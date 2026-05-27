@@ -55,6 +55,8 @@ model Profile {
   ageMin           Int      @default(18)
   ageMax           Int      @default(99)
   invisibleMode    Boolean  @default(false)
+  lastKnownLat     Float    @map("last_known_lat") @default(0)
+  lastKnownLng     Float    @map("last_known_lng") @default(0)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
