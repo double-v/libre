@@ -1,4 +1,5 @@
 import VerificationBadge from '@/components/VerificationBadge';
+import OnlineIndicator from '@/components/OnlineIndicator';
 
 interface ProfileCardProps {
   id: string;
@@ -6,6 +7,7 @@ interface ProfileCardProps {
   age?: number;
   bio: string;
   isVerified: boolean;
+  online?: boolean;
   distanceM?: number;
   distanceKm?: number;
   photos?: string[];
@@ -30,6 +32,7 @@ export default function ProfileCard({
   age,
   bio,
   isVerified,
+  online,
   distanceM,
   distanceKm,
   photos,
@@ -44,14 +47,18 @@ export default function ProfileCard({
     <div role="group" aria-label={`Profil de ${displayName}`} className="rounded-xl border border-gray-200 p-4 shadow-sm dark:border-gray-700">
       <div className="flex items-start gap-3">
         {photos && photos.length > 0 ? (
-          <img
-            src={photos[0]}
-            alt={displayName}
-            className="h-12 w-12 rounded-full object-cover"
-          />
+          <div className="relative">
+            <img
+              src={photos[0]}
+              alt={displayName}
+              className="h-12 w-12 rounded-full object-cover"
+            />
+            <OnlineIndicator online={online} />
+          </div>
         ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+          <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-400">
             {displayName.charAt(0).toUpperCase()}
+            <OnlineIndicator online={online} />
           </div>
         )}
         <div className="min-w-0 flex-1">

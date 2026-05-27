@@ -12,6 +12,23 @@ export async function GET() {
 
     const userId = session.user.id;
 
+    // Get blocked user IDs to exclude from crossings
+    const blocks = await prisma.block.findMany({
+      where: { OR: [{ blockerId: userId }, { blockedId: userId }] },
+      select: { blockerId: true, blockedId: true },
+    });
+    const blockedIds = new Set<string>();
+    for (const b of blocks) {
+      blockedIds.add(b.blockerId === userId ? b.blockedId : b.blockerId);
+    }
+
+    // Get already-liked user IDs
+    const likes = await prisma.like.findMany({
+      where: { likerId: userId },
+      select: { likedId: true },
+    });
+    const likedIds = new Set(likes.map((l) => l.likedId));
+
     const encounters = await prisma.encounter.findMany({
       where: {
         OR: [
@@ -24,6 +41,7 @@ export async function GET() {
           select: {
             id: true,
             displayName: true,
+            isBanned: true,
             isVerified: true,
             profile: {
               select: {
@@ -33,6 +51,7 @@ export async function GET() {
                 relationshipType: true,
                 interests: true,
                 photos: true,
+                invisibleMode: true,
               },
             },
           },
@@ -41,6 +60,7 @@ export async function GET() {
           select: {
             id: true,
             displayName: true,
+            isBanned: true,
             isVerified: true,
             profile: {
               select: {
@@ -50,6 +70,7 @@ export async function GET() {
                 relationshipType: true,
                 interests: true,
                 photos: true,
+                invisibleMode: true,
               },
             },
           },
@@ -59,19 +80,28 @@ export async function GET() {
       take: 50,
     });
 
-    const crossings = encounters.map((e) => {
-      const isUserA = e.userA === userId;
-      const other = isUserA ? e.userBRel : e.userARel;
-
-      return {
-        id: other.id,
-        displayName: other.displayName,
-        isVerified: other.isVerified,
-        profile: other.profile,
-        distanceM: e.distanceM,
-        happenedAt: e.happenedAt,
-      };
-    });
+    const crossings = encounters
+      .filter((e) => {
+        const isUserA = e.userA === userId;
+        const other = isUserA ? e.userBRel : e.userARel;
+        if (other.isBanned) return false;
+        if (blockedIds.has(other.id)) return false;
+        if (likedIds.has(other.id)) return false;
+        if (other.profile?.invisibleMode) return false;
+        return true;
+      })
+      .map((e) => {
+        const isUserA = e.userA === userId;
+        const other = isUserA ? e.userBRel : e.userARel;
+        return {
+          id: other.id,
+          displayName: other.displayName,
+          isVerified: other.isVerified,
+          profile: other.profile,
+          distanceM: e.distanceM,
+          happenedAt: e.happenedAt,
+        };
+      });
 
     return NextResponse.json({ crossings }, { status: 200 });
   } catch (error) {

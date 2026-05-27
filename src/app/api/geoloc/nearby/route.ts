@@ -48,6 +48,13 @@ export async function GET() {
       blockedIds.add(b.blockerId === userId ? b.blockedId : b.blockerId);
     }
 
+    // Get already-liked user IDs
+    const likes = await prisma.like.findMany({
+      where: { likerId: userId },
+      select: { likedId: true },
+    });
+    const likedIds = new Set(likes.map((l) => l.likedId));
+
     const maxDistanceKm = myProfile.maxDistanceKm;
     const nearby = [];
 
@@ -62,6 +69,9 @@ export async function GET() {
 
       // Skip blocked users
       if (blockedIds.has(otherUserId)) continue;
+
+      // Skip already-liked users
+      if (likedIds.has(otherUserId)) continue;
 
       // Check distance
       const distanceM = haversineDistance(
