@@ -1,0 +1,45 @@
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import prisma from '@/lib/db';
+import { authOptions } from '@/lib/auth';
+import { reportSchema } from '@/lib/validators';
+
+export async function POST(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const parsed = reportSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+        { status: 400 },
+      );
+    }
+
+    const { reportedId, reason, description } = parsed.data;
+    const reporterId = session.user.id;
+
+    const report = await prisma.report.create({
+      data: {
+        reporterId,
+        reportedId,
+        reason,
+        description,
+        status: 'pending',
+      },
+    });
+
+    return NextResponse.json({ report }, { status: 201 });
+  } catch (error) {
+    console.error('Report creation error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 },
+    );
+  }
+}
