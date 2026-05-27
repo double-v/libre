@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   title: "PeterlGame — Notre but, c'est que vous quittiez l'appli",
   description: 'Application de rencontre gratuite, sans abonnement ni revente de données.',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.svg',
+    apple: '/icon-192.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
