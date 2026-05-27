@@ -50,6 +50,7 @@ model Profile {
   orientation      String[]
   relationshipType String[]
   interests        String[]
+  practices        String[] @default([])
   socialLinks      Json     @default("{}")
   photos           String[]
   maxDistanceKm    Int      @default(50)

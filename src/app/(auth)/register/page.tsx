@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import PrivacyTip from '@/components/PrivacyTip';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -55,7 +56,7 @@ export default function RegisterPage() {
       <form onSubmit={handleSubmit} aria-label="Formulaire d'inscription" className="space-y-4">
         <div>
           <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
-            Nom affiché
+            Pseudo
           </label>
           <input
             id="displayName"
@@ -64,8 +65,9 @@ export default function RegisterPage() {
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
-            placeholder="Votre prénom"
+            placeholder="Un pseudo qui vous ressemble"
           />
+          <PrivacyTip tip="Un pseudo, c'est plus safe qu'un vrai nom. Vos matches ne verront que ça." />
         </div>
 
         <div>
@@ -97,7 +99,7 @@ export default function RegisterPage() {
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
             placeholder="Minimum 8 caractères"
           />
-          <p id="password-requirements" className="mt-1 text-xs text-gray-500">Minimum 8 caractères</p>
+          <p id="password-requirements" className="mt-1 text-xs text-gray-500">8 caractères min, avec majuscule, minuscule et chiffre</p>
         </div>
 
         <button

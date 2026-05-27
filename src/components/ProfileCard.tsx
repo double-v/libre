@@ -9,6 +9,8 @@ interface ProfileCardProps {
   distanceM?: number;
   distanceKm?: number;
   photos?: string[];
+  interests?: string[];
+  practices?: string[];
   onLike: () => void;
   onPass: () => void;
 }
@@ -31,6 +33,8 @@ export default function ProfileCard({
   distanceM,
   distanceKm,
   photos,
+  interests,
+  practices,
   onLike,
   onPass,
 }: ProfileCardProps) {
@@ -65,6 +69,17 @@ export default function ProfileCard({
 
       {bio && (
         <p className="mt-3 line-clamp-2 text-sm text-gray-700 dark:text-gray-300">{bio}</p>
+      )}
+
+      {((interests && interests.length > 0) || (practices && practices.length > 0)) && (
+        <div className="mt-3 flex flex-wrap gap-1">
+          {interests?.map((i) => (
+            <span key={i} className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-700">{i}</span>
+          ))}
+          {practices?.map((p) => (
+            <span key={p} className="inline-block rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-medium text-purple-700">{p}</span>
+          ))}
+        </div>
       )}
 
       <div className="mt-4 flex gap-3">

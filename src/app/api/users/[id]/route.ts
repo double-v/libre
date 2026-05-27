@@ -41,6 +41,7 @@ export async function GET(
       publicProfile.orientation = user.profile.orientation;
       publicProfile.relationshipType = user.profile.relationshipType;
       publicProfile.interests = user.profile.interests;
+      publicProfile.practices = user.profile.practices;
       publicProfile.photos = user.profile.photos;
     }
 
