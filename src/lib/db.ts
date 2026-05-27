@@ -8,7 +8,8 @@ const globalForPrisma = globalThis as unknown as {
 
 function createPrismaClient() {
   const connectionString = process.env.DATABASE_URL;
-  const pool = new pg.Pool({ connectionString });
+  const ssl = connectionString?.includes('neon.tech') ? { rejectUnauthorized: false } : undefined;
+  const pool = new pg.Pool({ connectionString, ssl });
   const adapter = new PrismaPg(pool);
   return new PrismaClient({ adapter });
 }

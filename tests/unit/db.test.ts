@@ -7,7 +7,10 @@ describe('Database connection', () => {
   let prisma: PrismaClient;
 
   beforeAll(() => {
-    const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+    const pool = new pg.Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+    });
     const adapter = new PrismaPg(pool);
     prisma = new PrismaClient({ adapter });
   });
