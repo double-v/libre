@@ -4,6 +4,31 @@ import prisma from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { profileUpdateSchema } from '@/lib/validators';
 
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const profile = await prisma.profile.findUnique({
+      where: { userId: session.user.id },
+    });
+
+    if (!profile) {
+      return NextResponse.json({ profile: null }, { status: 200 });
+    }
+
+    return NextResponse.json({ profile }, { status: 200 });
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 },
+    );
+  }
+}
+
 export async function PUT(request: Request) {
   try {
     const session = await getServerSession(authOptions);
