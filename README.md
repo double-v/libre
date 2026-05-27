@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PeterlGame
 
-## Getting Started
+> *Notre but, c'est que vous quittiez l'appli.*
 
-First, run the development server:
+Application de rencontre gratuite, open source, sans abonnement ni revente de données. Financée uniquement par dons pour l'hébergement.
+
+## Philosophie
+
+- **Gratuit. Pour toujours.** Pas d'abonnement, pas de fonctionnalités payantes, pas de pubs.
+- **Vos données sont à vous.** Messages chiffrés de bout en bout (E2E). Position géolocalisée floutée. Suppression de compte = purge totale.
+- **Notre but, c'est que vous quittiez l'appli.** Le chat sert à faire le pont vers la vraie vie. Une fois le contact établi, on sort de l'app.
+
+## Fonctionnalités
+
+- **Croisements** — Découvrez les célibataires que vous croisez IRL
+- **À proximité** — Voyez qui est proche de vous en temps réel
+- **Match mutuel** — Likez, si c'est réciproque le chat s'ouvre
+- **Chat E2E** — Messages chiffrés de bout en bout, le serveur ne lit jamais vos messages
+- **Badge vérifié** — Selfie vérifié par la communauté
+- **Modération communautaire** — Signalement, blocage, auto-unmatch
+- **Mode invisible** — Voyez les croisements sans apparaître dans les leurs
+- **PWA** — Installable sur mobile, pas besoin de store
+
+## Stack technique
+
+- **Frontend** : Next.js 15 (App Router) + TypeScript + Tailwind CSS
+- **Backend** : Next.js API Routes (monolithe)
+- **Base de données** : PostgreSQL + PostGIS
+- **Temps réel** : Pusher
+- **Stockage** : Cloudflare R2
+- **Chiffrement** : ECDH (P-256) + AES-256-CBC
+- **Tests** : Vitest + Testing Library + Playwright
+- **CI** : GitHub Actions
+
+## Développement local
 
 ```bash
+# Cloner le repo
+git clone https://github.com/VOTRE_USER/peterlgame.git
+cd peterlgame
+
+# Installer les dépendances
+npm install
+
+# Configurer l'environnement
+cp .env.example .env
+# Remplir les variables dans .env
+
+# Base de données
+npx prisma generate
+npx prisma migrate dev
+
+# Lancer l'app
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tests
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Tests unitaires + intégration
+npx vitest run
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Tests E2E
+npx playwright test
+```
 
-## Learn More
+## Licence
 
-To learn more about Next.js, take a look at the following resources:
+PolyForm Noncommercial 1.5.0 — Utilisation libre pour tout usage non commercial. Voir [LICENSE](./LICENSE).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*Rencontre libre. Gratuit. Sans revente de données.*
