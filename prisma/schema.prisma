@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  displayName  String
+  passwordHash String?
+  createdAt    DateTime @default(now())
+  isVerified   Boolean  @default(false)
+  isBanned     Boolean  @default(false)
+  lastActive   DateTime @updatedAt
+
+  profile              Profile?
+  userKey              UserKey?
+  sentLikes            Like[]                @relation("SentLikes")
+  receivedLikes        Like[]                @relation("ReceivedLikes")
+  matchesAsA           Match[]               @relation("UserAMatches")
+  matchesAsB           Match[]               @relation("UserBMatches")
+  conversationsAsA     Conversation[]        @relation("UserAConversations")
+  conversationsAsB     Conversation[]        @relation("UserBConversations")
+  sentMessages         Message[]             @relation("SentMessages")
+  encountersAsA        Encounter[]           @relation("UserAEncounters")
+  encountersAsB        Encounter[]           @relation("UserBEncounters")
+  reportsMade          Report[]              @relation("ReportsMade")
+  reportsReceived      Report[]              @relation("ReportsReceived")
+  verificationRequests VerificationRequest[] @relation("UserVerifications")
+  verificationReviews  VerificationRequest[] @relation("ReviewerVerifications")
+  blocksMade           Block[]               @relation("BlocksMade")
+  blocksReceived       Block[]               @relation("BlocksReceived")
+  reportReviews        Report[]              @relation("ReportReviewer")
+  accounts             Account[]
+  sessions             Session[]
+
+  @@map("users")
+}
+
+model Profile {
+  userId           String   @id @db.Uuid
+  bio              String   @default("")
+  birthDate        DateTime
+  genderIdentity   String
+  orientation      String[]
+  relationshipType String[]
+  interests        String[]
+  socialLinks      Json     @default("{}")
+  photos           String[]
+  maxDistanceKm    Int      @default(50)
+  ageMin           Int      @default(18)
+  ageMax           Int      @default(99)
+  invisibleMode    Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model UserKey {
+  userId       String   @id @db.Uuid
+  publicKey    String
+  keyCreatedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_keys")
+}
+
+model Encounter {
+  id         String   @id @default(uuid()) @db.Uuid
+  userA      String   @db.Uuid
+  userB      String   @db.Uuid
+  latitude   Float
+  longitude  Float
+  distanceM  Int
+  happenedAt DateTime @default(now())
+
+  userARel User @relation("UserAEncounters", fields: [userA], references: [id], onDelete: Cascade)
+  userBRel User @relation("UserBEncounters", fields: [userB], references: [id], onDelete: Cascade)
+
+  @@index([happenedAt])
+  @@index([latitude, longitude])
+  @@map("encounters")
+}
+
+model Like {
+  likerId   String   @db.Uuid
+  likedId   String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  liker User @relation("SentLikes", fields: [likerId], references: [id], onDelete: Cascade)
+  liked User @relation("ReceivedLikes", fields: [likedId], references: [id], onDelete: Cascade)
+
+  @@id([likerId, likedId])
+  @@map("likes")
+}
+
+model Match {
+  id        String   @id @default(uuid()) @db.Uuid
+  userA     String   @db.Uuid
+  userB     String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  userARel     User          @relation("UserAMatches", fields: [userA], references: [id], onDelete: Cascade)
+  userBRel     User          @relation("UserBMatches", fields: [userB], references: [id], onDelete: Cascade)
+  conversation Conversation?
+
+  @@unique([userA, userB])
+  @@map("matches")
+}
+
+model Conversation {
+  id        String   @id @default(uuid()) @db.Uuid
+  matchId   String   @unique @db.Uuid
+  userA     String   @db.Uuid
+  userB     String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  match    Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  userARel User      @relation("UserAConversations", fields: [userA], references: [id], onDelete: Cascade)
+  userBRel User      @relation("UserBConversations", fields: [userB], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id             String    @id @default(uuid()) @db.Uuid
+  conversationId String    @db.Uuid
+  senderId       String    @db.Uuid
+  content        String
+  createdAt      DateTime  @default(now())
+  readAt         DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+model Report {
+  id          String    @id @default(uuid()) @db.Uuid
+  reporterId  String    @db.Uuid
+  reportedId  String    @db.Uuid
+  reason      String
+  description String    @default("")
+  status      String    @default("pending")
+  reviewedBy  String?   @db.Uuid
+  createdAt   DateTime  @default(now())
+  resolvedAt  DateTime?
+
+  reporter User  @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported User  @relation("ReportsReceived", fields: [reportedId], references: [id], onDelete: Cascade)
+  reviewer User? @relation("ReportReviewer", fields: [reviewedBy], references: [id], onDelete: Cascade)
+
+  @@map("reports")
+}
+
+model VerificationRequest {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  selfieUrl  String
+  status     String    @default("pending")
+  reviewedBy String?   @db.Uuid
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+
+  user     User  @relation("UserVerifications", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer User? @relation("ReviewerVerifications", fields: [reviewedBy], references: [id], onDelete: Cascade)
+
+  @@map("verification_requests")
+}
+
+model Block {
+  blockerId String   @db.Uuid
+  blockedId String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  blocker User @relation("BlocksMade", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("BlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@map("blocks")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String   @db.Uuid
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
