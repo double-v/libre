@@ -141,27 +141,26 @@ export default function ProfilePage() {
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
   const startEdit = (section: string) => {
-    if (!profile) return;
     setEditingSection(section);
-    // Populate edit state from current profile
+    // Populate edit state from current profile (or defaults for first-time)
     if (section === 'identity') {
-      setEditBirthDate(profile.birthDate ? profile.birthDate.split('T')[0] : '');
-      setEditGenderIdentity(profile.genderIdentity ?? '');
+      setEditBirthDate(profile?.birthDate ? profile.birthDate.split('T')[0] : '');
+      setEditGenderIdentity(profile?.genderIdentity ?? '');
     }
-    if (section === 'bio') setEditBio(profile.bio ?? '');
+    if (section === 'bio') setEditBio(profile?.bio ?? '');
     if (section === 'orientation') {
-      setEditOrientation(profile.orientation ?? []);
-      setEditRelationshipType(profile.relationshipType ?? []);
+      setEditOrientation(profile?.orientation ?? []);
+      setEditRelationshipType(profile?.relationshipType ?? []);
     }
-    if (section === 'interests') setEditInterests(profile.interests ?? []);
-    if (section === 'practices') setEditPractices(profile.practices ?? []);
-    if (section === 'photos') setEditPhotos(profile.photos ?? []);
+    if (section === 'interests') setEditInterests(profile?.interests ?? []);
+    if (section === 'practices') setEditPractices(profile?.practices ?? []);
+    if (section === 'photos') setEditPhotos(profile?.photos ?? []);
     if (section === 'search') {
-      setEditAgeMin(profile.ageMin ?? 18);
-      setEditAgeMax(profile.ageMax ?? 99);
-      setEditMaxDistanceKm(profile.maxDistanceKm ?? 50);
+      setEditAgeMin(profile?.ageMin ?? 18);
+      setEditAgeMax(profile?.ageMax ?? 99);
+      setEditMaxDistanceKm(profile?.maxDistanceKm ?? 50);
     }
-    if (section === 'social') setEditSocialLinks(profile.socialLinks ?? {});
+    if (section === 'social') setEditSocialLinks(profile?.socialLinks ?? {});
   };
 
   const saveSection = async (data: Record<string, unknown>) => {
