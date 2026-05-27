@@ -11,15 +11,16 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const profile = await prisma.profile.findUnique({
-      where: { userId: session.user.id },
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { isVerified: true, profile: true },
     });
 
-    if (!profile) {
-      return NextResponse.json({ profile: null }, { status: 200 });
+    if (!user) {
+      return NextResponse.json({ profile: null, isVerified: false }, { status: 200 });
     }
 
-    return NextResponse.json({ profile }, { status: 200 });
+    return NextResponse.json({ profile: user.profile, isVerified: user.isVerified }, { status: 200 });
   } catch (error) {
     console.error('Profile fetch error:', error);
     return NextResponse.json(
@@ -46,49 +47,28 @@ export async function PUT(request: Request) {
       );
     }
 
-    const {
-      bio,
-      birthDate,
-      genderIdentity,
-      orientation,
-      relationshipType,
-      interests,
-      socialLinks,
-      photos,
-      maxDistanceKm,
-      ageMin,
-      ageMax,
-    } = parsed.data;
+    const data = parsed.data;
+
+    const updateData: Record<string, unknown> = {};
+    const createData: Record<string, unknown> = { userId: session.user.id };
+
+    if (data.bio !== undefined) { updateData.bio = data.bio; createData.bio = data.bio; }
+    if (data.birthDate !== undefined) { updateData.birthDate = new Date(data.birthDate); createData.birthDate = new Date(data.birthDate); }
+    if (data.genderIdentity !== undefined) { updateData.genderIdentity = data.genderIdentity; createData.genderIdentity = data.genderIdentity; }
+    if (data.orientation !== undefined) { updateData.orientation = data.orientation; createData.orientation = data.orientation; }
+    if (data.relationshipType !== undefined) { updateData.relationshipType = data.relationshipType; createData.relationshipType = data.relationshipType; }
+    if (data.interests !== undefined) { updateData.interests = data.interests; createData.interests = data.interests; }
+    if (data.socialLinks !== undefined) { updateData.socialLinks = data.socialLinks; createData.socialLinks = data.socialLinks; }
+    if (data.photos !== undefined) { updateData.photos = data.photos; createData.photos = data.photos; }
+    if (data.invisibleMode !== undefined) { updateData.invisibleMode = data.invisibleMode; createData.invisibleMode = data.invisibleMode; }
+    if (data.maxDistanceKm !== undefined) { updateData.maxDistanceKm = data.maxDistanceKm; createData.maxDistanceKm = data.maxDistanceKm; }
+    if (data.ageMin !== undefined) { updateData.ageMin = data.ageMin; createData.ageMin = data.ageMin; }
+    if (data.ageMax !== undefined) { updateData.ageMax = data.ageMax; createData.ageMax = data.ageMax; }
 
     const profile = await prisma.profile.upsert({
       where: { userId: session.user.id },
-      update: {
-        bio,
-        birthDate: new Date(birthDate),
-        genderIdentity,
-        orientation,
-        relationshipType,
-        interests,
-        ...(socialLinks !== undefined && { socialLinks }),
-        ...(photos !== undefined && { photos }),
-        maxDistanceKm,
-        ageMin,
-        ageMax,
-      },
-      create: {
-        userId: session.user.id,
-        bio,
-        birthDate: new Date(birthDate),
-        genderIdentity,
-        orientation,
-        relationshipType,
-        interests,
-        ...(socialLinks !== undefined && { socialLinks }),
-        ...(photos !== undefined && { photos }),
-        maxDistanceKm,
-        ageMin,
-        ageMax,
-      },
+      update: updateData,
+      create: createData,
     });
 
     return NextResponse.json({ profile }, { status: 200 });

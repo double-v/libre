@@ -9,18 +9,24 @@ export const registerSchema = z.object({
 });
 
 export const profileUpdateSchema = z.object({
-  bio: z.string().max(500),
-  birthDate: z.string().datetime(),
-  genderIdentity: z.string().min(1).max(50),
-  orientation: z.array(z.string().max(30)).max(10),
-  relationshipType: z.array(z.string().max(30)).max(10),
-  interests: z.array(z.string().max(30)).max(20),
+  bio: z.string().max(500).optional(),
+  birthDate: z.string().datetime().optional(),
+  genderIdentity: z.string().min(1).max(50).optional(),
+  orientation: z.array(z.string().max(30)).max(10).optional(),
+  relationshipType: z.array(z.string().max(30)).max(10).optional(),
+  interests: z.array(z.string().max(30)).max(20).optional(),
   socialLinks: z.record(z.string(), z.string()).optional(),
   photos: z.array(z.string().url()).max(6).optional(),
-  maxDistanceKm: z.number().int().min(1).max(500),
-  ageMin: z.number().int().min(18).max(99),
-  ageMax: z.number().int().min(18).max(99),
-}).refine((data) => data.ageMin <= data.ageMax, {
+  invisibleMode: z.boolean().optional(),
+  maxDistanceKm: z.number().int().min(1).max(500).optional(),
+  ageMin: z.number().int().min(18).max(99).optional(),
+  ageMax: z.number().int().min(18).max(99).optional(),
+}).refine((data) => {
+  if (data.ageMin !== undefined && data.ageMax !== undefined) {
+    return data.ageMin <= data.ageMax;
+  }
+  return true;
+}, {
   message: 'ageMin must be less than or equal to ageMax',
   path: ['ageMin'],
 });
