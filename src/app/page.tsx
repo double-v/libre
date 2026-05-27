@@ -4,7 +4,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Libre — Rencontre gratuite, sans abonnement ni revente de données',
   description:
-    'Application de rencontre 100% gratuite. Pas d\'abonnement, pas de microtransactions, pas de revente de données. Parce que quand c\'est gratuit, tout le monde est là. Notre but, c\'est que vous quittiez l\'appli.',
+    'Application de rencontre 100% gratuite. Pas d\'abonnement, pas de microtransactions, pas de revente de données. Parce que rencontrer ne devrait rien coûter.',
   alternates: { canonical: 'https://libre.rencontres.app' },
 };
 
@@ -88,7 +88,7 @@ export default function Home() {
             <span className="text-coral">Libre</span>
           </h1>
           <p className="mb-2 max-w-md text-xl font-medium text-gray-800 sm:text-2xl">
-            Notre but, c&apos;est que vous quittiez l&apos;appli.
+            Parce que rencontrer ne devrait rien coûter.
           </p>
           <p className="mb-8 max-w-lg text-base text-gray-500">
             Rencontre gratuite. Sans abonnement. Sans microtransaction. Sans revente de données.

@@ -1,6 +1,6 @@
 # Libre
 
-> *Notre but, c'est que vous quittiez l'appli.*
+> *Parce que rencontrer ne devrait rien coûter.*
 
 Application de rencontre gratuite, open source, sans abonnement ni revente de données. Financée uniquement par dons pour l'hébergement.
 
@@ -8,7 +8,7 @@ Application de rencontre gratuite, open source, sans abonnement ni revente de do
 
 - **Gratuit. Pour toujours.** Pas d'abonnement, pas de fonctionnalités payantes, pas de pubs.
 - **Vos données sont à vous.** Messages chiffrés de bout en bout (E2E). Position géolocalisée floutée. Suppression de compte = purge totale.
-- **Notre but, c'est que vous quittiez l'appli.** Le chat sert à faire le pont vers la vraie vie. Une fois le contact établi, on sort de l'app.
+- **Parce que rencontrer ne devrait rien coûter.** Le chat sert à faire le pont vers la vraie vie. Une fois le contact établi, on sort de l'app.
 
 ## Fonctionnalités
 

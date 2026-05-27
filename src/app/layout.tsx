@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     default: 'Libre — Rencontre libre et gratuite',
     template: '%s | Libre',
   },
-  description: 'Application de rencontre gratuite, sans abonnement ni revente de données. Croisez des célibataires près de chez vous. Notre but, c\'est que vous quittiez l\'appli.',
+  description: 'Application de rencontre gratuite, sans abonnement ni revente de données. Parce que rencontrer ne devrait rien coûter.',
   keywords: ['rencontre gratuite', 'app rencontre sans abonnement', 'rencontre libre', 'application rencontre gratuite', 'dating app gratuite', 'rencontre sans payer', 'croisement', 'rencontre proximité', 'chat gratuit', 'rencontre alternative', 'rencontre non commerciale'],
   authors: [{ name: 'Libre' }],
   creator: 'Libre',
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     url: 'https://libre.rencontres.app',
     siteName: 'Libre',
     title: 'Libre — Rencontre libre et gratuite',
-    description: 'Application de rencontre gratuite, sans abonnement ni revente de données. Notre but, c\'est que vous quittiez l\'appli.',
+    description: 'Application de rencontre gratuite, sans abonnement ni revente de données. Parce que rencontrer ne devrait rien coûter.',
     images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Libre — Rencontre libre et gratuite' }],
   },
   twitter: {
