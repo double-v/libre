@@ -1,4 +1,4 @@
-# PeterlGame
+# Libre
 
 > *Notre but, c'est que vous quittiez l'appli.*
 
@@ -36,8 +36,8 @@ Application de rencontre gratuite, open source, sans abonnement ni revente de do
 
 ```bash
 # Cloner le repo
-git clone https://github.com/VOTRE_USER/peterlgame.git
-cd peterlgame
+git clone https://github.com/VOTRE_USER/libre.git
+cd libre
 
 # Installer les dépendances
 npm install

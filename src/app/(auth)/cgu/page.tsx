@@ -15,7 +15,7 @@ export default function CGUPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">1. Objet</h2>
         <p className="text-sm text-gray-700">
-          PeterlGame est une application de rencontre gratuite, non commerciale, fond&eacute;e sur le
+          Libre est une application de rencontre gratuite, non commerciale, fond&eacute;e sur le
           matching g&eacute;olocalis&eacute; et le chiffrement de bout en bout des conversations. Le service
           est fourni sans aucun frais et sans abonnement.
         </p>
@@ -44,7 +44,7 @@ export default function CGUPage() {
         <h2 className="text-lg font-semibold">4. Responsabilit&eacute;</h2>
         <p className="text-sm text-gray-700">
           Le service est fourni en l&apos;&eacute;tat, sans garantie de disponibilit&eacute; ou de performance.
-          PeterlGame &eacute;tant un projet non commercial, aucune obligation de r&eacute;sultat ni de moyen
+          Libre &eacute;tant un projet non commercial, aucune obligation de r&eacute;sultat ni de moyen
           ne s&apos;applique. L&apos;&eacute;quipe ne saurait &ecirc;tre tenue responsable des rencontres
           r&eacute;alis&eacute;es via la plateforme.
         </p>
@@ -79,7 +79,7 @@ export default function CGUPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">8. Propri&eacute;t&eacute; intellectuelle</h2>
         <p className="text-sm text-gray-700">
-          Le code source de PeterlGame est distribu&eacute; sous licence
+          Le code source de Libre est distribu&eacute; sous licence
           PolyForm Noncommercial 1.5.0. Toute utilisation commerciale du code est interdite sans
           autorisation expresse.
         </p>

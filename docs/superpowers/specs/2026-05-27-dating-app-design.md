@@ -1,4 +1,4 @@
-# PeterlGame — Free Dating App Design Spec
+# Libre — Free Dating App Design Spec
 
 **Date**: 2026-05-27
 **Status**: Draft

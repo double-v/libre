@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { generateKeyPair, encryptPrivateKey, decryptPrivateKey } from '@/lib/crypto';
 
-const PUBLIC_KEY_STORAGE_KEY = 'peterlgame_public_key';
-const PRIVATE_KEY_STORAGE_KEY = 'peterlgame_private_key';
+const PUBLIC_KEY_STORAGE_KEY = 'libre_public_key';
+const PRIVATE_KEY_STORAGE_KEY = 'libre_private_key';
 
 export function useEncryptedChat() {
   const [publicKey, setPublicKey] = useState<string | null>(null);

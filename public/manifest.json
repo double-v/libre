@@ -1,7 +1,7 @@
 {
-  "name": "PeterlGame",
-  "short_name": "PeterlGame",
-  "description": "Rencontre libre. Gratuit. Open source.",
+  "name": "Libre",
+  "short_name": "Libre",
+  "description": "Rencontre libre et gratuite",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

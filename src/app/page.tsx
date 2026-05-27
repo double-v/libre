@@ -13,7 +13,7 @@ export default function Home() {
 
       <main id="main-content" className="flex flex-1 flex-col items-center justify-center px-6 py-12 text-center">
         <h1 className="mb-4 text-5xl font-bold tracking-tight sm:text-6xl">
-          PeterlGame
+          Libre
         </h1>
         <p className="mb-2 max-w-md text-xl font-medium text-gray-700 sm:text-2xl">
           Notre but, c&apos;est que vous quittiez l&apos;appli.

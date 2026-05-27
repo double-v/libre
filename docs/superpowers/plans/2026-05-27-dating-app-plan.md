@@ -1,4 +1,4 @@
-# PeterlGame Implementation Plan
+# Libre Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -13,7 +13,7 @@
 ## File Structure
 
 ```
-peterlgame/
+libre/
 ├── prisma/
 │   └── schema.prisma
 ├── src/
@@ -172,7 +172,7 @@ import '@testing-library/jest-dom';
 - [ ] **Step 4: Create .env.example**
 
 ```
-DATABASE_URL=postgresql://user:password@localhost:5432/peterlgame
+DATABASE_URL=postgresql://user:password@localhost:5432/libre
 NEXTAUTH_SECRET=your-secret-here
 NEXTAUTH_URL=http://localhost:3000
 PUSHER_APP_ID=
@@ -194,7 +194,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'PeterlGame — Notre but, c\'est que vous quittiez l\'appli',
+  title: 'Libre — Notre but, c\'est que vous quittiez l\'appli',
   description: 'Application de rencontre gratuite, open source, sans abonnement ni revente de données.',
 };
 
@@ -213,7 +213,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8">
-      <h1 className="text-4xl font-bold mb-4">PeterlGame</h1>
+      <h1 className="text-4xl font-bold mb-4">Libre</h1>
       <p className="text-xl text-gray-600 mb-2">Notre but, c&apos;est que vous quittiez l&apos;appli.</p>
       <p className="text-gray-500">Rencontre libre. Gratuit. Open source.</p>
     </main>
@@ -1319,7 +1319,7 @@ jobs:
         env:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
-          POSTGRES_DB: peterlgame_test
+          POSTGRES_DB: libre_test
         ports:
           - 5432:5432
         options: >-
@@ -1342,11 +1342,11 @@ jobs:
 
       - run: npx prisma migrate deploy
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/peterlgame_test
+          DATABASE_URL: postgresql://test:test@localhost:5432/libre_test
 
       - run: npx vitest run
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/peterlgame_test
+          DATABASE_URL: postgresql://test:test@localhost:5432/libre_test
           NEXTAUTH_SECRET: test-secret
 
       - name: Install Playwright browsers
@@ -1354,7 +1354,7 @@ jobs:
 
       - run: npx playwright test
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/peterlgame_test
+          DATABASE_URL: postgresql://test:test@localhost:5432/libre_test
           NEXTAUTH_SECRET: test-secret
 ```
 
@@ -2169,15 +2169,15 @@ Create `src/hooks/useEncryptedChat.ts`:
 import { useState, useEffect } from 'react';
 import { generateKeyPair, encryptPrivateKey, decryptPrivateKey } from '@/lib/crypto';
 
-const PRIVATE_KEY_STORAGE = 'peterlgame_private_key';
-const PRIVATE_KEY_IV = 'peterlgame_key_iv';
+const PRIVATE_KEY_STORAGE = 'libre_private_key';
+const PRIVATE_KEY_IV = 'libre_key_iv';
 
 export function useEncryptedChat() {
   const [publicKey, setPublicKey] = useState<string | null>(null);
   const [hasKeys, setHasKeys] = useState(false);
 
   useEffect(() => {
-    const storedPublicKey = localStorage.getItem('peterlgame_public_key');
+    const storedPublicKey = localStorage.getItem('libre_public_key');
     const storedPrivateKey = localStorage.getItem(PRIVATE_KEY_STORAGE);
     if (storedPublicKey && storedPrivateKey) {
       setPublicKey(storedPublicKey);
@@ -2189,7 +2189,7 @@ export function useEncryptedChat() {
     const keyPair = await generateKeyPair();
     const encryptedPrivate = await encryptPrivateKey(keyPair.privateKey, password);
 
-    localStorage.setItem('peterlgame_public_key', keyPair.publicKey);
+    localStorage.setItem('libre_public_key', keyPair.publicKey);
     localStorage.setItem(PRIVATE_KEY_STORAGE, encryptedPrivate);
 
     setPublicKey(keyPair.publicKey);
@@ -3830,8 +3830,8 @@ Create `public/manifest.json`:
 
 ```json
 {
-  "name": "PeterlGame",
-  "short_name": "PeterlGame",
+  "name": "Libre",
+  "short_name": "Libre",
   "description": "Rencontre libre. Gratuit. Open source.",
   "start_url": "/",
   "display": "standalone",
@@ -3859,7 +3859,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'PeterlGame — Rencontre libre',
+  title: 'Libre — Rencontre libre',
   description: 'Application de rencontre gratuite, open source, sans abonnement ni revente de données.',
   manifest: '/manifest.json',
 };

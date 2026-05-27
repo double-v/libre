@@ -9,8 +9,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "PeterlGame — Notre but, c'est que vous quittiez l'appli",
-  description: 'Application de rencontre gratuite, sans abonnement ni revente de données.',
+  title: "Libre — Rencontre libre et gratuite",
+  description: 'Application de rencontre gratuite, sans abonnement ni revente de données. Notre but, c\'est que vous quittiez l\'appli.',
   manifest: '/manifest.json',
   icons: {
     icon: '/favicon.svg',
