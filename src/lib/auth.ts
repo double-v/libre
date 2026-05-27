@@ -41,9 +41,12 @@ const adapter = {
   },
   updateUser: async (data: Record<string, unknown> & { id: string }) => {
     const { id, ...rest } = data;
+    const allowed: Record<string, unknown> = {};
+    if ('email' in rest) allowed.email = rest.email;
+    if ('name' in rest) allowed.displayName = rest.name;
     return prisma.user.update({
       where: { id },
-      data: rest as any,
+      data: allowed,
     }) as any;
   },
   deleteUser: async (id: string) => {
@@ -125,6 +128,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.displayName,
+          role: user.role,
         };
       },
     }),
@@ -144,6 +148,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = (user as any).role;
       }
       return token;
     },
@@ -151,6 +156,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user && token.id) {
         session.user.id = token.id as string;
+        (session.user as any).role = token.role;
       }
       return session;
     },

@@ -13,6 +13,10 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    if ((session.user as any).role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const reviewerId = session.user.id;
     const { id } = await params;
 

@@ -2,15 +2,29 @@ import { z } from 'zod';
 
 const VALID_REPORT_REASONS = ['harassment', 'spam', 'fake', 'inappropriate', 'other'] as const;
 
+const MIN_AGE = 18;
+
+function isAtLeast18(birthDateStr: string): boolean {
+  const birthDate = new Date(birthDateStr);
+  const minDate = new Date();
+  minDate.setFullYear(minDate.getFullYear() - MIN_AGE);
+  return birthDate <= minDate;
+}
+
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
 export const registerSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string().regex(
+    passwordRegex,
+    'Password must be at least 8 characters with uppercase, lowercase, and a digit',
+  ),
   displayName: z.string().min(1).max(50),
 });
 
 export const profileUpdateSchema = z.object({
   bio: z.string().max(500).optional(),
-  birthDate: z.string().datetime().optional(),
+  birthDate: z.string().datetime().refine(isAtLeast18, 'You must be at least 18 years old').optional(),
   genderIdentity: z.string().min(1).max(50).optional(),
   orientation: z.array(z.string().max(30)).max(10).optional(),
   relationshipType: z.array(z.string().max(30)).max(10).optional(),
@@ -51,7 +65,7 @@ export const geolocUpdateSchema = z.object({
 });
 
 export const verificationRequestSchema = z.object({
-  selfieUrl: z.string().url(),
+  selfieUrl: z.string().url().startsWith('https://', { message: 'selfieUrl must be HTTPS' }),
 });
 
 export const blockSchema = z.object({

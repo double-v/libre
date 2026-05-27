@@ -1,8 +1,11 @@
 /**
- * E2E Crypto Module — ECDH key exchange + AES-256-CBC encryption
+ * E2E Crypto Module — ECDH key exchange + AES-256-GCM encryption
  *
  * Uses the Web Crypto API (crypto.subtle) exclusively.
  * Targets modern browsers and Node.js 20+.
+ *
+ * GCM provides authenticated encryption (confidentiality + integrity).
+ * IV size: 12 bytes for GCM (vs 16 for CBC).
  */
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -40,14 +43,10 @@ export interface KeyPair {
   privateKey: string;
 }
 
-/**
- * Generate an ECDH key pair using the P-256 curve.
- * Returns both keys as base64-encoded strings.
- */
 export async function generateKeyPair(): Promise<KeyPair> {
   const keyPair = await crypto.subtle.generateKey(
     { name: 'ECDH', namedCurve: 'P-256' },
-    true, // extractable
+    true,
     ['deriveBits'],
   );
 
@@ -62,10 +61,6 @@ export async function generateKeyPair(): Promise<KeyPair> {
 
 // ─── Message Encryption / Decryption ─────────────────────────────────────────
 
-/**
- * Derive a shared AES-256-CBC key from a public key and a private key
- * using ECDH key agreement, then import it as an AES-CBC CryptoKey.
- */
 async function deriveSharedKey(
   publicKeyBase64: string,
   privateKeyBase64: string,
@@ -86,18 +81,16 @@ async function deriveSharedKey(
     ['deriveBits'],
   );
 
-  // Derive 256 shared bits (AES-256)
   const sharedBits = await crypto.subtle.deriveBits(
     { name: 'ECDH', public: publicKey },
     privateKey,
     256,
   );
 
-  // Import the derived bits as an AES-CBC key
   const aesKey = await crypto.subtle.importKey(
     'raw',
     sharedBits,
-    { name: 'AES-CBC' },
+    { name: 'AES-GCM' },
     false,
     ['encrypt', 'decrypt'],
   );
@@ -106,12 +99,10 @@ async function deriveSharedKey(
 }
 
 /**
- * Encrypt a message using ECDH-derived shared key with AES-256-CBC.
+ * Encrypt a message using ECDH-derived shared key with AES-256-GCM.
+ * GCM provides authenticated encryption — tampering is detected on decrypt.
  *
- * @param plaintext - The message to encrypt
- * @param recipientPublicKey - Recipient's public key (base64, SPKI)
- * @param senderPrivateKey - Sender's private key (base64, PKCS8)
- * @returns Base64-encoded string: IV (16 bytes) + ciphertext
+ * @returns Base64-encoded string: IV (12 bytes) + ciphertext + auth tag (16 bytes)
  */
 export async function encryptMessage(
   plaintext: string,
@@ -120,16 +111,15 @@ export async function encryptMessage(
 ): Promise<string> {
   const aesKey = await deriveSharedKey(recipientPublicKey, senderPrivateKey);
 
-  // Generate random 16-byte IV
-  const iv = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
 
   const ciphertext = await crypto.subtle.encrypt(
-    { name: 'AES-CBC', iv },
+    { name: 'AES-GCM', iv },
     aesKey,
     stringToArrayBuffer(plaintext),
   );
 
-  // Combine IV + ciphertext into a single buffer
+  // GCM ciphertext already includes the 16-byte auth tag
   const combined = new Uint8Array(iv.length + ciphertext.byteLength);
   combined.set(iv, 0);
   combined.set(new Uint8Array(ciphertext), iv.length);
@@ -138,12 +128,10 @@ export async function encryptMessage(
 }
 
 /**
- * Decrypt a message using ECDH-derived shared key with AES-256-CBC.
+ * Decrypt a message using ECDH-derived shared key with AES-256-GCM.
+ * Throws on tampering (auth tag verification fails).
  *
- * @param encryptedBase64 - Base64-encoded IV + ciphertext (as produced by encryptMessage)
- * @param senderPublicKey - Sender's public key (base64, SPKI)
- * @param recipientPrivateKey - Recipient's private key (base64, PKCS8)
- * @returns The decrypted plaintext
+ * @param encryptedBase64 - Base64-encoded IV (12 bytes) + ciphertext + auth tag
  */
 export async function decryptMessage(
   encryptedBase64: string,
@@ -154,12 +142,12 @@ export async function decryptMessage(
 
   const combined = new Uint8Array(base64ToArrayBuffer(encryptedBase64));
 
-  // Extract IV (first 16 bytes) and ciphertext
-  const iv = combined.slice(0, 16);
-  const ciphertext = combined.slice(16);
+  // GCM IV is 12 bytes
+  const iv = combined.slice(0, 12);
+  const ciphertext = combined.slice(12);
 
   const plaintext = await crypto.subtle.decrypt(
-    { name: 'AES-CBC', iv },
+    { name: 'AES-GCM', iv },
     aesKey,
     ciphertext,
   );
@@ -170,22 +158,17 @@ export async function decryptMessage(
 // ─── Private Key Encryption / Decryption ──────────────────────────────────────
 
 /**
- * Encrypt a private key string with a password using PBKDF2 + AES-256-CBC.
+ * Encrypt a private key string with a password using PBKDF2 + AES-256-GCM.
  *
- * @param privateKeyBase64 - The private key string to encrypt
- * @param password - The password to derive the encryption key from
- * @returns Base64-encoded string: salt (16 bytes) + IV (16 bytes) + ciphertext
+ * @returns Base64-encoded string: salt (16 bytes) + IV (12 bytes) + ciphertext + auth tag
  */
 export async function encryptPrivateKey(
   privateKeyBase64: string,
   password: string,
 ): Promise<string> {
-  // Generate random 16-byte salt
   const salt = crypto.getRandomValues(new Uint8Array(16));
-  // Generate random 16-byte IV
-  const iv = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
 
-  // Derive AES key from password using PBKDF2
   const passwordKey = await crypto.subtle.importKey(
     'raw',
     stringToArrayBuffer(password),
@@ -202,18 +185,18 @@ export async function encryptPrivateKey(
       hash: 'SHA-256',
     },
     passwordKey,
-    { name: 'AES-CBC', length: 256 },
+    { name: 'AES-GCM', length: 256 },
     false,
     ['encrypt'],
   );
 
   const ciphertext = await crypto.subtle.encrypt(
-    { name: 'AES-CBC', iv },
+    { name: 'AES-GCM', iv },
     aesKey,
     stringToArrayBuffer(privateKeyBase64),
   );
 
-  // Combine salt + IV + ciphertext
+  // salt (16) + IV (12) + ciphertext + auth tag
   const combined = new Uint8Array(
     salt.length + iv.length + ciphertext.byteLength,
   );
@@ -227,9 +210,7 @@ export async function encryptPrivateKey(
 /**
  * Decrypt a private key string that was encrypted with encryptPrivateKey.
  *
- * @param encryptedBase64 - Base64-encoded salt + IV + ciphertext
- * @param password - The password used during encryption
- * @returns The original private key string
+ * @param encryptedBase64 - Base64-encoded salt (16 bytes) + IV (12 bytes) + ciphertext + auth tag
  */
 export async function decryptPrivateKey(
   encryptedBase64: string,
@@ -237,12 +218,11 @@ export async function decryptPrivateKey(
 ): Promise<string> {
   const combined = new Uint8Array(base64ToArrayBuffer(encryptedBase64));
 
-  // Extract salt (16 bytes), IV (16 bytes), and ciphertext
+  // salt (16 bytes), IV (12 bytes for GCM), ciphertext + auth tag
   const salt = combined.slice(0, 16);
-  const iv = combined.slice(16, 32);
-  const ciphertext = combined.slice(32);
+  const iv = combined.slice(16, 28);
+  const ciphertext = combined.slice(28);
 
-  // Derive the same AES key from password + salt
   const passwordKey = await crypto.subtle.importKey(
     'raw',
     stringToArrayBuffer(password),
@@ -259,13 +239,13 @@ export async function decryptPrivateKey(
       hash: 'SHA-256',
     },
     passwordKey,
-    { name: 'AES-CBC', length: 256 },
+    { name: 'AES-GCM', length: 256 },
     false,
     ['decrypt'],
   );
 
   const plaintext = await crypto.subtle.decrypt(
-    { name: 'AES-CBC', iv },
+    { name: 'AES-GCM', iv },
     aesKey,
     ciphertext,
   );

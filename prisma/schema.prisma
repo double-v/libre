@@ -12,6 +12,7 @@ model User {
   email        String   @unique
   displayName  String
   passwordHash String?
+  role         String   @default("user")
   createdAt    DateTime @default(now())
   isVerified   Boolean  @default(false)
   isBanned     Boolean  @default(false)

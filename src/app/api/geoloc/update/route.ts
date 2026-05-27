@@ -28,10 +28,12 @@ export async function POST(request: Request) {
     const { latitude, longitude } = parsed.data;
     const userId = session.user.id;
 
-    // Update the user's profile with their raw last-known position
+    // Store fuzzed coordinates — never persist raw GPS
+    const fuzzed = fuzzLocation(latitude, longitude);
+
     await prisma.profile.upsert({
       where: { userId },
-      update: { lastKnownLat: latitude, lastKnownLng: longitude },
+      update: { lastKnownLat: fuzzed.lat, lastKnownLng: fuzzed.lng },
       create: {
         userId,
         bio: '',
@@ -40,8 +42,8 @@ export async function POST(request: Request) {
         orientation: [],
         relationshipType: [],
         interests: [],
-        lastKnownLat: latitude,
-        lastKnownLng: longitude,
+        lastKnownLat: fuzzed.lat,
+        lastKnownLng: fuzzed.lng,
       },
     });
 

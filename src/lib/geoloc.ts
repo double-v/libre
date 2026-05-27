@@ -2,8 +2,10 @@ const EARTH_RADIUS_M = 6371000;
 const FUZZ_RADIUS_M = 100;
 
 export function fuzzLocation(lat: number, lng: number): { lat: number; lng: number } {
-  const angle = Math.random() * 2 * Math.PI;
-  const distance = Math.random() * FUZZ_RADIUS_M;
+  const bytes = new Uint8Array(2);
+  crypto.getRandomValues(bytes);
+  const angle = (bytes[0] / 256) * 2 * Math.PI;
+  const distance = (bytes[1] / 256) * FUZZ_RADIUS_M;
   const deltaLat = (distance * Math.cos(angle)) / EARTH_RADIUS_M;
   const deltaLng = (distance * Math.sin(angle)) / (EARTH_RADIUS_M * Math.cos(lat * (Math.PI / 180)));
 

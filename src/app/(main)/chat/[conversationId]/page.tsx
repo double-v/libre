@@ -96,6 +96,10 @@ export default function ChatConversationPage() {
 
     const pusher = new Pusher(pusherKey, {
       cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'eu',
+      channelAuthorization: {
+        endpoint: '/api/pusher/auth',
+        transport: 'ajax',
+      },
     });
 
     const channelName = `private-chat-${conversationId}`;
@@ -170,6 +174,11 @@ export default function ChatConversationPage() {
       const myPrivateKey = ensurePrivateKey();
       if (otherPublicKey && myPrivateKey) {
         content = await encryptMessage(text, otherPublicKey, myPrivateKey);
+      } else {
+        // Block sending without E2E encryption
+        setSending(false);
+        setShowPasswordPrompt(true);
+        return;
       }
 
       const res = await fetch(`/api/chat/${conversationId}/messages`, {

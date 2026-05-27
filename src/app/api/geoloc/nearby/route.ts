@@ -86,7 +86,8 @@ export async function GET() {
           interests: otherProfile.interests,
           photos: otherProfile.photos,
         },
-        distanceKm: Math.round(distanceKm * 10) / 10,
+        // Coarse distance buckets to prevent trilateration
+        distanceKm: distanceKm < 1 ? 1 : Math.round(distanceKm),
       });
     }
 
