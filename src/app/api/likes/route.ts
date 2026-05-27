@@ -120,7 +120,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Like error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Une erreur est survenue, veuillez réessayer' },
       { status: 500 },
     );
   }

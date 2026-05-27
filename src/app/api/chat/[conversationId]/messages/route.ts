@@ -65,7 +65,7 @@ export async function GET(
   } catch (error) {
     console.error('Messages list error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Une erreur est survenue, veuillez réessayer' },
       { status: 500 },
     );
   }
@@ -124,7 +124,7 @@ export async function POST(
   } catch (error) {
     console.error('Message create error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Une erreur est survenue, veuillez réessayer' },
       { status: 500 },
     );
   }

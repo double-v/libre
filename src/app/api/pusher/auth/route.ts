@@ -45,6 +45,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Pusher auth error:', error);
-    return new NextResponse('Internal server error', { status: 500 });
+    return new NextResponse('Une erreur est survenue', { status: 500 });
   }
 }

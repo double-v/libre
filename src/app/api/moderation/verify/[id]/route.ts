@@ -64,7 +64,7 @@ export async function PUT(
   } catch (error) {
     console.error('Verification review error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Une erreur est survenue, veuillez réessayer' },
       { status: 500 },
     );
   }

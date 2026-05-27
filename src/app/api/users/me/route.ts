@@ -19,7 +19,7 @@ export async function DELETE() {
   } catch (error) {
     console.error('Account deletion error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Une erreur est survenue, veuillez réessayer' },
       { status: 500 },
     );
   }

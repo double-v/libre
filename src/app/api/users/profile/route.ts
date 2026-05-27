@@ -24,7 +24,7 @@ export async function GET() {
   } catch (error) {
     console.error('Profile fetch error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Une erreur est survenue, veuillez réessayer' },
       { status: 500 },
     );
   }
@@ -76,7 +76,7 @@ export async function PUT(request: Request) {
   } catch (error) {
     console.error('Profile update error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Une erreur est survenue, veuillez réessayer' },
       { status: 500 },
     );
   }

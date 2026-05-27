@@ -62,7 +62,7 @@ export async function GET(
   } catch (error) {
     console.error('Conversation fetch error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Une erreur est survenue, veuillez réessayer' },
       { status: 500 },
     );
   }
