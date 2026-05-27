@@ -1,8 +1,41 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
+export const metadata: Metadata = {
+  title: 'Libre — Rencontre libre et gratuite',
+  description: 'Application de rencontre gratuite, sans abonnement ni revente de données. Croisez des célibataires près de chez vous. Notre but, c\'est que vous quittiez l\'appli.',
+  alternates: { canonical: 'https://libre.rencontres.app' },
+};
+
 export default function Home() {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Libre',
+    applicationCategory: 'LifestyleApplication',
+    operatingSystem: 'Web',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'EUR',
+    },
+    description: 'Application de rencontre gratuite, sans abonnement ni revente de données.',
+    featureList: [
+      'Rencontre par géolocalisation',
+      'Messages chiffrés de bout en bout',
+      'Gratuit sans abonnement',
+      'Badge vérifié',
+      'Modération communautaire',
+    ],
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* Skip to content link for accessibility */}
       <a
         href="#main-content"
