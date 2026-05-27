@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth';
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,10 +13,8 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Moderator check: for now, any authenticated user can review
-    // In production, add a role/permission check here
     const reviewerId = session.user.id;
-    const { id } = params;
+    const { id } = await params;
 
     const body = await request.json();
     const { status } = body;

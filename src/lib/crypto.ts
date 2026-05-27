@@ -30,7 +30,7 @@ function arrayBufferToString(buffer: ArrayBuffer): string {
 }
 
 function stringToArrayBuffer(str: string): ArrayBuffer {
-  return new TextEncoder().encode(str);
+  return new TextEncoder().encode(str).buffer as ArrayBuffer;
 }
 
 // ─── Key Generation ─────────────────────────────────────────────────────────

@@ -42,7 +42,6 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
-    googleSiteVerification: 'PLACEHOLDER_ADD_YOUR_CODE',
   },
   alternates: {
     canonical: 'https://libre.rencontres.app',

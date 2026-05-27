@@ -68,7 +68,7 @@ export async function PUT(request: Request) {
     const profile = await prisma.profile.upsert({
       where: { userId: session.user.id },
       update: updateData,
-      create: createData,
+      create: createData as never,
     });
 
     return NextResponse.json({ profile }, { status: 200 });
