@@ -99,7 +99,7 @@ export default function MatchesPage() {
             {match.conversationId ? (
               <Link
                 href={`/chat/${match.conversationId}`}
-                className="mt-3 block w-full rounded-full bg-black py-2 text-center text-sm font-medium text-white transition-colors hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                className="mt-3 block w-full rounded-full bg-terracotta py-2 text-center text-sm font-medium text-white transition-colors hover:bg-coral-dark dark:bg-white dark:text-black dark:hover:bg-gray-200"
               >
                 Ouvrir le chat
               </Link>

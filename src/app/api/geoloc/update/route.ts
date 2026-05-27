@@ -36,12 +36,6 @@ export async function POST(request: Request) {
       update: { lastKnownLat: fuzzed.lat, lastKnownLng: fuzzed.lng },
       create: {
         userId,
-        bio: '',
-        birthDate: new Date('2000-01-01'),
-        genderIdentity: 'unspecified',
-        orientation: [],
-        relationshipType: [],
-        interests: [],
         lastKnownLat: fuzzed.lat,
         lastKnownLng: fuzzed.lng,
       },

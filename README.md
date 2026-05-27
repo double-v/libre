@@ -15,22 +15,38 @@ Application de rencontre gratuite, open source, sans abonnement ni revente de do
 - **Croisements** — Découvrez les célibataires que vous croisez IRL
 - **À proximité** — Voyez qui est proche de vous en temps réel
 - **Match mutuel** — Likez, si c'est réciproque le chat s'ouvre
-- **Chat E2E** — Messages chiffrés de bout en bout, le serveur ne lit jamais vos messages
+- **Chat E2E** — Messages chiffrés de bout en bout (ECDH P-256 + AES-256-GCM), le serveur ne lit jamais vos messages
+- **Profil riche** — Bio, centres d'intérêt (5 catégories), pratiques & préférences (optionnel), orientation, liens sociaux
+- **Identité de genre inclusive** — Femme, Homme, Non-binaire, Genderfluid, Agender, Bigender, Pangenre, Queer, En questionnement, Autre, ou pas de précision
 - **Badge vérifié** — Selfie vérifié par la communauté
 - **Modération communautaire** — Signalement, blocage, auto-unmatch
 - **Mode invisible** — Voyez les croisements sans apparaître dans les leurs
+- **Pédagogie vie privée** — Conseils intégrés dans l'UX : pseudo encouragé, explications sur le chiffrement, rappels de prudence
 - **PWA** — Installable sur mobile, pas besoin de store
+
+## Sécurité
+
+- Chiffrement E2E : ECDH (P-256) + AES-256-GCM (authentifié)
+- GPS flouté côté client avant envoi (`crypto.getRandomValues`)
+- Distances arrondies (buckets anti-trilatération)
+- Headers de sécurité : CSP, HSTS preload, X-Frame-Options DENY, Permissions-Policy
+- Rate limiting par endpoint (auth, messages, géoloc, likes, signalements)
+- Validation des clés publiques ECDH côté serveur
+- Whitelist des champs modifiables (pas de mass assignment)
+- OAuth conditionnel (boutons affichés uniquement si configurés)
 
 ## Stack technique
 
 - **Frontend** : Next.js 15 (App Router) + TypeScript + Tailwind CSS
 - **Backend** : Next.js API Routes (monolithe)
-- **Base de données** : PostgreSQL + PostGIS
-- **Temps réel** : Pusher
+- **Base de données** : PostgreSQL + PostGIS sur Neon (driver adapter Prisma 7)
+- **Auth** : NextAuth.js (JWT strategy, custom Prisma adapter)
+- **Temps réel** : Pusher (canaux privés authentifiés)
 - **Stockage** : Cloudflare R2
-- **Chiffrement** : ECDH (P-256) + AES-256-CBC
+- **Chiffrement** : ECDH (P-256) + AES-256-GCM
 - **Tests** : Vitest + Testing Library + Playwright
 - **CI** : GitHub Actions
+- **Déploiement** : Vercel + Neon
 
 ## Développement local
 

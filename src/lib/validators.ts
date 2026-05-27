@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { GENDER_OPTIONS } from '@/lib/taxonomy';
 
 const VALID_REPORT_REASONS = ['harassment', 'spam', 'fake', 'inappropriate', 'other'] as const;
 
@@ -13,19 +14,29 @@ function isAtLeast18(birthDateStr: string): boolean {
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
+const VALID_GENDER_VALUES = GENDER_OPTIONS.map(g => g.value);
+
+function normalizeGenderIdentity(v: string | undefined): string | undefined {
+  if (v === undefined) return undefined;
+  if (v === '') return '';
+  const lower = v.toLowerCase();
+  if ((VALID_GENDER_VALUES as string[]).includes(lower)) return lower;
+  return 'autre';
+}
+
 export const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().regex(
     passwordRegex,
     'Password must be at least 8 characters with uppercase, lowercase, and a digit',
   ),
-  displayName: z.string().min(1).max(50),
+  displayName: z.string().min(1).max(50).transform((s) => s.trim()),
 });
 
 export const profileUpdateSchema = z.object({
   bio: z.string().max(500).optional(),
   birthDate: z.string().datetime().refine(isAtLeast18, 'You must be at least 18 years old').optional(),
-  genderIdentity: z.string().min(1).max(50).optional(),
+  genderIdentity: z.string().max(50).optional().transform(normalizeGenderIdentity),
   orientation: z.array(z.string().max(30)).max(10).optional(),
   relationshipType: z.array(z.string().max(30)).max(10).optional(),
   interests: z.array(z.string().max(30)).max(20).optional(),

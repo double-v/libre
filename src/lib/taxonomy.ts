@@ -3,6 +3,22 @@ export interface TagCategory {
   items: string[];
 }
 
+// ─── Identité de genre (choix unique) ────────────────────────────────────────
+
+export const GENDER_OPTIONS = [
+  { value: 'femme', label: 'Femme' },
+  { value: 'homme', label: 'Homme' },
+  { value: 'non-binaire', label: 'Non-binaire' },
+  { value: 'genderfluid', label: 'Genderfluid' },
+  { value: 'agender', label: 'Agender' },
+  { value: 'bigender', label: 'Bigender' },
+  { value: 'pangenre', label: 'Pangenre' },
+  { value: 'queer', label: 'Queer' },
+  { value: 'questioning', label: 'En questionnement' },
+  { value: 'autre', label: 'Autre' },
+  { value: '', label: 'Je ne souhaite pas le préciser' },
+] as const;
+
 // ─── Centres d'intérêt ────────────────────────────────────────────────────────
 
 export const INTEREST_CATEGORIES: TagCategory[] = [

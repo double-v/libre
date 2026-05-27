@@ -54,7 +54,7 @@ describe('Validation schemas', () => {
       const result = profileUpdateSchema.safeParse({
         bio: 'Hello!',
         birthDate: '1995-06-15T00:00:00Z',
-        genderIdentity: 'non-binary',
+        genderIdentity: 'non-binaire',
         orientation: ['pansexuel'],
         relationshipType: ['poly'],
         interests: ['musique', 'rando'],
@@ -69,7 +69,7 @@ describe('Validation schemas', () => {
       const result = profileUpdateSchema.safeParse({
         bio: 'Hello!',
         birthDate: '1995-06-15T00:00:00Z',
-        genderIdentity: 'non-binary',
+        genderIdentity: 'non-binaire',
         orientation: [],
         relationshipType: [],
         interests: [],
@@ -84,7 +84,7 @@ describe('Validation schemas', () => {
       const result = profileUpdateSchema.safeParse({
         bio: 'a'.repeat(501),
         birthDate: '1995-06-15T00:00:00Z',
-        genderIdentity: 'non-binary',
+        genderIdentity: 'non-binaire',
         orientation: [],
         relationshipType: [],
         interests: [],

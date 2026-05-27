@@ -267,7 +267,7 @@ export default function ChatConversationPage() {
 
       {/* Password prompt modal */}
       {showPasswordPrompt && (
-        <div className="mx-4 mt-2 rounded-lg border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-800 dark:bg-indigo-950/50">
+        <div className="mx-4 mt-2 rounded-lg border border-blush bg-blush p-4 dark:border-coral-dark dark:bg-coral-dark/50">
           <p className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
             Debloquez votre cle privee pour envoyer des messages chiffres
           </p>
@@ -277,7 +277,7 @@ export default function ChatConversationPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Mot de passe"
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-coral focus:outline-none focus:ring-coral dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
             {passwordError && (
               <p className="text-xs text-red-600 dark:text-red-400">{passwordError}</p>
@@ -285,7 +285,7 @@ export default function ChatConversationPage() {
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                className="rounded-md bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-terracotta"
               >
                 Debloquer
               </button>
@@ -374,12 +374,12 @@ export default function ChatConversationPage() {
             placeholder="Message..."
             maxLength={1000}
             disabled={sending}
-            className="flex-1 rounded-full border border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="flex-1 rounded-full border border-gray-300 px-4 py-2 text-sm focus:border-coral focus:outline-none focus:ring-coral disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           />
           <button
             type="submit"
             disabled={sending || !inputText.trim()}
-            className="rounded-full bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-300"
+            className="rounded-full bg-terracotta px-4 py-2 text-sm font-medium text-white hover:bg-coral-dark disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-300"
           >
             Envoyer
           </button>

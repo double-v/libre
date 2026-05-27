@@ -30,14 +30,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 aria-current={isActive ? 'page' : undefined}
                 className={`flex flex-col items-center gap-0.5 px-3 py-2 text-xs font-medium transition-colors ${
                   isActive
-                    ? 'text-indigo-600 dark:text-indigo-400'
+                    ? 'text-coral dark:text-coral-light'
                     : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
                 }`}
               >
                 <span
                   className={`h-5 w-5 rounded-full border-2 transition-colors ${
                     isActive
-                      ? 'border-indigo-600 bg-indigo-600 dark:border-indigo-400 dark:bg-indigo-400'
+                      ? 'border-coral bg-coral dark:border-coral-light dark:bg-coral-light'
                       : 'border-gray-400 dark:border-gray-600'
                   }`}
                 />

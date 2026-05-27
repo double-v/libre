@@ -85,7 +85,7 @@ export default function Home() {
         {/* Hero */}
         <section className="flex flex-col items-center justify-center px-6 pt-16 pb-12 text-center">
           <h1 className="mb-4 text-5xl font-bold tracking-tight sm:text-6xl">
-            Libre
+            <span className="text-coral">Libre</span>
           </h1>
           <p className="mb-2 max-w-md text-xl font-medium text-gray-800 sm:text-2xl">
             Notre but, c&apos;est que vous quittiez l&apos;appli.
@@ -99,7 +99,7 @@ export default function Home() {
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
               href="/login"
-              className="rounded-full bg-black px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+              className="rounded-full bg-terracotta px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-coral-dark focus:outline-none focus:ring-2 focus:ring-terracotta focus:ring-offset-2"
             >
               Se connecter
             </Link>
@@ -113,7 +113,7 @@ export default function Home() {
         </section>
 
         {/* Chiffres */}
-        <section className="border-t border-gray-100 bg-gray-50 px-6 py-12">
+        <section className="border-t border-gray-100 bg-blush px-6 py-12">
           <div className="mx-auto grid max-w-2xl gap-8 sm:grid-cols-3">
             {facts.map((fact) => (
               <div key={fact.number} className="text-center">
@@ -200,7 +200,7 @@ export default function Home() {
           </p>
           <Link
             href="/register"
-            className="rounded-full bg-black px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+            className="rounded-full bg-terracotta px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-coral-dark focus:outline-none focus:ring-2 focus:ring-terracotta focus:ring-offset-2"
           >
             Cr&eacute;er un compte
           </Link>

@@ -8,7 +8,7 @@ import TagButton from '@/components/TagButton';
 import TagSelector from '@/components/TagSelector';
 import PrivacyTip from '@/components/PrivacyTip';
 import ProfileCompleteness from '@/components/ProfileCompleteness';
-import { INTEREST_CATEGORIES, PRACTICE_CATEGORIES } from '@/lib/taxonomy';
+import { INTEREST_CATEGORIES, PRACTICE_CATEGORIES, GENDER_OPTIONS } from '@/lib/taxonomy';
 
 interface ProfileData {
   userId: string;
@@ -56,7 +56,7 @@ function EditActions({ onSave, onCancel, saving }: { onSave: () => void; onCance
         type="button"
         onClick={onSave}
         disabled={saving}
-        className="rounded-full bg-black px-4 py-1.5 text-xs font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+        className="rounded-full bg-terracotta px-4 py-1.5 text-xs font-medium text-white hover:bg-coral-dark disabled:opacity-50"
       >
         {saving ? 'Enregistrement...' : 'Enregistrer'}
       </button>
@@ -220,7 +220,16 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="mb-4 text-2xl font-bold">Profil</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Profil</h1>
+        <button
+          type="button"
+          onClick={() => { signOut({ redirect: false }); router.push('/login'); }}
+          className="rounded-full border border-gray-300 px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+        >
+          Déconnexion
+        </button>
+      </div>
 
       {error && (
         <div role="alert" className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
@@ -241,7 +250,7 @@ export default function ProfilePage() {
           <p className="text-sm text-gray-600">Remplissez votre profil pour commencer à rencontrer des personnes.</p>
           <p className="text-sm text-gray-600">C&apos;est optionnel — vous pouvez toujours compléter plus tard.</p>
           {['identity', 'bio', 'orientation', 'interests', 'practices', 'photos', 'search', 'social'].map((s) => (
-            <button key={s} onClick={() => startEdit(s)} className="text-sm text-indigo-600 underline">
+            <button key={s} onClick={() => startEdit(s)} className="text-sm text-coral underline">
               Commencer par {s === 'identity' ? 'votre identité' : s === 'bio' ? 'votre bio' : s === 'orientation' ? 'votre orientation' : s === 'interests' ? 'vos centres d\'intérêt' : s === 'practices' ? 'vos pratiques' : s === 'photos' ? 'vos photos' : s === 'search' ? 'vos préférences de recherche' : 'vos liens sociaux'}
             </button>
           ))}
@@ -261,14 +270,18 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600">Genre</label>
-                  <input type="text" maxLength={50} value={editGenderIdentity} onChange={(e) => setEditGenderIdentity(e.target.value)} placeholder="Femme, Homme, Non-binaire..." className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-black focus:outline-none" />
+                  <select value={editGenderIdentity} onChange={(e) => setEditGenderIdentity(e.target.value)} className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-black focus:outline-none">
+                    {GENDER_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
                 </div>
                 <EditActions saving={saving} onSave={() => saveSection({ birthDate: editBirthDate ? new Date(editBirthDate).toISOString() : undefined, genderIdentity: editGenderIdentity || undefined })} onCancel={() => setEditingSection(null)} />
               </div>
             ) : (
               <dl className="mt-2 space-y-1 text-sm">
                 <div><dt className="text-xs text-gray-400">Âge</dt><dd>{age ?? <span className="italic text-gray-400">Non renseigné</span>} ans</dd></div>
-                <div><dt className="text-xs text-gray-400">Genre</dt><dd>{profile.genderIdentity || <span className="italic text-gray-400">Non renseigné</span>}</dd></div>
+                <div><dt className="text-xs text-gray-400">Genre</dt><dd>{GENDER_OPTIONS.find(g => g.value === profile.genderIdentity)?.label || profile.genderIdentity || <span className="italic text-gray-400">Non renseigné</span>}</dd></div>
               </dl>
             )}
           </section>
@@ -445,7 +458,7 @@ export default function ProfilePage() {
               <div className="mt-3 space-y-3">
                 <p className="text-sm text-gray-600">Générez une paire de clés pour le chiffrement de bout en bout de vos messages.</p>
                 <input type="password" value={keyPassword} onChange={(e) => setKeyPassword(e.target.value)} placeholder="Mot de passe pour protéger la clé" className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none" />
-                <button type="button" onClick={handleGenerateKeys} className="rounded-full bg-black px-4 py-1.5 text-xs font-medium text-white hover:bg-gray-800">Générer les clés</button>
+                <button type="button" onClick={handleGenerateKeys} className="rounded-full bg-terracotta px-4 py-1.5 text-xs font-medium text-white hover:bg-coral-dark">Générer les clés</button>
                 {keyMessage && <p className="text-sm text-gray-600">{keyMessage}</p>}
               </div>
             )}

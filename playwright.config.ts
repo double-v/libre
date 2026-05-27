@@ -12,8 +12,32 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile', use: { ...devices['Pixel 5'] } },
+    // Auth setup — runs first, creates tests/e2e/auth.json
+    {
+      name: 'setup',
+      testMatch: /setup-auth\.ts/,
+    },
+    // Unauthenticated tests (no storageState needed)
+    {
+      name: 'public',
+      testMatch: /(signup|auth)\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+      dependencies: ['setup'],
+    },
+    // Authenticated tests
+    {
+      name: 'authenticated',
+      testMatch: /(profile|settings|match-flow|chat)\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'], storageState: 'tests/e2e/auth.json' },
+      dependencies: ['setup'],
+    },
+    // Mobile view
+    {
+      name: 'mobile',
+      testMatch: /(signup|auth)\.spec\.ts/,
+      use: { ...devices['Pixel 5'] },
+      dependencies: ['setup'],
+    },
   ],
   webServer: {
     command: 'npm run dev',

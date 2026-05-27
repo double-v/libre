@@ -45,8 +45,8 @@ model User {
 model Profile {
   userId           String   @id @db.Uuid
   bio              String   @default("")
-  birthDate        DateTime
-  genderIdentity   String
+  birthDate        DateTime?
+  genderIdentity   String   @default("")
   orientation      String[]
   relationshipType String[]
   interests        String[]

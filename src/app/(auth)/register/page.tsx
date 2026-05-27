@@ -28,7 +28,12 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || data.details ? Object.values(data.details).flat().join(' ') : 'Erreur lors de l\'inscription');
+        const details = data.details as Record<string, string[]> | undefined;
+        if (details) {
+          setError(Object.values(details).flat().join(' '));
+        } else {
+          setError(data.error || 'Erreur lors de l\'inscription');
+        }
         return;
       }
 
@@ -64,7 +69,7 @@ export default function RegisterPage() {
             required
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-coral focus:outline-none focus:ring-coral"
             placeholder="Un pseudo qui vous ressemble"
           />
           <PrivacyTip tip="Un pseudo, c'est plus safe qu'un vrai nom. Vos matches ne verront que ça." />
@@ -80,7 +85,7 @@ export default function RegisterPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-coral focus:outline-none focus:ring-coral"
             placeholder="vous@exemple.com"
           />
         </div>
@@ -96,7 +101,7 @@ export default function RegisterPage() {
             aria-describedby="password-requirements"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-coral focus:outline-none focus:ring-coral"
             placeholder="Minimum 8 caractères"
           />
           <p id="password-requirements" className="mt-1 text-xs text-gray-500">8 caractères min, avec majuscule, minuscule et chiffre</p>
@@ -105,7 +110,7 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+          className="w-full rounded-md bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-terracotta focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2 disabled:opacity-50"
         >
           {loading ? 'Création…' : 'Créer mon compte'}
         </button>
@@ -113,7 +118,7 @@ export default function RegisterPage() {
 
       <p className="text-center text-sm text-gray-600">
         Déjà un compte ?{' '}
-        <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+        <Link href="/login" className="font-medium text-coral hover:text-terracotta">
           Se connecter
         </Link>
       </p>

@@ -16,8 +16,9 @@ export async function POST(request: Request) {
     }
 
     const { email, password, displayName } = parsed.data;
+    const normalizedEmail = email.toLowerCase();
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existingUser) {
       return NextResponse.json(
         { error: 'Email already registered' },
@@ -29,8 +30,8 @@ export async function POST(request: Request) {
 
     const user = await prisma.user.create({
       data: {
-        email,
-        displayName,
+        email: normalizedEmail,
+        displayName: displayName.trim(),
         passwordHash,
       },
       select: {

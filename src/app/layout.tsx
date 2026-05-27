@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const viewport: Viewport = {
-  themeColor: '#000000',
+  themeColor: '#E8634A',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,

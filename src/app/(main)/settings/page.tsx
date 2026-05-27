@@ -125,8 +125,8 @@ export default function SettingsPage() {
               aria-checked={profile?.invisibleMode ?? false}
               disabled={invisibleToggling || !profile}
               onClick={handleToggleInvisible}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 ${
-                profile?.invisibleMode ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2 disabled:opacity-50 ${
+                profile?.invisibleMode ? 'bg-coral' : 'bg-gray-200 dark:bg-gray-600'
               }`}
             >
               <span
@@ -157,7 +157,7 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={() => router.push('/verify')}
-                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                className="rounded-md bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-terracotta focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2"
               >
                 Obtenir le badge
               </button>

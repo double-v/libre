@@ -15,7 +15,7 @@ export default function CGUPage() {
         <p className="mt-1 text-sm text-gray-500">Derni&egrave;re mise &agrave; jour : mai 2026</p>
       </div>
 
-      <Link href="/" className="inline-block text-sm font-medium text-indigo-600 hover:text-indigo-500">
+      <Link href="/" className="inline-block text-sm font-medium text-coral hover:text-terracotta">
         &larr; Retour &agrave; l&apos;accueil
       </Link>
 
@@ -101,7 +101,7 @@ export default function CGUPage() {
       </section>
 
       <div className="border-t border-gray-200 pt-6 text-center">
-        <Link href="/" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+        <Link href="/" className="text-sm font-medium text-coral hover:text-terracotta">
           &larr; Retour &agrave; l&apos;accueil
         </Link>
       </div>
