@@ -47,12 +47,12 @@ export default function RegisterPage() {
       </div>
 
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+        <div role="alert" aria-live="polite" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} aria-label="Formulaire d'inscription" className="space-y-4">
         <div>
           <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
             Nom affiché
@@ -91,11 +91,13 @@ export default function RegisterPage() {
             id="password"
             type="password"
             required
+            aria-describedby="password-requirements"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
             placeholder="Minimum 8 caractères"
           />
+          <p id="password-requirements" className="mt-1 text-xs text-gray-500">Minimum 8 caractères</p>
         </div>
 
         <button

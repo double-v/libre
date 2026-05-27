@@ -37,7 +37,7 @@ export default function ProfileCard({
   const distance = formatDistance(distanceM, distanceKm);
 
   return (
-    <div className="rounded-xl border border-gray-200 p-4 shadow-sm dark:border-gray-700">
+    <div role="group" aria-label={`Profil de ${displayName}`} className="rounded-xl border border-gray-200 p-4 shadow-sm dark:border-gray-700">
       <div className="flex items-start gap-3">
         {photos && photos.length > 0 ? (
           <img
@@ -71,6 +71,7 @@ export default function ProfileCard({
         <button
           type="button"
           onClick={onPass}
+          aria-label={`Passer ${displayName}`}
           className="flex-1 rounded-full border border-gray-300 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
         >
           Passer
@@ -78,6 +79,7 @@ export default function ProfileCard({
         <button
           type="button"
           onClick={onLike}
+          aria-label={`Like ${displayName}`}
           className="flex-1 rounded-full bg-black py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
         >
           Like

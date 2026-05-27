@@ -316,7 +316,7 @@ export default function ChatConversationPage() {
       )}
 
       {/* Messages list */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+      <div aria-live="polite" aria-label="Messages de la conversation" className="flex-1 overflow-y-auto p-4 space-y-2">
         {messages.length === 0 && (
           <p className="text-center text-sm text-gray-400">
             Commencez la conversation !
@@ -355,8 +355,10 @@ export default function ChatConversationPage() {
 
       {/* Input area */}
       <div className="border-t border-gray-200 p-4 dark:border-gray-800">
-        <form onSubmit={handleSend} className="flex gap-2">
+        <form onSubmit={handleSend} aria-label="Envoyer un message" className="flex gap-2">
+          <label htmlFor="chat-input" className="sr-only">Votre message</label>
           <input
+            id="chat-input"
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}

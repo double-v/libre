@@ -87,7 +87,7 @@ function ProfileForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} aria-label="Formulaire du profil" className="space-y-5">
       <div>
         <label htmlFor="bio" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Bio
@@ -316,7 +316,7 @@ export default function ProfilePage() {
       <h1 className="mb-6 text-2xl font-bold">Profil</h1>
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-400">
+        <div role="alert" aria-live="polite" className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-400">
           {error}
         </div>
       )}
@@ -458,7 +458,7 @@ export default function ProfilePage() {
                 Supprimer mon compte
               </button>
             ) : (
-              <div className="space-y-3">
+              <div role="alert" className="space-y-3">
                 <p className="text-sm font-medium text-red-700 dark:text-red-400">
                   Etes-vous sûr ? Cette action est irréversible.
                 </p>

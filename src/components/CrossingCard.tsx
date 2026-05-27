@@ -51,7 +51,7 @@ export default function CrossingCard({
   const timeAgo = getTimeAgo(happenedAt);
 
   return (
-    <div className="rounded-xl border border-gray-200 p-4 shadow-sm dark:border-gray-700">
+    <div role="group" aria-label={`Croisement avec ${displayName}`} className="rounded-xl border border-gray-200 p-4 shadow-sm dark:border-gray-700">
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -76,6 +76,7 @@ export default function CrossingCard({
         <button
           type="button"
           onClick={onPass}
+          aria-label={`Passer ${displayName}`}
           className="flex-1 rounded-full border border-gray-300 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
         >
           Passer
@@ -83,6 +84,7 @@ export default function CrossingCard({
         <button
           type="button"
           onClick={onLike}
+          aria-label={`Like ${displayName}`}
           className="flex-1 rounded-full bg-black py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
         >
           Like

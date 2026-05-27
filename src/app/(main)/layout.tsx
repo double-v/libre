@@ -16,9 +16,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="flex min-h-screen flex-col">
-      <main className="flex-1 pb-16">{children}</main>
+      <main id="main-content" role="main" className="flex-1 pb-16">{children}</main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
+      <nav role="navigation" aria-label="Navigation principale" className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
         <div className="mx-auto flex max-w-lg items-center justify-around">
           {navItems.map((item) => {
             const isActive =
@@ -27,6 +27,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={isActive ? 'page' : undefined}
                 className={`flex flex-col items-center gap-0.5 px-3 py-2 text-xs font-medium transition-colors ${
                   isActive
                     ? 'text-indigo-600 dark:text-indigo-400'
