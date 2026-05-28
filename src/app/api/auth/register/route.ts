@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/db';
 import { registerSchema } from '@/lib/validators';
+import { normalizeEmail } from '@/lib/email';
 
 export async function POST(request: Request) {
   try {
@@ -16,12 +17,12 @@ export async function POST(request: Request) {
     }
 
     const { email, password, displayName } = parsed.data;
-    const normalizedEmail = email.toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
 
-    const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    const existingUser = await prisma.user.findUnique({ where: { normalizedEmail } });
     if (existingUser) {
       return NextResponse.json(
-        { error: 'Email already registered' },
+        { error: 'Email déjà utilisé' },
         { status: 409 },
       );
     }
@@ -30,7 +31,8 @@ export async function POST(request: Request) {
 
     const user = await prisma.user.create({
       data: {
-        email: normalizedEmail,
+        email: email.toLowerCase().trim(),
+        normalizedEmail,
         displayName: displayName.trim(),
         passwordHash,
       },

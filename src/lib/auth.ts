@@ -4,6 +4,7 @@ import GitHubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/db';
+import { normalizeEmail } from '@/lib/email';
 
 // ---------------------------------------------------------------------------
 // Custom adapter – maps our Prisma 7 User model (no emailVerified / image)
@@ -111,8 +112,9 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        const normalizedInput = normalizeEmail(credentials.email);
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase() },
+          where: { normalizedEmail: normalizedInput },
         });
 
         if (!user || !user.passwordHash) {
