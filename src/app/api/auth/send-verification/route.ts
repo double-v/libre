@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { createVerificationToken } from '@/lib/verify-token';
+import { sendVerificationEmail } from '@/lib/email-send';
 import prisma from '@/lib/db';
 
 export async function POST() {
@@ -20,10 +21,8 @@ export async function POST() {
   }
 
   const token = await createVerificationToken(user.id, user.email);
-
-  // TODO: Send actual email. For now, log the verification URL.
   const verifyUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${token}`;
-  console.log(`[DEV] Verification URL for ${user.email}: ${verifyUrl}`);
+  await sendVerificationEmail(user.email, verifyUrl);
 
   return NextResponse.json({ message: 'Verification email sent' }, { status: 200 });
 }
