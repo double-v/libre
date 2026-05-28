@@ -21,6 +21,8 @@ export async function GET() {
           select: {
             id: true,
             displayName: true,
+            lastActive: true,
+            isVerified: true,
             profile: {
               select: {
                 bio: true,
@@ -36,6 +38,8 @@ export async function GET() {
           select: {
             id: true,
             displayName: true,
+            lastActive: true,
+            isVerified: true,
             profile: {
               select: {
                 bio: true,
@@ -62,6 +66,8 @@ export async function GET() {
         user: {
           id: otherUser.id,
           displayName: otherUser.displayName,
+          isVerified: otherUser.isVerified,
+          lastActive: otherUser.lastActive,
           profile: otherUser.profile,
         },
         conversationId: match.conversation?.id ?? null,

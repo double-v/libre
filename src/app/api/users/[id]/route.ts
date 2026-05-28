@@ -32,6 +32,7 @@ export async function GET(
       id: user.id,
       displayName: user.displayName,
       isVerified: user.isVerified,
+      lastActive: user.lastActive,
     };
 
     if (user.profile) {
