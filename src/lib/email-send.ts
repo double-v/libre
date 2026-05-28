@@ -1,23 +1,20 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-const FROM = process.env.EMAIL_FROM || 'Libre <noreply@getlibre.fr>';
+const FROM = process.env.EMAIL_FROM || 'Libre <noreply@on.resend.dev>';
 
-function getTransporter() {
-  const host = process.env.SMTP_HOST;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  if (!host || !user || !pass) return null;
-  return nodemailer.createTransport({ host, port: 465, secure: true, auth: { user, pass } });
+function getResend(): Resend | null {
+  if (!process.env.RESEND_API_KEY) return null;
+  return new Resend(process.env.RESEND_API_KEY);
 }
 
 export async function sendVerificationEmail(to: string, verifyUrl: string) {
-  const transporter = getTransporter();
-  if (!transporter) {
+  const resend = getResend();
+  if (!resend) {
     console.log(`[DEV] Verification URL for ${to}: ${verifyUrl}`);
     return;
   }
 
-  await transporter.sendMail({
+  const { error } = await resend.emails.send({
     from: FROM,
     to,
     subject: 'Vérifiez votre email — Libre',
@@ -41,4 +38,9 @@ export async function sendVerificationEmail(to: string, verifyUrl: string) {
       </div>
     `,
   });
+
+  if (error) {
+    console.error('Failed to send verification email:', error);
+    throw error;
+  }
 }
