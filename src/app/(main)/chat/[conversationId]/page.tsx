@@ -283,7 +283,7 @@ export default function ChatConversationPage() {
       {/* Messages list */}
       <div aria-live="polite" aria-label="Messages de la conversation" className="flex-1 overflow-y-auto p-4 space-y-2">
         {messages.length === 0 && (
-          <p className="text-center text-sm text-gray-400">
+          <p className="text-center text-sm text-gray-500 dark:text-gray-400">
             Commencez la conversation !
           </p>
         )}

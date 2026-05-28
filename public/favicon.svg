@@ -1,4 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect x="0" y="0" width="512" height="512" rx="92" ry="92" fill="#C4503A"/>
-  <text x="256" y="290" font-family="sans-serif" font-size="300" font-weight="bold" fill="#ffffff" text-anchor="middle" dominant-baseline="central">L</text>
+  <rect width="512" height="512" rx="96" fill="#E8634A"/>
+  <g fill="#fff">
+    <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(-60 256 188)"/>
+    <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(-30 256 188)"/>
+    <rect x="236" y="42" width="40" height="120" rx="20"/>
+    <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(30 256 188)"/>
+    <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(60 256 188)"/>
+    <path d="M256,195 C256,170 218,130 180,130 C130,130 105,175 105,215 C105,300 256,375 256,390 C256,375 407,300 407,215 C407,175 382,130 332,130 C294,130 256,170 256,195 Z"/>
+  </g>
 </svg>

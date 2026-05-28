@@ -41,7 +41,7 @@ export default function TagSelector({
     <div className="space-y-4">
       {categories.map((category) => (
         <div key={category.name}>
-          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
             {category.name}
           </p>
           <div className="flex flex-wrap gap-1.5">

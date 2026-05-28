@@ -82,7 +82,7 @@ export default function FeedbackButton() {
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300"
                   aria-label="Fermer"
                 >
                   &times;

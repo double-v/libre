@@ -71,7 +71,7 @@ function EditActions({ onSave, onCancel, saving }: { onSave: () => void; onCance
 }
 
 function ChipList({ items, dark }: { items: string[]; dark?: boolean }) {
-  if (items.length === 0) return <span className="text-xs italic text-gray-400">Non renseigné</span>;
+  if (items.length === 0) return <span className="text-xs italic text-gray-500 dark:text-gray-400">Non renseigné</span>;
   return (
     <div className="flex flex-wrap gap-1">
       {items.map((item) => (
@@ -261,8 +261,8 @@ export default function ProfilePage() {
               </div>
             ) : (
               <dl className="mt-2 space-y-1 text-sm">
-                <div><dt className="text-xs text-gray-400">Âge</dt><dd>{age ?? <span className="italic text-gray-400">Non renseigné</span>} ans</dd></div>
-                <div><dt className="text-xs text-gray-400">Genre</dt><dd>{GENDER_OPTIONS.find(g => g.value === profile.genderIdentity)?.label || profile.genderIdentity || <span className="italic text-gray-400">Non renseigné</span>}</dd></div>
+                <div><dt className="text-xs text-gray-500 dark:text-gray-400">Âge</dt><dd>{age ?? <span className="italic text-gray-500 dark:text-gray-400">Non renseigné</span>} ans</dd></div>
+                <div><dt className="text-xs text-gray-500 dark:text-gray-400">Genre</dt><dd>{GENDER_OPTIONS.find(g => g.value === profile.genderIdentity)?.label || profile.genderIdentity || <span className="italic text-gray-500 dark:text-gray-400">Non renseigné</span>}</dd></div>
               </dl>
             )}
           </section>
@@ -273,11 +273,11 @@ export default function ProfilePage() {
             {editingSection === 'bio' ? (
               <div className="mt-3 space-y-3">
                 <textarea rows={3} maxLength={500} value={editBio} onChange={(e) => setEditBio(e.target.value)} placeholder="Parlez un peu de vous..." className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none" />
-                <p className="text-xs text-gray-400">{editBio.length}/500</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{editBio.length}/500</p>
                 <EditActions saving={saving} onSave={() => saveSection({ bio: editBio })} onCancel={() => setEditingSection(null)} />
               </div>
             ) : (
-              <p className="mt-2 text-sm text-gray-700">{profile.bio || <span className="italic text-gray-400">Non renseigné</span>}</p>
+              <p className="mt-2 text-sm text-gray-700">{profile.bio || <span className="italic text-gray-500 dark:text-gray-400">Non renseigné</span>}</p>
             )}
           </section>
 
@@ -287,7 +287,7 @@ export default function ProfilePage() {
             {editingSection === 'orientation' ? (
               <div className="mt-3 space-y-4">
                 <div>
-                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">Orientation</p>
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Orientation</p>
                   <div className="flex flex-wrap gap-1.5">
                     {ORIENTATION_OPTIONS.map((opt) => (
                       <TagButton key={opt} label={opt} selected={editOrientation.includes(opt)} onClick={() => setEditOrientation(editOrientation.includes(opt) ? editOrientation.filter((o) => o !== opt) : [...editOrientation, opt])} />
@@ -295,7 +295,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <div>
-                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">Type de relation</p>
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Type de relation</p>
                   <div className="flex flex-wrap gap-1.5">
                     {RELATIONSHIP_TYPE_OPTIONS.map((opt) => (
                       <TagButton key={opt} label={opt} selected={editRelationshipType.includes(opt)} onClick={() => setEditRelationshipType(editRelationshipType.includes(opt) ? editRelationshipType.filter((r) => r !== opt) : [...editRelationshipType, opt])} />
@@ -306,8 +306,8 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="mt-2 space-y-2">
-                <div><p className="text-xs text-gray-400">Orientation</p><ChipList items={profile.orientation} /></div>
-                <div><p className="text-xs text-gray-400">Type de relation</p><ChipList items={profile.relationshipType} /></div>
+                <div><p className="text-xs text-gray-500 dark:text-gray-400">Orientation</p><ChipList items={profile.orientation} /></div>
+                <div><p className="text-xs text-gray-500 dark:text-gray-400">Type de relation</p><ChipList items={profile.relationshipType} /></div>
               </div>
             )}
           </section>
@@ -367,7 +367,7 @@ export default function ProfilePage() {
               <div className="mt-2 flex gap-2 overflow-x-auto">
                 {profile.photos.length > 0 ? profile.photos.map((url, i) => (
                   <img key={i} src={url} alt={`Photo ${i + 1}`} className="h-20 w-20 shrink-0 rounded-lg object-cover" />
-                )) : <span className="text-xs italic text-gray-400">Non renseigné</span>}
+                )) : <span className="text-xs italic text-gray-500 dark:text-gray-400">Non renseigné</span>}
               </div>
             )}
           </section>
@@ -393,8 +393,8 @@ export default function ProfilePage() {
               </div>
             ) : (
               <dl className="mt-2 space-y-1 text-sm">
-                <div><dt className="text-xs text-gray-400">Tranche d&apos;âge</dt><dd>{profile.ageMin} – {profile.ageMax} ans</dd></div>
-                <div><dt className="text-xs text-gray-400">Distance max</dt><dd>{profile.maxDistanceKm} km</dd></div>
+                <div><dt className="text-xs text-gray-500 dark:text-gray-400">Tranche d&apos;âge</dt><dd>{profile.ageMin} – {profile.ageMax} ans</dd></div>
+                <div><dt className="text-xs text-gray-500 dark:text-gray-400">Distance max</dt><dd>{profile.maxDistanceKm} km</dd></div>
               </dl>
             )}
           </section>
@@ -425,7 +425,7 @@ export default function ProfilePage() {
               <div className="mt-2">
                 {Object.keys(profile.socialLinks || {}).length > 0
                   ? <div className="flex flex-wrap gap-1">{Object.keys(profile.socialLinks).map((p) => <span key={p} className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">{p}</span>)}</div>
-                  : <span className="text-xs italic text-gray-400">Non renseigné</span>}
+                  : <span className="text-xs italic text-gray-500 dark:text-gray-400">Non renseigné</span>}
               </div>
             )}
           </section>

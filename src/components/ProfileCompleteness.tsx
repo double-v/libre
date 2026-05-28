@@ -44,7 +44,7 @@ export default function ProfileCompleteness({ profile, onSuggestionClick }: Prof
         <p className="text-xs font-medium text-gray-600">
           Profil complété à {pct}%
         </p>
-        <span className="text-xs text-gray-400">{filled.length}/{CHECKS.length}</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">{filled.length}/{CHECKS.length}</span>
       </div>
       <div className="mb-2 h-1.5 w-full rounded-full bg-gray-200">
         <div

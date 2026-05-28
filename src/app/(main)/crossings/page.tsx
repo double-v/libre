@@ -100,7 +100,7 @@ export default function CrossingsPage() {
 
       {!error && crossings.length === 0 && (
         <p className="text-gray-600 dark:text-gray-400">
-          Aucun croisement pour le moment. Sortez un peu !
+          Aucun croisement pour le moment. Vos chemins se croiseront bientôt.
         </p>
       )}
 

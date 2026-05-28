@@ -122,7 +122,7 @@ export default function Home() {
                 </p>
                 <p className="mt-2 text-sm text-gray-600">{fact.label}</p>
                 {fact.source && (
-                  <p className="mt-1 text-xs text-gray-400">{fact.source}</p>
+                  <p className="mt-1 text-xs text-gray-500">{fact.source}</p>
                 )}
               </div>
             ))}
@@ -163,13 +163,13 @@ export default function Home() {
               profils, plus de croisements, plus de possibilit&eacute;s de contact.
             </p>
             <p className="mb-8 text-sm text-gray-300">
-              Le chat n&apos;est pas le produit. C&apos;est le pont vers la vraie vie. Une fois le
-              contact &eacute;tabli, on &eacute;change ses coordonn&eacute;es et on se voit.
+              Le chat n&apos;est pas le produit. C&apos;est le pont vers de vraies rencontres. Une fois le
+              contact &eacute;tabli, &agrave; vous de choisir comment aller plus loin.
             </p>
 
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
-                <p className="font-semibold">Croisements IRL</p>
+                <p className="font-semibold">Croisements en chemin</p>
                 <p className="text-xs text-gray-400">
                   D&eacute;couvrez les c&eacute;libataires que vous croisez au quotidien
                 </p>
@@ -207,7 +207,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-gray-100 px-6 py-6 text-center text-sm text-gray-400">
+      <footer className="border-t border-gray-100 px-6 py-6 text-center text-sm text-gray-500">
         <Link href="/cgu" className="hover:text-gray-600 hover:underline focus:outline-none focus:underline">
           Conditions g&eacute;n&eacute;rales d&apos;utilisation
         </Link>
