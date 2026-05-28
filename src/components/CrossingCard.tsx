@@ -1,6 +1,7 @@
 import VerificationBadge from '@/components/VerificationBadge';
 
 interface CrossingCardProps {
+  id: string;
   displayName: string;
   age?: number;
   isVerified: boolean;
@@ -9,6 +10,7 @@ interface CrossingCardProps {
   bio?: string;
   onLike: () => void;
   onPass: () => void;
+  onProfileClick?: (userId: string) => void;
 }
 
 function getTimeAgo(dateStr: string): string {
@@ -39,6 +41,7 @@ function formatDistance(meters: number): string {
 }
 
 export default function CrossingCard({
+  id,
   displayName,
   age,
   isVerified,
@@ -47,11 +50,12 @@ export default function CrossingCard({
   bio,
   onLike,
   onPass,
+  onProfileClick,
 }: CrossingCardProps) {
   const timeAgo = getTimeAgo(happenedAt);
 
   return (
-    <div role="group" aria-label={`Croisement avec ${displayName}`} className="rounded-xl border border-gray-200 p-4 shadow-sm dark:border-gray-700">
+    <div role="group" aria-label={`Croisement avec ${displayName}`} onClick={() => onProfileClick?.(id)} className={`rounded-xl border border-gray-200 p-4 shadow-sm dark:border-gray-700${onProfileClick ? ' cursor-pointer' : ''}`}>
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">

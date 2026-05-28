@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import ProfileCard from '@/components/ProfileCard';
+import ProfileModal from '@/components/ProfileModal';
 import DiscoverFilters from '@/components/DiscoverFilters';
 
 type Tab = 'online' | 'nearby' | 'all';
@@ -63,6 +64,7 @@ export default function DiscoverPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [passedIds, setPassedIds] = useState<Set<string>>(new Set());
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const fetchIdRef = useRef(0);
 
   const fetchPage = useCallback(
@@ -237,6 +239,7 @@ export default function DiscoverPage() {
               practices={user.practices}
               onLike={() => handleLike(user.userId)}
               onPass={() => handlePass(user.userId)}
+              onProfileClick={(id) => setSelectedUserId(id)}
             />
           ))}
 
@@ -252,6 +255,7 @@ export default function DiscoverPage() {
           )}
         </div>
       )}
+      <ProfileModal userId={selectedUserId ?? ''} open={!!selectedUserId} onClose={() => setSelectedUserId(null)} />
     </div>
   );
 }

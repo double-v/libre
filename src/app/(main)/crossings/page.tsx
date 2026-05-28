@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import CrossingCard from '@/components/CrossingCard';
+import ProfileModal from '@/components/ProfileModal';
 
 interface Crossing {
   id: string;
@@ -23,6 +24,7 @@ export default function CrossingsPage() {
   const [crossings, setCrossings] = useState<Crossing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const fetchCrossings = useCallback(async () => {
     try {
@@ -106,6 +108,7 @@ export default function CrossingsPage() {
         {crossings.map((crossing) => (
           <CrossingCard
             key={crossing.id}
+            id={crossing.id}
             displayName={crossing.displayName}
             isVerified={crossing.isVerified}
             distanceM={crossing.distanceM}
@@ -113,9 +116,11 @@ export default function CrossingsPage() {
             bio={crossing.profile.bio}
             onLike={() => handleLike(crossing.id)}
             onPass={() => handlePass(crossing.id)}
+            onProfileClick={(id) => setSelectedUserId(id)}
           />
         ))}
       </div>
+      <ProfileModal userId={selectedUserId ?? ''} open={!!selectedUserId} onClose={() => setSelectedUserId(null)} />
     </div>
   );
 }

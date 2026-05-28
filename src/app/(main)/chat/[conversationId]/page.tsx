@@ -6,6 +6,7 @@ import Pusher from 'pusher-js';
 import { encryptMessage, decryptMessage } from '@/lib/crypto';
 import { useEncryptedChat } from '@/hooks/useEncryptedChat';
 import ShareContactButton from '@/components/ShareContactButton';
+import ProfileModal from '@/components/ProfileModal';
 
 interface Message {
   id: string;
@@ -42,6 +43,7 @@ export default function ChatConversationPage() {
   const [error, setError] = useState('');
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const { privateKey, ready } = useEncryptedChat();
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -244,19 +246,22 @@ export default function ChatConversationPage() {
     <div className="flex h-[calc(100vh-4rem)] max-w-lg flex-col mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-gray-200 p-4 dark:border-gray-800">
-        {otherUser?.photos?.[0] ? (
-          <img src={otherUser.photos[0]} alt={otherUser.displayName} className="h-10 w-10 rounded-full object-cover" />
-        ) : (
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-300 text-sm font-bold dark:bg-gray-600">
-            {otherUser?.displayName?.[0] ?? '?'}
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <h1 className="truncate text-lg font-bold">{otherUser?.displayName ?? 'Utilisateur'}</h1>
-          {otherUser && (
-            <ShareContactButton conversationId={conversationId} onSend={handleShareContact} />
+        <div
+          className="flex items-center gap-3 cursor-pointer flex-1 min-w-0"
+          onClick={() => otherUser && setSelectedUserId(otherUser.id)}
+        >
+          {otherUser?.photos?.[0] ? (
+            <img src={otherUser.photos[0]} alt={otherUser.displayName} className="h-10 w-10 rounded-full object-cover" />
+          ) : (
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-300 text-sm font-bold dark:bg-gray-600">
+              {otherUser?.displayName?.[0] ?? '?'}
+            </div>
           )}
+          <h1 className="truncate text-lg font-bold">{otherUser?.displayName ?? 'Utilisateur'}</h1>
         </div>
+        {otherUser && (
+          <ShareContactButton conversationId={conversationId} onSend={handleShareContact} />
+        )}
       </div>
 
       {/* Error banner */}
@@ -336,6 +341,7 @@ export default function ChatConversationPage() {
           </button>
         </form>
       </div>
+      <ProfileModal userId={selectedUserId ?? ''} open={!!selectedUserId} onClose={() => setSelectedUserId(null)} />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import ProfileCard from '@/components/ProfileCard';
+import ProfileModal from '@/components/ProfileModal';
 
 interface NearbyUser {
   id: string;
@@ -24,6 +25,7 @@ export default function NearbyPage() {
   const [nearby, setNearby] = useState<NearbyUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const fetchNearby = useCallback(async (latitude: number, longitude: number) => {
     setLoading(true);
@@ -152,9 +154,11 @@ export default function NearbyPage() {
             photos={user.profile.photos}
             onLike={() => handleLike(user.id)}
             onPass={() => handlePass(user.id)}
+            onProfileClick={(id) => setSelectedUserId(id)}
           />
         ))}
       </div>
+      <ProfileModal userId={selectedUserId ?? ''} open={!!selectedUserId} onClose={() => setSelectedUserId(null)} />
     </div>
   );
 }

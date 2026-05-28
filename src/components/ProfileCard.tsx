@@ -15,6 +15,7 @@ interface ProfileCardProps {
   practices?: string[];
   onLike: () => void;
   onPass: () => void;
+  onProfileClick?: (userId: string) => void;
 }
 
 function formatDistance(meters?: number, kilometers?: number): string | null {
@@ -28,6 +29,7 @@ function formatDistance(meters?: number, kilometers?: number): string | null {
 }
 
 export default function ProfileCard({
+  id,
   displayName,
   age,
   bio,
@@ -40,11 +42,12 @@ export default function ProfileCard({
   practices,
   onLike,
   onPass,
+  onProfileClick,
 }: ProfileCardProps) {
   const distance = formatDistance(distanceM, distanceKm);
 
   return (
-    <div role="group" aria-label={`Profil de ${displayName}`} className="rounded-xl border border-gray-200 p-4 shadow-sm dark:border-gray-700">
+    <div role="group" aria-label={`Profil de ${displayName}`} onClick={() => onProfileClick?.(id)} className={`rounded-xl border border-gray-200 p-4 shadow-sm dark:border-gray-700${onProfileClick ? ' cursor-pointer' : ''}`}>
       <div className="flex items-start gap-3">
         {photos && photos.length > 0 ? (
           <div className="relative">

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Pusher from 'pusher-js';
 import OnlineIndicator from '@/components/OnlineIndicator';
+import ProfileModal from '@/components/ProfileModal';
 import { formatLastSeen, isOnline } from '@/lib/time';
 
 interface MatchUser {
@@ -31,6 +32,7 @@ export default function MatchesPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const fetchMatches = useCallback(async () => {
     try {
@@ -101,7 +103,8 @@ export default function MatchesPage() {
         {matches.map((match) => (
           <div
             key={match.id}
-            className="rounded-xl border border-gray-200 p-4 shadow-sm dark:border-gray-700"
+            className="cursor-pointer rounded-xl border border-gray-200 p-4 shadow-sm dark:border-gray-700"
+            onClick={() => setSelectedUserId(match.user.id)}
           >
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -144,6 +147,7 @@ export default function MatchesPage() {
           </div>
         ))}
       </div>
+      <ProfileModal userId={selectedUserId ?? ''} open={!!selectedUserId} onClose={() => setSelectedUserId(null)} />
     </div>
   );
 }
