@@ -8,15 +8,18 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid()) @db.Uuid
-  email        String   @unique
-  displayName  String
-  passwordHash String?
-  role         String   @default("user")
-  createdAt    DateTime @default(now())
-  isVerified   Boolean  @default(false)
-  isBanned     Boolean  @default(false)
-  lastActive   DateTime @updatedAt
+  id              String   @id @default(uuid()) @db.Uuid
+  email           String   @unique
+  normalizedEmail String   @unique @default("")
+  emailVerified   DateTime?
+  displayName     String
+  passwordHash     String?
+  deviceId        String?
+  role            String   @default("user")
+  createdAt       DateTime @default(now())
+  isVerified      Boolean  @default(false)
+  isBanned        Boolean  @default(false)
+  lastActive      DateTime @updatedAt
 
   profile              Profile?
   userKey              UserKey?
