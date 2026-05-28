@@ -69,7 +69,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <div className="flex min-h-screen flex-col">
       <BetaBanner onFeedback={() => window.dispatchEvent(new Event('open-feedback'))} />
 
-      <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/80 backdrop-blur-md dark:border-gray-800 dark:bg-gray-950/80">
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md shadow-sm dark:bg-gray-950/80">
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-2">
           <Link href="/discover" aria-label="Accueil Libre" className="flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className="h-8 w-8" aria-hidden="true">
@@ -85,12 +85,18 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             </svg>
             <span className="text-lg font-bold text-coral dark:text-coral-light">Libre</span>
           </Link>
+          <Link href="/settings" aria-label="Paramètres" className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+          </Link>
         </div>
       </header>
 
       <main id="main-content" role="main" className="flex-1 pb-16">{children}</main>
 
-      <nav role="navigation" aria-label="Navigation principale" className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
+      <nav role="navigation" aria-label="Navigation principale" className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-[0_-1px_6px_rgba(0,0,0,0.04)] dark:bg-gray-950">
         <div className="mx-auto flex max-w-lg items-center justify-around">
           {navItems.map((item) => {
             const isActive =
@@ -102,17 +108,29 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 aria-current={isActive ? 'page' : undefined}
                 className={`flex flex-col items-center gap-0.5 px-3 py-2 text-xs font-medium transition-colors ${
                   isActive
-                    ? 'text-coral dark:text-coral-light'
+                    ? 'font-semibold text-coral dark:text-coral-light'
                     : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
                 }`}
               >
-                <span
-                  className={`h-5 w-5 rounded-full border-2 transition-colors ${
-                    isActive
-                      ? 'border-coral bg-coral dark:border-coral-light dark:bg-coral-light'
-                      : 'border-gray-400 dark:border-gray-600'
-                  }`}
-                />
+                {item.href === '/discover' && (
+                  isActive ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                  )
+                )}
+                {item.href === '/crossings' && (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isActive ? 'currentColor' : 'currentColor'} strokeWidth="1.5" strokeLinecap="round"><path d="M4 17 L12 7 M12 17 L20 7"/></svg>
+                )}
+                {item.href === '/nearby' && (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                )}
+                {item.href === '/matches' && (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                )}
+                {item.href === '/profile' && (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                )}
                 {item.label}
               </Link>
             );
