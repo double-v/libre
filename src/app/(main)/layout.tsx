@@ -82,7 +82,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 className={`flex flex-col items-center gap-0.5 px-3 py-2 text-xs font-medium transition-colors ${
                   isActive
                     ? 'text-coral dark:text-coral-light'
-                    : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
+                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
                 }`}
               >
                 <span

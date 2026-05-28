@@ -38,7 +38,7 @@ export default function DiscoverFilters({
     <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
       {/* Genre */}
       <div>
-        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Genre</p>
+        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">Genre</p>
         <div className="flex flex-wrap gap-1.5">
           {GENDER_OPTIONS.filter((o) => o.value !== '').map((opt) => (
             <TagButton
@@ -53,7 +53,7 @@ export default function DiscoverFilters({
 
       {/* Orientation */}
       <div>
-        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Orientation</p>
+        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">Orientation</p>
         <div className="flex flex-wrap gap-1.5">
           {ORIENTATION_OPTIONS.map((opt) => (
             <TagButton
@@ -68,7 +68,7 @@ export default function DiscoverFilters({
 
       {/* Tranche d'âge */}
       <div>
-        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
           Âge : {ageMin} – {ageMax}
         </p>
         <div className="flex items-center gap-3">
@@ -99,7 +99,7 @@ export default function DiscoverFilters({
 
       {/* Centres d'intérêt */}
       <div>
-        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Centres d&apos;intérêt</p>
+        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">Centres d&apos;intérêt</p>
         <div className="max-h-48 overflow-y-auto space-y-3">
           {INTEREST_CATEGORIES.map((cat) => (
             <div key={cat.name}>

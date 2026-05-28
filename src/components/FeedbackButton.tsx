@@ -82,7 +82,7 @@ export default function FeedbackButton() {
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300"
+                  className="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
                   aria-label="Fermer"
                 >
                   &times;
@@ -120,7 +120,7 @@ export default function FeedbackButton() {
                       ? 'Votre idée...'
                       : 'Votre question...'
                 }
-                className="mb-3 h-24 w-full resize-none rounded-lg border border-gray-200 bg-gray-50 p-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-coral focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
+                className="mb-3 h-24 w-full resize-none rounded-lg border border-gray-200 bg-gray-50 p-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-coral focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
                 required
                 minLength={5}
                 maxLength={2000}

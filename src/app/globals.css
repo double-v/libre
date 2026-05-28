@@ -30,3 +30,11 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+input, textarea, select {
+  color: var(--foreground);
+}
+input::placeholder, textarea::placeholder {
+  color: var(--color-muted, #4b5563);
+  opacity: 1;
+}

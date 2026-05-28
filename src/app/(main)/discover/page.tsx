@@ -189,7 +189,7 @@ export default function DiscoverPage() {
             className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
               tab === key
                 ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                : 'text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
             }`}
           >
             {label}

@@ -142,7 +142,7 @@ export default function MatchesPage() {
                 Ouvrir le chat
               </Link>
             ) : (
-              <p className="mt-3 text-sm text-gray-500 dark:text-gray-500">Chat non disponible</p>
+              <p className="mt-3 text-sm text-gray-600 dark:text-gray-500">Chat non disponible</p>
             )}
           </div>
         ))}

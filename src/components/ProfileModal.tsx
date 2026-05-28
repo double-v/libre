@@ -237,7 +237,7 @@ export default function ProfileModal({ userId, open, onClose }: ProfileModalProp
             <div className="px-4 pb-6">
               {profile.genderIdentity && (
                 <div className="mb-3">
-                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-500">
+                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-500">
                     Genre
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
@@ -250,7 +250,7 @@ export default function ProfileModal({ userId, open, onClose }: ProfileModalProp
 
               {profile.orientation && (
                 <div className="mb-3">
-                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-500">
+                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-500">
                     Orientation
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
@@ -263,7 +263,7 @@ export default function ProfileModal({ userId, open, onClose }: ProfileModalProp
 
               {profile.interests && profile.interests.length > 0 && (
                 <div className="mb-3">
-                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-500">
+                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-500">
                     Centres d&apos;intérêt
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
@@ -281,7 +281,7 @@ export default function ProfileModal({ userId, open, onClose }: ProfileModalProp
 
               {profile.practices && profile.practices.length > 0 && (
                 <div className="mb-3">
-                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-500">
+                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-500">
                     Pratiques
                   </h3>
                   <div className="flex flex-wrap gap-1.5">

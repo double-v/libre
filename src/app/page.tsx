@@ -122,7 +122,7 @@ export default function Home() {
                 </p>
                 <p className="mt-2 text-sm text-gray-600">{fact.label}</p>
                 {fact.source && (
-                  <p className="mt-1 text-xs text-gray-500">{fact.source}</p>
+                  <p className="mt-1 text-xs text-gray-600">{fact.source}</p>
                 )}
               </div>
             ))}
@@ -207,7 +207,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-gray-100 px-6 py-6 text-center text-sm text-gray-500">
+      <footer className="border-t border-gray-100 px-6 py-6 text-center text-sm text-gray-600">
         <Link href="/cgu" className="hover:text-gray-600 hover:underline focus:outline-none focus:underline">
           Conditions g&eacute;n&eacute;rales d&apos;utilisation
         </Link>
