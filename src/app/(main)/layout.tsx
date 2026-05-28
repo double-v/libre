@@ -68,6 +68,26 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="flex min-h-screen flex-col">
       <BetaBanner onFeedback={() => window.dispatchEvent(new Event('open-feedback'))} />
+
+      <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/80 backdrop-blur-md dark:border-gray-800 dark:bg-gray-950/80">
+        <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-2">
+          <Link href="/discover" aria-label="Accueil Libre" className="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className="h-8 w-8" aria-hidden="true">
+              <rect width="512" height="512" rx="96" fill="#E8634A"/>
+              <g fill="#fff">
+                <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(-60 256 188)"/>
+                <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(-30 256 188)"/>
+                <rect x="236" y="42" width="40" height="120" rx="20"/>
+                <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(30 256 188)"/>
+                <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(60 256 188)"/>
+                <path d="M256,195 C256,170 218,130 180,130 C130,130 105,175 105,215 C105,300 256,375 256,390 C256,375 407,300 407,215 C407,175 382,130 332,130 C294,130 256,170 256,195 Z"/>
+              </g>
+            </svg>
+            <span className="text-lg font-bold text-coral dark:text-coral-light">Libre</span>
+          </Link>
+        </div>
+      </header>
+
       <main id="main-content" role="main" className="flex-1 pb-16">{children}</main>
 
       <nav role="navigation" aria-label="Navigation principale" className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
