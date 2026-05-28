@@ -103,7 +103,7 @@ export default function DiscoverFilters({
         <div className="max-h-48 overflow-y-auto space-y-3">
           {INTEREST_CATEGORIES.map((cat) => (
             <div key={cat.name}>
-              <p className="mb-1 text-[10px] font-medium text-gray-500">{cat.name}</p>
+              <p className="mb-1 text-[10px] font-medium text-gray-600">{cat.name}</p>
               <div className="flex flex-wrap gap-1">
                 {cat.items.map((tag) => (
                   <TagButton

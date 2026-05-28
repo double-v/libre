@@ -53,7 +53,7 @@ export default function ProfileCompleteness({ profile, onSuggestionClick }: Prof
         />
       </div>
       {nextMissing && pct < 100 && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-gray-600">
           Ajoutez {nextMissing.label}
           {onSuggestionClick && (
             <button

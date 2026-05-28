@@ -64,7 +64,7 @@ export default function CrossingCard({
             </h3>
             <VerificationBadge isVerified={isVerified} />
           </div>
-          <div className="mt-0.5 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <div className="mt-0.5 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
             <span>{timeAgo}</span>
             <span aria-hidden="true">&middot;</span>
             <span>{formatDistance(distanceM)}</span>

@@ -100,7 +100,7 @@ export default function NearbyPage() {
   if (geo.loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400">Localisation en cours...</p>
+        <p className="text-gray-600 dark:text-gray-400">Localisation en cours...</p>
       </div>
     );
   }
@@ -121,7 +121,7 @@ export default function NearbyPage() {
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400">Chargement...</p>
+        <p className="text-gray-600 dark:text-gray-400">Chargement...</p>
       </div>
     );
   }
@@ -137,7 +137,7 @@ export default function NearbyPage() {
       )}
 
       {!error && nearby.length === 0 && (
-        <p className="text-gray-500 dark:text-gray-400">
+        <p className="text-gray-600 dark:text-gray-400">
           Personne a proximite pour le moment.
         </p>
       )}

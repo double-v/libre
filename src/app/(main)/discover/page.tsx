@@ -219,7 +219,7 @@ export default function DiscoverPage() {
       ) : error ? (
         <p className="py-8 text-center text-sm text-red-500">Une erreur est survenue, veuillez réessayer</p>
       ) : visibleUsers.length === 0 ? (
-        <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+        <p className="py-8 text-center text-sm text-gray-600 dark:text-gray-400">
           Aucun profil trouvé
         </p>
       ) : (

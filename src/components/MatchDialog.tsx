@@ -70,7 +70,7 @@ export default function MatchDialog({ userId, pusherKey, pusherCluster }: MatchD
         <h2 className="mb-1 text-xl font-bold text-gray-900 dark:text-gray-100">
           C&apos;est un match !
         </h2>
-        <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
           Vous et {match.matchedWith.displayName} vous plaisez mutuellement
         </p>
 

@@ -62,7 +62,7 @@ export default function RegisterPage() {
     <div className="space-y-6">
       <div className="text-center">
         <h1 className="text-2xl font-bold">Créer un compte</h1>
-        <p className="mt-1 text-sm text-gray-500">Gratuit. Pour toujours.</p>
+        <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">Gratuit. Sans limites.</p>
       </div>
 
       {error && (
@@ -117,7 +117,7 @@ export default function RegisterPage() {
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-coral focus:outline-none focus:ring-coral"
             placeholder="Minimum 8 caractères"
           />
-          <p id="password-requirements" className="mt-1 text-xs text-gray-500">8 caractères min, avec majuscule, minuscule et chiffre</p>
+          <p id="password-requirements" className="mt-1 text-xs text-gray-600 dark:text-gray-400">8 caractères min, avec majuscule, minuscule et chiffre</p>
         </div>
 
         {siteKey && (

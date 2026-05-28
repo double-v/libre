@@ -90,7 +90,7 @@ export default function Home() {
           <p className="mb-2 max-w-md text-xl font-medium text-gray-800 sm:text-2xl">
             Parce que rencontrer ne devrait rien coûter.
           </p>
-          <p className="mb-8 max-w-lg text-base text-gray-500">
+          <p className="mb-8 max-w-lg text-base text-gray-600">
             Rencontre gratuite. Sans abonnement. Sans microtransaction. Sans revente de données.
             <br />
             Parce que quand c&apos;est gratuit, tout le monde est l&agrave;.
@@ -143,7 +143,7 @@ export default function Home() {
                   </span>
                   <div>
                     <p className="font-medium text-gray-800">{item.title}</p>
-                    <p className="text-sm text-gray-500">{item.detail}</p>
+                    <p className="text-sm text-gray-600">{item.detail}</p>
                   </div>
                 </li>
               ))}
@@ -195,7 +195,7 @@ export default function Home() {
           <p className="mb-2 text-lg font-medium text-gray-800">
             0 &euro;. Pas d&apos;abonnement. Pas de pi&egrave;ges.
           </p>
-          <p className="mb-6 text-sm text-gray-500">
+          <p className="mb-6 text-sm text-gray-600">
             Rejoignez ceux qui refusent de payer pour esp&eacute;rer.
           </p>
           <Link

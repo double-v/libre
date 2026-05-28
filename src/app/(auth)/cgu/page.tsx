@@ -12,7 +12,7 @@ export default function CGUPage() {
     <div className="mx-auto max-w-2xl space-y-8 py-8">
       <div className="text-center">
         <h1 className="text-2xl font-bold">Conditions g&eacute;n&eacute;rales d&apos;utilisation</h1>
-        <p className="mt-1 text-sm text-gray-500">Derni&egrave;re mise &agrave; jour : mai 2026</p>
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Derni&egrave;re mise &agrave; jour : mai 2026</p>
       </div>
 
       <Link href="/" className="inline-block text-sm font-medium text-coral hover:text-terracotta">

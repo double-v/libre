@@ -212,13 +212,13 @@ export default function ProfileModal({ userId, open, onClose }: ProfileModalProp
                   {profile.displayName}
                 </h2>
                 {age !== null && (
-                  <span className="text-gray-500 dark:text-gray-400">{age}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{age}</span>
                 )}
                 <VerificationBadge isVerified={profile.isVerified} />
               </div>
 
               {profile.relationshipType && (
-                <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                <p className="mt-0.5 text-sm text-gray-600 dark:text-gray-400">
                   {profile.relationshipType}
                 </p>
               )}

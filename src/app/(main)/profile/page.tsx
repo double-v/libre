@@ -38,7 +38,7 @@ function SectionHeader({ title, onEdit, editing }: { title: string; onEdit?: () 
         <button
           type="button"
           onClick={onEdit}
-          className="text-xs font-medium text-gray-500 hover:text-black"
+          className="text-xs font-medium text-gray-600 hover:text-black"
           aria-label={`Modifier ${title}`}
         >
           Modifier
@@ -192,7 +192,7 @@ export default function ProfilePage() {
   };
 
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center"><p className="text-gray-500">Chargement...</p></div>;
+    return <div className="flex min-h-screen items-center justify-center"><p className="text-gray-600 dark:text-gray-400">Chargement...</p></div>;
   }
 
   const age = profile?.birthDate
@@ -329,7 +329,7 @@ export default function ProfilePage() {
           {/* ─── Pratiques & Préférences ────────────────────────────────── */}
           <section className="rounded-lg border border-purple-200 bg-purple-50/30 p-4">
             <SectionHeader title="Pratiques & Préférences" onEdit={() => startEdit('practices')} editing={editingSection === 'practices'} />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-600">
               Certaines personnes aiment explorer des pratiques sensuelles ou spécifiques. C&apos;est totalement optionnel.
             </p>
             <PrivacyTip tip="Ces préférences sont privées. Elles ne s&apos;affichent que pour vos matches, pas publiquement." />

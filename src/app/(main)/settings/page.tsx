@@ -94,7 +94,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500">Chargement...</p>
+        <p className="text-gray-600 dark:text-gray-400">Chargement...</p>
       </div>
     );
   }

@@ -59,7 +59,7 @@ export default function ProfileCard({
             <OnlineIndicator online={online} />
           </div>
         ) : (
-          <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+          <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">
             {displayName.charAt(0).toUpperCase()}
             <OnlineIndicator online={online} />
           </div>
@@ -72,7 +72,7 @@ export default function ProfileCard({
             <VerificationBadge isVerified={isVerified} />
           </div>
           {distance && (
-            <p className="text-sm text-gray-500 dark:text-gray-400">{distance}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{distance}</p>
           )}
         </div>
       </div>

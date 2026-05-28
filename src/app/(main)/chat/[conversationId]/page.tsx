@@ -237,7 +237,7 @@ export default function ChatConversationPage() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-gray-500">Chargement...</p>
+        <p className="text-gray-600 dark:text-gray-400">Chargement...</p>
       </div>
     );
   }
@@ -306,7 +306,7 @@ export default function ChatConversationPage() {
                   className={`mt-1 text-[10px] ${
                     isSent
                       ? 'text-white/60 dark:text-gray-500'
-                      : 'text-gray-500 dark:text-gray-400'
+                      : 'text-gray-600 dark:text-gray-400'
                   }`}
                 >
                   {formatTime(msg.createdAt)}

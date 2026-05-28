@@ -80,7 +80,7 @@ export default function MatchesPage() {
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400">Chargement...</p>
+        <p className="text-gray-600 dark:text-gray-400">Chargement...</p>
       </div>
     );
   }
@@ -96,7 +96,7 @@ export default function MatchesPage() {
       )}
 
       {!error && matches.length === 0 && (
-        <p className="text-gray-500 dark:text-gray-400">Pas encore de match.</p>
+        <p className="text-gray-600 dark:text-gray-400">Pas encore de match.</p>
       )}
 
       <div className="space-y-4">
@@ -115,7 +115,7 @@ export default function MatchesPage() {
                     className="h-12 w-12 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">
                     {match.user.displayName.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -125,10 +125,10 @@ export default function MatchesPage() {
                 <h3 className="truncate text-base font-semibold text-gray-900 dark:text-gray-100">
                   {match.user.displayName}
                 </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {formatLastSeen(new Date(match.user.lastActive))}
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Match le {new Date(match.createdAt).toLocaleDateString('fr-FR')}
                 </p>
               </div>
