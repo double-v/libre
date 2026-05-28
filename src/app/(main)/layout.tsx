@@ -8,6 +8,7 @@ import dynamic from 'next/dynamic';
 
 const MatchDialog = dynamic(() => import('@/components/MatchDialog'), { ssr: false });
 const FeedbackButton = dynamic(() => import('@/components/FeedbackButton'), { ssr: false });
+const ThemeToggle = dynamic(() => import('@/components/ThemeToggle'), { ssr: false });
 
 const BETA_DISMISSED_KEY = 'libre_beta_dismissed';
 
@@ -108,6 +109,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       )}
 
       <FeedbackButton />
+      <ThemeToggle />
     </div>
   );
 }
