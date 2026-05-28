@@ -39,6 +39,7 @@ model User {
   blocksMade           Block[]               @relation("BlocksMade")
   blocksReceived       Block[]               @relation("BlocksReceived")
   reportReviews        Report[]              @relation("ReportReviewer")
+  feedback             Feedback[]
   accounts             Account[]
   sessions             Session[]
 
@@ -197,6 +198,23 @@ model Block {
 
   @@id([blockerId, blockedId])
   @@map("blocks")
+}
+
+model Feedback {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @db.Uuid
+  category  String   @default("bug")
+  message   String
+  url       String?
+  userAgent String?
+  status    String   @default("open")
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("feedback")
 }
 
 model Account {

@@ -1,11 +1,15 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 
 const MatchDialog = dynamic(() => import('@/components/MatchDialog'), { ssr: false });
+const FeedbackButton = dynamic(() => import('@/components/FeedbackButton'), { ssr: false });
+
+const BETA_DISMISSED_KEY = 'libre_beta_dismissed';
 
 const navItems = [
   { href: '/discover', label: 'Découvrir' },
@@ -15,6 +19,45 @@ const navItems = [
   { href: '/profile', label: 'Profil' },
 ];
 
+function BetaBanner({ onFeedback }: { onFeedback: () => void }) {
+  const [dismissed, setDismissed] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !localStorage.getItem(BETA_DISMISSED_KEY)) {
+      setDismissed(false);
+    }
+  }, []);
+
+  if (dismissed) return null;
+
+  return (
+    <div className="flex items-center justify-center gap-2 border-b border-coral/20 bg-blush px-4 py-1.5 text-center text-xs text-coral-dark dark:border-coral/30 dark:bg-coral/10 dark:text-coral-light">
+      <span className="mr-1 rounded-full bg-coral px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+        Bêta
+      </span>
+      <span>Libre est en version bêta — vos retours comptent !</span>
+      <button
+        type="button"
+        onClick={onFeedback}
+        className="font-semibold underline underline-offset-2 hover:no-underline"
+      >
+        Signaler
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          setDismissed(true);
+          localStorage.setItem(BETA_DISMISSED_KEY, '1');
+        }}
+        className="ml-1 text-coral-dark/60 hover:text-coral-dark dark:text-coral-light/60 dark:hover:text-coral-light"
+        aria-label="Fermer la bannière bêta"
+      >
+        &times;
+      </button>
+    </div>
+  );
+}
+
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { data: session } = useSession();
@@ -23,6 +66,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="flex min-h-screen flex-col">
+      <BetaBanner onFeedback={() => window.dispatchEvent(new Event('open-feedback'))} />
       <main id="main-content" role="main" className="flex-1 pb-16">{children}</main>
 
       <nav role="navigation" aria-label="Navigation principale" className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
@@ -62,6 +106,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           pusherCluster={pusherCluster}
         />
       )}
+
+      <FeedbackButton />
     </div>
   );
 }
