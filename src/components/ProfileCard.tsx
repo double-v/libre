@@ -85,10 +85,10 @@ export default function ProfileCard({
       {((interests && interests.length > 0) || (practices && practices.length > 0)) && (
         <div className="mt-3 flex flex-wrap gap-1">
           {interests?.map((i) => (
-            <span key={i} className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">{i}</span>
+            <span key={i} className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">{i}</span>
           ))}
           {practices?.map((p) => (
-            <span key={p} className="inline-block rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">{p}</span>
+            <span key={p} className="inline-block rounded-full bg-sand/60 px-2 py-0.5 text-xs font-medium text-coral-dark dark:bg-coral/20 dark:text-coral-light">{p}</span>
           ))}
         </div>
       )}
@@ -106,7 +106,7 @@ export default function ProfileCard({
           type="button"
           onClick={onLike}
           aria-label={`Like ${displayName}`}
-          className="flex-1 rounded-full bg-terracotta py-2 text-sm font-medium text-white transition-colors hover:bg-coral-dark dark:bg-white dark:text-black dark:hover:bg-gray-200"
+          className="flex-1 rounded-full bg-terracotta py-2 text-sm font-medium text-white transition-colors hover:bg-coral-dark dark:bg-coral dark:hover:bg-terracotta"
         >
           Like
         </button>

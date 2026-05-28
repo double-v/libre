@@ -258,7 +258,7 @@ export default function ChatConversationPage() {
               {otherUser?.displayName?.[0] ?? '?'}
             </div>
           )}
-          <h1 className="truncate text-lg font-bold">{otherUser?.displayName ?? 'Utilisateur'}</h1>
+          <h1 className="truncate text-lg font-bold text-gray-900 dark:text-gray-100">{otherUser?.displayName ?? 'Utilisateur'}</h1>
         </div>
         {otherUser && (
           <ShareContactButton conversationId={conversationId} onSend={handleShareContact} />
@@ -298,7 +298,7 @@ export default function ChatConversationPage() {
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-2 ${
                   isSent
-                    ? 'bg-terracotta text-white dark:bg-gray-100 dark:text-gray-900'
+                    ? 'bg-terracotta text-white dark:bg-coral dark:text-white'
                     : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
                 }`}
               >
@@ -336,7 +336,7 @@ export default function ChatConversationPage() {
           <button
             type="submit"
             disabled={sending || !inputText.trim()}
-            className="rounded-full bg-terracotta px-4 py-2 text-sm font-medium text-white hover:bg-coral-dark disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-300"
+            className="rounded-full bg-terracotta px-4 py-2 text-sm font-medium text-white hover:bg-coral-dark disabled:opacity-50 dark:bg-coral dark:hover:bg-terracotta"
           >
             Envoyer
           </button>

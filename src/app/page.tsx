@@ -67,7 +67,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-white dark:bg-gray-950">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -87,10 +87,10 @@ export default function Home() {
           <h1 className="mb-4 text-5xl font-bold tracking-tight sm:text-6xl">
             <span className="text-coral">Libre</span>
           </h1>
-          <p className="mb-2 max-w-md text-xl font-medium text-gray-800 sm:text-2xl">
+          <p className="mb-2 max-w-md text-xl font-medium text-gray-800 dark:text-gray-200 sm:text-2xl">
             Parce que rencontrer ne devrait rien coûter.
           </p>
-          <p className="mb-8 max-w-lg text-base text-gray-600">
+          <p className="mb-8 max-w-lg text-base text-gray-600 dark:text-gray-400">
             Rencontre gratuite. Sans abonnement. Sans microtransaction. Sans revente de données.
             <br />
             Parce que quand c&apos;est gratuit, tout le monde est l&agrave;.
@@ -99,13 +99,13 @@ export default function Home() {
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
               href="/login"
-              className="rounded-full bg-terracotta px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-coral-dark focus:outline-none focus:ring-2 focus:ring-terracotta focus:ring-offset-2"
+              className="rounded-full bg-terracotta px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-coral-dark focus:outline-none focus:ring-2 focus:ring-terracotta focus:ring-offset-2 dark:focus:ring-offset-gray-950"
             >
               Se connecter
             </Link>
             <Link
               href="/register"
-              className="rounded-full border border-gray-300 bg-white px-8 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+              className="rounded-full border border-gray-300 bg-white px-8 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 dark:focus:ring-offset-gray-950"
             >
               Cr&eacute;er un compte gratuitement
             </Link>
@@ -113,16 +113,16 @@ export default function Home() {
         </section>
 
         {/* Chiffres */}
-        <section className="border-t border-gray-100 bg-blush px-6 py-12">
+        <section className="border-t border-gray-100 bg-blush px-6 py-12 dark:border-gray-800 dark:bg-coral/10">
           <div className="mx-auto grid max-w-2xl gap-8 sm:grid-cols-3">
             {facts.map((fact) => (
               <div key={fact.number} className="text-center">
-                <p className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                <p className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
                   {fact.number}
                 </p>
-                <p className="mt-2 text-sm text-gray-600">{fact.label}</p>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{fact.label}</p>
                 {fact.source && (
-                  <p className="mt-1 text-xs text-gray-600">{fact.source}</p>
+                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-500">{fact.source}</p>
                 )}
               </div>
             ))}
@@ -132,7 +132,7 @@ export default function Home() {
         {/* Constat */}
         <section className="px-6 py-12">
           <div className="mx-auto max-w-2xl">
-            <h2 className="mb-8 text-center text-2xl font-bold text-gray-900">
+            <h2 className="mb-8 text-center text-2xl font-bold text-gray-900 dark:text-gray-100">
               Les apps de rencontre font payer l&apos;espoir
             </h2>
             <ul className="space-y-5">
@@ -142,8 +142,8 @@ export default function Home() {
                     &bull;
                   </span>
                   <div>
-                    <p className="font-medium text-gray-800">{item.title}</p>
-                    <p className="text-sm text-gray-600">{item.detail}</p>
+                    <p className="font-medium text-gray-800 dark:text-gray-200">{item.title}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{item.detail}</p>
                   </div>
                 </li>
               ))}
@@ -152,7 +152,7 @@ export default function Home() {
         </section>
 
         {/* Argument Libre */}
-        <section className="border-t border-gray-100 bg-black px-6 py-12 text-center text-white">
+        <section className="border-t border-gray-100 bg-black px-6 py-12 text-center text-white dark:border-gray-800">
           <div className="mx-auto max-w-xl">
             <h2 className="mb-4 text-2xl font-bold">
               Gratuit = plus de c&eacute;libataires = plus de chances
@@ -192,23 +192,23 @@ export default function Home() {
 
         {/* CTA final */}
         <section className="flex flex-col items-center px-6 py-12 text-center">
-          <p className="mb-2 text-lg font-medium text-gray-800">
+          <p className="mb-2 text-lg font-medium text-gray-800 dark:text-gray-200">
             0 &euro;. Pas d&apos;abonnement. Pas de pi&egrave;ges.
           </p>
-          <p className="mb-6 text-sm text-gray-600">
+          <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
             Rejoignez ceux qui refusent de payer pour esp&eacute;rer.
           </p>
           <Link
             href="/register"
-            className="rounded-full bg-terracotta px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-coral-dark focus:outline-none focus:ring-2 focus:ring-terracotta focus:ring-offset-2"
+            className="rounded-full bg-terracotta px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-coral-dark focus:outline-none focus:ring-2 focus:ring-terracotta focus:ring-offset-2 dark:focus:ring-offset-gray-950"
           >
             Cr&eacute;er un compte
           </Link>
         </section>
       </main>
 
-      <footer className="border-t border-gray-100 px-6 py-6 text-center text-sm text-gray-600">
-        <Link href="/cgu" className="hover:text-gray-600 hover:underline focus:outline-none focus:underline">
+      <footer className="border-t border-gray-100 px-6 py-6 text-center text-sm text-gray-600 dark:border-gray-800 dark:text-gray-400">
+        <Link href="/cgu" className="hover:text-gray-600 hover:underline focus:outline-none focus:underline dark:hover:text-gray-300">
           Conditions g&eacute;n&eacute;rales d&apos;utilisation
         </Link>
       </footer>

@@ -89,7 +89,7 @@ export default function CrossingCard({
           type="button"
           onClick={onLike}
           aria-label={`Like ${displayName}`}
-          className="flex-1 rounded-full bg-terracotta py-2 text-sm font-medium text-white transition-colors hover:bg-coral-dark dark:bg-white dark:text-black dark:hover:bg-gray-200"
+          className="flex-1 rounded-full bg-terracotta py-2 text-sm font-medium text-white transition-colors hover:bg-coral-dark dark:bg-coral dark:hover:bg-terracotta"
         >
           Like
         </button>

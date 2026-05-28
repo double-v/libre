@@ -53,7 +53,7 @@ export default function ChatListPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="mb-6 text-2xl font-bold">Messages</h1>
+      <h1 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">Messages</h1>
 
       {error && (
         <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-400">
@@ -75,7 +75,7 @@ export default function ChatListPage() {
                 {match.user.displayName[0]}
               </div>
               <div className="min-w-0">
-                <p className="truncate font-medium">{match.user.displayName}</p>
+                <p className="truncate font-medium text-gray-900 dark:text-gray-100">{match.user.displayName}</p>
                 {match.user.isVerified && (
                   <span className="text-xs font-medium text-green-600 dark:text-green-400">
                     Verifie
