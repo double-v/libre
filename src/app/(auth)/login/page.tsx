@@ -13,8 +13,12 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
+  const [resendSent, setResendSent] = useState(false);
 
   const justRegistered = searchParams.get('registered') === 'true';
+  const justVerified = searchParams.get('verified') === 'true';
+  const errorParam = searchParams.get('error');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,7 +33,12 @@ function LoginForm() {
       });
 
       if (result?.error) {
-        setError('Email ou mot de passe incorrect');
+        if (result.error === 'EMAIL_NOT_VERIFIED') {
+          setError('Veuillez vérifier votre email avant de vous connecter.');
+          setUnverifiedEmail(email);
+        } else {
+          setError('Email ou mot de passe incorrect');
+        }
         return;
       }
 
@@ -54,6 +63,34 @@ function LoginForm() {
       {error && (
         <div role="alert" aria-live="polite" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
           {error}
+        </div>
+      )}
+
+      {unverifiedEmail && (
+        <div className="mt-2 text-center">
+          <button
+            type="button"
+            onClick={async () => {
+              await fetch('/api/auth/send-verification', { method: 'POST' });
+              setResendSent(true);
+            }}
+            className="text-sm font-medium text-coral hover:text-terracotta"
+            disabled={resendSent}
+          >
+            {resendSent ? 'Email renvoyé !' : "Renvoyer l'email de vérification"}
+          </button>
+        </div>
+      )}
+
+      {justVerified && (
+        <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
+          Email vérifié ! Vous pouvez maintenant vous connecter.
+        </div>
+      )}
+
+      {errorParam === 'invalid-token' && (
+        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+          Le lien de vérification est invalide ou a expiré.
         </div>
       )}
 

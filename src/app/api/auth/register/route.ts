@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import prisma from '@/lib/db';
 import { registerSchema } from '@/lib/validators';
 import { normalizeEmail } from '@/lib/email';
+import { createVerificationToken } from '@/lib/verify-token';
 
 export async function POST(request: Request) {
   try {
@@ -44,6 +45,11 @@ export async function POST(request: Request) {
         isVerified: true,
       },
     });
+
+    // Send verification email
+    const verifyToken = await createVerificationToken(user.id, email.toLowerCase().trim());
+    const verifyUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${verifyToken}`;
+    console.log(`[DEV] Verification URL for ${email}: ${verifyUrl}`);
 
     return NextResponse.json({ user }, { status: 201 });
   } catch (error) {
