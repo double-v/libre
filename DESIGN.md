@@ -37,12 +37,12 @@ Blush is Libre's answer to the "warm canvas" — tinted, never pure clinical whi
 | body-strong | `#1f2937` | `text-gray-800` | 13.5:1 | Emphasized paragraphs |
 | body | `#374151` | `text-gray-700` | 8.3:1 | Default running text |
 | body-secondary | `#4b5563` | `text-gray-600` | 7.5:1 | Secondary text, descriptions |
-| muted | `#6b7280` | `text-gray-500` | 4.6:1 | Labels, timestamps, sub-headings (WCAG AA minimum) |
-| muted-soft | `#9ca3af` | `text-gray-400` | 2.8:1 | **Dark backgrounds only** — captions in dark mode |
+| muted | `#4b5563` | `text-gray-600` | 7.5:1 | Labels, timestamps, sub-headings (WCAG AAA) |
+| muted-soft | `#9ca3af` | `text-gray-400` | 2.8:1 | **Dark backgrounds only** (7.3:1 on dark) — never on light |
 | on-coral | `#FFFFFF` | `text-white` | — | Text on coral/terracotta backgrounds |
 | on-dark | `#ededed` | `dark:text-gray-200` | — | Text on dark surfaces |
 
-**Accessibility rule**: `text-gray-400` is FORBIDDEN on light backgrounds (fails WCAG AA at 2.8:1). Minimum on white is `text-gray-500` (4.6:1, passes AA). On dark backgrounds, `text-gray-400` passes AAA at 7.3:1.
+**Accessibility rule**: `text-gray-400` is FORBIDDEN on light backgrounds (fails WCAG AA at 2.8:1). Minimum on white is `text-gray-600` (7.5:1, passes AAA). On dark backgrounds, `text-gray-400` passes AAA at 7.3:1.
 
 ### Semantic
 
@@ -262,14 +262,14 @@ Touch targets: minimum 44px for interactive elements. Buttons at 36–40px heigh
 
 - Anchor every page on white/blush — warm tint is the brand differentiator
 - Reserve coral for primary CTAs, logo, and active states; don't paint everything coral
-- Use `text-gray-500` minimum on light backgrounds (WCAG AA)
+- Use `text-gray-600` minimum on light backgrounds (WCAG AAA)
 - Write French copy that assumes nothing about the user's abilities or circumstances
 - Pair white cards with blush section backgrounds for warmth
 - Use pill radius for tags/badges/avatars; md for buttons/inputs; lg/xl for cards
 
 ### Don't
 
-- Don't use `text-gray-400` on white/light backgrounds — fails WCAG AA (2.8:1)
+- Don't use `text-gray-400` or `text-gray-500` on white/light backgrounds — fails/limits WCAG (2.8:1 / 4.6:1)
 - Don't use cool blues or pure grays as brand accent — coral is Libre
 - Don't write exclusionary copy ("sortez", "IRL", "on se voit")
 - Don't expose technical error details to users — generic French messages only
@@ -282,5 +282,5 @@ Touch targets: minimum 44px for interactive elements. Buttons at 36–40px heigh
 1. Reference token names, never inline hex values. `text-coral` not `text-[#E8634A]`.
 2. Variants (hover, focus, disabled, dark) live in this doc as separate entries.
 3. When adding a new component, define it here with token refs before building.
-4. Accessibility first: every text-on-light choice must pass WCAG AA (4.5:1).
+4. Accessibility first: every text-on-light choice must pass WCAG AAA (7:1). Use `text-gray-600` minimum on white.
 5. Copy changes must pass the inclusivity checklist (no mobility assumptions).
