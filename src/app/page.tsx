@@ -34,7 +34,11 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:px-4 focus:py-2 focus:text-coral">
+        Aller au contenu principal
+      </a>
 
+      <main id="main-content">
       {/* Nav */}
       <nav className="mx-auto flex w-full max-w-2xl items-center justify-between px-6 py-4">
         <Link href="/" aria-label="Accueil Libre" className="flex items-center gap-2">
@@ -65,7 +69,7 @@ export default function Home() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1529333166437-975d7beeg948?w=1200&q=80"
+            src="https://images.unsplash.com/photo-1767790693308-b630592ab50f?w=1200&q=80"
             alt=""
             fill
             className="object-cover blur-[6px] brightness-110 scale-110"
@@ -236,6 +240,7 @@ export default function Home() {
           Conditions générales d&apos;utilisation
         </Link>
       </footer>
+      </main>
     </div>
   );
 }
