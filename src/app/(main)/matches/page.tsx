@@ -3,10 +3,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Pusher from 'pusher-js';
+import OnlineIndicator from '@/components/OnlineIndicator';
+import { formatLastSeen, isOnline } from '@/lib/time';
 
 interface MatchUser {
   id: string;
   displayName: string;
+  isVerified: boolean;
+  lastActive: string;
   profile: {
     bio?: string;
     photos: string[];
@@ -100,21 +104,27 @@ export default function MatchesPage() {
             className="rounded-xl border border-gray-200 p-4 shadow-sm dark:border-gray-700"
           >
             <div className="flex items-center gap-3">
-              {match.user.profile.photos && match.user.profile.photos.length > 0 ? (
-                <img
-                  src={match.user.profile.photos[0]}
-                  alt={match.user.displayName}
-                  className="h-12 w-12 rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-                  {match.user.displayName.charAt(0).toUpperCase()}
-                </div>
-              )}
+              <div className="relative">
+                {match.user.profile.photos && match.user.profile.photos.length > 0 ? (
+                  <img
+                    src={match.user.profile.photos[0]}
+                    alt={match.user.displayName}
+                    className="h-12 w-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                    {match.user.displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <OnlineIndicator online={isOnline(new Date(match.user.lastActive))} />
+              </div>
               <div className="min-w-0 flex-1">
                 <h3 className="truncate text-base font-semibold text-gray-900 dark:text-gray-100">
                   {match.user.displayName}
                 </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {formatLastSeen(new Date(match.user.lastActive))}
+                </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Match le {new Date(match.createdAt).toLocaleDateString('fr-FR')}
                 </p>
