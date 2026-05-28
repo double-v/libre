@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
+import { Turnstile } from '@marsidev/react-turnstile';
 import { Suspense } from 'react';
 
 function LoginForm() {
@@ -15,6 +16,8 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState('');
   const [resendSent, setResendSent] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   const justRegistered = searchParams.get('registered') === 'true';
   const justVerified = searchParams.get('verified') === 'true';
@@ -30,6 +33,7 @@ function LoginForm() {
         redirect: false,
         email,
         password,
+        turnstileToken: turnstileToken ?? '',
       });
 
       if (result?.error) {
@@ -131,9 +135,18 @@ function LoginForm() {
           />
         </div>
 
+        {siteKey && (
+          <Turnstile
+            siteKey={siteKey}
+            onSuccess={setTurnstileToken}
+            onExpire={() => setTurnstileToken(null)}
+            onError={() => setTurnstileToken(null)}
+          />
+        )}
+
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || (!!siteKey && !turnstileToken)}
           className="w-full rounded-md bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-terracotta focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2 disabled:opacity-50"
         >
           {loading ? 'Connexion…' : 'Se connecter'}

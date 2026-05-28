@@ -31,6 +31,8 @@ export const registerSchema = z.object({
     'Password must be at least 8 characters with uppercase, lowercase, and a digit',
   ),
   displayName: z.string().min(1).max(50).transform((s) => s.trim()),
+  turnstileToken: z.string().optional(),
+  deviceId: z.string().optional(),
 });
 
 export const profileUpdateSchema = z.object({

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Turnstile } from '@marsidev/react-turnstile';
 import PrivacyTip from '@/components/PrivacyTip';
 
 export default function RegisterPage() {
@@ -12,6 +13,8 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -22,7 +25,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ displayName, email, password }),
+        body: JSON.stringify({ displayName, email, password, turnstileToken }),
       });
 
       const data = await res.json();
@@ -107,9 +110,18 @@ export default function RegisterPage() {
           <p id="password-requirements" className="mt-1 text-xs text-gray-500">8 caractères min, avec majuscule, minuscule et chiffre</p>
         </div>
 
+        {siteKey && (
+          <Turnstile
+            siteKey={siteKey}
+            onSuccess={setTurnstileToken}
+            onExpire={() => setTurnstileToken(null)}
+            onError={() => setTurnstileToken(null)}
+          />
+        )}
+
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || (!!siteKey && !turnstileToken)}
           className="w-full rounded-md bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-terracotta focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2 disabled:opacity-50"
         >
           {loading ? 'Création…' : 'Créer mon compte'}

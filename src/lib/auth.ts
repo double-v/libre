@@ -106,10 +106,20 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        turnstileToken: { label: 'Captcha', type: 'text' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           return null;
+        }
+
+        // Verify Turnstile if configured
+        if (credentials.turnstileToken && process.env.TURNSTILE_SECRET_KEY) {
+          const { verifyTurnstile } = await import('@/lib/turnstile');
+          const valid = await verifyTurnstile(credentials.turnstileToken);
+          if (!valid) {
+            throw new Error('CAPTCHA_FAILED');
+          }
         }
 
         const normalizedInput = normalizeEmail(credentials.email);

@@ -4,6 +4,7 @@ import prisma from '@/lib/db';
 import { registerSchema } from '@/lib/validators';
 import { normalizeEmail } from '@/lib/email';
 import { createVerificationToken } from '@/lib/verify-token';
+import { verifyTurnstile } from '@/lib/turnstile';
 
 export async function POST(request: Request) {
   try {
@@ -17,7 +18,38 @@ export async function POST(request: Request) {
       );
     }
 
-    const { email, password, displayName } = parsed.data;
+    const { email, password, displayName, turnstileToken, deviceId } = parsed.data;
+
+    // Verify Turnstile captcha
+    if (process.env.TURNSTILE_SECRET_KEY) {
+      if (!turnstileToken) {
+        return NextResponse.json(
+          { error: 'Veuillez compléter le captcha' },
+          { status: 400 },
+        );
+      }
+      const valid = await verifyTurnstile(turnstileToken);
+      if (!valid) {
+        return NextResponse.json(
+          { error: 'Captcha invalide, veuillez réessayer' },
+          { status: 400 },
+        );
+      }
+    }
+
+    // Check device limit
+    if (deviceId) {
+      const deviceCount = await prisma.user.count({
+        where: { deviceId },
+      });
+      if (deviceCount >= 2) {
+        return NextResponse.json(
+          { error: 'Nombre maximum de comptes atteint sur cet appareil' },
+          { status: 403 },
+        );
+      }
+    }
+
     const normalizedEmail = normalizeEmail(email);
 
     const existingUser = await prisma.user.findUnique({ where: { normalizedEmail } });
@@ -36,6 +68,7 @@ export async function POST(request: Request) {
         normalizedEmail,
         displayName: displayName.trim(),
         passwordHash,
+        deviceId: deviceId || null,
       },
       select: {
         id: true,
