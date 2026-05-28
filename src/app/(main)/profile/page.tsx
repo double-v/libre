@@ -76,7 +76,8 @@ export default function ProfilePage() {
   const [editInterests, setEditInterests] = useState<string[]>([]);
   const [editPractices, setEditPractices] = useState<string[]>([]);
   const [editPhotos, setEditPhotos] = useState<string[]>([]);
-  const [editPhotoInput, setEditPhotoInput] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [photoError, setPhotoError] = useState('');
   const [editAgeMin, setEditAgeMin] = useState(18);
   const [editAgeMax, setEditAgeMax] = useState(99);
   const [editMaxDistanceKm, setEditMaxDistanceKm] = useState(50);
@@ -315,19 +316,85 @@ export default function ProfilePage() {
             <PrivacyTip tip="Évitez les photos avec des détails identifiables (lieux, plaques, etc.)." />
             {editingSection === 'photos' ? (
               <div className="mt-3 space-y-3">
-                {editPhotos.map((url, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <input type="text" value={url} onChange={(e) => { const p = [...editPhotos]; p[i] = e.target.value; setEditPhotos(p); }} className={INPUT_CLASS_SM} />
-                    <button type="button" onClick={() => setEditPhotos(editPhotos.filter((_, j) => j !== i))} className="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">✕</button>
-                  </div>
-                ))}
-                {editPhotos.length < 6 && (
-                  <div className="flex gap-2">
-                    <input type="url" value={editPhotoInput} onChange={(e) => setEditPhotoInput(e.target.value)} placeholder="https://..." className={INPUT_CLASS_SM} />
-                    <button type="button" onClick={() => { if (editPhotoInput.trim()) { setEditPhotos([...editPhotos, editPhotoInput.trim()]); setEditPhotoInput(''); } }} disabled={!editPhotoInput.trim()} className="rounded-md border border-gray-300 px-3 py-1.5 text-xs disabled:opacity-40 dark:border-gray-600 dark:text-gray-300">Ajouter</button>
+                {editPhotos.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {editPhotos.map((url, i) => (
+                      <div key={i} className="group relative aspect-square">
+                        <img src={url} alt={`Photo ${i + 1}`} className="h-full w-full rounded-lg object-cover" />
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              const res = await fetch('/api/users/photos', {
+                                method: 'DELETE',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ photoUrl: url }),
+                              });
+                              if (res.ok) {
+                                const data = await res.json();
+                                setEditPhotos(data.photos);
+                                if (profile) setProfile({ ...profile, photos: data.photos });
+                              }
+                            } catch { /* ignore */ }
+                          }}
+                          className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100"
+                          aria-label="Supprimer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
-                <EditActions saving={saving} onSave={() => saveSection({ photos: editPhotos })} onCancel={() => setEditingSection(null)} />
+                {photoError && <p className="text-xs text-red-600 dark:text-red-400">{photoError}</p>}
+                {editPhotos.length < 6 && (
+                  <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4 transition-colors hover:border-coral hover:bg-blush dark:border-gray-600 dark:bg-gray-800/50 dark:hover:border-coral-light dark:hover:bg-coral/10">
+                    {uploading ? (
+                      <span className="text-xs text-gray-600 dark:text-gray-400">Envoi en cours...</span>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-gray-400">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.329 47.329 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-3.246 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+                        </svg>
+                        <span className="mt-1 text-xs text-gray-600 dark:text-gray-400">JPG, PNG ou WebP — 5 Mo max</span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      disabled={uploading}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploading(true);
+                        setPhotoError('');
+                        try {
+                          const formData = new FormData();
+                          formData.append('photo', file);
+                          const res = await fetch('/api/users/photos', { method: 'POST', body: formData });
+                          const data = await res.json();
+                          if (!res.ok) throw new Error(data.error || 'Erreur');
+                          setEditPhotos(data.photos);
+                          if (profile) setProfile({ ...profile, photos: data.photos });
+                        } catch (err) {
+                          setPhotoError(err instanceof Error ? err.message : 'Erreur lors de l\'envoi');
+                        } finally {
+                          setUploading(false);
+                          e.target.value = '';
+                        }
+                      }}
+                    />
+                  </label>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setEditingSection(null)}
+                  className="rounded-full border border-gray-300 bg-white px-4 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                >
+                  Fermer
+                </button>
               </div>
             ) : (
               <div className="mt-2 flex gap-2 overflow-x-auto">
