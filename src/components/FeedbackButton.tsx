@@ -120,7 +120,7 @@ export default function FeedbackButton() {
                       ? 'Votre idée...'
                       : 'Votre question...'
                 }
-                className="mb-3 h-24 w-full resize-none rounded-lg border border-gray-200 bg-gray-50 p-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-coral focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
+                className="mb-3 h-24 w-full resize-none rounded-lg border border-gray-200 bg-gray-50 p-2 text-sm text-gray-900 focus:border-coral focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
                 required
                 minLength={5}
                 maxLength={2000}

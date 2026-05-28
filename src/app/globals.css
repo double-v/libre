@@ -31,10 +31,13 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Visual hierarchy: input text (gray-900) > labels (gray-800) > section headers (gray-600) > placeholders (gray-400 italic) */
+/* Placeholders: intentionally lighter + italic so users can distinguish hint from typed value */
 input, textarea, select {
   color: var(--foreground);
 }
 input::placeholder, textarea::placeholder {
-  color: var(--color-muted, #4b5563);
+  color: #9ca3af;
+  font-style: italic;
   opacity: 1;
 }

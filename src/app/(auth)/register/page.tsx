@@ -57,7 +57,7 @@ export default function RegisterPage() {
     <div className="space-y-6">
       <div className="text-center">
         <h1 className="text-2xl font-bold">Créer un compte</h1>
-        <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">Gratuit. Sans limites.</p>
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Gratuit. Sans limites.</p>
       </div>
 
       {error && (
@@ -68,7 +68,7 @@ export default function RegisterPage() {
 
       <form onSubmit={handleSubmit} aria-label="Formulaire d'inscription" className="space-y-4">
         <div>
-          <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="displayName" className="block text-sm font-medium text-gray-800">
             Pseudo
           </label>
           <input
@@ -77,14 +77,14 @@ export default function RegisterPage() {
             required
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm placeholder:text-gray-500 focus:border-coral focus:outline-none focus:ring-coral"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-coral focus:outline-none focus:ring-coral"
             placeholder="Un pseudo qui vous ressemble"
           />
           <PrivacyTip tip="Un pseudo, c'est plus safe qu'un vrai nom. Vos matches ne verront que ça." />
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-800">
             Email
           </label>
           <input
@@ -93,13 +93,13 @@ export default function RegisterPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm placeholder:text-gray-500 focus:border-coral focus:outline-none focus:ring-coral"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-coral focus:outline-none focus:ring-coral"
             placeholder="vous@exemple.com"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-800">
             Mot de passe
           </label>
           <input
@@ -109,7 +109,7 @@ export default function RegisterPage() {
             aria-describedby="password-requirements"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm placeholder:text-gray-500 focus:border-coral focus:outline-none focus:ring-coral"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-coral focus:outline-none focus:ring-coral"
             placeholder="Minimum 8 caractères"
           />
           <p id="password-requirements" className="mt-1 text-xs text-gray-600 dark:text-gray-400">8 caractères min, avec majuscule, minuscule et chiffre</p>

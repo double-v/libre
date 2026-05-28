@@ -33,16 +33,22 @@ Blush is Libre's answer to the "warm canvas" — tinted, never pure clinical whi
 
 | Token | Hex | Tailwind | Contrast on white | Use |
 |---|---|---|---|---|
-| ink | `#171717` | `text-gray-900` | 17.4:1 | Headlines, primary text |
-| body-strong | `#1f2937` | `text-gray-800` | 13.5:1 | Emphasized paragraphs |
-| body | `#374151` | `text-gray-700` | 8.3:1 | Default running text |
-| body-secondary | `#4b5563` | `text-gray-600` | 7.5:1 | Secondary text, descriptions |
-| muted | `#4b5563` | `text-gray-600` | 7.5:1 | Labels, timestamps, sub-headings (WCAG AAA) |
-| muted-soft | `#9ca3af` | `text-gray-400` | 2.8:1 | **Dark backgrounds only** (7.3:1 on dark) — never on light |
+| ink | `#171717` | `text-gray-900` | 17.4:1 | Input value text, page titles |
+| label | `#1f2937` | `text-gray-800` | 13.5:1 | Form labels (strong, but distinct from input text) |
+| body | `#374151` | `text-gray-700` | 8.3:1 | Running text, small labels, descriptions |
+| secondary | `#4b5563` | `text-gray-600` | 7.5:1 | Subtitles, section headers (uppercase), muted text |
+| placeholder | `#9ca3af` | `text-gray-400 italic` | 2.8:1 | **Placeholder only** — lighter than input text by design |
 | on-coral | `#FFFFFF` | `text-white` | — | Text on coral/terracotta backgrounds |
 | on-dark | `#ededed` | `dark:text-gray-200` | — | Text on dark surfaces |
 
-**Accessibility rule**: `text-gray-400` is FORBIDDEN on light backgrounds (fails WCAG AA at 2.8:1). Minimum on white is `text-gray-600` (7.5:1, passes AAA). On dark backgrounds, `text-gray-400` passes AAA at 7.3:1.
+**Visual hierarchy on light backgrounds** (darkest → lightest):
+1. **Input value** (`text-gray-900`) — what the user types, MOST visible
+2. **Form labels** (`text-gray-800`) — "Pseudo", "Email", always visible
+3. **Body text** (`text-gray-700`) — descriptions, bio, running text
+4. **Secondary text** (`text-gray-600`) — subtitles, uppercase section headers, timestamps
+5. **Placeholders** (`text-gray-400 italic`) — hints, examples, LEAST visible
+
+**Placeholder rule**: Placeholders MUST be lighter than input value text so users can distinguish hint from typed data. Use `font-style: italic` for additional visual distinction. Placeholders are supplementary — every input has a visible `<label>`.
 
 ### Semantic
 
@@ -173,7 +179,7 @@ Base unit: 4px.
 
 | Component | Background | Border | Radius | Height | Use |
 |---|---|---|---|---|---|
-| text-input | white | 1px gray-300 | md | 40px | All text inputs |
+| text-input | white | 1px gray-300 | md | 40px | `text-gray-900` value, `text-gray-400 italic` placeholder |
 | text-input-focus | white | 2px coral | md + ring | 40px | Focused |
 | text-area | white | 1px gray-300 | md | auto | Bio, feedback |
 | select | white | 1px gray-300 | md | 36px | Gender, dropdowns |
@@ -269,7 +275,8 @@ Touch targets: minimum 44px for interactive elements. Buttons at 36–40px heigh
 
 ### Don't
 
-- Don't use `text-gray-400` or `text-gray-500` on white/light backgrounds — fails/limits WCAG (2.8:1 / 4.6:1)
+- Don't use `text-gray-400` or `text-gray-500` on light backgrounds for content text (fails WCAG or limits readability)
+- Don't make placeholder as visible as input value text — placeholder must be lighter + italic
 - Don't use cool blues or pure grays as brand accent — coral is Libre
 - Don't write exclusionary copy ("sortez", "IRL", "on se voit")
 - Don't expose technical error details to users — generic French messages only
@@ -282,5 +289,6 @@ Touch targets: minimum 44px for interactive elements. Buttons at 36–40px heigh
 1. Reference token names, never inline hex values. `text-coral` not `text-[#E8634A]`.
 2. Variants (hover, focus, disabled, dark) live in this doc as separate entries.
 3. When adding a new component, define it here with token refs before building.
-4. Accessibility first: every text-on-light choice must pass WCAG AAA (7:1). Use `text-gray-600` minimum on white.
+4. Accessibility first: follow the 5-level visual hierarchy. Input text > labels > body > secondary > placeholders.
+5. Placeholders are always `text-gray-400 italic` — lighter than typed text, with italic for visual distinction.
 5. Copy changes must pass the inclusivity checklist (no mobility assumptions).

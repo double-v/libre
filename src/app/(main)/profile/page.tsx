@@ -246,12 +246,12 @@ export default function ProfilePage() {
             {editingSection === 'identity' ? (
               <div className="mt-3 space-y-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600">Date de naissance</label>
-                  <input type="date" value={editBirthDate} onChange={(e) => setEditBirthDate(e.target.value)} className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900 placeholder:text-gray-500 focus:border-black focus:outline-none" />
+                  <label className="block text-xs font-medium text-gray-700">Date de naissance</label>
+                  <input type="date" value={editBirthDate} onChange={(e) => setEditBirthDate(e.target.value)} className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-black focus:outline-none" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600">Genre</label>
-                  <select value={editGenderIdentity} onChange={(e) => setEditGenderIdentity(e.target.value)} className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900 placeholder:text-gray-500 focus:border-black focus:outline-none">
+                  <label className="block text-xs font-medium text-gray-700">Genre</label>
+                  <select value={editGenderIdentity} onChange={(e) => setEditGenderIdentity(e.target.value)} className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-black focus:outline-none">
                     {GENDER_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
@@ -272,7 +272,7 @@ export default function ProfilePage() {
             <SectionHeader title="Bio" onEdit={() => startEdit('bio')} editing={editingSection === 'bio'} />
             {editingSection === 'bio' ? (
               <div className="mt-3 space-y-3">
-                <textarea rows={3} maxLength={500} value={editBio} onChange={(e) => setEditBio(e.target.value)} placeholder="Parlez un peu de vous..." className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-black focus:outline-none" />
+                <textarea rows={3} maxLength={500} value={editBio} onChange={(e) => setEditBio(e.target.value)} placeholder="Parlez un peu de vous..." className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-black focus:outline-none" />
                 <p className="text-xs text-gray-600 dark:text-gray-400">{editBio.length}/500</p>
                 <EditActions saving={saving} onSave={() => saveSection({ bio: editBio })} onCancel={() => setEditingSection(null)} />
               </div>
@@ -351,13 +351,13 @@ export default function ProfilePage() {
               <div className="mt-3 space-y-3">
                 {editPhotos.map((url, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <input type="text" value={url} onChange={(e) => { const p = [...editPhotos]; p[i] = e.target.value; setEditPhotos(p); }} className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-900 placeholder:text-gray-500 focus:border-black focus:outline-none" />
+                    <input type="text" value={url} onChange={(e) => { const p = [...editPhotos]; p[i] = e.target.value; setEditPhotos(p); }} className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-900 focus:border-black focus:outline-none" />
                     <button type="button" onClick={() => setEditPhotos(editPhotos.filter((_, j) => j !== i))} className="text-xs text-red-500 hover:text-red-700">✕</button>
                   </div>
                 ))}
                 {editPhotos.length < 6 && (
                   <div className="flex gap-2">
-                    <input type="url" value={editPhotoInput} onChange={(e) => setEditPhotoInput(e.target.value)} placeholder="https://..." className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-900 placeholder:text-gray-500 focus:border-black focus:outline-none" />
+                    <input type="url" value={editPhotoInput} onChange={(e) => setEditPhotoInput(e.target.value)} placeholder="https://..." className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-900 focus:border-black focus:outline-none" />
                     <button type="button" onClick={() => { if (editPhotoInput.trim()) { setEditPhotos([...editPhotos, editPhotoInput.trim()]); setEditPhotoInput(''); } }} disabled={!editPhotoInput.trim()} className="rounded-md border border-gray-300 px-3 py-1.5 text-xs disabled:opacity-40">Ajouter</button>
                   </div>
                 )}
@@ -378,15 +378,15 @@ export default function ProfilePage() {
             {editingSection === 'search' ? (
               <div className="mt-3 space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600">Âge minimum : {editAgeMin} ans</label>
+                  <label className="block text-xs font-medium text-gray-700">Âge minimum : {editAgeMin} ans</label>
                   <input type="range" min={18} max={99} value={editAgeMin} onChange={(e) => setEditAgeMin(Number(e.target.value))} className="block w-full accent-black" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600">Âge maximum : {editAgeMax} ans</label>
+                  <label className="block text-xs font-medium text-gray-700">Âge maximum : {editAgeMax} ans</label>
                   <input type="range" min={18} max={99} value={editAgeMax} onChange={(e) => setEditAgeMax(Number(e.target.value))} className="block w-full accent-black" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600">Distance maximale : {editMaxDistanceKm} km</label>
+                  <label className="block text-xs font-medium text-gray-700">Distance maximale : {editMaxDistanceKm} km</label>
                   <input type="range" min={1} max={500} value={editMaxDistanceKm} onChange={(e) => setEditMaxDistanceKm(Number(e.target.value))} className="block w-full accent-black" />
                 </div>
                 <EditActions saving={saving} onSave={() => saveSection({ ageMin: editAgeMin, ageMax: editAgeMax, maxDistanceKm: editMaxDistanceKm })} onCancel={() => setEditingSection(null)} />
@@ -407,8 +407,8 @@ export default function ProfilePage() {
               <div className="mt-3 space-y-3">
                 {Object.entries(editSocialLinks).map(([platform, url]) => (
                   <div key={platform} className="flex items-center gap-2">
-                    <span className="w-20 shrink-0 text-xs font-medium text-gray-600">{platform}</span>
-                    <input type="url" value={url} onChange={(e) => setEditSocialLinks({ ...editSocialLinks, [platform]: e.target.value })} className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-900 placeholder:text-gray-500 focus:border-black focus:outline-none" />
+                    <span className="w-20 shrink-0 text-xs font-medium text-gray-700">{platform}</span>
+                    <input type="url" value={url} onChange={(e) => setEditSocialLinks({ ...editSocialLinks, [platform]: e.target.value })} className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-900 focus:border-black focus:outline-none" />
                     <button type="button" onClick={() => { const c = { ...editSocialLinks }; delete c[platform]; setEditSocialLinks(c); }} className="text-xs text-red-500">✕</button>
                   </div>
                 ))}
@@ -416,7 +416,7 @@ export default function ProfilePage() {
                   <select value={editSocialPlatform} onChange={(e) => setEditSocialPlatform(e.target.value)} className="rounded-md border border-gray-300 px-2 py-1.5 text-xs">
                     {SOCIAL_PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
                   </select>
-                  <input type="url" value={editSocialUrl} onChange={(e) => setEditSocialUrl(e.target.value)} placeholder="https://..." className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-900 placeholder:text-gray-500 focus:border-black focus:outline-none" />
+                  <input type="url" value={editSocialUrl} onChange={(e) => setEditSocialUrl(e.target.value)} placeholder="https://..." className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-900 focus:border-black focus:outline-none" />
                   <button type="button" onClick={() => { if (editSocialUrl.trim()) { setEditSocialLinks({ ...editSocialLinks, [editSocialPlatform]: editSocialUrl.trim() }); setEditSocialUrl(''); } }} disabled={!editSocialUrl.trim()} className="rounded-md border border-gray-300 px-3 py-1.5 text-xs disabled:opacity-40">+</button>
                 </div>
                 <EditActions saving={saving} onSave={() => saveSection({ socialLinks: editSocialLinks })} onCancel={() => setEditingSection(null)} />
