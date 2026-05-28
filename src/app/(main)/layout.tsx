@@ -2,6 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import dynamic from 'next/dynamic';
+
+const MatchDialog = dynamic(() => import('@/components/MatchDialog'), { ssr: false });
 
 const navItems = [
   { href: '/discover', label: 'Découvrir' },
@@ -13,6 +17,9 @@ const navItems = [
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
+  const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'eu';
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -47,6 +54,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           })}
         </div>
       </nav>
+
+      {session?.user?.id && pusherKey && (
+        <MatchDialog
+          userId={session.user.id}
+          pusherKey={pusherKey}
+          pusherCluster={pusherCluster}
+        />
+      )}
     </div>
   );
 }

@@ -44,6 +44,7 @@ export const limits: Record<string, RateLimitPreset> = {
   auth: { limit: 5, windowMs: 60_000 },
   message: { limit: 30, windowMs: 60_000 },
   geoloc: { limit: 12, windowMs: 60_000 },
+  discover: { limit: 30, windowMs: 60_000 },
   like: { limit: 50, windowMs: 86_400_000 },
   report: { limit: 5, windowMs: 3_600_000 },
   api: { limit: 60, windowMs: 60_000 },

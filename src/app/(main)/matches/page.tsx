@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Pusher from 'pusher-js';
 
 interface MatchUser {
   id: string;
@@ -44,6 +45,30 @@ export default function MatchesPage() {
 
   useEffect(() => {
     fetchMatches();
+  }, [fetchMatches]);
+
+  // Auto-refresh on new match via Pusher
+  useEffect(() => {
+    const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
+    if (!pusherKey) return;
+
+    let client: Pusher | null = null;
+
+    fetch('/api/auth/session').then(r => r.json()).then((session) => {
+      if (!session?.user?.id) return;
+      client = new Pusher(pusherKey, {
+        cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'eu',
+        channelAuthorization: { endpoint: '/api/pusher/auth', transport: 'ajax' },
+      });
+      const channel = client.subscribe(`private-user-${session.user.id}`);
+      channel.bind('new-match', () => {
+        fetchMatches();
+      });
+    });
+
+    return () => {
+      if (client) client.disconnect();
+    };
   }, [fetchMatches]);
 
   if (loading) {

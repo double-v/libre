@@ -16,6 +16,8 @@ export function middleware(request: NextRequest) {
       preset = limits.message;
     } else if (path.includes('/geoloc/')) {
       preset = limits.geoloc;
+    } else if (path.includes('/discover')) {
+      preset = limits.discover;
     } else if (path.includes('/likes')) {
       preset = limits.like;
     } else if (path.includes('/moderation/report')) {

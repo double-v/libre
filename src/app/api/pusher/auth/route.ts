@@ -19,24 +19,30 @@ export async function POST(request: Request) {
       return new NextResponse('Missing socket_id or channel_name', { status: 400 });
     }
 
-    // Only allow private-chat- channels
-    if (!channelName.startsWith('private-chat-')) {
+    // Allow private-chat- and private-user- channels
+    if (channelName.startsWith('private-chat-')) {
+      const conversationId = channelName.replace('private-chat-', '');
+
+      // Verify user is a participant in this conversation
+      const conversation = await prisma.conversation.findUnique({
+        where: { id: conversationId },
+      });
+
+      if (!conversation) {
+        return new NextResponse('Conversation not found', { status: 404 });
+      }
+
+      if (conversation.userA !== session.user.id && conversation.userB !== session.user.id) {
+        return new NextResponse('Forbidden', { status: 403 });
+      }
+    } else if (channelName.startsWith('private-user-')) {
+      // User can only subscribe to their own channel
+      const channelUserId = channelName.replace('private-user-', '');
+      if (channelUserId !== session.user.id) {
+        return new NextResponse('Forbidden', { status: 403 });
+      }
+    } else {
       return new NextResponse('Forbidden channel', { status: 403 });
-    }
-
-    const conversationId = channelName.replace('private-chat-', '');
-
-    // Verify user is a participant in this conversation
-    const conversation = await prisma.conversation.findUnique({
-      where: { id: conversationId },
-    });
-
-    if (!conversation) {
-      return new NextResponse('Conversation not found', { status: 404 });
-    }
-
-    if (conversation.userA !== session.user.id && conversation.userB !== session.user.id) {
-      return new NextResponse('Forbidden', { status: 403 });
     }
 
     const authResponse = pusher.authorizeChannel(socketId, channelName);

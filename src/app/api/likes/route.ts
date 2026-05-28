@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import prisma from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { likeSchema } from '@/lib/validators';
+import { pusher, getUserChannel } from '@/lib/pusher';
 
 const DAILY_LIKE_LIMIT = 50;
 
@@ -107,6 +108,37 @@ export async function POST(request: Request) {
       });
 
       matchId = match.id;
+
+      // Notify both users via Pusher
+      try {
+        const likerProfile = await prisma.user.findUnique({
+          where: { id: likerId },
+          select: { displayName: true, profile: { select: { photos: true } } },
+        });
+        const likedProfile = await prisma.user.findUnique({
+          where: { id: likedId },
+          select: { displayName: true, profile: { select: { photos: true } } },
+        });
+
+        const matchPayload = {
+          matchId: match.id,
+          conversationId: match.conversation?.id,
+        };
+
+        // Notify the person who was liked first (they didn't initiate this like)
+        pusher.trigger(getUserChannel(likedId), 'new-match', {
+          ...matchPayload,
+          matchedWith: { id: likerId, displayName: likerProfile?.displayName, photos: likerProfile?.profile?.photos },
+        });
+
+        // Also notify the liker (they initiated but should see confirmation)
+        pusher.trigger(getUserChannel(likerId), 'new-match', {
+          ...matchPayload,
+          matchedWith: { id: likedId, displayName: likedProfile?.displayName, photos: likedProfile?.profile?.photos },
+        });
+      } catch (pusherError) {
+        console.error('Pusher match notification error:', pusherError);
+      }
     }
 
     return NextResponse.json(

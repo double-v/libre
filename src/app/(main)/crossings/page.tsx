@@ -45,13 +45,31 @@ export default function CrossingsPage() {
 
   async function handleLike(userId: string) {
     try {
-      await fetch('/api/likes', {
+      const res = await fetch('/api/likes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ likedId: userId }),
       });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.match) {
+          const matchedUser = crossings.find((c) => c.id === userId);
+          if (matchedUser && typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('libre:instant-match', {
+              detail: {
+                matchId: data.matchId,
+                matchedWith: {
+                  id: userId,
+                  displayName: matchedUser.displayName,
+                  photos: matchedUser.profile.photos,
+                },
+              },
+            }));
+          }
+        }
+      }
     } catch {
-      // Silently fail — card is still removed from list
+      // Silently fail
     }
     setCrossings((prev) => prev.filter((c) => c.id !== userId));
   }

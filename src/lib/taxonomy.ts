@@ -19,6 +19,8 @@ export const GENDER_OPTIONS = [
   { value: '', label: 'Je ne souhaite pas le préciser' },
 ] as const;
 
+export const ORIENTATION_OPTIONS = ['hétéro', 'homo', 'bi', 'pan', 'ace', 'autre'] as const;
+
 // ─── Centres d'intérêt ────────────────────────────────────────────────────────
 
 export const INTEREST_CATEGORIES: TagCategory[] = [

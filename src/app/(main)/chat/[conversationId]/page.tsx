@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Pusher from 'pusher-js';
-import { encryptMessage } from '@/lib/crypto';
+import { encryptMessage, decryptMessage } from '@/lib/crypto';
 import { useEncryptedChat } from '@/hooks/useEncryptedChat';
 import ShareContactButton from '@/components/ShareContactButton';
 
@@ -43,13 +43,25 @@ export default function ChatConversationPage() {
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
 
-  // E2E encryption state
-  const { hasKeys, decryptPrivateKeyFromStorage } = useEncryptedChat();
-  const [privateKey, setPrivateKey] = useState<string | null>(null);
-  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
-  const [password, setPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
+  const { privateKey, ready } = useEncryptedChat();
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Attempt to decrypt a message; fall back to raw content
+  const tryDecrypt = useCallback(async (content: string, senderId: string): Promise<string> => {
+    // Only decrypt if it looks like base64 ciphertext and we have keys
+    if (!privateKey || !otherPublicKey) return content;
+    // Don't try to decrypt our own messages (they're already plaintext in UI)
+    if (senderId !== otherUser?.id) return content;
+    // Quick base64 check
+    if (!/^[A-Za-z0-9+/]+=*$/.test(content) || content.length < 30) return content;
+
+    try {
+      return await decryptMessage(content, otherPublicKey, privateKey);
+    } catch {
+      // Not encrypted or decryption failed — show as-is
+      return content;
+    }
+  }, [privateKey, otherPublicKey, otherUser?.id]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -59,14 +71,12 @@ export default function ChatConversationPage() {
   // Load conversation, messages, and other user's public key
   const loadConversation = useCallback(async () => {
     try {
-      // Fetch conversation details
       const convoRes = await fetch(`/api/chat/${conversationId}`);
       if (!convoRes.ok) throw new Error('Failed to fetch conversation');
       const convoData: ConversationData = await convoRes.json();
-
       setOtherUser(convoData.otherUser);
 
-      // Fetch other user's profile to get their public key
+      // Fetch other user's public key
       const profileRes = await fetch(`/api/users/${convoData.otherUser.id}`);
       if (profileRes.ok) {
         const profileData: ProfileData = await profileRes.json();
@@ -89,6 +99,26 @@ export default function ChatConversationPage() {
     loadConversation();
   }, [loadConversation]);
 
+  // Decrypt received messages once we have all keys
+  useEffect(() => {
+    if (!privateKey || !otherPublicKey || messages.length === 0) return;
+    const otherId = otherUser?.id;
+    if (!otherId) return;
+
+    let cancelled = false;
+    (async () => {
+      const decrypted = await Promise.all(
+        messages.map(async (msg) => {
+          if (msg.senderId !== otherId) return msg;
+          const decrypted = await tryDecrypt(msg.content, msg.senderId);
+          return { ...msg, content: decrypted };
+        }),
+      );
+      if (!cancelled) setMessages(decrypted);
+    })();
+    return () => { cancelled = true; };
+  }, [privateKey, otherPublicKey, messages.length, otherUser?.id, tryDecrypt]);
+
   // Subscribe to Pusher for real-time messages
   useEffect(() => {
     const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
@@ -106,59 +136,31 @@ export default function ChatConversationPage() {
     const channel = pusher.subscribe(channelName);
 
     channel.bind('new-message', (data: { id: string; senderId: string; createdAt: string }) => {
-      // Pusher only sends metadata; fetch the full message
       fetch(`/api/chat/${conversationId}/messages`)
         .then((res) => res.json())
-        .then((msgData) => {
+        .then(async (msgData) => {
           if (msgData.messages) {
-            setMessages(msgData.messages);
+            // Decrypt new messages if possible
+            const decrypted = await Promise.all(
+              msgData.messages.map(async (msg: Message) => {
+                if (msg.senderId === otherUser?.id && privateKey && otherPublicKey) {
+                  const decrypted = await tryDecrypt(msg.content, msg.senderId);
+                  return { ...msg, content: decrypted };
+                }
+                return msg;
+              }),
+            );
+            setMessages(decrypted);
           }
         })
-        .catch(() => {
-          // Fallback: add partial message from Pusher data
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === data.id)) return prev;
-            return [
-              ...prev,
-              {
-                id: data.id,
-                senderId: data.senderId,
-                content: '[Message chiffre]',
-                createdAt: data.createdAt,
-              },
-            ];
-          });
-        });
+        .catch(() => {});
     });
 
     return () => {
       pusher.unsubscribe(channelName);
       pusher.disconnect();
     };
-  }, [conversationId]);
-
-  // Handle password unlock for E2E encryption
-  const handleUnlockKey = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPasswordError('');
-    try {
-      const key = await decryptPrivateKeyFromStorage(password);
-      setPrivateKey(key);
-      setShowPasswordPrompt(false);
-      setPassword('');
-    } catch {
-      setPasswordError('Mot de passe incorrect ou cle introuvable');
-    }
-  };
-
-  // Prompt for password when user tries to send but hasn't unlocked their key
-  const ensurePrivateKey = (): string | null => {
-    if (privateKey) return privateKey;
-    if (hasKeys) {
-      setShowPasswordPrompt(true);
-    }
-    return null;
-  };
+  }, [conversationId, otherUser?.id, privateKey, otherPublicKey, tryDecrypt]);
 
   // Send a message
   const handleSend = async (e: React.FormEvent) => {
@@ -170,15 +172,9 @@ export default function ChatConversationPage() {
     try {
       let content = text;
 
-      // Encrypt if we have the other user's public key and our private key
-      const myPrivateKey = ensurePrivateKey();
-      if (otherPublicKey && myPrivateKey) {
-        content = await encryptMessage(text, otherPublicKey, myPrivateKey);
-      } else {
-        // Block sending without E2E encryption
-        setSending(false);
-        setShowPasswordPrompt(true);
-        return;
+      // Encrypt if both users have keys
+      if (otherPublicKey && privateKey) {
+        content = await encryptMessage(text, otherPublicKey, privateKey);
       }
 
       const res = await fetch(`/api/chat/${conversationId}/messages`, {
@@ -189,12 +185,12 @@ export default function ChatConversationPage() {
 
       if (!res.ok) throw new Error('Failed to send message');
 
-      // The new message will come through Pusher, but we can optimistically add it
       const msgData = await res.json();
       if (msgData.message) {
+        // Add with plaintext (we know what we sent)
         setMessages((prev) => {
           if (prev.some((m) => m.id === msgData.message.id)) return prev;
-          return [...prev, msgData.message];
+          return [...prev, { ...msgData.message, content: text }];
         });
       }
 
@@ -229,11 +225,12 @@ export default function ChatConversationPage() {
     }
   };
 
-  // Format time for message display
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   };
+
+  const e2eEnabled = !!(privateKey && otherPublicKey);
 
   if (loading) {
     return (
@@ -247,9 +244,13 @@ export default function ChatConversationPage() {
     <div className="flex h-[calc(100vh-4rem)] max-w-lg flex-col mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-gray-200 p-4 dark:border-gray-800">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-300 text-sm font-bold dark:bg-gray-600">
-          {otherUser?.displayName?.[0] ?? '?'}
-        </div>
+        {otherUser?.photos?.[0] ? (
+          <img src={otherUser.photos[0]} alt={otherUser.displayName} className="h-10 w-10 rounded-full object-cover" />
+        ) : (
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-300 text-sm font-bold dark:bg-gray-600">
+            {otherUser?.displayName?.[0] ?? '?'}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <h1 className="truncate text-lg font-bold">{otherUser?.displayName ?? 'Utilisateur'}</h1>
           {otherUser && (
@@ -265,62 +266,12 @@ export default function ChatConversationPage() {
         </div>
       )}
 
-      {/* Password prompt modal */}
-      {showPasswordPrompt && (
-        <div className="mx-4 mt-2 rounded-lg border border-blush bg-blush p-4 dark:border-coral-dark dark:bg-coral-dark/50">
-          <p className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
-            Debloquez votre cle privee pour envoyer des messages chiffres
-          </p>
-          <form onSubmit={handleUnlockKey} className="space-y-2">
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mot de passe"
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-coral focus:outline-none focus:ring-coral dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-            />
-            {passwordError && (
-              <p className="text-xs text-red-600 dark:text-red-400">{passwordError}</p>
-            )}
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="rounded-md bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-terracotta"
-              >
-                Debloquer
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowPasswordPrompt(false);
-                  setPassword('');
-                  setPasswordError('');
-                }}
-                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
-              >
-                Annuler
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* E2E status indicator */}
-      {!privateKey && hasKeys && !showPasswordPrompt && (
+      {/* E2E status */}
+      {!e2eEnabled && (
         <div className="mx-4 mt-2 rounded-md bg-yellow-50 p-2 text-xs text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-          Vos messages seront envoyes en clair jusqu&apos;au deblocage de votre cle privee.
-          <button
-            onClick={() => setShowPasswordPrompt(true)}
-            className="ml-1 font-medium underline"
-          >
-            Debloquer
-          </button>
-        </div>
-      )}
-
-      {!hasKeys && (
-        <div className="mx-4 mt-2 rounded-md bg-yellow-50 p-2 text-xs text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-          Le chiffrement E2E n&apos;est pas active. Configurez vos cles dans votre profil.
+          {!otherPublicKey
+            ? "Le chiffrement de bout en bout n'est pas disponible (l'autre utilisateur n'a pas encore de clés)"
+            : "Vos clés de chiffrement sont en cours d'initialisation…"}
         </div>
       )}
 
@@ -341,7 +292,7 @@ export default function ChatConversationPage() {
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-2 ${
                   isSent
-                    ? 'bg-black text-white dark:bg-gray-100 dark:text-gray-900'
+                    ? 'bg-terracotta text-white dark:bg-gray-100 dark:text-gray-900'
                     : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
                 }`}
               >
@@ -349,7 +300,7 @@ export default function ChatConversationPage() {
                 <p
                   className={`mt-1 text-[10px] ${
                     isSent
-                      ? 'text-gray-400 dark:text-gray-500'
+                      ? 'text-white/60 dark:text-gray-500'
                       : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >

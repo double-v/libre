@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Providers from '@/components/Providers';
 import './globals.css';
 
 export const viewport: Viewport = {
@@ -58,7 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Aller au contenu principal
         </a>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

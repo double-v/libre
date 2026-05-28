@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-import { useEncryptedChat } from '@/hooks/useEncryptedChat';
 import TagButton from '@/components/TagButton';
 import TagSelector from '@/components/TagSelector';
 import PrivacyTip from '@/components/PrivacyTip';
@@ -100,11 +99,6 @@ export default function ProfilePage() {
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // E2E keys
-  const { hasKeys, generateKeys } = useEncryptedChat();
-  const [keyPassword, setKeyPassword] = useState('');
-  const [keyMessage, setKeyMessage] = useState('');
-
   // Edit state per section
   const [editBio, setEditBio] = useState('');
   const [editBirthDate, setEditBirthDate] = useState('');
@@ -194,18 +188,6 @@ export default function ProfilePage() {
       router.push('/');
     } catch {
       setError('Erreur lors de la suppression');
-    }
-  };
-
-  const handleGenerateKeys = async () => {
-    if (!keyPassword) { setKeyMessage('Entrez un mot de passe'); return; }
-    try {
-      setKeyMessage('');
-      await generateKeys(keyPassword);
-      setKeyPassword('');
-      setKeyMessage('Clés E2E générées !');
-    } catch {
-      setKeyMessage('Erreur lors de la génération');
     }
   };
 
@@ -444,21 +426,6 @@ export default function ProfilePage() {
                 {Object.keys(profile.socialLinks || {}).length > 0
                   ? <div className="flex flex-wrap gap-1">{Object.keys(profile.socialLinks).map((p) => <span key={p} className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">{p}</span>)}</div>
                   : <span className="text-xs italic text-gray-400">Non renseigné</span>}
-              </div>
-            )}
-          </section>
-
-          {/* ─── Chiffrement E2E ────────────────────────────────────────── */}
-          <section className="rounded-lg border border-gray-200 p-4">
-            <h2 className="text-base font-semibold">Chiffrement E2E</h2>
-            {hasKeys ? (
-              <p className="mt-2 text-sm text-green-700">Vos clés de chiffrement sont configurées.</p>
-            ) : (
-              <div className="mt-3 space-y-3">
-                <p className="text-sm text-gray-600">Générez une paire de clés pour le chiffrement de bout en bout de vos messages.</p>
-                <input type="password" value={keyPassword} onChange={(e) => setKeyPassword(e.target.value)} placeholder="Mot de passe pour protéger la clé" className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none" />
-                <button type="button" onClick={handleGenerateKeys} className="rounded-full bg-terracotta px-4 py-1.5 text-xs font-medium text-white hover:bg-coral-dark">Générer les clés</button>
-                {keyMessage && <p className="text-sm text-gray-600">{keyMessage}</p>}
               </div>
             )}
           </section>

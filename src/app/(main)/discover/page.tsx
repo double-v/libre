@@ -123,11 +123,32 @@ export default function DiscoverPage() {
   const handleLike = async (userId: string) => {
     setPassedIds((prev) => new Set(prev).add(userId));
     try {
-      await fetch('/api/likes', {
+      const res = await fetch('/api/likes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ likedId: userId }),
       });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.match) {
+          // The MatchDialog in the layout will handle Pusher notification,
+          // but the liker gets instant feedback here
+          const matchedUser = users.find((u) => u.userId === userId);
+          if (matchedUser && typeof window !== 'undefined') {
+            // Dispatch custom event for MatchDialog or direct notification
+            window.dispatchEvent(new CustomEvent('libre:instant-match', {
+              detail: {
+                matchId: data.matchId,
+                matchedWith: {
+                  id: userId,
+                  displayName: matchedUser.displayName,
+                  photos: matchedUser.photos,
+                },
+              },
+            }));
+          }
+        }
+      }
     } catch {
       // Silently fail
     }

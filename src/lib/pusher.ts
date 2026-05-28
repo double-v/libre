@@ -10,3 +10,7 @@ export const pusher = new Pusher({
 export function getPusherChannel(conversationId: string) {
   return `private-chat-${conversationId}`;
 }
+
+export function getUserChannel(userId: string) {
+  return `private-user-${userId}`;
+}
