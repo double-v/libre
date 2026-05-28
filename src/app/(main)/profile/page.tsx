@@ -10,6 +10,7 @@ import ProfileCompleteness from '@/components/ProfileCompleteness';
 import ProfileSection from '@/components/ProfileSection';
 import ProfileField from '@/components/ProfileField';
 import ChipList from '@/components/ChipList';
+import Image from 'next/image';
 import { INTEREST_CATEGORIES, PRACTICE_CATEGORIES, GENDER_OPTIONS } from '@/lib/taxonomy';
 
 interface ProfileData {
@@ -320,7 +321,7 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-3 gap-2">
                     {editPhotos.map((url, i) => (
                       <div key={i} className="group relative aspect-square">
-                        <img src={url} alt={`Photo ${i + 1}`} className="h-full w-full rounded-lg object-cover" />
+                        <Image src={`/api/photos/${encodeURIComponent(url)}`} alt={`Photo ${i + 1}`} fill className="rounded-lg object-cover" />
                         <button
                           type="button"
                           onClick={async () => {
@@ -328,7 +329,7 @@ export default function ProfilePage() {
                               const res = await fetch('/api/users/photos', {
                                 method: 'DELETE',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ photoUrl: url }),
+                                body: JSON.stringify({ photoKey: url }),
                               });
                               if (res.ok) {
                                 const data = await res.json();
@@ -399,7 +400,7 @@ export default function ProfilePage() {
             ) : (
               <div className="mt-2 flex gap-2 overflow-x-auto">
                 {profile.photos.length > 0 ? profile.photos.map((url, i) => (
-                  <img key={i} src={url} alt={`Photo ${i + 1}`} className="h-20 w-20 shrink-0 rounded-lg object-cover" />
+                  <Image key={i} src={`/api/photos/${encodeURIComponent(url)}`} alt={`Photo ${i + 1}`} width={80} height={80} className="shrink-0 rounded-lg object-cover" />
                 )) : <span className="text-xs italic text-gray-600 dark:text-gray-400">Non renseigné</span>}
               </div>
             )}

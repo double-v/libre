@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import OnlineIndicator from '@/components/OnlineIndicator';
 import VerificationBadge from '@/components/VerificationBadge';
 import { isOnline, formatLastSeen } from '@/lib/time';
+import Image from 'next/image';
 import { photoUrl } from '@/lib/photos';
 
 interface PublicProfile {
@@ -166,12 +167,13 @@ export default function ProfileModal({ userId, open, onClose }: ProfileModalProp
         {profile && !loading && !error && (
           <div>
             {/* Photo section */}
-            <div className="relative">
+            <div className="relative h-72 w-full">
               {mainPhoto ? (
-                <img
+                <Image
                   src={photoUrl(mainPhoto)}
                   alt={profile.displayName}
-                  className="h-72 w-full rounded-t-2xl object-cover"
+                  fill
+                  className="rounded-t-2xl object-cover"
                 />
               ) : (
                 <div className="flex h-72 w-full items-center justify-center rounded-t-2xl bg-gradient-to-br from-blush to-coral/20">
@@ -194,13 +196,13 @@ export default function ProfileModal({ userId, open, onClose }: ProfileModalProp
                     key={i}
                     type="button"
                     onClick={() => setSelectedPhoto(i)}
-                    className={`h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
+                    className={`relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
                       i === selectedPhoto
                         ? 'border-coral'
                         : 'border-transparent hover:border-gray-300 dark:hover:border-gray-600'
                     }`}
                   >
-                    <img src={photoUrl(photo)} alt="" className="h-full w-full object-cover" />
+                    <Image src={photoUrl(photo)} alt={`Photo de ${profile.displayName} - ${i + 1}`} fill className="object-cover" />
                   </button>
                 ))}
               </div>

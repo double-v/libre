@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   authors: [{ name: 'Libre' }],
   creator: 'Libre',
   publisher: 'Libre',
-  metadataBase: new URL('https://libre.rencontres.app'),
+  metadataBase: new URL('https://www.getlibre.fr'),
   manifest: '/manifest.json',
   icons: {
     icon: '/favicon.svg',
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
-    url: 'https://libre.rencontres.app',
+    url: 'https://www.getlibre.fr',
     siteName: 'Libre',
     title: 'Libre — Rencontre libre et gratuite',
     description: 'Application de rencontre gratuite, sans abonnement ni revente de données. Parce que rencontrer ne devrait rien coûter.',
@@ -45,8 +45,24 @@ export const metadata: Metadata = {
     follow: true,
   },
   alternates: {
-    canonical: 'https://libre.rencontres.app',
+    canonical: '/',
   },
+};
+
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Libre',
+  url: 'https://www.getlibre.fr',
+  logo: 'https://www.getlibre.fr/favicon.svg',
+  description: 'Application de rencontre gratuite, sans abonnement ni revente de données.',
+};
+
+const webSiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Libre',
+  url: 'https://www.getlibre.fr',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -54,6 +70,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('libre-theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')}catch{}})()` }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }} />
       </head>
       <body className="antialiased">
         <a

@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: 'Libre — Rencontre gratuite, sans abonnement ni revente de données',
   description:
     'Application de rencontre 100% gratuite. Pas d\'abonnement, pas de microtransactions, pas de revente de données. Parce que rencontrer ne devrait rien coûter.',
-  alternates: { canonical: 'https://libre.rencontres.app' },
+  alternates: { canonical: '/' },
 };
 
 const facts = [

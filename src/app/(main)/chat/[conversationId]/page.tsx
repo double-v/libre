@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Pusher from 'pusher-js';
 import { encryptMessage, decryptMessage } from '@/lib/crypto';
+import Image from 'next/image';
 import { photoUrl } from '@/lib/photos';
 import { useEncryptedChat } from '@/hooks/useEncryptedChat';
 import ShareContactButton from '@/components/ShareContactButton';
@@ -252,7 +253,7 @@ export default function ChatConversationPage() {
           onClick={() => otherUser && setSelectedUserId(otherUser.id)}
         >
           {otherUser?.photos?.[0] ? (
-            <img src={photoUrl(otherUser.photos[0])} alt={otherUser.displayName} className="h-10 w-10 rounded-full object-cover" />
+            <Image src={photoUrl(otherUser.photos[0])} alt={otherUser.displayName} width={40} height={40} className="rounded-full object-cover" />
           ) : (
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-300 text-sm font-bold dark:bg-gray-600">
               {otherUser?.displayName?.[0] ?? '?'}

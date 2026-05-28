@@ -4,7 +4,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Conditions générales d\'utilisation',
   description: 'CGU de Libre. Application de rencontre gratuite, respect de la vie privée, messages chiffrés.',
-  alternates: { canonical: 'https://libre.rencontres.app/cgu' },
+  alternates: { canonical: '/cgu' },
 };
 
 export default function CGUPage() {
