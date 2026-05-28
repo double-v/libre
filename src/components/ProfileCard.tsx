@@ -1,5 +1,6 @@
 import VerificationBadge from '@/components/VerificationBadge';
 import OnlineIndicator from '@/components/OnlineIndicator';
+import Image from 'next/image';
 import { photoUrl } from '@/lib/photos';
 
 interface ProfileCardProps {
@@ -52,10 +53,13 @@ export default function ProfileCard({
       <div className="flex items-start gap-3">
         {photos && photos.length > 0 ? (
           <div className="relative">
-            <img
+            <Image
               src={photoUrl(photos[0])}
               alt={displayName}
+              width={48}
+              height={48}
               className="h-12 w-12 rounded-full object-cover"
+              unoptimized
             />
             <OnlineIndicator online={online} />
           </div>

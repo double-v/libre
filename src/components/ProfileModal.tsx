@@ -174,6 +174,7 @@ export default function ProfileModal({ userId, open, onClose }: ProfileModalProp
                   alt={profile.displayName}
                   fill
                   className="rounded-t-2xl object-cover"
+                  unoptimized
                 />
               ) : (
                 <div className="flex h-72 w-full items-center justify-center rounded-t-2xl bg-gradient-to-br from-blush to-coral/20">
@@ -202,7 +203,7 @@ export default function ProfileModal({ userId, open, onClose }: ProfileModalProp
                         : 'border-transparent hover:border-gray-300 dark:hover:border-gray-600'
                     }`}
                   >
-                    <Image src={photoUrl(photo)} alt={`Photo de ${profile.displayName} - ${i + 1}`} fill className="object-cover" />
+                    <Image src={photoUrl(photo)} alt={`Photo de ${profile.displayName} - ${i + 1}`} fill className="object-cover" unoptimized />
                   </button>
                 ))}
               </div>

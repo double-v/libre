@@ -44,7 +44,7 @@ export const profileUpdateSchema = z.object({
   interests: z.array(z.string().max(30)).max(20).optional(),
   practices: z.array(z.string().max(30)).max(20).optional(),
   socialLinks: z.record(z.string(), z.string()).optional(),
-  photos: z.array(z.string().url()).max(6).optional(),
+  photos: z.array(z.string()).max(6).optional(),
   invisibleMode: z.boolean().optional(),
   maxDistanceKm: z.number().int().min(1).max(500).optional(),
   ageMin: z.number().int().min(18).max(99).optional(),

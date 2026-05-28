@@ -253,7 +253,7 @@ export default function ChatConversationPage() {
           onClick={() => otherUser && setSelectedUserId(otherUser.id)}
         >
           {otherUser?.photos?.[0] ? (
-            <Image src={photoUrl(otherUser.photos[0])} alt={otherUser.displayName} width={40} height={40} className="rounded-full object-cover" />
+            <Image src={photoUrl(otherUser.photos[0])} alt={otherUser.displayName} width={40} height={40} className="rounded-full object-cover" unoptimized />
           ) : (
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-300 text-sm font-bold dark:bg-gray-600">
               {otherUser?.displayName?.[0] ?? '?'}

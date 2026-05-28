@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Pusher from 'pusher-js';
 import { photoUrl } from '@/lib/photos';
 
@@ -76,10 +77,13 @@ export default function MatchDialog({ userId, pusherKey, pusherCluster }: MatchD
         </p>
 
         {photo ? (
-          <img
+          <Image
             src={photoUrl(photo)}
             alt={match.matchedWith.displayName}
+            width={96}
+            height={96}
             className="mx-auto mb-4 h-24 w-24 rounded-full object-cover"
+            unoptimized
           />
         ) : (
           <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-blush text-3xl font-bold text-coral">

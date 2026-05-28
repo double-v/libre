@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Pusher from 'pusher-js';
 import OnlineIndicator from '@/components/OnlineIndicator';
 import ProfileModal from '@/components/ProfileModal';
@@ -110,10 +111,13 @@ export default function MatchesPage() {
             <div className="flex items-center gap-3">
               <div className="relative">
                 {match.user.profile.photos && match.user.profile.photos.length > 0 ? (
-                  <img
+                  <Image
                     src={photoUrl(match.user.profile.photos[0])}
                     alt={match.user.displayName}
+                    width={48}
+                    height={48}
                     className="h-12 w-12 rounded-full object-cover"
+                    unoptimized
                   />
                 ) : (
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">

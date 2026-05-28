@@ -321,7 +321,7 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-3 gap-2">
                     {editPhotos.map((url, i) => (
                       <div key={i} className="group relative aspect-square">
-                        <Image src={`/api/photos/${encodeURIComponent(url)}`} alt={`Photo ${i + 1}`} fill className="rounded-lg object-cover" />
+                        <Image src={`/api/photos/${encodeURIComponent(url)}`} alt={`Photo ${i + 1}`} fill className="rounded-lg object-cover" unoptimized />
                         <button
                           type="button"
                           onClick={async () => {
@@ -400,7 +400,7 @@ export default function ProfilePage() {
             ) : (
               <div className="mt-2 flex gap-2 overflow-x-auto">
                 {profile.photos.length > 0 ? profile.photos.map((url, i) => (
-                  <Image key={i} src={`/api/photos/${encodeURIComponent(url)}`} alt={`Photo ${i + 1}`} width={80} height={80} className="shrink-0 rounded-lg object-cover" />
+                  <Image key={i} src={`/api/photos/${encodeURIComponent(url)}`} alt={`Photo ${i + 1}`} width={80} height={80} className="shrink-0 rounded-lg object-cover" unoptimized />
                 )) : <span className="text-xs italic text-gray-600 dark:text-gray-400">Non renseigné</span>}
               </div>
             )}
