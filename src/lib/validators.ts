@@ -25,12 +25,12 @@ function normalizeGenderIdentity(v: string | undefined): string | undefined {
 }
 
 export const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().regex(
+  email: z.string({ message: 'Veuillez entrer un email valide' }).email('Veuillez entrer un email valide'),
+  password: z.string({ message: 'Veuillez entrer un mot de passe' }).regex(
     passwordRegex,
-    'Password must be at least 8 characters with uppercase, lowercase, and a digit',
+    '8 caractères min, avec majuscule, minuscule et chiffre',
   ),
-  displayName: z.string().min(1).max(50).transform((s) => s.trim()),
+  displayName: z.string({ message: 'Veuillez entrer un pseudo' }).min(1, 'Le pseudo est requis').max(50, 'Le pseudo ne peut pas dépasser 50 caractères').transform((s) => s.trim()),
   turnstileToken: z.string().optional(),
   deviceId: z.string().optional(),
 });

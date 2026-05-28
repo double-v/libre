@@ -13,8 +13,10 @@ export async function POST(request: Request) {
     const parsed = registerSchema.safeParse(body);
 
     if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      const message = firstError?.message || 'Les informations saisies sont invalides';
       return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+        { error: message },
         { status: 400 },
       );
     }
@@ -45,7 +47,7 @@ export async function POST(request: Request) {
       });
       if (deviceCount >= 2) {
         return NextResponse.json(
-          { error: 'Nombre maximum de comptes atteint sur cet appareil' },
+          { error: 'Impossible de créer un compte pour le moment' },
           { status: 403 },
         );
       }
@@ -56,7 +58,7 @@ export async function POST(request: Request) {
     const existingUser = await prisma.user.findUnique({ where: { normalizedEmail } });
     if (existingUser) {
       return NextResponse.json(
-        { error: 'Email déjà utilisé' },
+        { error: 'Impossible de créer un compte avec cet email' },
         { status: 409 },
       );
     }

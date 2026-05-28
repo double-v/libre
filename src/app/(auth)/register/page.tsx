@@ -41,12 +41,7 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        const details = data.details as Record<string, string[]> | undefined;
-        if (details) {
-          setError(Object.values(details).flat().join(' '));
-        } else {
-          setError(data.error || 'Erreur lors de l\'inscription');
-        }
+        setError(data.error || 'Erreur lors de l\'inscription, veuillez réessayer');
         return;
       }
 
