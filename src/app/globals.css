@@ -1,8 +1,15 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+}
+
+:root.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 @theme inline {
@@ -16,13 +23,6 @@
   --color-coral-dark: #9E3A28;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 /* Base typography: 18px base, 1.6 line-height, Geist Sans
@@ -64,6 +64,9 @@ input::placeholder, textarea::placeholder {
   color: #9ca3af;
   font-style: italic;
   opacity: 1;
+}
+.dark input::placeholder, .dark textarea::placeholder {
+  color: #6b7280;
 }
 
 /* Mobile: slightly smaller base for comfort */

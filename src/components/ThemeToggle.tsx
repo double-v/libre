@@ -41,7 +41,7 @@ export default function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label="Changer le thème"
-      className="fixed bottom-20 right-4 z-40 h-10 w-10 rounded-full border border-gray-200 bg-white shadow-md transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+      className="fixed bottom-20 left-4 z-40 h-10 w-10 rounded-full border border-gray-200 bg-white shadow-md transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
     >
       {dark ? (
         <svg

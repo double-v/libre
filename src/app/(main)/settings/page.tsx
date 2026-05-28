@@ -101,7 +101,7 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="mb-6 text-2xl font-bold">Paramètres</h1>
+      <h1 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">Paramètres</h1>
 
       {error && (
         <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-400">
@@ -111,10 +111,10 @@ export default function SettingsPage() {
 
       <div className="space-y-6">
         {/* Invisible mode */}
-        <section className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+        <section className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:p-5">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold">Mode invisible</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Mode invisible</h2>
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 Vous n&apos;apparaîtrez plus dans les découvertes ni dans les passages proches.
               </p>
@@ -140,8 +140,8 @@ export default function SettingsPage() {
         </section>
 
         {/* Verification status */}
-        <section className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-          <h2 className="text-lg font-semibold">Vérification</h2>
+        <section className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:p-5">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Vérification</h2>
           {isVerified ? (
             <div className="mt-2 flex items-center gap-2">
               <span className="inline-block h-5 w-5 rounded-full bg-green-500" aria-hidden="true" />
@@ -166,8 +166,8 @@ export default function SettingsPage() {
         </section>
 
         {/* Sign out */}
-        <section className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-          <h2 className="text-lg font-semibold">Session</h2>
+        <section className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:p-5">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Session</h2>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
             Déconnectez-vous de votre compte.
           </p>
@@ -181,7 +181,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Delete account */}
-        <section className="rounded-lg border border-red-200 p-4 dark:border-red-900/50">
+        <section className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20 sm:p-5">
           <h2 className="mb-2 text-lg font-semibold text-red-700 dark:text-red-400">
             Zone dangereuse
           </h2>
