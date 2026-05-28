@@ -138,7 +138,7 @@ export default function Home() {
             <ul className="space-y-5">
               {comparisons.map((item) => (
                 <li key={item.title} className="flex gap-3">
-                  <span className="mt-1 shrink-0 text-lg text-gray-300" aria-hidden="true">
+                  <span className="mt-1 shrink-0 text-lg text-coral" aria-hidden="true">
                     &bull;
                   </span>
                   <div>

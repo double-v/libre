@@ -32,7 +32,7 @@ function BetaBanner({ onFeedback }: { onFeedback: () => void }) {
 
   return (
     <div className="flex items-center justify-center gap-2 border-b border-coral/20 bg-blush px-4 py-1.5 text-center text-xs text-coral-dark dark:border-coral/30 dark:bg-coral/10 dark:text-coral-light">
-      <span className="mr-1 rounded-full bg-coral px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+      <span className="mr-1 rounded-full bg-coral px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider text-white">
         Bêta
       </span>
       <span>Libre est en version bêta — vos retours comptent !</span>

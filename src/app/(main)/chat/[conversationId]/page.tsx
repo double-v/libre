@@ -303,7 +303,7 @@ export default function ChatConversationPage() {
               >
                 <p className="text-sm break-words">{msg.content}</p>
                 <p
-                  className={`mt-1 text-[10px] ${
+                  className={`mt-1 text-xs ${
                     isSent
                       ? 'text-white/60 dark:text-gray-500'
                       : 'text-gray-600 dark:text-gray-400'

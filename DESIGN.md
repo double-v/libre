@@ -76,6 +76,16 @@ Blush is Libre's answer to the "warm canvas" — tinted, never pure clinical whi
 
 No serif display face — Libre's voice is modern, approachable, never literary or corporate.
 
+### Base
+
+- **Font-size**: 18px desktop, 16px mobile — 16px is browser minimum, 18px is optimal for screen readability
+- **Line-height**: 1.6 body, 1.2 headings — tight heads, generous body
+- **Paragraph spacing**: 1.2em margin-bottom — breathing room between blocks
+- **Uppercase labels**: `letter-spacing: 0.05em` — prevents letter merging at small caps
+- **Max line length**: 60–75 characters (≈700px) — eye fatigue beyond that
+
+Source: crea-troyes.fr typography methodology — "Le confort de lecture passe toujours avant l'esthétique."
+
 ### Scale
 
 | Token | Size | Weight | Tailwind | Use |

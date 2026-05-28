@@ -84,10 +84,10 @@ export default function ProfileCard({
       {((interests && interests.length > 0) || (practices && practices.length > 0)) && (
         <div className="mt-3 flex flex-wrap gap-1">
           {interests?.map((i) => (
-            <span key={i} className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-700">{i}</span>
+            <span key={i} className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">{i}</span>
           ))}
           {practices?.map((p) => (
-            <span key={p} className="inline-block rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-medium text-purple-700">{p}</span>
+            <span key={p} className="inline-block rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">{p}</span>
           ))}
         </div>
       )}
