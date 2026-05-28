@@ -30,15 +30,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Maximum 6 photos autorisées' }, { status: 400 });
     }
 
-    const url = await uploadPhoto(file, session.user.id);
+    const key = await uploadPhoto(file, session.user.id);
 
     const updated = await prisma.profile.upsert({
       where: { userId: session.user.id },
-      update: { photos: { push: url } },
-      create: { userId: session.user.id, photos: [url] },
+      update: { photos: { push: key } },
+      create: { userId: session.user.id, photos: [key] },
     });
 
-    return NextResponse.json({ photo: url, photos: updated.photos }, { status: 201 });
+    return NextResponse.json({ photo: key, photos: updated.photos }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erreur lors de l\'envoi';
     console.error('Photo upload error:', error);
@@ -53,9 +53,9 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
-    const { photoUrl } = await request.json();
-    if (!photoUrl) {
-      return NextResponse.json({ error: 'URL requise' }, { status: 400 });
+    const { photoKey } = await request.json();
+    if (!photoKey) {
+      return NextResponse.json({ error: 'Clé requise' }, { status: 400 });
     }
 
     const profile = await prisma.profile.findUnique({
@@ -68,7 +68,7 @@ export async function DELETE(request: Request) {
 
     const updated = await prisma.profile.update({
       where: { userId: session.user.id },
-      data: { photos: profile.photos.filter((p) => p !== photoUrl) },
+      data: { photos: profile.photos.filter((p) => p !== photoKey) },
     });
 
     return NextResponse.json({ photos: updated.photos }, { status: 200 });

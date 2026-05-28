@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { email, password, displayName, turnstileToken, deviceId } = parsed.data;
+    const { email, password, displayName, turnstileToken = undefined, deviceId = undefined } = parsed.data;
 
     // Verify Turnstile captcha
     if (process.env.TURNSTILE_SECRET_KEY) {

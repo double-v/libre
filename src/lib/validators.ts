@@ -31,8 +31,8 @@ export const registerSchema = z.object({
     '8 caractères min, avec majuscule, minuscule et chiffre',
   ),
   displayName: z.string({ message: 'Veuillez entrer un pseudo' }).min(1, 'Le pseudo est requis').max(50, 'Le pseudo ne peut pas dépasser 50 caractères').transform((s) => s.trim()),
-  turnstileToken: z.string().optional(),
-  deviceId: z.string().optional(),
+  turnstileToken: z.string().nullable().optional(),
+  deviceId: z.string().nullable().optional(),
 });
 
 export const profileUpdateSchema = z.object({
