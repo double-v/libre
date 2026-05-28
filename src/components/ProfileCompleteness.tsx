@@ -17,8 +17,8 @@ const CHECKS: { key: string; label: string; section: string }[] = [
 export default function ProfileCompleteness({ profile, onSuggestionClick }: ProfileCompletenessProps) {
   if (!profile) {
     return (
-      <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
-        <p className="text-sm text-gray-600">Commencez par remplir votre profil</p>
+      <div className="mb-6 rounded-xl border border-gray-200 bg-blush p-4 dark:border-gray-700 dark:bg-coral/10">
+        <p className="text-sm text-gray-700 dark:text-gray-300">Commencez par remplir votre profil</p>
       </div>
     );
   }
@@ -39,27 +39,27 @@ export default function ProfileCompleteness({ profile, onSuggestionClick }: Prof
   });
 
   return (
-    <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
+    <div className="mb-6 rounded-xl border border-gray-200 bg-blush p-4 dark:border-gray-700 dark:bg-coral/10">
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-xs font-medium text-gray-600">
+        <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
           Profil complété à {pct}%
         </p>
         <span className="text-xs text-gray-600 dark:text-gray-400">{filled.length}/{CHECKS.length}</span>
       </div>
-      <div className="mb-2 h-1.5 w-full rounded-full bg-gray-200">
+      <div className="mb-2 h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
         <div
           className="h-1.5 rounded-full bg-coral transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>
       {nextMissing && pct < 100 && (
-        <p className="text-xs text-gray-600">
+        <p className="text-xs text-gray-700 dark:text-gray-300">
           Ajoutez {nextMissing.label}
           {onSuggestionClick && (
             <button
               type="button"
               onClick={() => onSuggestionClick(nextMissing.section)}
-              className="ml-1 font-medium underline hover:text-black"
+              className="ml-1 font-medium text-coral underline hover:text-terracotta"
             >
               ici
             </button>
