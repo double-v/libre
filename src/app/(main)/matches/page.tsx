@@ -6,6 +6,7 @@ import Pusher from 'pusher-js';
 import OnlineIndicator from '@/components/OnlineIndicator';
 import ProfileModal from '@/components/ProfileModal';
 import { formatLastSeen, isOnline } from '@/lib/time';
+import { photoUrl } from '@/lib/photos';
 
 interface MatchUser {
   id: string;
@@ -110,7 +111,7 @@ export default function MatchesPage() {
               <div className="relative">
                 {match.user.profile.photos && match.user.profile.photos.length > 0 ? (
                   <img
-                    src={match.user.profile.photos[0]}
+                    src={photoUrl(match.user.profile.photos[0])}
                     alt={match.user.displayName}
                     className="h-12 w-12 rounded-full object-cover"
                   />

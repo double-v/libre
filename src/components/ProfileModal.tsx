@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import OnlineIndicator from '@/components/OnlineIndicator';
 import VerificationBadge from '@/components/VerificationBadge';
 import { isOnline, formatLastSeen } from '@/lib/time';
+import { photoUrl } from '@/lib/photos';
 
 interface PublicProfile {
   id: string;
@@ -168,7 +169,7 @@ export default function ProfileModal({ userId, open, onClose }: ProfileModalProp
             <div className="relative">
               {mainPhoto ? (
                 <img
-                  src={mainPhoto}
+                  src={photoUrl(mainPhoto)}
                   alt={profile.displayName}
                   className="h-72 w-full rounded-t-2xl object-cover"
                 />
@@ -199,7 +200,7 @@ export default function ProfileModal({ userId, open, onClose }: ProfileModalProp
                         : 'border-transparent hover:border-gray-300 dark:hover:border-gray-600'
                     }`}
                   >
-                    <img src={photo} alt="" className="h-full w-full object-cover" />
+                    <img src={photoUrl(photo)} alt="" className="h-full w-full object-cover" />
                   </button>
                 ))}
               </div>

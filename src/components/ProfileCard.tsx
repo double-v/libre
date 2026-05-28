@@ -1,5 +1,6 @@
 import VerificationBadge from '@/components/VerificationBadge';
 import OnlineIndicator from '@/components/OnlineIndicator';
+import { photoUrl } from '@/lib/photos';
 
 interface ProfileCardProps {
   id: string;
@@ -52,7 +53,7 @@ export default function ProfileCard({
         {photos && photos.length > 0 ? (
           <div className="relative">
             <img
-              src={photos[0]}
+              src={photoUrl(photos[0])}
               alt={displayName}
               className="h-12 w-12 rounded-full object-cover"
             />
