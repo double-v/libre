@@ -144,7 +144,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.displayName,
-          role: user.role,
+          role: user.role.toUpperCase(), // Normalize to uppercase
         };
       },
     }),
@@ -168,8 +168,9 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role;
-        console.log('[auth/jwt] sign-in: id=%s role=%s', user.id, (user as any).role);
+        // Normalize role to uppercase to handle DB inconsistencies
+        token.role = String((user as any).role).toUpperCase();
+        console.log('[auth/jwt] sign-in: id=%s role=%s', user.id, token.role);
       } else if (token.id) {
         // JWT refresh: re-fetch role from DB so changes propagate
         // without requiring the user to sign out and back in
@@ -179,8 +180,9 @@ export const authOptions: NextAuthOptions = {
             select: { role: true },
           });
           if (dbUser) {
-            token.role = dbUser.role;
-            console.log('[auth/jwt] refresh: id=%s dbRole=%s', token.id, dbUser.role);
+            // Normalize to uppercase — DB may store 'user' or 'admin' in lowercase
+            token.role = dbUser.role.toUpperCase();
+            console.log('[auth/jwt] refresh: id=%s dbRole=%s', token.id, token.role);
           } else {
             console.log('[auth/jwt] refresh: id=%s user NOT FOUND in DB', token.id);
           }
