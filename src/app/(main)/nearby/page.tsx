@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import ProfileCard from '@/components/ProfileCard';
 import ProfileModal from '@/components/ProfileModal';
+import EmptyStateCards from '@/components/EmptyStateCards';
 
 interface NearbyUser {
   id: string;
@@ -137,9 +138,7 @@ export default function NearbyPage() {
       )}
 
       {!error && nearby.length === 0 && (
-        <p className="text-gray-600 dark:text-gray-400">
-          Personne a proximite pour le moment.
-        </p>
+        <EmptyStateCards context="à proximité" />
       )}
 
       <div className="space-y-4">
