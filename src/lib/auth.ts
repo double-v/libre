@@ -140,11 +140,15 @@ export const authOptions: NextAuthOptions = {
           throw new Error('EMAIL_NOT_VERIFIED');
         }
 
+        if (user.isBanned) {
+          throw new Error('ACCOUNT_BANNED');
+        }
+
         return {
           id: user.id,
           email: user.email,
           name: user.displayName,
-          role: user.role.toUpperCase(), // Normalize to uppercase
+          role: user.role.toUpperCase(),
         };
       },
     }),

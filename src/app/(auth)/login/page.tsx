@@ -68,6 +68,8 @@ function LoginForm() {
         if (result.error === 'EMAIL_NOT_VERIFIED') {
           setError('Veuillez vérifier votre email avant de vous connecter.');
           setUnverifiedEmail(email);
+        } else if (result.error === 'ACCOUNT_BANNED') {
+          setError('Votre compte a été suspendu. Contactez le support si vous pensez qu\'il s\'agit d\'une erreur.');
         } else {
           setError('Email ou mot de passe incorrect');
         }
@@ -141,6 +143,12 @@ function LoginForm() {
         </div>
       )}
 
+      {searchParams.get('reset') === 'success' && (
+        <div className="rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/30 dark:text-green-300">
+          Mot de passe réinitialisé ! Connectez-vous avec votre nouveau mot de passe.
+        </div>
+      )}
+
       {turnstileBlocked && !turnstileToken && (
         <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
           Le captcha de sécurité n&apos;a pas pu se charger. Cela arrive souvent avec les bloqueurs de publicités. Vous pouvez quand même vous connecter — si le problème persiste, essayez de désactiver temporairement votre bloqueur.
@@ -200,6 +208,12 @@ function LoginForm() {
         Pas encore de compte ?{' '}
         <Link href="/register" className="font-medium text-coral hover:text-terracotta">
           Créer un compte
+        </Link>
+      </p>
+
+      <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+        <Link href="/forgot-password" className="font-medium text-coral hover:text-terracotta">
+          Mot de passe oublié ?
         </Link>
       </p>
     </div>

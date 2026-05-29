@@ -44,3 +44,41 @@ export async function sendVerificationEmail(to: string, verifyUrl: string) {
     throw error;
   }
 }
+
+export async function sendPasswordResetEmail(to: string, resetUrl: string) {
+  const resend = getResend();
+  if (!resend) {
+    console.log(`[DEV] Reset URL for ${to}: ${resetUrl}`);
+    return;
+  }
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to,
+    subject: 'Réinitialisation de votre mot de passe — Libre',
+    html: `
+      <div style="max-width:480px;margin:0 auto;font-family:sans-serif;padding:24px">
+        <h1 style="color:#c0563f;font-size:24px;margin:0 0 16px">Mot de passe oublié ?</h1>
+        <p style="font-size:16px;color:#333;margin:0 0 24px">
+          Vous avez demandé à réinitialiser votre mot de passe. Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :
+        </p>
+        <a href="${resetUrl}"
+           style="display:inline-block;background:#c0563f;color:#fff;padding:12px 24px;border-radius:9999px;text-decoration:none;font-size:16px;font-weight:600">
+          Réinitialiser mon mot de passe
+        </a>
+        <p style="font-size:14px;color:#666;margin:24px 0 0">
+          Si le bouton ne fonctionne pas, copiez-collez ce lien :<br>
+          <a href="${resetUrl}" style="color:#c0563f;word-break:break-all">${resetUrl}</a>
+        </p>
+        <p style="font-size:12px;color:#999;margin:24px 0 0">
+          Ce lien expire dans 15 minutes. Si vous n'avez pas demandé cette réinitialisation, ignorez cet email — votre mot de passe reste inchangé.
+        </p>
+      </div>
+    `,
+  });
+
+  if (error) {
+    console.error('Failed to send password reset email:', error);
+    throw error;
+  }
+}
