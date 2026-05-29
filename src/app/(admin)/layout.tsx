@@ -59,3 +59,62 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     console.log('[admin/layout] ACCESS DENIED → 404 (dbRole=%s)', dbRole);
     notFound();
   }
+
+  return (
+    <div className="flex min-h-screen">
+      <aside className="hidden w-56 shrink-0 border-r border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900 md:block">
+        <div className="p-4">
+          <Link href="/admin" className="text-lg font-bold text-coral dark:text-coral-light">
+            Libre Admin
+          </Link>
+        </div>
+        <nav className="mt-2 flex flex-col gap-1 px-2">
+          {adminNavItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+            >
+              <SidebarIcon icon={item.icon} />
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="mt-auto border-t border-gray-200 p-4 dark:border-gray-800">
+          <Link href="/discover" className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+            ← Retour à l&apos;app
+          </Link>
+        </div>
+      </aside>
+
+      {/* Mobile header */}
+      <div className="flex flex-1 flex-col md:hidden">
+        <header className="border-b border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-950">
+          <div className="flex items-center justify-between">
+            <Link href="/admin" className="text-lg font-bold text-coral dark:text-coral-light">
+              Libre Admin
+            </Link>
+            <Link href="/discover" className="text-sm text-gray-500">
+              Retour
+            </Link>
+          </div>
+          <nav className="mt-2 flex gap-2 overflow-x-auto">
+            {adminNavItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </header>
+        <main className="flex-1 overflow-y-auto p-4">{children}</main>
+      </div>
+
+      {/* Desktop content */}
+      <main className="hidden flex-1 overflow-y-auto p-6 md:block">{children}</main>
+    </div>
+  );
+}
