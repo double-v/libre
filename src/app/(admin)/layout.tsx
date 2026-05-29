@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { getToken } from 'next-auth/jwt';
+import { decode } from 'next-auth/jwt';
 import { notFound } from 'next/navigation';
 import { getDb } from '@/lib/db';
 import Link from 'next/link';
@@ -32,8 +32,8 @@ function SidebarIcon({ icon }: { icon: string }) {
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   // ---------------------------------------------------------------------------
   // FIX: getServerSession(authOptions) is unreliable in App Router layouts.
-  // We decode the JWT cookie directly via next-auth/jwt which works in any
-  // server context (API route, middleware, server component, edge).
+  // We decode the JWT cookie directly via next-auth/jwt/decode — no req object
+  // needed, just the raw token string + secret. This works in ANY server context.
   // ---------------------------------------------------------------------------
   const cookieStore = await cookies();
 
@@ -47,13 +47,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     notFound();
   }
 
-  // Build a minimal req-compatible object for getToken
-  const cookieValue = `${tokenCookie.name}=${tokenCookie.value}`;
-  const req = {
-    headers: { cookie: cookieValue },
-    cookies: { [tokenCookie.name]: tokenCookie.value },
-  };
-
   const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
   if (!secret) {
     console.error('[admin/layout] NEXTAUTH_SECRET is not set');
@@ -62,7 +55,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   let token: { sub?: string; role?: string } | null = null;
   try {
-    token = await getToken({ req: req as any, secret });
+    token = await decode({ token: tokenCookie.value, secret });
   } catch (err) {
     console.error('[admin/layout] JWT decode error:', err);
     token = null;
