@@ -1,6 +1,6 @@
-import { getServerSession } from 'next-auth';
+import { cookies } from 'next/headers';
+import { getToken } from 'next-auth/jwt';
 import { notFound } from 'next/navigation';
-import { authOptions } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import Link from 'next/link';
 
@@ -30,30 +30,69 @@ function SidebarIcon({ icon }: { icon: string }) {
 }
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions);
-  console.log('[admin/layout] session=%s userId=%s jwtRole=%s',
-    !!session, session?.user?.id ?? 'none', session?.user?.role ?? 'none');
+  // ---------------------------------------------------------------------------
+  // FIX: getServerSession(authOptions) is unreliable in App Router layouts.
+  // We decode the JWT cookie directly via next-auth/jwt which works in any
+  // server context (API route, middleware, server component, edge).
+  // ---------------------------------------------------------------------------
+  const cookieStore = await cookies();
 
-  if (!session?.user?.id) {
-    console.log('[admin/layout] ACCESS DENIED → 404 (no session)');
+  // Try secure cookie name first (HTTPS), fallback to plain name (HTTP)
+  const cookieName = '__Secure-next-auth.session-token';
+  const fallbackName = 'next-auth.session-token';
+  let tokenCookie = cookieStore.get(cookieName) ?? cookieStore.get(fallbackName);
+
+  if (!tokenCookie) {
+    console.log('[admin/layout] ACCESS DENIED → 404 (no JWT cookie)');
     notFound();
   }
+
+  // Build a minimal req-compatible object for getToken
+  const cookieValue = `${tokenCookie.name}=${tokenCookie.value}`;
+  const req = {
+    headers: { cookie: cookieValue },
+    cookies: { [tokenCookie.name]: tokenCookie.value },
+  };
+
+  const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
+  if (!secret) {
+    console.error('[admin/layout] NEXTAUTH_SECRET is not set');
+    notFound();
+  }
+
+  let token: { sub?: string; role?: string } | null = null;
+  try {
+    token = await getToken({ req: req as any, secret });
+  } catch (err) {
+    console.error('[admin/layout] JWT decode error:', err);
+    token = null;
+  }
+
+  console.log('[admin/layout] token=%s sub=%s jwtRole=%s',
+    !!token, token?.sub ?? 'none', token?.role ?? 'none');
+
+  if (!token?.sub) {
+    console.log('[admin/layout] ACCESS DENIED → 404 (JWT has no subject)');
+    notFound();
+  }
+
+  const userId = token.sub;
+  const jwtRole = token.role?.toUpperCase();
 
   // Check DB directly — JWT may be stale, role changes must propagate instantly
   let dbRole: string | undefined;
   try {
     const dbUser = await getDb().user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: { role: true },
     });
     dbRole = dbUser?.role?.toUpperCase();
   } catch (err) {
     console.error('[admin/layout] DB error, falling back to JWT role:', err);
-    dbRole = session.user.role?.toUpperCase();
+    dbRole = jwtRole;
   }
 
-  console.log('[admin/layout] userId=%s dbRole=%s jwtRole=%s',
-    session.user.id, dbRole ?? 'none', session.user.role);
+  console.log('[admin/layout] userId=%s dbRole=%s jwtRole=%s', userId, dbRole ?? 'none', jwtRole);
 
   if (dbRole !== 'ADMIN') {
     console.log('[admin/layout] ACCESS DENIED → 404 (dbRole=%s)', dbRole);
