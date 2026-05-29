@@ -34,6 +34,32 @@ interface ProfileData {
   isVerified?: boolean;
 }
 
+function getCacheKey(conversationId: string): string {
+  return `libre_chat_cache_${conversationId}`;
+}
+
+function loadPlaintextCache(conversationId: string): Map<string, string> {
+  try {
+    const raw = localStorage.getItem(getCacheKey(conversationId));
+    if (raw) {
+      const obj = JSON.parse(raw);
+      return new Map(Object.entries(obj));
+    }
+  } catch {
+    // ignore
+  }
+  return new Map();
+}
+
+function savePlaintextCache(conversationId: string, cache: Map<string, string>): void {
+  try {
+    const obj = Object.fromEntries(cache.entries());
+    localStorage.setItem(getCacheKey(conversationId), JSON.stringify(obj));
+  } catch {
+    // ignore
+  }
+}
+
 export default function ChatConversationPage() {
   const params = useParams<{ conversationId: string }>();
   const conversationId = params.conversationId;
@@ -46,58 +72,55 @@ export default function ChatConversationPage() {
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  // Cache persistant session-level des messages en clair (own + decrypted from other)
-  const plaintextCacheRef = useRef<Map<string, string>>(new Map());
 
   const { privateKey, publicKey, ready } = useEncryptedChat();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const cacheRef = useRef<Map<string, string>>(loadPlaintextCache(conversationId));
+  const pendingOwnRef = useRef<Set<string>>(new Set());
 
-  // Attempt to decrypt a message; fall back to raw content
-  const tryDecrypt = useCallback(async (content: string, senderId: string): Promise<string> => {
-    // Only decrypt if it looks like base64 ciphertext and we have keys
-    if (!privateKey || !otherPublicKey) return content;
-    // Don't try to decrypt our own messages (they're already plaintext in UI)
-    if (senderId !== otherUser?.id) return content;
-    // Quick base64 check
-    if (!/^[A-Za-z0-9+/]+=*$/.test(content) || content.length < 30) return content;
+  // ─── Decryption helpers ──────────────────────────────────────────
 
-    try {
-      return await decryptMessage(content, otherPublicKey, privateKey);
-    } catch {
-      // Not encrypted or decryption failed — show as-is
-      return content;
-    }
-  }, [privateKey, otherPublicKey, otherUser?.id]);
+  const tryDecrypt = useCallback(
+    async (content: string): Promise<string> => {
+      if (!privateKey || !otherPublicKey) return content;
+      if (!/^[A-Za-z0-9+/]+=*$/.test(content) || content.length < 30) return content;
+      try {
+        return await decryptMessage(content, otherPublicKey, privateKey);
+      } catch {
+        return content;
+      }
+    },
+    [privateKey, otherPublicKey],
+  );
 
-  // Apply plaintext cache + decrypt incoming messages
-  const resolveContent = useCallback((msg: Message): string => {
-    const cached = plaintextCacheRef.current.get(msg.id);
-    if (cached != null) return cached;
-    // Messages from other user might be encrypted — decrypt async later
-    return msg.content;
-  }, []);
+  // Decrypt a batch of messages; cache results; update localStorage
+  const applyDecryption = useCallback(
+    async (msgs: Message[]): Promise<Message[]> => {
+      if (!privateKey || !otherPublicKey) return msgs;
+      const cache = cacheRef.current;
+      const decrypted = await Promise.all(
+        msgs.map(async (msg) => {
+          const cached = cache.get(msg.id);
+          if (cached != null) return { ...msg, content: cached };
+          const plain = await tryDecrypt(msg.content);
+          if (plain !== msg.content) cache.set(msg.id, plain);
+          return { ...msg, content: plain };
+        }),
+      );
+      savePlaintextCache(conversationId, cache);
+      return decrypted;
+    },
+    [privateKey, otherPublicKey, conversationId, tryDecrypt],
+  );
 
-  // Decrypt messages from the other user asynchronously
-  const applyDecryption = useCallback(async (msgs: Message[]): Promise<Message[]> => {
-    if (!privateKey || !otherPublicKey || !otherUser?.id) return msgs;
-    return Promise.all(
-      msgs.map(async (msg) => {
-        if (msg.senderId !== otherUser.id) return msg; // own messages: rely on cache
-        const cached = plaintextCacheRef.current.get(msg.id);
-        if (cached != null) return { ...msg, content: cached };
-        const decrypted = await tryDecrypt(msg.content, msg.senderId);
-        if (decrypted !== msg.content) plaintextCacheRef.current.set(msg.id, decrypted);
-        return { ...msg, content: decrypted };
-      }),
-    );
-  }, [privateKey, otherPublicKey, otherUser?.id, tryDecrypt]);
+  // ─── Scroll ──────────────────────────────────────────────────────
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages.length]);
 
-  // Load conversation, messages, and other user's public key
+  // ─── Load conversation & messages ────────────────────────────────
+
   const loadConversation = useCallback(async () => {
     try {
       const convoRes = await fetch(`/api/chat/${conversationId}`);
@@ -105,25 +128,21 @@ export default function ChatConversationPage() {
       const convoData: ConversationData = await convoRes.json();
       setOtherUser(convoData.otherUser);
 
-      // Fetch other user's public key
       const profileRes = await fetch(`/api/users/${convoData.otherUser.id}`);
       if (profileRes.ok) {
         const profileData: ProfileData = await profileRes.json();
         setOtherPublicKey(profileData.publicKey ?? null);
       }
 
-      // Fetch messages
       const msgRes = await fetch(`/api/chat/${conversationId}/messages`);
       if (!msgRes.ok) throw new Error('Failed to fetch messages');
       const msgData = await msgRes.json();
+      const base: Message[] = msgData.messages || [];
 
-      // Apply decryption + cache
-      const baseMessages: Message[] = msgData.messages || [];
-      setMessages(baseMessages);
-      // Async decrypt after state update
-      applyDecryption(baseMessages).then((decrypted) => {
-        setMessages(decrypted);
-      });
+      // First render raw (fast), then decrypt in background
+      setMessages(base);
+      const decrypted = await applyDecryption(base);
+      setMessages(decrypted);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
     } finally {
@@ -135,7 +154,8 @@ export default function ChatConversationPage() {
     loadConversation();
   }, [loadConversation]);
 
-  // Pusher realtime — fetch messages, decrypt other user's, preserve own plaintext from cache
+  // ─── Pusher realtime ─────────────────────────────────────────────
+
   useEffect(() => {
     const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
     if (!pusherKey) return;
@@ -151,39 +171,40 @@ export default function ChatConversationPage() {
     const channelName = `private-chat-${conversationId}`;
     const channel = pusher.subscribe(channelName);
 
-    channel.bind('new-message', (data: { id: string; senderId: string; createdAt: string }) => {
-      fetch(`/api/chat/${conversationId}/messages`)
-        .then((res) => res.json())
-        .then((msgData) => {
-          if (msgData.messages) {
-            const base: Message[] = msgData.messages;
-            // Set base first, then decrypt + cache
-            setMessages(base);
-            applyDecryption(base).then((decrypted) => {
+    channel.bind(
+      'new-message',
+      (_data: { id: string; senderId: string; createdAt: string }) => {
+        fetch(`/api/chat/${conversationId}/messages`)
+          .then((res) => res.json())
+          .then(async (msgData) => {
+            if (msgData.messages) {
+              const base: Message[] = msgData.messages;
+              // Preserve pending own messages (not yet in DB) by keeping them in cache
+              const decrypted = await applyDecryption(base);
               setMessages(decrypted);
-            });
-          }
-        })
-        .catch(() => {});
-    });
+            }
+          })
+          .catch(() => {});
+      },
+    );
 
     return () => {
       pusher.unsubscribe(channelName);
       pusher.disconnect();
     };
-  }, [conversationId, otherUser?.id, privateKey, otherPublicKey, applyDecryption]);
+  }, [conversationId, applyDecryption]);
 
-  // Send a message
+  // ─── Send message ────────────────────────────────────────────────
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     const text = inputText.trim();
     if (!text || sending) return;
 
     setSending(true);
+    setError('');
     try {
       let content = text;
-
-      // Encrypt if both users have keys
       if (otherPublicKey && privateKey) {
         content = await encryptMessage(text, otherPublicKey, privateKey);
       }
@@ -194,22 +215,29 @@ export default function ChatConversationPage() {
         body: JSON.stringify({ content }),
       });
 
-      if (!res.ok) throw new Error('Failed to send message');
-
-      const msgData = await res.json();
-      if (msgData.message) {
-        // 1. Cache notre texte clair immédiatement
-        plaintextCacheRef.current.set(msgData.message.id, text);
-        // 2. Ajouter à l'UI avec le clair
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === msgData.message.id)) return prev;
-          return [...prev, { ...msgData.message, content: text }];
-        });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to send message');
       }
 
+      const msgData = await res.json();
+      if (msgData.message?.id) {
+        // 1. Cache own plaintext
+        cacheRef.current.set(msgData.message.id, text);
+        savePlaintextCache(conversationId, cacheRef.current);
+        // 2. Optimistic UI
+        const optimistic: Message = {
+          ...msgData.message,
+          content: text,
+        };
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === optimistic.id)) return prev;
+          return [...prev, optimistic];
+        });
+      }
       setInputText('');
-    } catch {
-      setError("Impossible d'envoyer le message");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Impossible d'envoyer");
     } finally {
       setSending(false);
     }
@@ -227,16 +255,20 @@ export default function ChatConversationPage() {
       if (!res.ok) throw new Error('Failed to send');
 
       const msgData = await res.json();
-      if (msgData.message) {
+      if (msgData.message?.id) {
+        cacheRef.current.set(msgData.message.id, content);
+        savePlaintextCache(conversationId, cacheRef.current);
         setMessages((prev) => {
           if (prev.some((m) => m.id === msgData.message.id)) return prev;
-          return [...prev, msgData.message];
+          return [...prev, { ...msgData.message, content }];
         });
       }
     } catch {
       setError("Impossible d'envoyer le message de partage");
     }
   };
+
+  // ─── UI helpers ──────────────────────────────────────────────────
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -254,21 +286,30 @@ export default function ChatConversationPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] max-w-lg flex-col mx-auto">
+    <div className="mx-auto flex h-[calc(100vh-4rem)] max-w-lg flex-col">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-gray-200 p-4 dark:border-gray-800">
         <div
-          className="flex items-center gap-3 cursor-pointer flex-1 min-w-0"
+          className="flex flex-1 min-w-0 cursor-pointer items-center gap-3"
           onClick={() => otherUser && setSelectedUserId(otherUser.id)}
         >
           {otherUser?.photos?.[0] ? (
-            <Image src={photoUrl(otherUser.photos[0])} alt={otherUser.displayName} width={40} height={40} className="rounded-full object-cover" unoptimized />
+            <Image
+              src={photoUrl(otherUser.photos[0])}
+              alt={otherUser.displayName}
+              width={40}
+              height={40}
+              className="rounded-full object-cover"
+              unoptimized
+            />
           ) : (
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-300 text-sm font-bold dark:bg-gray-600">
               {otherUser?.displayName?.[0] ?? '?'}
             </div>
           )}
-          <h1 className="truncate text-lg font-bold text-gray-900 dark:text-gray-100">{otherUser?.displayName ?? 'Utilisateur'}</h1>
+          <h1 className="truncate text-lg font-bold text-gray-900 dark:text-gray-100">
+            {otherUser?.displayName ?? 'Utilisateur'}
+          </h1>
         </div>
         {otherUser && (
           <ShareContactButton conversationId={conversationId} onSend={handleShareContact} />
@@ -292,7 +333,11 @@ export default function ChatConversationPage() {
       )}
 
       {/* Messages list */}
-      <div aria-live="polite" aria-label="Messages de la conversation" className="flex-1 overflow-y-auto p-4 space-y-2">
+      <div
+        aria-live="polite"
+        aria-label="Messages de la conversation"
+        className="flex-1 space-y-2 overflow-y-auto p-4"
+      >
         {messages.length === 0 && (
           <p className="text-center text-sm text-gray-600 dark:text-gray-400">
             Commencez la conversation !
@@ -301,10 +346,7 @@ export default function ChatConversationPage() {
         {messages.map((msg) => {
           const isSent = msg.senderId !== otherUser?.id;
           return (
-            <div
-              key={msg.id}
-              className={`flex ${isSent ? 'justify-end' : 'justify-start'}`}
-            >
+            <div key={msg.id} className={`flex ${isSent ? 'justify-end' : 'justify-start'}`}>
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-2 ${
                   isSent
@@ -312,7 +354,7 @@ export default function ChatConversationPage() {
                     : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
                 }`}
               >
-                <p className="text-sm break-words">{msg.content}</p>
+                <p className="break-words text-sm">{msg.content}</p>
                 <p
                   className={`mt-1 text-xs ${
                     isSent
@@ -332,7 +374,9 @@ export default function ChatConversationPage() {
       {/* Input area */}
       <div className="border-t border-gray-200 p-4 dark:border-gray-800">
         <form onSubmit={handleSend} aria-label="Envoyer un message" className="flex gap-2">
-          <label htmlFor="chat-input" className="sr-only">Votre message</label>
+          <label htmlFor="chat-input" className="sr-only">
+            Votre message
+          </label>
           <input
             id="chat-input"
             type="text"
@@ -352,7 +396,11 @@ export default function ChatConversationPage() {
           </button>
         </form>
       </div>
-      <ProfileModal userId={selectedUserId ?? ''} open={!!selectedUserId} onClose={() => setSelectedUserId(null)} />
+      <ProfileModal
+        userId={selectedUserId ?? ''}
+        open={!!selectedUserId}
+        onClose={() => setSelectedUserId(null)}
+      />
     </div>
   );
 }
