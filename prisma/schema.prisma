@@ -42,6 +42,8 @@ model User {
   feedback             Feedback[]
   accounts             Account[]
   sessions             Session[]
+  moderationActions   ModerationLog[] @relation("ModerationActions")
+  moderationTargets    ModerationLog[] @relation("ModerationTargets")
 
   @@map("users")
 }
@@ -215,6 +217,22 @@ model Feedback {
   @@index([status])
   @@index([createdAt])
   @@map("feedback")
+}
+
+model ModerationLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  adminId      String   @db.Uuid
+  targetUserId String   @db.Uuid
+  action       String   // BAN, UNBAN, WARNING, DELETE_USER, APPROVE_VERIFICATION, REJECT_VERIFICATION, DISMISS_REPORT
+  reason       String?
+  createdAt    DateTime @default(now())
+
+  admin      User @relation("ModerationActions", fields: [adminId], references: [id], onDelete: Cascade)
+  targetUser User @relation("ModerationTargets", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  @@index([action])
+  @@index([createdAt])
+  @@map("moderation_logs")
 }
 
 model Account {
