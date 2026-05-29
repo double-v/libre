@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Turnstile } from '@marsidev/react-turnstile';
 import PrivacyTip from '@/components/PrivacyTip';
@@ -10,6 +11,7 @@ const TURNSTILE_LOAD_TIMEOUT = 5000;
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { status } = useSession();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,6 +38,20 @@ export default function RegisterPage() {
     }, TURNSTILE_LOAD_TIMEOUT);
     return () => clearTimeout(timer);
   }, [siteKey, turnstileToken]);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace('/discover');
+    }
+  }, [status, router]);
+
+  if (status === 'loading') {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center text-gray-500">
+        Chargement…
+      </div>
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -30,7 +30,10 @@ function SidebarIcon({ icon }: { icon: string }) {
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
+  console.log('[admin/layout] session=%s userId=%s role=%s',
+    !!session, session?.user?.id ?? 'none', session?.user?.role ?? 'none');
   if (!session?.user?.id || session.user.role !== 'ADMIN') {
+    console.log('[admin/layout] ACCESS DENIED → 404');
     notFound();
   }
 

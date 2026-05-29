@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { Suspense } from 'react';
@@ -11,6 +11,7 @@ const TURNSTILE_LOAD_TIMEOUT = 5000;
 
 function LoginForm() {
   const router = useRouter();
+  const { status } = useSession();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,6 +30,20 @@ function LoginForm() {
     }, TURNSTILE_LOAD_TIMEOUT);
     return () => clearTimeout(timer);
   }, [siteKey, turnstileToken]);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace('/discover');
+    }
+  }, [status, router]);
+
+  if (status === 'loading') {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center text-gray-500">
+        Chargement…
+      </div>
+    );
+  }
 
   const justRegistered = searchParams.get('registered') === 'true';
   const justVerified = searchParams.get('verified') === 'true';

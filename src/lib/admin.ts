@@ -16,8 +16,16 @@ export interface AdminSession {
  */
 export async function verifyAdmin(): Promise<AdminSession | null> {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) return null;
-  if (session.user.role !== 'ADMIN') return null;
+  console.log('[admin/verifyAdmin] session=%s userId=%s role=%s',
+    !!session, session?.user?.id ?? 'none', session?.user?.role ?? 'none');
+  if (!session?.user?.id) {
+    console.log('[admin/verifyAdmin] DENIED: no session or no user.id');
+    return null;
+  }
+  if (session.user.role !== 'ADMIN') {
+    console.log('[admin/verifyAdmin] DENIED: role=%s is not ADMIN', session.user.role);
+    return null;
+  }
   return {
     userId: session.user.id,
     email: session.user.email ?? '',

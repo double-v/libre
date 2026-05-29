@@ -169,6 +169,24 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = (user as any).role;
+        console.log('[auth/jwt] sign-in: id=%s role=%s', user.id, (user as any).role);
+      } else if (token.id) {
+        // JWT refresh: re-fetch role from DB so changes propagate
+        // without requiring the user to sign out and back in
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { role: true },
+          });
+          if (dbUser) {
+            token.role = dbUser.role;
+            console.log('[auth/jwt] refresh: id=%s dbRole=%s', token.id, dbUser.role);
+          } else {
+            console.log('[auth/jwt] refresh: id=%s user NOT FOUND in DB', token.id);
+          }
+        } catch (err) {
+          console.error('[auth/jwt] refresh DB error for id=%s:', token.id, err);
+        }
       }
       return token;
     },
