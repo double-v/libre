@@ -85,3 +85,19 @@ export const verificationRequestSchema = z.object({
 export const blockSchema = z.object({
   blockedId: z.string().uuid(),
 });
+
+// Admin validators
+export const adminHandleReportSchema = z.object({
+  action: z.enum(['DISMISS_REPORT', 'BAN', 'WARNING']),
+  reason: z.string().max(500).optional(),
+});
+
+export const adminHandleVerificationSchema = z.object({
+  action: z.enum(['APPROVE_VERIFICATION', 'REJECT_VERIFICATION']),
+  reason: z.string().max(500).optional(),
+});
+
+export const adminBanSchema = z.object({
+  banned: z.boolean(),
+  reason: z.string().max(500).optional(),
+});
