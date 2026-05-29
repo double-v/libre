@@ -88,8 +88,26 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   console.log('[admin/layout] userId=%s dbRole=%s jwtRole=%s', userId, dbRole ?? 'none', jwtRole);
 
   if (dbRole !== 'ADMIN') {
-    console.log('[admin/layout] ACCESS DENIED → 404 (dbRole=%s)', dbRole);
-    notFound();
+    console.log('[admin/layout] ACCESS DENIED → showing forbidden page (dbRole=%s)', dbRole);
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-950">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-red-600">Accès refusé</h1>
+          <p className="mt-4 text-lg text-gray-700 dark:text-gray-300">
+            Rôle requis : <strong>ADMIN</strong>
+          </p>
+          <p className="mt-2 text-gray-500 dark:text-gray-400">
+            Votre rôle actuel : <code className="rounded bg-gray-200 px-2 py-1 dark:bg-gray-800">{dbRole || 'non défini'}</code>
+          </p>
+          <Link
+            href="/discover"
+            className="mt-6 inline-block rounded-lg bg-coral px-6 py-3 text-white hover:bg-coral-dark"
+          >
+            Retour à l&apos;application
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (

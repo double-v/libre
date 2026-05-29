@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { rateLimit, limits } from '@/lib/rate-limit';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // Rate limiting on API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
