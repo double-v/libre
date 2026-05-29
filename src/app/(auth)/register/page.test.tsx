@@ -7,6 +7,10 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
+vi.mock('next-auth/react', () => ({
+  useSession: () => ({ status: 'unauthenticated' }),
+}));
+
 describe('RegisterPage', () => {
   it('renders registration form', () => {
     render(<RegisterPage />);
@@ -35,6 +39,6 @@ describe('RegisterPage', () => {
 
   it('displays the tagline', () => {
     render(<RegisterPage />);
-    expect(screen.getByText(/gratuit\. pour toujours\./i)).toBeInTheDocument();
+    expect(screen.getByText(/gratuit\. sans limites\./i)).toBeInTheDocument();
   });
 });
