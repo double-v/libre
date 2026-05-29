@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 
 async function isValidECDHPublicKey(base64: string): Promise<boolean> {
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       );
     }
 
-    await prisma.userKey.upsert({
+    await getDb().userKey.upsert({
       where: { userId: session.user.id },
       update: { publicKey },
       create: {

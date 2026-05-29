@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { blockSchema } from '@/lib/validators';
 
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     }
 
     // Check for existing block
-    const existingBlock = await prisma.block.findUnique({
+    const existingBlock = await getDb().block.findUnique({
       where: {
         blockerId_blockedId: { blockerId, blockedId },
       },
@@ -41,13 +41,13 @@ export async function POST(request: Request) {
     }
 
     // Create the block
-    await prisma.block.create({
+    await getDb().block.create({
       data: { blockerId, blockedId },
     });
 
     // AUTO-UNMATCH: delete any matches between the two users
     // Conversations and messages cascade on match deletion
-    await prisma.match.deleteMany({
+    await getDb().match.deleteMany({
       where: {
         OR: [
           { userA: blockerId, userB: blockedId },

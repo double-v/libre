@@ -3,7 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GitHubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 import bcrypt from 'bcryptjs';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { normalizeEmail } from '@/lib/email';
 
 // ---------------------------------------------------------------------------
@@ -14,7 +14,7 @@ import { normalizeEmail } from '@/lib/email';
 
 const adapter = {
   createUser: async (data: Record<string, unknown>) => {
-    return prisma.user.create({
+    return getDb().user.create({
       data: {
         email: data.email as string,
         displayName: (data.name as string) || 'New User',
@@ -23,13 +23,13 @@ const adapter = {
     }) as any;
   },
   getUser: async (id: string) => {
-    return prisma.user.findUnique({ where: { id } }) as any;
+    return getDb().user.findUnique({ where: { id } }) as any;
   },
   getUserByEmail: async (email: string) => {
-    return prisma.user.findUnique({ where: { email } }) as any;
+    return getDb().user.findUnique({ where: { email } }) as any;
   },
   getUserByAccount: async (params: { provider: string; providerAccountId: string }) => {
-    const account = await prisma.account.findUnique({
+    const account = await getDb().account.findUnique({
       where: {
         provider_providerAccountId: {
           provider: params.provider,
@@ -45,19 +45,19 @@ const adapter = {
     const allowed: Record<string, unknown> = {};
     if ('email' in rest) allowed.email = rest.email;
     if ('name' in rest) allowed.displayName = rest.name;
-    return prisma.user.update({
+    return getDb().user.update({
       where: { id },
       data: allowed,
     }) as any;
   },
   deleteUser: async (id: string) => {
-    return prisma.user.delete({ where: { id } }) as any;
+    return getDb().user.delete({ where: { id } }) as any;
   },
   linkAccount: async (data: Record<string, unknown>) => {
-    return prisma.account.create({ data: data as any }) as any;
+    return getDb().account.create({ data: data as any }) as any;
   },
   unlinkAccount: async (params: { provider: string; providerAccountId: string }) => {
-    return prisma.account.delete({
+    return getDb().account.delete({
       where: {
         provider_providerAccountId: {
           provider: params.provider,
@@ -67,10 +67,10 @@ const adapter = {
     }) as any;
   },
   createSession: async (data: Record<string, unknown>) => {
-    return prisma.session.create({ data: data as any }) as any;
+    return getDb().session.create({ data: data as any }) as any;
   },
   getSessionAndUser: async (sessionToken: string) => {
-    const userAndSession = await prisma.session.findUnique({
+    const userAndSession = await getDb().session.findUnique({
       where: { sessionToken },
       include: { user: true },
     });
@@ -79,13 +79,13 @@ const adapter = {
     return { user, session } as any;
   },
   updateSession: async (data: Record<string, unknown> & { sessionToken: string }) => {
-    return prisma.session.update({
+    return getDb().session.update({
       where: { sessionToken: data.sessionToken },
       data: data as any,
     }) as any;
   },
   deleteSession: async (sessionToken: string) => {
-    return prisma.session.delete({ where: { sessionToken } }) as any;
+    return getDb().session.delete({ where: { sessionToken } }) as any;
   },
 };
 
@@ -123,7 +123,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         const normalizedInput = normalizeEmail(credentials.email);
-        const user = await prisma.user.findUnique({
+        const user = await getDb().user.findUnique({
           where: { normalizedEmail: normalizedInput },
         });
 
@@ -174,7 +174,7 @@ export const authOptions: NextAuthOptions = {
         // JWT refresh: re-fetch role from DB so changes propagate
         // without requiring the user to sign out and back in
         try {
-          const dbUser = await prisma.user.findUnique({
+          const dbUser = await getDb().user.findUnique({
             where: { id: token.id as string },
             select: { role: true },
           });

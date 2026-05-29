@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
-import { prisma } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { adminBanSchema } from '@/lib/validators';
 
 export async function GET(
@@ -11,7 +11,7 @@ export async function GET(
   if (!isAdminSession(adminResult)) return adminResult;
   const { id } = await params;
 
-  const user = await prisma.user.findUnique({
+  const user = await getDb().user.findUnique({
     where: { id },
     include: {
       profile: true,
@@ -43,12 +43,12 @@ export async function PATCH(
 
   const { banned, reason } = parsed.data;
 
-  const user = await prisma.user.update({
+  const user = await getDb().user.update({
     where: { id },
     data: { isBanned: banned },
   });
 
-  await prisma.moderationLog.create({
+  await getDb().moderationLog.create({
     data: {
       adminId: adminResult.userId,
       targetUserId: id,
@@ -68,9 +68,9 @@ export async function DELETE(
   if (!isAdminSession(adminResult)) return adminResult;
   const { id } = await params;
 
-  await prisma.user.delete({ where: { id } });
+  await getDb().user.delete({ where: { id } });
 
-  await prisma.moderationLog.create({
+  await getDb().moderationLog.create({
     data: {
       adminId: adminResult.userId,
       targetUserId: id,

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
-import { prisma } from '@/lib/db';
+import { getDb } from '@/lib/db';
 
 export async function GET() {
   const adminResult = await requireAdmin();
@@ -12,10 +12,10 @@ export async function GET() {
     pendingReports,
     pendingVerifications,
   ] = await Promise.all([
-    prisma.user.count(),
-    prisma.user.count({ where: { isBanned: true } }),
-    prisma.report.count({ where: { status: 'pending' } }),
-    prisma.verificationRequest.count({ where: { status: 'pending' } }),
+    getDb().user.count(),
+    getDb().user.count({ where: { isBanned: true } }),
+    getDb().report.count({ where: { status: 'pending' } }),
+    getDb().verificationRequest.count({ where: { status: 'pending' } }),
   ]);
 
   return NextResponse.json({

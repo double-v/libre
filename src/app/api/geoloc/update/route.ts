@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { geolocUpdateSchema } from '@/lib/validators';
 import { fuzzLocation, haversineDistance, roundDistance, isWithinRadius } from '@/lib/geoloc';
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     // Store fuzzed coordinates — never persist raw GPS
     const fuzzed = fuzzLocation(latitude, longitude);
 
-    await prisma.profile.upsert({
+    await getDb().profile.upsert({
       where: { userId },
       update: { lastKnownLat: fuzzed.lat, lastKnownLng: fuzzed.lng },
       create: {
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     });
 
     // Fetch all other users with non-default positions
-    const otherProfiles = await prisma.profile.findMany({
+    const otherProfiles = await getDb().profile.findMany({
       where: {
         userId: { not: userId },
         lastKnownLat: { not: 0 },
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     });
 
     // Check for blocks involving the current user
-    const blocks = await prisma.block.findMany({
+    const blocks = await getDb().block.findMany({
       where: {
         OR: [
           { blockerId: userId },
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
       }
 
       // Check for existing encounter in the last 24h for this pair
-      const existing = await prisma.encounter.findFirst({
+      const existing = await getDb().encounter.findFirst({
         where: {
           OR: [
             { userA: userId, userB: otherUserId, happenedAt: { gte: cutoff } },
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       const fuzzed = fuzzLocation(latitude, longitude);
       const rounded = roundDistance(distanceM);
 
-      await prisma.encounter.create({
+      await getDb().encounter.create({
         data: {
           userA: userId,
           userB: otherUserId,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { getTodayTheme, getPseudonym } from '@/lib/square/themes';
 import { addMessage } from '@/lib/square/store';
 import { squareMessageSchema } from '@/lib/square/validators';
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   const userId = session.user.id;
 
   // Check if user is banned from square
-  const user = await prisma.user.findUnique({
+  const user = await getDb().user.findUnique({
     where: { id: userId },
     select: { squareBannedUntil: true, role: true },
   });

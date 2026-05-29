@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { getPhotoSignedUrl, isR2Configured } from '@/lib/r2';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ key: string }> }) {
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     // Permission check: owner can always see, others must be matches
     if (ownerId !== session.user.id) {
-      const isMatch = await prisma.match.findFirst({
+      const isMatch = await getDb().match.findFirst({
         where: {
           OR: [
             { userA: session.user.id, userB: ownerId },

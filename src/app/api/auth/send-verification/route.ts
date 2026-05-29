@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createVerificationToken } from '@/lib/verify-token';
 import { sendVerificationEmail } from '@/lib/email-send';
 import { normalizeEmail } from '@/lib/email';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 
 export async function POST(request: Request) {
   try {
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     }
 
     const normalizedEmail = normalizeEmail(email);
-    const user = await prisma.user.findUnique({ where: { normalizedEmail } });
+    const user = await getDb().user.findUnique({ where: { normalizedEmail } });
 
     if (!user) {
       return NextResponse.json({ message: 'Si un compte existe avec cet email, un lien de vérification a été envoyé.' }, { status: 200 });

@@ -3,21 +3,31 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
+  __libre_prisma: PrismaClient | undefined;
 };
 
-function createPrismaClient() {
-  const connectionString = process.env.DATABASE_URL;
-  const ssl = connectionString?.includes('neon.tech') ? true : undefined;
-  const pool = new pg.Pool({ connectionString, ssl });
-  const adapter = new PrismaPg(pool);
-  return new PrismaClient({ adapter });
+/**
+ * Returns the singleton PrismaClient instance.
+ * Uses a function accessor + globalThis because Turbopack wraps module
+ * exports in a proxy that breaks PrismaClient's internal delegation chain.
+ * Reading from globalThis at call-time always returns the live object.
+ */
+export function getDb(): PrismaClient {
+  if (!globalForPrisma.__libre_prisma) {
+    const connectionString = process.env.DATABASE_URL;
+    // Neon requires explicit SSL config (Prisma 7 PrismaPg regression #29252)
+    const isNeon = connectionString?.includes('neon.tech');
+    const pool = new pg.Pool({
+      connectionString,
+      ssl: isNeon ? { rejectUnauthorized: false } : undefined,
+    });
+    const adapter = new PrismaPg(pool);
+    globalForPrisma.__libre_prisma = new PrismaClient({ adapter });
+  }
+  return globalForPrisma.__libre_prisma;
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
-}
-
+// Legacy exports — still break under Turbopack but kept for type compat.
+// Prefer getDb() everywhere in server code.
+export const prisma = globalForPrisma.__libre_prisma ?? ({} as PrismaClient);
 export default prisma;

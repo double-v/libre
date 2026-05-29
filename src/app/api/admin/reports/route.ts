@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
-import { prisma } from '@/lib/db';
+import { getDb } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   const adminResult = await requireAdmin();
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   const perPage = Math.min(50, Math.max(1, Number(searchParams.get('perPage') ?? '20')));
 
   const [reports, total] = await Promise.all([
-    prisma.report.findMany({
+    getDb().report.findMany({
       where: { status },
       include: {
         reporter: { select: { id: true, displayName: true } },
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       skip: (page - 1) * perPage,
       take: perPage,
     }),
-    prisma.report.count({ where: { status } }),
+    getDb().report.count({ where: { status } }),
   ]);
 
   return NextResponse.json({ reports, total, page, perPage });

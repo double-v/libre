@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { profileUpdateSchema } from '@/lib/validators';
 
@@ -11,7 +11,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await getDb().user.findUnique({
       where: { id: session.user.id },
       select: { isVerified: true, profile: true },
     });
@@ -66,7 +66,7 @@ export async function PUT(request: Request) {
     if (data.ageMin !== undefined) { updateData.ageMin = data.ageMin; createData.ageMin = data.ageMin; }
     if (data.ageMax !== undefined) { updateData.ageMax = data.ageMax; createData.ageMax = data.ageMax; }
 
-    const profile = await prisma.profile.upsert({
+    const profile = await getDb().profile.upsert({
       where: { userId: session.user.id },
       update: updateData,
       create: createData as never,

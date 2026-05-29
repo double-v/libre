@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 
 export async function PUT(
@@ -31,7 +31,7 @@ export async function PUT(
     }
 
     // Find the verification request
-    const verificationRequest = await prisma.verificationRequest.findUnique({
+    const verificationRequest = await getDb().verificationRequest.findUnique({
       where: { id },
     });
 
@@ -43,7 +43,7 @@ export async function PUT(
     }
 
     // Update the verification request
-    const updated = await prisma.verificationRequest.update({
+    const updated = await getDb().verificationRequest.update({
       where: { id },
       data: {
         status,
@@ -54,7 +54,7 @@ export async function PUT(
 
     // If approved, update the user's isVerified flag
     if (status === 'approved') {
-      await prisma.user.update({
+      await getDb().user.update({
         where: { id: verificationRequest.userId },
         data: { isVerified: true },
       });

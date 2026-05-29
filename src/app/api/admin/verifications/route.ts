@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
-import { prisma } from '@/lib/db';
+import { getDb } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   const adminResult = await requireAdmin();
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const status = searchParams.get('status') ?? 'pending';
 
-  const verifications = await prisma.verificationRequest.findMany({
+  const verifications = await getDb().verificationRequest.findMany({
     where: { status },
     include: {
       user: { select: { id: true, displayName: true, email: true } },

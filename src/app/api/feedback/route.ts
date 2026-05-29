@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { z } from 'zod';
 
 const feedbackSchema = z.object({
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     const { category, message, url } = parsed.data;
     const userAgent = request.headers.get('user-agent') || undefined;
 
-    const feedback = await prisma.feedback.create({
+    const feedback = await getDb().feedback.create({
       data: {
         userId: session?.user?.id || null,
         category,

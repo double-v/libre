@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { haversineDistance } from '@/lib/geoloc';
 
@@ -14,7 +14,7 @@ export async function GET() {
     const userId = session.user.id;
 
     // Get current user's profile for position and maxDistanceKm
-    const myProfile = await prisma.profile.findUnique({
+    const myProfile = await getDb().profile.findUnique({
       where: { userId },
     });
 
@@ -23,7 +23,7 @@ export async function GET() {
     }
 
     // Fetch all other users with non-default positions
-    const otherProfiles = await prisma.profile.findMany({
+    const otherProfiles = await getDb().profile.findMany({
       where: {
         userId: { not: userId },
         lastKnownLat: { not: 0 },
@@ -33,7 +33,7 @@ export async function GET() {
     });
 
     // Check for blocks involving the current user
-    const blocks = await prisma.block.findMany({
+    const blocks = await getDb().block.findMany({
       where: {
         OR: [
           { blockerId: userId },
@@ -49,7 +49,7 @@ export async function GET() {
     }
 
     // Get already-liked user IDs
-    const likes = await prisma.like.findMany({
+    const likes = await getDb().like.findMany({
       where: { likerId: userId },
       select: { likedId: true },
     });

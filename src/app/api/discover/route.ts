@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { haversineDistance } from '@/lib/geoloc';
 
@@ -25,10 +25,10 @@ export async function GET(request: NextRequest) {
     const interestsFilter = searchParams.get('interests')?.split(',').filter(Boolean) || [];
 
     // Get current user's profile for nearby tab
-    const myProfile = await prisma.profile.findUnique({ where: { userId } });
+    const myProfile = await getDb().profile.findUnique({ where: { userId } });
 
     // Get blocked user IDs
-    const blocks = await prisma.block.findMany({
+    const blocks = await getDb().block.findMany({
       where: { OR: [{ blockerId: userId }, { blockedId: userId }] },
       select: { blockerId: true, blockedId: true },
     });
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get already-liked user IDs
-    const likes = await prisma.like.findMany({
+    const likes = await getDb().like.findMany({
       where: { likerId: userId },
       select: { likedId: true },
     });
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
 
     if (tab === 'online') {
       const onlineThreshold = new Date(Date.now() - ONLINE_THRESHOLD_MS);
-      const dbProfiles = await prisma.profile.findMany({
+      const dbProfiles = await getDb().profile.findMany({
         where: {
           ...baseWhere,
           user: { ...baseWhere.user, lastActive: { gte: onlineThreshold } },
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ users: [], nextCursor: null });
       }
       const maxDist = myProfile.maxDistanceKm || 50;
-      const allProfiles = await prisma.profile.findMany({
+      const allProfiles = await getDb().profile.findMany({
         where: {
           ...baseWhere,
           lastKnownLat: { not: 0 },
@@ -152,7 +152,7 @@ export async function GET(request: NextRequest) {
       // tab === 'all'
       const now = Date.now();
       const onlineThreshold = new Date(now - ONLINE_THRESHOLD_MS);
-      const dbProfiles = await prisma.profile.findMany({
+      const dbProfiles = await getDb().profile.findMany({
         where: baseWhere,
         include: { user: { select: { id: true, displayName: true, isVerified: true, lastActive: true } } },
         take: PAGE_SIZE + 1,

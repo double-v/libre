@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { pusher } from '@/lib/pusher';
 
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       const conversationId = channelName.replace('private-chat-', '');
 
       // Verify user is a participant in this conversation
-      const conversation = await prisma.conversation.findUnique({
+      const conversation = await getDb().conversation.findUnique({
         where: { id: conversationId },
       });
 

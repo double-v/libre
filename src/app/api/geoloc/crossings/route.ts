@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 
 export async function GET() {
@@ -13,7 +13,7 @@ export async function GET() {
     const userId = session.user.id;
 
     // Get blocked user IDs to exclude from crossings
-    const blocks = await prisma.block.findMany({
+    const blocks = await getDb().block.findMany({
       where: { OR: [{ blockerId: userId }, { blockedId: userId }] },
       select: { blockerId: true, blockedId: true },
     });
@@ -23,13 +23,13 @@ export async function GET() {
     }
 
     // Get already-liked user IDs
-    const likes = await prisma.like.findMany({
+    const likes = await getDb().like.findMany({
       where: { likerId: userId },
       select: { likedId: true },
     });
     const likedIds = new Set(likes.map((l) => l.likedId));
 
-    const encounters = await prisma.encounter.findMany({
+    const encounters = await getDb().encounter.findMany({
       where: {
         OR: [
           { userA: userId },

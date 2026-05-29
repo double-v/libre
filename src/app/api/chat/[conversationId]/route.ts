@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 
 export async function GET(
@@ -16,7 +16,7 @@ export async function GET(
     const { conversationId } = await params;
     const userId = session.user.id;
 
-    const conversation = await prisma.conversation.findUnique({
+    const conversation = await getDb().conversation.findUnique({
       where: { id: conversationId },
       include: {
         match: {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { likeSchema } from '@/lib/validators';
 import { pusher, getUserChannel } from '@/lib/pusher';
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     }
 
     // Check if a block exists between the two users (in either direction)
-    const block = await prisma.block.findFirst({
+    const block = await getDb().block.findFirst({
       where: {
         OR: [
           { blockerId: likerId, blockedId: likedId },
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
-    const todayLikeCount = await prisma.like.count({
+    const todayLikeCount = await getDb().like.count({
       where: {
         likerId,
         createdAt: { gte: startOfDay },
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     }
 
     // Check for duplicate like
-    const existingLike = await prisma.like.findUnique({
+    const existingLike = await getDb().like.findUnique({
       where: {
         likerId_likedId: { likerId, likedId },
       },
@@ -76,12 +76,12 @@ export async function POST(request: Request) {
     }
 
     // Create the like
-    await prisma.like.create({
+    await getDb().like.create({
       data: { likerId, likedId },
     });
 
     // Check for reciprocal like (did the other person already like us?)
-    const reciprocalLike = await prisma.like.findUnique({
+    const reciprocalLike = await getDb().like.findUnique({
       where: {
         likerId_likedId: { likerId: likedId, likedId: likerId },
       },
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
       // Mutual like — create a match
       const [userA, userB] = likerId < likedId ? [likerId, likedId] : [likedId, likerId];
 
-      const match = await prisma.match.create({
+      const match = await getDb().match.create({
         data: {
           userA,
           userB,
@@ -111,11 +111,11 @@ export async function POST(request: Request) {
 
       // Notify both users via Pusher
       try {
-        const likerProfile = await prisma.user.findUnique({
+        const likerProfile = await getDb().user.findUnique({
           where: { id: likerId },
           select: { displayName: true, profile: { select: { photos: true } } },
         });
-        const likedProfile = await prisma.user.findUnique({
+        const likedProfile = await getDb().user.findUnique({
           where: { id: likedId },
           select: { displayName: true, profile: { select: { photos: true } } },
         });

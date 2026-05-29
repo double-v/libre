@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { registerSchema } from '@/lib/validators';
 import { normalizeEmail } from '@/lib/email';
 import { createVerificationToken } from '@/lib/verify-token';
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
     // Check device limit
     if (deviceId) {
-      const deviceCount = await prisma.user.count({
+      const deviceCount = await getDb().user.count({
         where: { deviceId },
       });
       if (deviceCount >= 2) {
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 
     const normalizedEmail = normalizeEmail(email);
 
-    const existingUser = await prisma.user.findUnique({ where: { normalizedEmail } });
+    const existingUser = await getDb().user.findUnique({ where: { normalizedEmail } });
     if (existingUser) {
       return NextResponse.json(
         { error: 'Impossible de créer un compte avec cet email' },
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    const user = await prisma.user.create({
+    const user = await getDb().user.create({
       data: {
         email: email.toLowerCase().trim(),
         normalizedEmail,

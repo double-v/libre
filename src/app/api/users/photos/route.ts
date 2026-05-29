@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { uploadPhoto, isR2Configured } from '@/lib/r2';
 
 export async function POST(request: Request) {
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Aucune image fournie' }, { status: 400 });
     }
 
-    const profile = await prisma.profile.findUnique({
+    const profile = await getDb().profile.findUnique({
       where: { userId: session.user.id },
     });
 
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 
     const key = await uploadPhoto(file, session.user.id);
 
-    const updated = await prisma.profile.upsert({
+    const updated = await getDb().profile.upsert({
       where: { userId: session.user.id },
       update: { photos: { push: key } },
       create: { userId: session.user.id, photos: [key] },
@@ -58,7 +58,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Clé requise' }, { status: 400 });
     }
 
-    const profile = await prisma.profile.findUnique({
+    const profile = await getDb().profile.findUnique({
       where: { userId: session.user.id },
     });
 
@@ -66,7 +66,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Profil non trouvé' }, { status: 404 });
     }
 
-    const updated = await prisma.profile.update({
+    const updated = await getDb().profile.update({
       where: { userId: session.user.id },
       data: { photos: profile.photos.filter((p) => p !== photoKey) },
     });

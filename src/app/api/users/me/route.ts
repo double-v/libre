@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 
 export async function DELETE() {
@@ -11,7 +11,7 @@ export async function DELETE() {
     }
 
     // Cascade deletes profile, likes, matches, messages, etc.
-    await prisma.user.delete({
+    await getDb().user.delete({
       where: { id: session.user.id },
     });
 

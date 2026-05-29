@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
-import { prisma } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { adminHandleReportSchema } from '@/lib/validators';
 
 export async function PATCH(
@@ -18,7 +18,7 @@ export async function PATCH(
   }
 
   const { action, reason } = parsed.data;
-  const report = await prisma.report.findUnique({ where: { id } });
+  const report = await getDb().report.findUnique({ where: { id } });
   if (!report) {
     return NextResponse.json({ error: 'Signalement non trouvé' }, { status: 404 });
   }
@@ -29,19 +29,19 @@ export async function PATCH(
     WARNING: 'resolved',
   };
 
-  await prisma.report.update({
+  await getDb().report.update({
     where: { id },
     data: { status: statusMap[action], reviewedBy: adminResult.userId, resolvedAt: new Date() },
   });
 
   if (action === 'BAN') {
-    await prisma.user.update({
+    await getDb().user.update({
       where: { id: report.reportedId },
       data: { isBanned: true },
     });
   }
 
-  await prisma.moderationLog.create({
+  await getDb().moderationLog.create({
     data: {
       adminId: adminResult.userId,
       targetUserId: report.reportedId,

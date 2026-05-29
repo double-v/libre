@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { messageSchema } from '@/lib/validators';
 import { pusher, getPusherChannel } from '@/lib/pusher';
@@ -9,7 +9,7 @@ import { pusher, getPusherChannel } from '@/lib/pusher';
 // Helper: verify the authenticated user is a participant in the conversation
 // ---------------------------------------------------------------------------
 async function verifyParticipant(conversationId: string, userId: string) {
-  const conversation = await prisma.conversation.findUnique({
+  const conversation = await getDb().conversation.findUnique({
     where: { id: conversationId },
     select: { userA: true, userB: true },
   });
@@ -42,14 +42,14 @@ export async function GET(
     }
 
     // Fetch messages (limit 100, most recent first)
-    const messages = await prisma.message.findMany({
+    const messages = await getDb().message.findMany({
       where: { conversationId },
       orderBy: { createdAt: 'desc' },
       take: 100,
     });
 
     // Mark unread messages addressed to this user as read
-    await prisma.message.updateMany({
+    await getDb().message.updateMany({
       where: {
         conversationId,
         senderId: { not: userId },
@@ -103,7 +103,7 @@ export async function POST(
 
     // Content is CIPHERTEXT — encrypted client-side before sending.
     // The server never sees plaintext.
-    const message = await prisma.message.create({
+    const message = await getDb().message.create({
       data: {
         conversationId,
         senderId: userId,

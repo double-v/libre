@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 
 export async function GET(
@@ -15,7 +15,7 @@ export async function GET(
 
     const { id } = await params;
 
-    const user = await prisma.user.findUnique({
+    const user = await getDb().user.findUnique({
       where: { id },
       include: {
         profile: true,

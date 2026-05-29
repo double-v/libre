@@ -29,6 +29,17 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   trailingSlash: false,
+
+  // Prisma 7 + driver adapters must be externalized for Turbopack
+  // Otherwise Turbopack wraps the module and PrismaClient breaks
+  serverExternalPackages: ['@prisma/client', '@prisma/adapter-pg', 'pg'],
+
+  turbopack: {
+    resolveAlias: {
+      '@prisma/client': './src/generated/client',
+    },
+  },
+
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [

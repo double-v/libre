@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db';
+import { getDb } from '@/lib/db';
 
 export interface SquareMessage {
   id: string;
@@ -18,7 +18,7 @@ const connections = new Set<ReadableStreamDefaultController>();
  * Add a message to the database and broadcast it to all connected SSE clients.
  */
 export async function addMessage(msg: Omit<SquareMessage, 'id' | 'timestamp'>): Promise<SquareMessage> {
-  const row = await prisma.squareMessage.create({
+  const row = await getDb().squareMessage.create({
     data: {
       pseudonym: msg.pseudonym,
       content: msg.content,
@@ -53,7 +53,7 @@ export async function addMessage(msg: Omit<SquareMessage, 'id' | 'timestamp'>): 
  * Get the last MAX_MESSAGES from the database.
  */
 export async function getMessages(): Promise<SquareMessage[]> {
-  const rows = await prisma.squareMessage.findMany({
+  const rows = await getDb().squareMessage.findMany({
     orderBy: { createdAt: 'asc' },
     take: MAX_MESSAGES,
   });

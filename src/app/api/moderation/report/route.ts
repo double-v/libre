@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { reportSchema } from '@/lib/validators';
 
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const { reportedId, reason, description } = parsed.data;
     const reporterId = session.user.id;
 
-    const report = await prisma.report.create({
+    const report = await getDb().report.create({
       data: {
         reporterId,
         reportedId,

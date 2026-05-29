@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyVerificationToken } from '@/lib/verify-token';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL('/login?error=invalid-token', request.url));
   }
 
-  const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+  const user = await getDb().user.findUnique({ where: { id: payload.userId } });
   if (!user) {
     return NextResponse.redirect(new URL('/login?error=user-not-found', request.url));
   }
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL('/login?verified=true', request.url));
   }
 
-  await prisma.user.update({
+  await getDb().user.update({
     where: { id: payload.userId },
     data: { emailVerified: new Date() },
   });

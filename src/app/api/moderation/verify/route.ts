@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { verificationRequestSchema } from '@/lib/validators';
 
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     const userId = session.user.id;
 
     // Check for existing pending verification request
-    const existingPending = await prisma.verificationRequest.findFirst({
+    const existingPending = await getDb().verificationRequest.findFirst({
       where: {
         userId,
         status: 'pending',
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const verificationRequest = await prisma.verificationRequest.create({
+    const verificationRequest = await getDb().verificationRequest.create({
       data: {
         userId,
         selfieUrl,

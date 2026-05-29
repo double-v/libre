@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
-import { prisma } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { adminHandleVerificationSchema } from '@/lib/validators';
 
 export async function PATCH(
@@ -18,14 +18,14 @@ export async function PATCH(
   }
 
   const { action, reason } = parsed.data;
-  const verification = await prisma.verificationRequest.findUnique({ where: { id } });
+  const verification = await getDb().verificationRequest.findUnique({ where: { id } });
   if (!verification) {
     return NextResponse.json({ error: 'Demande non trouvée' }, { status: 404 });
   }
 
   const isApproved = action === 'APPROVE_VERIFICATION';
 
-  await prisma.verificationRequest.update({
+  await getDb().verificationRequest.update({
     where: { id },
     data: {
       status: isApproved ? 'approved' : 'rejected',
@@ -35,13 +35,13 @@ export async function PATCH(
   });
 
   if (isApproved) {
-    await prisma.user.update({
+    await getDb().user.update({
       where: { id: verification.userId },
       data: { isVerified: true },
     });
   }
 
-  await prisma.moderationLog.create({
+  await getDb().moderationLog.create({
     data: {
       adminId: adminResult.userId,
       targetUserId: verification.userId,
