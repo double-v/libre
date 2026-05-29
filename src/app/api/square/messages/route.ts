@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
   const pseudonym = getPseudonym(userId);
 
-  const message = addMessage({
+  const message = await addMessage({
     pseudonym,
     content,
     type: type as SquareMessage['type'],

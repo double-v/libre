@@ -1,3 +1,5 @@
+import { prisma } from '@/lib/db';
+
 export interface SquareMessage {
   id: string;
   pseudonym: string;
@@ -6,24 +8,30 @@ export interface SquareMessage {
   timestamp: number;
 }
 
-const MAX_MESSAGES = 50;
-let messages: SquareMessage[] = [];
-let messageIdCounter = 0;
+const MAX_MESSAGES = 84;
 
-// Active SSE connections
+// Active SSE connections for real-time broadcast
 const connections = new Set<ReadableStreamDefaultController>();
 
-export function addMessage(msg: Omit<SquareMessage, 'id' | 'timestamp'>): SquareMessage {
-  const message: SquareMessage = {
-    ...msg,
-    id: `sq_${++messageIdCounter}`,
-    timestamp: Date.now(),
-  };
+/**
+ * Add a message to the database and broadcast it to all connected SSE clients.
+ */
+export async function addMessage(msg: Omit<SquareMessage, 'id' | 'timestamp'>): Promise<SquareMessage> {
+  const row = await prisma.squareMessage.create({
+    data: {
+      pseudonym: msg.pseudonym,
+      content: msg.content,
+      type: msg.type,
+    },
+  });
 
-  messages.push(message);
-  if (messages.length > MAX_MESSAGES) {
-    messages = messages.slice(-MAX_MESSAGES);
-  }
+  const message: SquareMessage = {
+    id: row.id,
+    pseudonym: row.pseudonym,
+    content: row.content,
+    type: row.type as SquareMessage['type'],
+    timestamp: row.createdAt.getTime(),
+  };
 
   // Broadcast to all SSE connections
   const data = `data: ${JSON.stringify(message)}\n\n`;
@@ -38,10 +46,27 @@ export function addMessage(msg: Omit<SquareMessage, 'id' | 'timestamp'>): Square
   return message;
 }
 
-export function getMessages(): SquareMessage[] {
-  return [...messages];
+/**
+ * Get the last MAX_MESSAGES from the database.
+ */
+export async function getMessages(): Promise<SquareMessage[]> {
+  const rows = await prisma.squareMessage.findMany({
+    orderBy: { createdAt: 'asc' },
+    take: MAX_MESSAGES,
+  });
+
+  return rows.map((row) => ({
+    id: row.id,
+    pseudonym: row.pseudonym,
+    content: row.content,
+    type: row.type as SquareMessage['type'],
+    timestamp: row.createdAt.getTime(),
+  }));
 }
 
+/**
+ * Register an SSE connection. Returns a cleanup function.
+ */
 export function addConnection(controller: ReadableStreamDefaultController): () => void {
   connections.add(controller);
   return () => {

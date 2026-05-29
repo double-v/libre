@@ -10,7 +10,7 @@ export async function GET() {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const initialMessages = getMessages();
+  const initialMessages = await getMessages();
 
   const stream = new ReadableStream({
     start(controller) {

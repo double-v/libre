@@ -236,6 +236,17 @@ model ModerationLog {
   @@map("moderation_logs")
 }
 
+model SquareMessage {
+  id         String   @id @default(uuid()) @db.Uuid
+  pseudonym  String
+  content    String
+  type       String   // text, emoji, reaction, gif, polite, riddle
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("square_messages")
+}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String  @db.Uuid
