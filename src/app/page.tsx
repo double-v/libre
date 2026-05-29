@@ -121,38 +121,90 @@ export default function Home() {
       </section>
 
       {/* Chiffres */}
-      <section className="bg-blush px-6 py-12 dark:bg-coral/10">
-        <div className="mx-auto grid max-w-lg gap-8 sm:grid-cols-3">
-          <div className="text-center">
-            <p className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">~240 €</p>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Coût annuel moyen d&apos;un abonnement dating</p>
-          </div>
-          <div className="text-center">
-            <p className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">47 %</p>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Des abonnés regrettent leur achat</p>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">UFC-Que Choisir, 2025</p>
-          </div>
-          <div className="text-center">
-            <p className="text-3xl font-extrabold tracking-tight text-coral sm:text-4xl">0 €</p>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Chez Libre. Pour toujours.</p>
+      <section className="bg-blush px-6 py-16 dark:bg-coral/10">
+        <div className="mx-auto max-w-xl">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <p className="text-6xl font-extrabold tracking-tight text-coral sm:text-7xl">0 €</p>
+            <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">Pour toujours. Pas d'abonnement, pas de piège.</p>
+            <p className="max-w-sm text-sm text-gray-600 dark:text-gray-400">La concurrence facture ~240 €/an et 47 % des abonnés regrettent leur achat (UFC-Que Choisir, 2025). Libre ne facture rien, jamais.</p>
           </div>
         </div>
       </section>
 
       {/* Constat */}
-      <section className="px-6 py-12">
-        <div className="mx-auto max-w-md">
-          <h2 className="mb-8 text-center text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <section className="px-6 py-16">
+        <div className="mx-auto max-w-xl">
+          <h2 className="mb-2 text-center text-3xl font-bold text-gray-900 dark:text-gray-100">
             Les apps de rencontre font payer l&apos;espoir
           </h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <p className="mb-10 text-center text-base text-gray-600 dark:text-gray-400">
+            Swipes bridés, boosts à l&apos;unité, prix variables selon le profil : la version gratuite est conçue pour frustrer et pousser à payer.
+          </p>
+
+          <div className="space-y-4">
             {[
               { title: 'Likes limités sans abonnement', detail: 'Swipes bridés, fonctionnalités verrouillées — la version gratuite pousse à payer.' },
               { title: 'Microtransactions à chaque action', detail: "Super Like à 5 €, Boost à l'unité... Le coût réel dépasse vite l'abonnement." },
               { title: 'Prix variables selon votre profil', detail: 'Deux personnes voient des prix différents pour le même abonnement.' },
               { title: 'Renouvellement automatique piège', detail: "On s'abonne un mois, on oublie d'annuler, et les prélèvements continuent." },
+            ].map((item, i) => (
+              <div key={item.title} className="flex items-start gap-4">
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-coral/10 text-sm font-bold text-coral">{i + 1}</span>
+                <div>
+                  <p className="font-semibold text-gray-800 dark:text-gray-200">{item.title}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{item.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Argument Libre */}
+      <section className="bg-sand px-6 py-16 dark:bg-coral/5">
+        <div className="mx-auto max-w-xl text-center">
+          <h2 className="mb-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Gratuit = plus de célibataires = plus de chances
+          </h2>
+          <p className="mb-10 text-base text-gray-600 dark:text-gray-400">
+            Pas de barrière financière, pas de fonctionnalité verrouillée, pas de boost à acheter. Tout le monde a accès à tout.
+          </p>
+
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+            {[
+              { title: 'Croisements en chemin', detail: 'Découvrez les célibataires que vous croisez au quotidien' },
+              { title: 'Chat chiffré E2E', detail: 'Le serveur ne lit jamais vos messages' },
+              { title: 'Modération communautaire', detail: 'Signalement, blocage, badge vérifié' },
             ].map((item) => (
-              <div key={item.title} className="rounded-2xl bg-blush p-4 shadow-sm dark:bg-coral/10">
+              <div key={item.title} className="text-center">
+                <p className="font-semibold text-gray-800 dark:text-gray-200">{item.title}</p>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{item.detail}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-10 text-base text-gray-600 dark:text-gray-400">
+            Une fois le contact établi, vous choisissez comment aller plus loin. Le chat est un pont, pas une fin en soi.
+          </p>
+        </div>
+      </section>
+
+      {/* Vie privée */}
+      <section className="bg-blush px-6 py-16 dark:bg-coral/10">
+        <div className="mx-auto max-w-xl">
+          <h2 className="mb-10 text-center text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Votre vie privée n&apos;est pas un produit
+          </h2>
+
+          <div className="grid grid-cols-2 gap-x-8 gap-y-8">
+            {[
+              { icon: '🔒', title: 'Chiffrement E2E', detail: 'Le serveur ne lit jamais vos messages' },
+              { icon: '🛡️', title: 'Zéro revente', detail: 'Vos données ne sont jamais vendues' },
+              { icon: '✅', title: 'Badge vérifié', detail: 'Photos vérifiées par selfie' },
+              { icon: '👥', title: 'Modération', detail: 'Signalement et blocage communautaire' },
+            ].map((item) => (
+              <div key={item.title} className="text-center">
+                <div className="mb-2 text-2xl">{item.icon}</div>
                 <p className="font-semibold text-gray-800 dark:text-gray-200">{item.title}</p>
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{item.detail}</p>
               </div>
@@ -161,63 +213,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Argument Libre */}
-      <section className="bg-sand px-6 py-12 dark:bg-coral/5">
-        <div className="mx-auto max-w-md text-center">
-          <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Gratuit = plus de célibataires = plus de chances
-          </h2>
-          <p className="mb-8 text-sm text-gray-600 dark:text-gray-400">
-            Pas de barrière financière, pas de fonctionnalité verrouillée, pas de boost à acheter. Tout le monde a accès à tout.
-          </p>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {[
-              { title: 'Croisements en chemin', detail: 'Découvrez les célibataires que vous croisez au quotidien' },
-              { title: 'Chat chiffré E2E', detail: 'Le serveur ne lit jamais vos messages' },
-              { title: 'Modération communautaire', detail: 'Signalement, blocage, badge vérifié' },
-            ].map((item) => (
-              <div key={item.title} className="rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-900">
-                <p className="font-semibold text-gray-800 dark:text-gray-200">{item.title}</p>
-                <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">{item.detail}</p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-6 text-sm text-gray-600 dark:text-gray-400">
-            Le chat n&apos;est pas le produit. C&apos;est le pont vers de vraies rencontres. Une fois le contact établi, à vous de choisir comment aller plus loin.
-          </p>
-        </div>
-      </section>
-
-      {/* Vie privée */}
-      <section className="bg-blush px-6 py-12 dark:bg-coral/10">
-        <div className="mx-auto max-w-sm text-center">
-          <h2 className="mb-8 text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Votre vie privée n&apos;est pas un produit
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { icon: '🔒', title: 'Chiffrement E2E', detail: 'Le serveur ne lit jamais vos messages' },
-              { icon: '🛡️', title: 'Zéro revente', detail: 'Vos données ne sont jamais vendues' },
-              { icon: '✅', title: 'Badge vérifié', detail: 'Photos vérifiées par selfie' },
-              { icon: '👥', title: 'Modération', detail: 'Signalement et blocage communautaire' },
-            ].map((item) => (
-              <div key={item.title} className="rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-900">
-                <div className="mb-1 text-lg">{item.icon}</div>
-                <p className="font-semibold text-gray-800 dark:text-gray-200">{item.title}</p>
-                <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">{item.detail}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* CTA final */}
-      <section className="bg-gradient-to-br from-coral to-terracotta px-6 py-12 text-center">
-        <p className="mb-2 text-2xl font-extrabold text-white">0 €. Pas d&apos;abonnement. Pas de pièges.</p>
-        <p className="mb-6 text-sm text-white/70">Rejoignez ceux qui refusent de payer pour espérer.</p>
+      <section className="bg-gradient-to-br from-coral to-terracotta px-6 py-16 text-center">
+        <p className="mb-2 text-3xl font-extrabold text-white">0 €. Pas d&apos;abonnement. Pas de pièges.</p>
+        <p className="mb-8 text-base text-white/90">Rejoignez ceux qui refusent de payer pour espérer.</p>
         <Link
           href="/register"
-          className="inline-block rounded-full bg-white px-8 py-3 text-sm font-bold text-terracotta transition-colors hover:bg-gray-100"
+          className="inline-block rounded-full bg-white px-8 py-3 text-sm font-bold text-terracotta transition-colors hover:bg-gray-50"
         >
           Créer un compte
         </Link>
