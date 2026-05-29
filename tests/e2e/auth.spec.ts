@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Login flow', () => {
   test('login page is accessible', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByText('Se connecter')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Se connecter' })).toBeVisible();
     await expect(page.locator('input[id="email"]')).toBeVisible();
     await expect(page.locator('input[id="password"]')).toBeVisible();
   });
@@ -18,10 +18,10 @@ test.describe('Login flow', () => {
 
   test('navigation between login and register', async ({ page }) => {
     await page.goto('/login');
-    await page.click('a', { hasText: 'Créer un compte' });
+    await page.getByRole('link', { name: 'Créer un compte' }).click();
     await expect(page).toHaveURL(/\/register/);
 
-    await page.click('a', { hasText: 'Se connecter' });
+    await page.getByRole('link', { name: 'Se connecter' }).click();
     await expect(page).toHaveURL(/\/login/);
   });
 });

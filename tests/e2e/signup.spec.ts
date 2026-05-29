@@ -24,7 +24,7 @@ test.describe('Registration flow', () => {
 
     await page.click('button[type="submit"]');
 
-    await expect(page.getByText(/erreur/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/8 caractères min/i)).toBeVisible({ timeout: 5000 });
     await expect(page).toHaveURL(/\/register/);
   });
 
@@ -53,7 +53,7 @@ test.describe('Registration flow', () => {
 
   test('login page shows correct branding', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByText('Se connecter')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Se connecter' })).toBeVisible();
     await expect(page.getByText('Créer un compte')).toBeVisible();
   });
 });
