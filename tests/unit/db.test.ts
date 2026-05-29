@@ -7,9 +7,11 @@ describe('Database connection', () => {
   let prisma: PrismaClient;
 
   beforeAll(() => {
+    const connectionString = process.env.DATABASE_URL;
+    const isNeon = connectionString?.includes('neon.tech');
     const pool = new pg.Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false },
+      connectionString,
+      ssl: isNeon ? { rejectUnauthorized: false } : undefined,
     });
     const adapter = new PrismaPg(pool);
     prisma = new PrismaClient({ adapter });
