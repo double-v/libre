@@ -19,6 +19,7 @@ model User {
   createdAt       DateTime @default(now())
   isVerified      Boolean  @default(false)
   isBanned        Boolean  @default(false)
+  squareBannedUntil DateTime? @map("square_banned_until")
   lastActive      DateTime @updatedAt
 
   profile              Profile?
