@@ -46,8 +46,10 @@ export default function ChatConversationPage() {
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  // Cache persistant session-level des messages en clair (own + decrypted from other)
+  const plaintextCacheRef = useRef<Map<string, string>>(new Map());
 
-  const { privateKey, ready } = useEncryptedChat();
+  const { privateKey, publicKey, ready } = useEncryptedChat();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Attempt to decrypt a message; fall back to raw content
@@ -66,6 +68,29 @@ export default function ChatConversationPage() {
       return content;
     }
   }, [privateKey, otherPublicKey, otherUser?.id]);
+
+  // Apply plaintext cache + decrypt incoming messages
+  const resolveContent = useCallback((msg: Message): string => {
+    const cached = plaintextCacheRef.current.get(msg.id);
+    if (cached != null) return cached;
+    // Messages from other user might be encrypted — decrypt async later
+    return msg.content;
+  }, []);
+
+  // Decrypt messages from the other user asynchronously
+  const applyDecryption = useCallback(async (msgs: Message[]): Promise<Message[]> => {
+    if (!privateKey || !otherPublicKey || !otherUser?.id) return msgs;
+    return Promise.all(
+      msgs.map(async (msg) => {
+        if (msg.senderId !== otherUser.id) return msg; // own messages: rely on cache
+        const cached = plaintextCacheRef.current.get(msg.id);
+        if (cached != null) return { ...msg, content: cached };
+        const decrypted = await tryDecrypt(msg.content, msg.senderId);
+        if (decrypted !== msg.content) plaintextCacheRef.current.set(msg.id, decrypted);
+        return { ...msg, content: decrypted };
+      }),
+    );
+  }, [privateKey, otherPublicKey, otherUser?.id, tryDecrypt]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -91,39 +116,26 @@ export default function ChatConversationPage() {
       const msgRes = await fetch(`/api/chat/${conversationId}/messages`);
       if (!msgRes.ok) throw new Error('Failed to fetch messages');
       const msgData = await msgRes.json();
-      setMessages(msgData.messages || []);
+
+      // Apply decryption + cache
+      const baseMessages: Message[] = msgData.messages || [];
+      setMessages(baseMessages);
+      // Async decrypt after state update
+      applyDecryption(baseMessages).then((decrypted) => {
+        setMessages(decrypted);
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
     } finally {
       setLoading(false);
     }
-  }, [conversationId]);
+  }, [conversationId, applyDecryption]);
 
   useEffect(() => {
     loadConversation();
   }, [loadConversation]);
 
-  // Decrypt received messages once we have all keys
-  useEffect(() => {
-    if (!privateKey || !otherPublicKey || messages.length === 0) return;
-    const otherId = otherUser?.id;
-    if (!otherId) return;
-
-    let cancelled = false;
-    (async () => {
-      const decrypted = await Promise.all(
-        messages.map(async (msg) => {
-          if (msg.senderId !== otherId) return msg;
-          const decrypted = await tryDecrypt(msg.content, msg.senderId);
-          return { ...msg, content: decrypted };
-        }),
-      );
-      if (!cancelled) setMessages(decrypted);
-    })();
-    return () => { cancelled = true; };
-  }, [privateKey, otherPublicKey, messages.length, otherUser?.id, tryDecrypt]);
-
-  // Subscribe to Pusher for real-time messages
+  // Pusher realtime — fetch messages, decrypt other user's, preserve own plaintext from cache
   useEffect(() => {
     const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
     if (!pusherKey) return;
@@ -142,19 +154,14 @@ export default function ChatConversationPage() {
     channel.bind('new-message', (data: { id: string; senderId: string; createdAt: string }) => {
       fetch(`/api/chat/${conversationId}/messages`)
         .then((res) => res.json())
-        .then(async (msgData) => {
+        .then((msgData) => {
           if (msgData.messages) {
-            // Decrypt new messages if possible
-            const decrypted = await Promise.all(
-              msgData.messages.map(async (msg: Message) => {
-                if (msg.senderId === otherUser?.id && privateKey && otherPublicKey) {
-                  const decrypted = await tryDecrypt(msg.content, msg.senderId);
-                  return { ...msg, content: decrypted };
-                }
-                return msg;
-              }),
-            );
-            setMessages(decrypted);
+            const base: Message[] = msgData.messages;
+            // Set base first, then decrypt + cache
+            setMessages(base);
+            applyDecryption(base).then((decrypted) => {
+              setMessages(decrypted);
+            });
           }
         })
         .catch(() => {});
@@ -164,7 +171,7 @@ export default function ChatConversationPage() {
       pusher.unsubscribe(channelName);
       pusher.disconnect();
     };
-  }, [conversationId, otherUser?.id, privateKey, otherPublicKey, tryDecrypt]);
+  }, [conversationId, otherUser?.id, privateKey, otherPublicKey, applyDecryption]);
 
   // Send a message
   const handleSend = async (e: React.FormEvent) => {
@@ -191,7 +198,9 @@ export default function ChatConversationPage() {
 
       const msgData = await res.json();
       if (msgData.message) {
-        // Add with plaintext (we know what we sent)
+        // 1. Cache notre texte clair immédiatement
+        plaintextCacheRef.current.set(msgData.message.id, text);
+        // 2. Ajouter à l'UI avec le clair
         setMessages((prev) => {
           if (prev.some((m) => m.id === msgData.message.id)) return prev;
           return [...prev, { ...msgData.message, content: text }];
