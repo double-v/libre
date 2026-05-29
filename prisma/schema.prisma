@@ -15,7 +15,7 @@ model User {
   displayName     String
   passwordHash     String?
   deviceId        String?
-  role            String   @default("user")
+  role            String   @default("USER")
   createdAt       DateTime @default(now())
   isVerified      Boolean  @default(false)
   isBanned        Boolean  @default(false)
@@ -241,6 +241,7 @@ model SquareMessage {
   pseudonym  String
   content    String
   type       String   // text, emoji, reaction, gif, polite, riddle
+  isAdmin    Boolean  @default(false)
   createdAt  DateTime @default(now())
 
   @@index([createdAt])

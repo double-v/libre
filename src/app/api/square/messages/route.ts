@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   // Check if user is banned from square
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { squareBannedUntil: true },
+    select: { squareBannedUntil: true, role: true },
   });
 
   if (user?.squareBannedUntil && user.squareBannedUntil > new Date()) {
@@ -50,11 +50,13 @@ export async function POST(request: NextRequest) {
   }
 
   const pseudonym = getPseudonym(userId);
+  const isAdmin = session.user.role === 'ADMIN';
 
   const message = await addMessage({
     pseudonym,
     content,
     type: type as SquareMessage['type'],
+    isAdmin,
   });
 
   return NextResponse.json({ message }, { status: 201 });

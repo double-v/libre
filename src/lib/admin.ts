@@ -17,11 +17,11 @@ export interface AdminSession {
 export async function verifyAdmin(): Promise<AdminSession | null> {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return null;
-  if ((session.user as any).role !== 'ADMIN') return null;
+  if (session.user.role !== 'ADMIN') return null;
   return {
     userId: session.user.id,
     email: session.user.email ?? '',
-    role: (session.user as any).role,
+    role: session.user.role,
   };
 }
 

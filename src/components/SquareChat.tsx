@@ -120,7 +120,11 @@ export default function SquareChat({ userId }: { userId: string }) {
         {messages.map((msg) => (
           <div key={msg.id} className="group mb-3">
             <div className="flex items-baseline gap-2">
-              <span className="text-sm font-medium text-coral dark:text-coral-light">{msg.pseudonym}</span>
+              {msg.isAdmin ? (
+                <span className="text-sm font-bold text-purple-600 dark:text-purple-400">🛡 {msg.pseudonym}</span>
+              ) : (
+                <span className="text-sm font-medium text-coral dark:text-coral-light">{msg.pseudonym}</span>
+              )}
               <span className="text-xs text-gray-400">{new Date(msg.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
             <div className="flex items-end gap-2">

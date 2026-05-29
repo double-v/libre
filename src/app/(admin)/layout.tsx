@@ -30,7 +30,7 @@ function SidebarIcon({ icon }: { icon: string }) {
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id || (session.user as any).role !== 'ADMIN') {
+  if (!session?.user?.id || session.user.role !== 'ADMIN') {
     notFound();
   }
 

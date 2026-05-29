@@ -5,6 +5,7 @@ export interface SquareMessage {
   pseudonym: string;
   content: string;
   type: 'text' | 'emoji' | 'reaction' | 'gif' | 'polite' | 'riddle';
+  isAdmin: boolean;
   timestamp: number;
 }
 
@@ -22,6 +23,7 @@ export async function addMessage(msg: Omit<SquareMessage, 'id' | 'timestamp'>): 
       pseudonym: msg.pseudonym,
       content: msg.content,
       type: msg.type,
+      isAdmin: msg.isAdmin,
     },
   });
 
@@ -30,6 +32,7 @@ export async function addMessage(msg: Omit<SquareMessage, 'id' | 'timestamp'>): 
     pseudonym: row.pseudonym,
     content: row.content,
     type: row.type as SquareMessage['type'],
+    isAdmin: row.isAdmin,
     timestamp: row.createdAt.getTime(),
   };
 
@@ -60,6 +63,7 @@ export async function getMessages(): Promise<SquareMessage[]> {
     pseudonym: row.pseudonym,
     content: row.content,
     type: row.type as SquareMessage['type'],
+    isAdmin: row.isAdmin,
     timestamp: row.createdAt.getTime(),
   }));
 }
