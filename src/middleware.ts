@@ -12,6 +12,8 @@ export function middleware(request: NextRequest) {
     let preset = limits.api;
     if (path.includes('/auth/') || path === '/api/auth/register') {
       preset = limits.auth;
+    } else if (path.includes('/admin')) {
+      preset = limits.api; // standard rate limit; auth check returns 404 for non-admins
     } else if (path.includes('/chat/') && path.includes('/messages')) {
       preset = limits.message;
     } else if (path.includes('/geoloc/')) {
