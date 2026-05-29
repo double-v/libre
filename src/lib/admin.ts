@@ -1,5 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { getDb } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -11,26 +12,52 @@ export interface AdminSession {
 
 /**
  * Verify the current session has ADMIN role.
- * Returns the session if admin, or null if not.
- * Use in server components and API routes.
+ * Queries the DB directly — does NOT trust the JWT cache.
+ * This ensures role changes propagate instantly without re-login.
  */
 export async function verifyAdmin(): Promise<AdminSession | null> {
   const session = await getServerSession(authOptions);
   console.log('[admin/verifyAdmin] session=%s userId=%s role=%s',
     !!session, session?.user?.id ?? 'none', session?.user?.role ?? 'none');
+
   if (!session?.user?.id) {
     console.log('[admin/verifyAdmin] DENIED: no session or no user.id');
     return null;
   }
-  if (session.user.role !== 'ADMIN') {
-    console.log('[admin/verifyAdmin] DENIED: role=%s is not ADMIN', session.user.role);
+
+  // Always check the DB — JWT may be stale
+  try {
+    const dbUser = await getDb().user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    });
+    const dbRole = dbUser?.role?.toUpperCase();
+    console.log('[admin/verifyAdmin] userId=%s dbRole=%s jwtRole=%s',
+      session.user.id, dbRole ?? 'none', session.user.role);
+
+    if (dbRole !== 'ADMIN') {
+      console.log('[admin/verifyAdmin] DENIED: dbRole=%s is not ADMIN', dbRole);
+      return null;
+    }
+
+    return {
+      userId: session.user.id,
+      email: session.user.email ?? '',
+      role: dbRole,
+    };
+  } catch (err) {
+    console.error('[admin/verifyAdmin] DB error:', err);
+    // Fallback to JWT role if DB is unreachable
+    if (session.user.role?.toUpperCase() === 'ADMIN') {
+      console.log('[admin/verifyAdmin] DB error but JWT has ADMIN — allowing (degraded)');
+      return {
+        userId: session.user.id,
+        email: session.user.email ?? '',
+        role: session.user.role,
+      };
+    }
     return null;
   }
-  return {
-    userId: session.user.id,
-    email: session.user.email ?? '',
-    role: session.user.role,
-  };
 }
 
 /**
