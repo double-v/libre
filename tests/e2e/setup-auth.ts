@@ -1,5 +1,5 @@
 import { test as setup, expect } from '@playwright/test';
-import pg from 'pg';
+import { Pool } from 'pg';
 
 // This setup script creates an authenticated session file for E2E tests.
 // Run: npx playwright test --project=setup
@@ -21,9 +21,9 @@ setup('authenticate', async ({ page }) => {
 
   // Bypass email verification in CI: mark email verified directly in DB
   if (process.env.DATABASE_URL) {
-    const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     await pool.query(
-      'UPDATE "User" SET "emailVerified" = NOW(), "isVerified" = true WHERE email = $1',
+      'UPDATE users SET "emailVerified" = NOW(), "isVerified" = true WHERE email = $1',
       [email],
     );
     await pool.end();
