@@ -9,7 +9,53 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
 };
 
-export default function Home() {
+/* ------------------------------------------------------------------ */
+/*  Server data: fetch user count for the live counter (cached 5 min)  */
+/* ------------------------------------------------------------------ */
+async function getUserCount() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || ''}/api/stats/public`, {
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return { totalUsers: 0, verifiedUsers: 0 };
+    return res.json() as Promise<{ totalUsers: number; verifiedUsers: number }>;
+  } catch {
+    return { totalUsers: 0, verifiedUsers: 0 };
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  FAQ data                                                           */
+/* ------------------------------------------------------------------ */
+const faqItems = [
+  {
+    q: 'Est-ce vraiment gratuit ?',
+    a: "Oui, à 100 %. Pas d'abonnement, pas de microtransaction, pas de version premium cachée. Toutes les fonctionnalités sont accessibles à tout le monde, toujours.",
+  },
+  {
+    q: 'Comment gagnez-vous de l\'argent alors ?',
+    a: "Libre est un projet à but non lucratif porté par des bénévoles convaincus que la rencontre ne devrait pas être un marché. Les coûts de fonctionnement sont couverts par des dons. Nous ne vendons rien : ni abonnements, ni données, ni publicité.",
+  },
+  {
+    q: 'Mes messages sont-ils vraiment privés ?',
+    a: "Oui. Vos messages sont chiffrés de bout en bout (E2E). Cela signifie que même nos serveurs ne peuvent pas les lire. Seul vous et votre correspondant avez les clés de déchiffrement.",
+  },
+  {
+    q: 'Y a-t-il des faux profils ?',
+    a: "Nous luttons activement contre les faux profils grâce au système de badge vérifié (vérification par selfie), à la modération communautaire (signalement, blocage) et à une équipe de modération humaine. Contrairement à d'autres plateformes, nous n'avons jamais créé et ne créerons jamais de faux profils pour gonfler artificiellement nos chiffres.",
+  },
+  {
+    q: 'Quelles différences avec Tinder, Happn ou Bumble ?',
+    a: "La différence fondamentale : chez Libre, la version gratuite n'est pas conçue pour frustrer. Pas de likes limités, pas de boost à acheter, pas de prix variable selon votre âge ou votre genre. Tout est gratuit, pour tout le monde, sans piège.",
+  },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Page component                                                     */
+/* ------------------------------------------------------------------ */
+export default async function Home() {
+  const { totalUsers } = await getUserCount();
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
@@ -39,7 +85,7 @@ export default function Home() {
       </a>
 
       <main id="main-content">
-      {/* Nav */}
+      {/* ====== NAV ====== */}
       <nav className="mx-auto flex w-full max-w-2xl items-center justify-between px-6 py-4">
         <Link href="/" aria-label="Accueil Libre" className="flex items-center gap-2">
           <svg viewBox="76 36 360 360" className="h-8 w-8" fill="currentColor" aria-hidden="true">
@@ -65,7 +111,7 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Hero */}
+      {/* ====== HERO ====== */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           <Image
@@ -84,17 +130,22 @@ export default function Home() {
             <p className="mb-2 text-xl font-semibold text-gray-800 dark:text-gray-200 sm:text-2xl">
               Parce que rencontrer ne devrait rien coûter.
             </p>
-            <p className="mb-8 text-base text-gray-600 dark:text-gray-400">
+            <p className="mb-4 text-base text-gray-600 dark:text-gray-400">
               Rencontre gratuite. Sans abonnement. Sans microtransaction. Sans revente de données.
               <br />
               Parce que quand c&apos;est gratuit, tout le monde est là.
             </p>
+            {totalUsers > 0 && (
+              <p className="mb-8 text-sm font-medium text-coral">
+                Rejoignez déjà {totalUsers.toLocaleString('fr-FR')} célibataires inscrits
+              </p>
+            )}
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/register"
                 className="rounded-full bg-terracotta px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-coral-dark focus:outline-none focus:ring-2 focus:ring-terracotta focus:ring-offset-2 dark:focus:ring-offset-gray-950"
               >
-                Créer un compte gratuitement
+                Créer mon profil gratuitement
               </Link>
               <Link
                 href="/login"
@@ -120,19 +171,65 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Chiffres */}
+      {/* ====== CHIFFRES ====== */}
       <section className="bg-blush px-6 py-16 dark:bg-coral/10">
         <div className="mx-auto max-w-xl">
           <div className="flex flex-col items-center gap-4 text-center">
             <p className="text-6xl font-extrabold tracking-tight text-coral sm:text-7xl">0 €</p>
-            <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">Pour toujours. Pas d'abonnement, pas de piège.</p>
+            <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">Pour toujours. Pas d&apos;abonnement, pas de piège.</p>
             <p className="max-w-sm text-sm text-gray-600 dark:text-gray-400">La concurrence facture ~240 €/an et 47 % des abonnés regrettent leur achat (UFC-Que Choisir, 2025). Libre ne facture rien, jamais.</p>
           </div>
         </div>
       </section>
 
-      {/* Constat */}
+      {/* ====== COMMENT ÇA MARCHE ====== */}
       <section className="px-6 py-16">
+        <div className="mx-auto max-w-xl">
+          <h2 className="mb-2 text-center text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Comment ça marche ?
+          </h2>
+          <p className="mb-10 text-center text-base text-gray-600 dark:text-gray-400">
+            Trois étapes pour rejoindre la communauté Libre.
+          </p>
+          <div className="space-y-8">
+            {[
+              {
+                step: '1',
+                icon: '✍️',
+                title: 'Créez votre profil en 2 minutes',
+                detail: 'Prénom, âge, une photo, quelques mots sur vous. Pas de questionnaire interminable, pas de sync Facebook obligatoire.',
+              },
+              {
+                step: '2',
+                icon: '🔍',
+                title: 'Découvrez les célibataires autour de vous',
+                detail: 'Grâce à la géolocalisation, voyez qui vous croisez au quotidien ou qui se trouve à proximité. Sans limite de likes.',
+              },
+              {
+                step: '3',
+                icon: '💬',
+                title: 'Chattez en toute sécurité',
+                detail: 'Quand le courant passe, lancez la conversation. Vos messages sont chiffrés de bout en bout — personne d\'autre ne les lit.',
+              },
+            ].map((item) => (
+              <div key={item.step} className="flex items-start gap-4">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-coral/10 text-2xl">
+                  {item.icon}
+                </span>
+                <div>
+                  <p className="font-semibold text-gray-800 dark:text-gray-200">
+                    <span className="text-coral">Étape {item.step}.</span> {item.title}
+                  </p>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{item.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ====== CONSTAT ====== */}
+      <section className="bg-blush px-6 py-16 dark:bg-coral/10">
         <div className="mx-auto max-w-xl">
           <h2 className="mb-2 text-center text-3xl font-bold text-gray-900 dark:text-gray-100">
             Les apps de rencontre font payer l&apos;espoir
@@ -148,11 +245,13 @@ export default function Home() {
               { title: 'Prix variables selon votre profil', detail: 'Deux personnes voient des prix différents pour le même abonnement.' },
               { title: 'Renouvellement automatique piège', detail: "On s'abonne un mois, on oublie d'annuler, et les prélèvements continuent." },
             ].map((item, i) => (
-              <div key={item.title} className="flex items-start gap-4">
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-coral/10 text-sm font-bold text-coral">{i + 1}</span>
-                <div>
-                  <p className="font-semibold text-gray-800 dark:text-gray-200">{item.title}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{item.detail}</p>
+              <div key={item.title} className="rounded-xl bg-white/60 px-5 py-4 shadow-sm dark:bg-gray-900/40">
+                <div className="flex items-start gap-4">
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-coral/10 text-sm font-bold text-coral">{i + 1}</span>
+                  <div>
+                    <p className="font-semibold text-gray-800 dark:text-gray-200">{item.title}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{item.detail}</p>
+                  </div>
                 </div>
               </div>
             ))}
@@ -160,7 +259,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Argument Libre */}
+      {/* ====== ARGUMENT LIBRE ====== */}
       <section className="bg-sand px-6 py-16 dark:bg-coral/5">
         <div className="mx-auto max-w-xl text-center">
           <h2 className="mb-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
@@ -172,11 +271,12 @@ export default function Home() {
 
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
             {[
-              { title: 'Croisements en chemin', detail: 'Découvrez les célibataires que vous croisez au quotidien' },
-              { title: 'Chat chiffré E2E', detail: 'Le serveur ne lit jamais vos messages' },
-              { title: 'Modération communautaire', detail: 'Signalement, blocage, badge vérifié' },
+              { icon: '🚶', title: 'Croisements en chemin', detail: 'Découvrez les célibataires que vous croisez au quotidien' },
+              { icon: '🔐', title: 'Chat chiffré E2E', detail: 'Le serveur ne lit jamais vos messages' },
+              { icon: '🛡️', title: 'Modération communautaire', detail: 'Signalement, blocage, badge vérifié' },
             ].map((item) => (
-              <div key={item.title} className="text-center">
+              <div key={item.title} className="rounded-xl bg-white/70 px-6 py-5 shadow-sm dark:bg-gray-900/30">
+                <div className="mb-2 text-2xl">{item.icon}</div>
                 <p className="font-semibold text-gray-800 dark:text-gray-200">{item.title}</p>
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{item.detail}</p>
               </div>
@@ -189,8 +289,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Vie privée */}
-      <section className="bg-blush px-6 py-16 dark:bg-coral/10">
+      {/* ====== VIE PRIVÉE ====== */}
+      <section className="px-6 py-16">
         <div className="mx-auto max-w-xl">
           <h2 className="mb-10 text-center text-3xl font-bold text-gray-900 dark:text-gray-100">
             Votre vie privée n&apos;est pas un produit
@@ -203,7 +303,7 @@ export default function Home() {
               { icon: '✅', title: 'Badge vérifié', detail: 'Photos vérifiées par selfie' },
               { icon: '👥', title: 'Modération', detail: 'Signalement et blocage communautaire' },
             ].map((item) => (
-              <div key={item.title} className="text-center">
+              <div key={item.title} className="rounded-xl bg-blush/60 px-5 py-5 text-center shadow-sm dark:bg-coral/5">
                 <div className="mb-2 text-2xl">{item.icon}</div>
                 <p className="font-semibold text-gray-800 dark:text-gray-200">{item.title}</p>
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{item.detail}</p>
@@ -213,10 +313,80 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA final */}
+      {/* ====== FAQ ====== */}
+      <section className="bg-sand px-6 py-16 dark:bg-coral/5">
+        <div className="mx-auto max-w-xl">
+          <h2 className="mb-10 text-center text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Questions fréquentes
+          </h2>
+          <div className="space-y-4">
+            {faqItems.map((item) => (
+              <details
+                key={item.q}
+                className="group rounded-xl bg-white/70 shadow-sm dark:bg-gray-900/30"
+              >
+                <summary className="cursor-pointer px-5 py-4 font-semibold text-gray-800 dark:text-gray-200 list-none flex items-center justify-between">
+                  <span>{item.q}</span>
+                  <span className="ml-2 text-coral transition-transform group-open:rotate-45 text-xl leading-none select-none">+</span>
+                </summary>
+                <p className="px-5 pb-4 text-sm text-gray-600 dark:text-gray-400">
+                  {item.a}
+                </p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ====== L'ÉQUIPE ====== */}
+      <section className="px-6 py-16">
+        <div className="mx-auto max-w-xl text-center">
+          <h2 className="mb-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Qui sommes-nous ?
+          </h2>
+          <p className="mb-8 text-base text-gray-600 dark:text-gray-400">
+            Libre est un projet porté par des bénévoles qui refusent de voir la rencontre devenir un commerce.
+          </p>
+          <div className="rounded-xl bg-blush/60 px-8 py-8 shadow-sm dark:bg-coral/5">
+            <p className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
+              Nous croyons en trois choses
+            </p>
+            <div className="space-y-3 text-left">
+              <div className="flex items-start gap-3">
+                <span className="text-coral text-lg mt-0.5">{'>'}</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <strong>Rencontrer est un droit</strong>, pas un service premium. Personne ne devrait payer pour espérer trouver l&apos;amour ou faire une rencontre.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-coral text-lg mt-0.5">{'>'}</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <strong>Vos données vous appartiennent.</strong> Nous ne les vendons pas, nous ne les monétisons pas, nous ne les partageons pas. Jamais.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-coral text-lg mt-0.5">{'>'}</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <strong>La transparence n&apos;est pas une option.</strong> Pas de prix cachés, pas de faux profils, pas d&apos;algorithme qui vous manipule. Le code est open, les intentions sont claires.
+                </p>
+              </div>
+            </div>
+          </div>
+          <p className="mt-6 text-sm text-gray-500 dark:text-gray-400">
+            Vous partagez ces valeurs ? Rejoignez l&apos;aventure.
+          </p>
+        </div>
+      </section>
+
+      {/* ====== CTA FINAL ====== */}
       <section className="bg-gradient-to-br from-coral to-terracotta px-6 py-16 text-center">
         <p className="mb-2 text-3xl font-extrabold text-white">0 €. Pas d&apos;abonnement. Pas de pièges.</p>
         <p className="mb-8 text-base text-white/90">Rejoignez ceux qui refusent de payer pour espérer.</p>
+        {totalUsers > 0 && (
+          <p className="mb-6 text-sm text-white/80">
+            Déjà {totalUsers.toLocaleString('fr-FR')} célibataires nous font confiance
+          </p>
+        )}
         <Link
           href="/register"
           className="inline-block rounded-full bg-white px-8 py-3 text-sm font-bold text-terracotta transition-colors hover:bg-gray-50"
@@ -225,9 +395,9 @@ export default function Home() {
         </Link>
       </section>
 
-      {/* Footer */}
-      <footer className="px-6 py-6 text-center">
-        <div className="mb-2 flex items-center justify-center gap-1.5">
+      {/* ====== FOOTER ====== */}
+      <footer className="px-6 py-8 text-center">
+        <div className="mb-3 flex items-center justify-center gap-1.5">
           <svg viewBox="76 36 360 360" className="h-4 w-4 opacity-50" fill="currentColor" aria-hidden="true">
             <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(-60 256 188)" />
             <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(-30 256 188)" />
@@ -238,9 +408,58 @@ export default function Home() {
           </svg>
           <span className="text-sm font-bold text-coral opacity-50">Libre</span>
         </div>
-        <Link href="/cgu" className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-          Conditions générales d&apos;utilisation
-        </Link>
+        {/* Liens légaux */}
+        <div className="mb-3 flex items-center justify-center gap-4 text-xs text-gray-400">
+          <Link href="/cgu" className="hover:text-gray-600 dark:hover:text-gray-300">
+            Conditions générales d&apos;utilisation
+          </Link>
+          <Link href="/confidentialite" className="hover:text-gray-600 dark:hover:text-gray-300">
+            Politique de confidentialité
+          </Link>
+        </div>
+        {/* Réseaux sociaux */}
+        <div className="mb-3 flex items-center justify-center gap-4">
+          {/* Twitter / X */}
+          <a
+            href="https://x.com/getlibre_fr"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Suivez Libre sur X"
+            className="text-gray-400 transition-colors hover:text-coral"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
+          </a>
+          {/* Instagram */}
+          <a
+            href="https://instagram.com/getlibre_fr"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Suivez Libre sur Instagram"
+            className="text-gray-400 transition-colors hover:text-coral"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+            </svg>
+          </a>
+          {/* TikTok */}
+          <a
+            href="https://tiktok.com/@getlibre_fr"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Suivez Libre sur TikTok"
+            className="text-gray-400 transition-colors hover:text-coral"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+              <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.43v-2.78a8.27 8.27 0 005.58 2.17v-3.43a4.85 4.85 0 01-3.77-1.78V6.69h3.77z" />
+            </svg>
+          </a>
+        </div>
+        {/* Mention presse — placeholder */}
+        <p className="text-xs text-gray-300 dark:text-gray-600">
+          Presse &amp; médias : contact@getlibre.fr
+        </p>
       </footer>
       </main>
     </div>
