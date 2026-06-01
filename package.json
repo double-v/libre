@@ -7,7 +7,8 @@
     "dev": "next dev",
     "build": "prisma migrate deploy && prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:square": "tsx prisma/seed-square-themes.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1055.0",
