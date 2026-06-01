@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Providers from '@/components/Providers';
+import ServiceWorkerRegistrar from '@/components/ServiceWorkerRegistrar';
 import CookieBanner from '@/components/CookieBanner';
 import './globals.css';
 
@@ -23,7 +24,10 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://www.getlibre.fr'),
   manifest: '/manifest.json',
   icons: {
-    icon: '/favicon.svg',
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
     apple: '/icon-192.png',
   },
   openGraph: {
@@ -83,6 +87,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <Providers>{children}</Providers>
         <CookieBanner />
+        <ServiceWorkerRegistrar />
       </body>
     </html>
   );
