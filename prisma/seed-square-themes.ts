@@ -3,6 +3,7 @@ dotenv.config();            // .env (contains DATABASE_URL)
 dotenv.config({ path: ".env.local", override: true }); // .env.local overrides
 
 import { getDb } from "../src/lib/db";
+import { Prisma } from "../src/generated/client/client";
 
 const themes = [
   {
@@ -114,6 +115,11 @@ const defaultSchedule: Record<number, string> = {
   6: "riddle",       // Saturday
 };
 
+/** Convert null to Prisma.JsonNull for nullable JSON fields */
+function toJson<T>(value: T[] | null): Prisma.NullableJsonNullValueInput | T[] {
+  return value === null ? Prisma.JsonNull : value;
+}
+
 async function main() {
   const db = getDb();
 
@@ -130,8 +136,8 @@ async function main() {
         placeholder: theme.placeholder,
         maxLength: theme.maxLength,
         allowFreeText: theme.allowFreeText,
-        options: theme.options,
-        pseudonymNames: theme.pseudonymNames,
+        options: toJson(theme.options),
+        pseudonymNames: toJson(theme.pseudonymNames),
       },
       create: {
         themeId: theme.themeId,
@@ -141,8 +147,8 @@ async function main() {
         placeholder: theme.placeholder,
         maxLength: theme.maxLength,
         allowFreeText: theme.allowFreeText,
-        options: theme.options,
-        pseudonymNames: theme.pseudonymNames,
+        options: toJson(theme.options),
+        pseudonymNames: toJson(theme.pseudonymNames),
       },
     });
     console.log(`  Upserted theme: ${theme.themeId} (${record.id})`);

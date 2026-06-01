@@ -1,5 +1,5 @@
 import { getDb } from '@/lib/db';
-import type { SquareTheme } from './themes';
+import { getTodayTheme } from './themes';
 
 export interface ThemeConfigRow {
   id: string;
@@ -64,7 +64,6 @@ export async function getTodayThemeConfig(): Promise<ThemeConfigRow> {
   }
 
   // Fallback to hardcoded themes
-  const { getTodayTheme } = require('./themes') as { getTodayTheme: () => SquareTheme };
   const fallback = getTodayTheme();
   const config: ThemeConfigRow = {
     id: 'fallback',

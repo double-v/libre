@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getDb } from '@/lib/db';
-import { rateLimit } from '@/lib/rate-limit';
+import { rateLimit, limits } from '@/lib/rate-limit';
 import { squareReportSchema } from '@/lib/square/validators';
 
 export async function POST(
@@ -18,7 +18,7 @@ export async function POST(
   const { id: messageId } = await params;
 
   // Rate limit: 3 reports per hour
-  const rl = rateLimit(`square:report:${userId}`, 3, 3_600_000);
+  const rl = rateLimit(`square:report:${userId}`, limits.squareReport.limit, limits.squareReport.windowMs);
   if (!rl.success) {
     return NextResponse.json(
       { error: 'Trop de signalements. Réessayez plus tard.' },

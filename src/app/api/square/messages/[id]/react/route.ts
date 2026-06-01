@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getDb } from '@/lib/db';
-import { rateLimit } from '@/lib/rate-limit';
+import { rateLimit, limits } from '@/lib/rate-limit';
 import { broadcastReaction } from '@/lib/square/store';
 import { squareReactionSchema } from '@/lib/square/validators';
 import type { SquareReaction } from '@/lib/square/store';
@@ -22,7 +22,7 @@ export async function POST(
   const { id: messageId } = await params;
 
   // Rate limit: 5 reactions per minute
-  const rl = rateLimit(`square:react:${userId}`, 5, 60_000);
+  const rl = rateLimit(`square:react:${userId}`, limits.squareReaction.limit, limits.squareReaction.windowMs);
   if (!rl.success) {
     return NextResponse.json(
       { error: 'Trop de réactions. Réessayez dans un moment.' },

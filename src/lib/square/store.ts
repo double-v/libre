@@ -30,7 +30,8 @@ type SSEEvent =
   | { type: 'delete'; data: { messageId: string } };
 
 function broadcastEvent(event: SSEEvent): void {
-  const payload = `event: ${event.type}\ndata: ${JSON.stringify(event.data ?? '')}\n\n`;
+  const data = 'data' in event ? event.data : '';
+  const payload = `event: ${event.type}\ndata: ${JSON.stringify(data)}\n\n`;
   const encoded = new TextEncoder().encode(payload);
   for (const controller of connections) {
     try {
