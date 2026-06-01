@@ -14,10 +14,12 @@ export async function GET() {
 
   const stream = new ReadableStream({
     start(controller) {
-      // Send initial messages as a batch
       const encoder = new TextEncoder();
+
+      // Send initial messages as individual typed events
       for (const msg of initialMessages) {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(msg)}\n\n`));
+        const eventType = msg.isSystem ? 'system' : 'message';
+        controller.enqueue(encoder.encode(`event: ${eventType}\ndata: ${JSON.stringify(msg)}\n\n`));
       }
 
       // Keep connection alive with periodic heartbeat
@@ -39,7 +41,6 @@ export async function GET() {
         try { controller.close(); } catch {}
       };
 
-      // Best-effort cleanup
       process.on('SIGTERM', closeHandler);
     },
   });
