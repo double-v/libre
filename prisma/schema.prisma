@@ -46,6 +46,7 @@ model User {
   passwordResetTokens  PasswordResetToken[]
   moderationActions   ModerationLog[] @relation("ModerationActions")
   moderationTargets    ModerationLog[] @relation("ModerationTargets")
+  consents             Consent[]
 
   @@map("users")
 }
@@ -225,7 +226,7 @@ model ModerationLog {
   id           String   @id @default(uuid()) @db.Uuid
   adminId      String   @db.Uuid
   targetUserId String   @db.Uuid
-  action       String   // BAN, UNBAN, WARNING, DELETE_USER, APPROVE_VERIFICATION, REJECT_VERIFICATION, DISMISS_REPORT
+  action       String
   reason       String?
   createdAt    DateTime @default(now())
 
@@ -241,7 +242,7 @@ model SquareMessage {
   id         String   @id @default(uuid()) @db.Uuid
   pseudonym  String
   content    String
-  type       String   // text, emoji, reaction, gif, polite, riddle
+  type       String
   isAdmin    Boolean  @default(false)
   createdAt  DateTime @default(now())
 
@@ -283,7 +284,7 @@ model Session {
 model PasswordResetToken {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @db.Uuid
-  tokenHash String   @unique  // hash du token JWT — stocké hashé pour sécurité
+  tokenHash String   @unique
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime @default(now())
@@ -292,4 +293,23 @@ model PasswordResetToken {
 
   @@index([userId, createdAt])
   @@map("password_reset_tokens")
+}
+
+/// Consent traceability — RGPD art. 7(1): "Where processing is based on consent, the controller shall be able to demonstrate that the data subject has consented"
+model Consent {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  type       String   // "cgu", "privacy_policy", "cookies_essential", "cookies_analytics", "e2e_messaging", "geolocation", "feedback_tracking"
+  version    String   @default("1") // version of the document/policy accepted
+  given      Boolean  @default(true)
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  withdrawnAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@index([createdAt])
+  @@map("consents")
 }

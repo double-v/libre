@@ -416,6 +416,9 @@ export default async function Home() {
           <Link href="/confidentialite" className="hover:text-gray-600 dark:hover:text-gray-300">
             Politique de confidentialité
           </Link>
+          <Link href="/mentions-legales" className="hover:text-gray-600 dark:hover:text-gray-300">
+            Mentions légales
+          </Link>
         </div>
         {/* Réseaux sociaux */}
         <div className="mb-3 flex items-center justify-center gap-4">

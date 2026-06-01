@@ -21,7 +21,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const { email, password, displayName, turnstileToken = undefined, deviceId = undefined } = parsed.data;
+    const { email, password, displayName, turnstileToken = undefined, deviceId = undefined, consentGiven = false } = parsed.data as typeof parsed.data & { consentGiven?: boolean };
+
+    // RGPD: verify explicit consent was given
+    if (!consentGiven) {
+      return NextResponse.json(
+        { error: 'Vous devez accepter les CGU et la politique de confidentialité pour vous inscrire' },
+        { status: 400 },
+      );
+    }
 
     // Verify Turnstile captcha
     if (process.env.TURNSTILE_SECRET_KEY) {
@@ -80,6 +88,40 @@ export async function POST(request: Request) {
         createdAt: true,
         isVerified: true,
       },
+    });
+
+    // RGPD art. 7(1): record consent traceability
+    const userAgent = request.headers.get('user-agent') || undefined;
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ipAddress = forwarded ? forwarded.split(',')[0].trim() : (request.headers.get('x-real-ip') || undefined);
+
+    await getDb().consent.createMany({
+      data: [
+        {
+          userId: user.id,
+          type: 'cgu',
+          version: '1',
+          given: true,
+          ipAddress,
+          userAgent,
+        },
+        {
+          userId: user.id,
+          type: 'privacy_policy',
+          version: '1',
+          given: true,
+          ipAddress,
+          userAgent,
+        },
+        {
+          userId: user.id,
+          type: 'cookies_essential',
+          version: '1',
+          given: true,
+          ipAddress,
+          userAgent,
+        },
+      ],
     });
 
     // Send verification email

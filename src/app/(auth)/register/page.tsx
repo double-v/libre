@@ -20,6 +20,7 @@ export default function RegisterPage() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileBlocked, setTurnstileBlocked] = useState(false);
   const [deviceId, setDeviceId] = useState('');
+  const [consentGiven, setConsentGiven] = useState(false);
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   useEffect(() => {
@@ -82,7 +83,7 @@ export default function RegisterPage() {
 
   const inputClass = 'mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-coral focus:outline-none focus:ring-coral dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-coral-light';
 
-  const canSubmit = !loading && (!siteKey || !!turnstileToken || turnstileBlocked);
+  const canSubmit = !loading && consentGiven && (!siteKey || !!turnstileToken || turnstileBlocked);
 
   return (
     <div className="space-y-6">
@@ -163,6 +164,24 @@ export default function RegisterPage() {
             onError={() => setTurnstileBlocked(true)}
           />
         )}
+
+        <div className="flex items-start gap-2">
+          <input
+            id="consent"
+            type="checkbox"
+            checked={consentGiven}
+            onChange={(e) => setConsentGiven(e.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-gray-300 text-coral focus:ring-coral dark:border-gray-600 dark:bg-gray-700"
+            required
+          />
+          <label htmlFor="consent" className="text-xs leading-snug text-gray-600 dark:text-gray-400">
+            J&apos;accepte les{' '}
+            <Link href="/cgu" className="text-coral hover:underline">Conditions générales d&apos;utilisation</Link>
+            {' '}et la{' '}
+            <Link href="/confidentialite" className="text-coral hover:underline">Politique de confidentialité</Link>
+            . Le traitement de mes données est conforme au RGPD.
+          </label>
+        </div>
 
         <button
           type="submit"

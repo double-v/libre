@@ -222,6 +222,43 @@ export default function SettingsPage() {
             </div>
           )}
         </section>
+
+        {/* RGPD: Data export & legal links */}
+        <section className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:p-5">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Vos droits RGPD</h2>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            Conformément au RGPD, vous pouvez exporter ou supprimer vos données.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const res = await fetch('/api/users/me/export');
+                  if (!res.ok) throw new Error('Export failed');
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'libre_data_export.json';
+                  a.click();
+                  URL.revokeObjectURL(url);
+                } catch {
+                  setError("Erreur lors de l'export de vos données");
+                }
+              }}
+              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              Exporter mes données (JSON)
+            </button>
+            <a
+              href="/confidentialite"
+              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              Politique de confidentialité
+            </a>
+          </div>
+        </section>
       </div>
     </div>
   );

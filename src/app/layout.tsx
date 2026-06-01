@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Providers from '@/components/Providers';
+import CookieBanner from '@/components/CookieBanner';
 import './globals.css';
 
 export const viewport: Viewport = {
@@ -81,6 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Aller au contenu principal
         </a>
         <Providers>{children}</Providers>
+        <CookieBanner />
       </body>
     </html>
   );
