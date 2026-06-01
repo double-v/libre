@@ -48,4 +48,7 @@ export const limits: Record<string, RateLimitPreset> = {
   like: { limit: 50, windowMs: 86_400_000 },
   report: { limit: 5, windowMs: 3_600_000 },
   api: { limit: 60, windowMs: 60_000 },
+  squareMessage: { limit: 10, windowMs: 60_000 },
+  squareReaction: { limit: 5, windowMs: 60_000 },
+  squareReport: { limit: 3, windowMs: 3_600_000 },
 };
