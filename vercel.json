@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/square/presage",
+      "schedule": "45 1 * * *"
+    },
+    {
+      "path": "/api/square/reset",
+      "schedule": "0 2 * * *"
+    }
+  ]
+}
