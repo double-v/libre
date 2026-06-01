@@ -2,10 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getDb } from '@/lib/db';
-import { getTodayTheme, getPseudonym } from '@/lib/square/themes';
-import { addMessage } from '@/lib/square/store';
+import { getTodayThemeConfig, getPseudonymFromConfig } from '@/lib/square/themes-server';
+import { checkContent } from '@/lib/square/moderation';
+import { rateLimit, limits } from '@/lib/rate-limit';
+import { getMessages, addMessage } from '@/lib/square/store';
 import { squareMessageSchema } from '@/lib/square/validators';
 import type { SquareMessage } from '@/lib/square/store';
+
+export async function GET() {
+  const messages = await getMessages();
+  return NextResponse.json({ messages });
+}
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -14,6 +21,15 @@ export async function POST(request: NextRequest) {
   }
 
   const userId = session.user.id;
+
+  // Rate limiting
+  const rl = rateLimit(`square:${userId}`, limits.message.limit, limits.message.windowMs);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: 'Trop de messages. Réessayez dans un moment.' },
+      { status: 429 },
+    );
+  }
 
   // Check if user is banned from square
   const user = await getDb().user.findUnique({
@@ -25,7 +41,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Vous êtes banni(e) de la Place' }, { status: 403 });
   }
 
-  const theme = getTodayTheme();
+  const theme = await getTodayThemeConfig();
   const body = await request.json();
   const parsed = squareMessageSchema.safeParse(body);
 
@@ -49,14 +65,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Message trop long' }, { status: 400 });
   }
 
-  const pseudonym = getPseudonym(userId);
+  // Moderation check
+  const moderationResult = await checkContent(content);
+  if (!moderationResult.allowed) {
+    return NextResponse.json(
+      { error: 'Ce message contient du contenu non autorisé' },
+      { status: 403 },
+    );
+  }
+
+  const pseudonym = await getPseudonymFromConfig(userId);
   const isAdmin = session.user.role === 'ADMIN';
 
   const message = await addMessage({
     pseudonym,
-    content,
+    content: moderationResult.censored,
     type: type as SquareMessage['type'],
     isAdmin,
+    themeConfigId: theme.id,
   });
 
   return NextResponse.json({ message }, { status: 201 });
