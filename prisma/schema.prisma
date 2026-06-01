@@ -47,6 +47,7 @@ model User {
   moderationActions   ModerationLog[] @relation("ModerationActions")
   moderationTargets    ModerationLog[] @relation("ModerationTargets")
   consents             Consent[]
+  squareReports        SquareMessageReport[] @relation("SquareReportsMade")
 
   @@map("users")
 }
@@ -239,15 +240,91 @@ model ModerationLog {
 }
 
 model SquareMessage {
-  id         String   @id @default(uuid()) @db.Uuid
-  pseudonym  String
-  content    String
-  type       String
-  isAdmin    Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  id            String    @id @default(uuid()) @db.Uuid
+  pseudonym     String
+  content       String
+  type          String
+  isAdmin       Boolean   @default(false)
+  isSystem      Boolean   @default(false)
+  themeConfigId String?   @db.Uuid
+  createdAt     DateTime  @default(now())
+
+  themeConfig SquareThemeConfig?  @relation(fields: [themeConfigId], references: [id])
+  reactions   SquareReaction[]
+  reports     SquareMessageReport[]
 
   @@index([createdAt])
   @@map("square_messages")
+}
+
+model SquareThemeConfig {
+  id             String   @id @default(uuid()) @db.Uuid
+  themeId        String   @unique
+  label          String
+  description    String
+  inputType      String
+  placeholder    String
+  maxLength      Int      @default(200)
+  allowFreeText  Boolean  @default(false)
+  options        Json?
+  pseudonymNames Json?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  scheduleSlots SquareThemeSchedule[]
+  messages      SquareMessage[]
+
+  @@map("square_theme_configs")
+}
+
+model SquareThemeSchedule {
+  id            String   @id @default(uuid()) @db.Uuid
+  dayOfWeek     Int      @unique
+  themeConfigId String   @db.Uuid
+  createdAt     DateTime @default(now())
+
+  themeConfig SquareThemeConfig @relation(fields: [themeConfigId], references: [id], onDelete: Cascade)
+
+  @@map("square_theme_schedule")
+}
+
+model BannedWord {
+  id        String   @id @default(uuid()) @db.Uuid
+  word      String   @unique
+  severity  String   @default("block")
+  createdAt DateTime @default(now())
+
+  @@map("banned_words")
+}
+
+model SquareReaction {
+  id        String   @id @default(uuid()) @db.Uuid
+  messageId String   @db.Uuid
+  emoji     String
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  message SquareMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, emoji])
+  @@map("square_reactions")
+}
+
+model SquareMessageReport {
+  id         String   @id @default(uuid()) @db.Uuid
+  messageId  String   @db.Uuid
+  reporterId String   @db.Uuid
+  reason     String
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+
+  message   SquareMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  reporter  User          @relation("SquareReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("square_message_reports")
 }
 
 model Account {
