@@ -82,3 +82,18 @@ input::placeholder, textarea::placeholder {
 @media (max-width: 640px) {
   html { font-size: 16px; }
 }
+
+/* Respect prefers-reduced-motion: WCAG 2.3.3 (AAA) + 2.2.2 (A)
+   Force all motion to a near-instant 80ms crossfade. The browser keeps
+   the user feedback (hover/focus state changes) but stops the choreography
+   that can trigger vestibular disorders, vertigo, and migraines. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 80ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 80ms !important;
+    scroll-behavior: auto !important;
+  }
+}
