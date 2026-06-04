@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import Alert from '@/components/ui/Alert';
 
 function ResetForm() {
   const router = useRouter();
@@ -70,20 +71,18 @@ function ResetForm() {
       </div>
 
       {tokenError && (
-        <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
-          {tokenError}
+        <Alert variant="error" title={tokenError}>
           <div className="mt-2 text-center">
             <Link href="/forgot-password" className="font-medium text-coral hover:text-terracotta">
               Demander un nouveau lien
             </Link>
           </div>
-        </div>
+        </Alert>
       )}
 
       {done && (
-        <div className="rounded-md bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/30 dark:text-green-300">
-          <p className="font-medium">Mot de passe mis à jour !</p>
-          <p className="mt-1">Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</p>
+        <Alert variant="success" title="Mot de passe mis à jour !">
+          <p>Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</p>
           <div className="mt-3 text-center">
             <Button
               variant="primary"
@@ -92,15 +91,13 @@ function ResetForm() {
               Se connecter
             </Button>
           </div>
-        </div>
+        </Alert>
       )}
 
       {!done && !tokenError && (
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
-              {error}
-            </div>
+            <Alert variant="error">{error}</Alert>
           )}
 
           <Input
