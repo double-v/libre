@@ -6,6 +6,8 @@ import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { Suspense } from 'react';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 
 const TURNSTILE_LOAD_TIMEOUT = 5000;
 
@@ -48,8 +50,6 @@ function LoginForm() {
   const justRegistered = searchParams.get('registered') === 'true';
   const justVerified = searchParams.get('verified') === 'true';
   const errorParam = searchParams.get('error');
-
-  const inputClass = 'mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-coral focus:outline-none focus:ring-coral dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-coral-light';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -156,35 +156,27 @@ function LoginForm() {
       )}
 
       <form onSubmit={handleSubmit} aria-label="Formulaire de connexion" className="space-y-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-800 dark:text-gray-200">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={inputClass}
-            placeholder="vous@exemple.com"
-          />
-        </div>
+        <Input
+          id="email"
+          type="email"
+          label="Email"
+          required
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="vous@exemple.com"
+        />
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-800 dark:text-gray-200">
-            Mot de passe
-          </label>
-          <input
-            id="password"
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={inputClass}
-            placeholder="Votre mot de passe"
-          />
-        </div>
+        <Input
+          id="password"
+          type="password"
+          label="Mot de passe"
+          required
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Votre mot de passe"
+        />
 
         {siteKey && (
           <Turnstile
@@ -195,13 +187,15 @@ function LoginForm() {
           />
         )}
 
-        <button
+        <Button
           type="submit"
+          variant="primary"
+          fullWidth
           disabled={!canSubmit}
-          className="w-full rounded-md bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-terracotta focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
+          loading={loading}
         >
           {loading ? 'Connexion…' : 'Se connecter'}
-        </button>
+        </Button>
       </form>
 
       <p className="text-center text-sm text-gray-600 dark:text-gray-400">
