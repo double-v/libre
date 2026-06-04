@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import Alert from '@/components/ui/Alert';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -47,16 +48,13 @@ export default function ForgotPasswordPage() {
       </div>
 
       {error && (
-        <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
-          {error}
-        </div>
+        <Alert variant="error">{error}</Alert>
       )}
 
       {sent ? (
-        <div className="rounded-md bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/30 dark:text-green-300">
-          <p className="font-medium">Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.</p>
-          <p className="mt-1">Vérifiez votre boîte de réception (et les spams) dans quelques minutes.</p>
-        </div>
+        <Alert variant="success" title="Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.">
+          Vérifiez votre boîte de réception (et les spams) dans quelques minutes.
+        </Alert>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
