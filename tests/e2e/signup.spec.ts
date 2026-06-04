@@ -8,6 +8,7 @@ test.describe('Registration flow', () => {
     await page.fill('input[id="displayName"]', 'BetaTest');
     await page.fill('input[id="email"]', email);
     await page.fill('input[id="password"]', 'SecurePass123');
+    await page.check('input[id="consent"]');
 
     await page.click('button[type="submit"]');
 
@@ -21,6 +22,7 @@ test.describe('Registration flow', () => {
     await page.fill('input[id="displayName"]', 'BetaTest');
     await page.fill('input[id="email"]', `weak-${Date.now()}@example.com`);
     await page.fill('input[id="password"]', 'short');
+    await page.check('input[id="consent"]');
 
     await page.click('button[type="submit"]');
 
@@ -34,6 +36,7 @@ test.describe('Registration flow', () => {
     await page.fill('input[id="displayName"]', 'BetaDup');
     await page.fill('input[id="email"]', 'dup@example.com');
     await page.fill('input[id="password"]', 'SecurePass123');
+    await page.check('input[id="consent"]');
 
     await page.click('button[type="submit"]');
 
@@ -46,6 +49,7 @@ test.describe('Registration flow', () => {
       await page.fill('input[id="displayName"]', 'BetaDup2');
       await page.fill('input[id="email"]', 'dup@example.com');
       await page.fill('input[id="password"]', 'SecurePass123');
+      await page.check('input[id="consent"]');
       await page.click('button[type="submit"]');
       await expect(page.getByText(/erreur/i)).toBeVisible({ timeout: 5000 });
     }
