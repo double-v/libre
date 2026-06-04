@@ -1,5 +1,14 @@
 import { test, expect } from '@playwright/test';
 
+// Mock Turnstile globally for all signup tests (see TurnstileProvider.tsx).
+// The component checks window.__TURNSTILE_MOCK__ on mount and uses the
+// mock branch (instant fake token) instead of loading the Cloudflare widget.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __TURNSTILE_MOCK__?: boolean }).__TURNSTILE_MOCK__ = true;
+  });
+});
+
 test.describe('Registration flow', () => {
   test('registers a new user and sees confirmation on login', async ({ page }) => {
     const email = `beta-${Date.now()}@example.com`;

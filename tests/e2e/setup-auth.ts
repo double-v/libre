@@ -8,6 +8,13 @@ import { Pool } from 'pg';
 const AUTH_FILE = 'tests/e2e/auth.json';
 
 setup('authenticate', async ({ page }) => {
+  // Mock Turnstile: in tests, skip the Cloudflare widget entirely and
+  // emit a fake token immediately. The TurnstileProvider component checks
+  // window.__TURNSTILE_MOCK__ on mount and uses the mock branch.
+  await page.addInitScript(() => {
+    (window as unknown as { __TURNSTILE_MOCK__?: boolean }).__TURNSTILE_MOCK__ = true;
+  });
+
   const email = `e2e-test-${Date.now()}@example.com`;
   const password = 'E2eTestPass123';
 
