@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { photoUrl } from '@/lib/photos';
 import Button from '@/components/ui/Button';
 import Tag from '@/components/ui/Tag';
-
+import Card from '@/components/ui/Card';
 interface ProfileCardProps {
   id: string;
   displayName: string;
@@ -51,7 +51,13 @@ export default function ProfileCard({
   const distance = formatDistance(distanceM, distanceKm);
 
   return (
-    <div role="group" aria-label={`Profil de ${displayName}`} onClick={() => onProfileClick?.(id)} className={`rounded-xl border border-gray-200 p-4 shadow-sm dark:border-gray-700${onProfileClick ? ' cursor-pointer' : ''}`}>
+    <Card
+      as="article"
+      interactive={!!onProfileClick}
+      role="group"
+      aria-label={`Profil de ${displayName}`}
+      onClick={() => onProfileClick?.(id)}
+    >
       <div className="flex items-start gap-3">
         {photos && photos.length > 0 ? (
           <div className="relative">
@@ -117,6 +123,6 @@ export default function ProfileCard({
           Like
         </Button>
       </div>
-    </div>
+    </Card>
   );
 }
