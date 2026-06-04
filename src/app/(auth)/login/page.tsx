@@ -8,6 +8,7 @@ import { Turnstile } from '@marsidev/react-turnstile';
 import { Suspense } from 'react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import Alert from '@/components/ui/Alert';
 
 const TURNSTILE_LOAD_TIMEOUT = 5000;
 
@@ -97,14 +98,12 @@ function LoginForm() {
       </div>
 
       {error && (
-        <div role="alert" aria-live="polite" className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
-          {error}
-        </div>
+        <Alert variant="error">{error}</Alert>
       )}
 
       {unverifiedEmail && (
-        <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-          <p>Votre email n&apos;est pas encore vérifié. Vérifiez votre boîte de réception (et les spams).</p>
+        <Alert variant="warning" title="Votre email n'est pas encore vérifié.">
+          <p>Vérifiez votre boîte de réception (et les spams).</p>
           <div className="mt-2 text-center">
             <button
               type="button"
@@ -122,37 +121,29 @@ function LoginForm() {
               {resendSent ? 'Email renvoyé ! Vérifiez votre boîte de réception.' : "Renvoyer l'email de vérification"}
             </button>
           </div>
-        </div>
+        </Alert>
       )}
 
       {justVerified && (
-        <div className="rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/30 dark:text-green-300">
-          Email vérifié ! Vous pouvez maintenant vous connecter.
-        </div>
+        <Alert variant="success">Email vérifié ! Vous pouvez maintenant vous connecter.</Alert>
       )}
 
       {errorParam === 'invalid-token' && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
-          Le lien de vérification est invalide ou a expiré.
-        </div>
+        <Alert variant="error">Le lien de vérification est invalide ou a expiré.</Alert>
       )}
 
       {justRegistered && (
-        <div className="rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/30 dark:text-green-300">
-          Inscription réussie ! Connectez-vous avec vos identifiants.
-        </div>
+        <Alert variant="success">Inscription réussie ! Connectez-vous avec vos identifiants.</Alert>
       )}
 
       {searchParams.get('reset') === 'success' && (
-        <div className="rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/30 dark:text-green-300">
-          Mot de passe réinitialisé ! Connectez-vous avec votre nouveau mot de passe.
-        </div>
+        <Alert variant="success">Mot de passe réinitialisé ! Connectez-vous avec votre nouveau mot de passe.</Alert>
       )}
 
       {turnstileBlocked && !turnstileToken && (
-        <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+        <Alert variant="warning">
           Le captcha de sécurité n&apos;a pas pu se charger. Cela arrive souvent avec les bloqueurs de publicités. Vous pouvez quand même vous connecter — si le problème persiste, essayez de désactiver temporairement votre bloqueur.
-        </div>
+        </Alert>
       )}
 
       <form onSubmit={handleSubmit} aria-label="Formulaire de connexion" className="space-y-4">
