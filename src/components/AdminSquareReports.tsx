@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Card from './ui/Card';
 
 interface ReportMessage {
   id: string;
@@ -127,7 +128,7 @@ export default function AdminSquareReports() {
       ) : (
         <div className="space-y-3">
           {reports.map((r) => (
-            <div key={r.id} className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+            <Card key={r.id} variant="profile">
               {/* Message content */}
               {r.message && (
                 <div className="mb-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
@@ -179,7 +180,7 @@ export default function AdminSquareReports() {
                   </button>
                 </div>
               )}
-            </div>
+            </Card>
           ))}
         </div>
       )}
