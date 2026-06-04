@@ -167,7 +167,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <Link href="/cgu" className="hover:text-gray-600 dark:hover:text-gray-300">CGU</Link>
         <Link href="/confidentialite" className="hover:text-gray-600 dark:hover:text-gray-300">Confidentialité</Link>
         <Link href="/mentions-legales" className="hover:text-gray-600 dark:hover:text-gray-300">Mentions légales</Link>
-        <Link href="/faq/session-expiree" className="hover:text-gray-600 dark:hover:text-gray-300">FAQ</Link>
       </div>
     </div>
   );
