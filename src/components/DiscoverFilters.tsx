@@ -2,6 +2,7 @@
 
 import TagButton from './TagButton';
 import { GENDER_OPTIONS, ORIENTATION_OPTIONS, INTEREST_CATEGORIES } from '@/lib/taxonomy';
+import Card from './ui/Card';
 
 interface DiscoverFiltersProps {
   gender: string[];
@@ -35,7 +36,8 @@ export default function DiscoverFilters({
   const hasFilters = gender.length > 0 || orientation.length > 0 || ageMin > 18 || ageMax < 99 || interests.length > 0;
 
   return (
-    <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+    <div className="space-y-4">
+      <Card as="section" variant="filter" className="space-y-4">
       {/* Genre */}
       <div>
         <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">Genre</p>
@@ -128,6 +130,7 @@ export default function DiscoverFilters({
           Réinitialiser les filtres
         </button>
       )}
+    </Card>
     </div>
   );
 }
