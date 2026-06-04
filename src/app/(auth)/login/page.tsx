@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { Turnstile } from '@marsidev/react-turnstile';
 import { Suspense } from 'react';
+import TurnstileProvider from '@/components/TurnstileProvider';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Alert from '@/components/ui/Alert';
@@ -170,7 +170,7 @@ function LoginForm() {
         />
 
         {siteKey && (
-          <Turnstile
+          <TurnstileProvider
             siteKey={siteKey}
             onSuccess={setTurnstileToken}
             onExpire={() => setTurnstileToken(null)}

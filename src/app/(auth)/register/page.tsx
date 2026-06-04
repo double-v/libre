@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { Turnstile } from '@marsidev/react-turnstile';
+import TurnstileProvider from '@/components/TurnstileProvider';
 import PrivacyTip from '@/components/PrivacyTip';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -142,7 +142,7 @@ export default function RegisterPage() {
         />
 
         {siteKey && (
-          <Turnstile
+          <TurnstileProvider
             siteKey={siteKey}
             onSuccess={(token) => {
               setTurnstileToken(token);
