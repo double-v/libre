@@ -1,4 +1,5 @@
 import VerificationBadge from '@/components/VerificationBadge';
+import Card from '@/components/ui/Card';
 
 interface CrossingCardProps {
   id: string;
@@ -55,7 +56,13 @@ export default function CrossingCard({
   const timeAgo = getTimeAgo(happenedAt);
 
   return (
-    <div role="group" aria-label={`Croisement avec ${displayName}`} onClick={() => onProfileClick?.(id)} className={`rounded-xl border border-gray-200 p-4 shadow-sm dark:border-gray-700${onProfileClick ? ' cursor-pointer' : ''}`}>
+    <Card
+      as="article"
+      interactive={!!onProfileClick}
+      role="group"
+      aria-label={`Croisement avec ${displayName}`}
+      onClick={() => onProfileClick?.(id)}
+    >
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -94,6 +101,6 @@ export default function CrossingCard({
           Like
         </button>
       </div>
-    </div>
+    </Card>
   );
 }
