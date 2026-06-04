@@ -19,6 +19,17 @@ description: A warm, inclusive dating app built on coral and cream — deliberat
 
 Coral is Libre's voltage. It signals warmth, approachability, and the human side of meeting someone. It deliberately avoids the cool blue/slate of corporate dating apps. Use it generously on CTAs and brand moments; sparingly on decorative elements.
 
+### Secondary Warm (gamification + accents)
+
+| Token | Hex | Use |
+|---|---|---|
+| abricot | `#F4B58A` | Têtes de section chaudes, célébrations subtiles, illustrations d'onboarding |
+| miel | `#E8A04E` | Badges d'accomplissement discrets, accents chaleureux dans le chat |
+| terracotta-deep | `#8A2A1B` | Texte accentué sur fond clair (alternative à coral-dark pour variation visuelle) |
+| rose-poudré | `#F7D4CB` | Background alternatif à blush, états hover doux sur cartes |
+
+Ces couleurs sont **secondaires** : on ne les utilise jamais comme CTA principal. Elles portent la profondeur visuelle, les nuances, et les moments gamifiés discrets. Abricot et miel sont les couleurs d'accomplissement (badges "Cœur ouvert", streaks discrets). Rose-poudré est un fond alternatif pour briser la monotonie du cream.
+
 ### Surface
 
 | Token | Hex | Use |
@@ -261,6 +272,73 @@ The logo is a heart shape with sun rays emanating from the top. Concept: love (h
 | Modal overlay | `bg-black/50` + centered card | Modals, dialogs |
 
 Philosophy: color-block first, shadow rarely. Depth comes from surface contrast (white vs blush vs dark), not drop shadows.
+
+### Shadow Tokens (rare, intentional)
+
+| Token | Value | Use |
+|---|---|---|
+| `shadow-soft` | `0 2px 8px -2px rgb(232 99 74 / 0.08)` | Cards au hover, modal ouverte — **toujours teinté coral** pour rester dans l'univers |
+| `shadow-pop` | `0 8px 24px -4px rgb(232 99 74 / 0.16)` | Menu ouvert, dropdown, célébration éphémère |
+| `shadow-focus` | `0 0 0 3px rgb(232 99 74 / 0.4)` | Anneau de focus accessible (conforme WCAG 2.1) |
+
+**Règle absolue** : pas d'ombre grise neutre (`shadow-md` par défaut Tailwind). Toute ombre porte la teinte coral pour rester dans le brand. Si tu hésites à mettre une ombre, mets une bordure à la place.
+
+## Motion
+
+Motion est un **token de design à part entière**, pas un afterthought. La gamification subtile vit dans ces tokens.
+
+### Durées
+
+| Token | Durée | Use |
+|---|---|---|
+| `motion-instant` | 80ms | Feedbacks immédiats (clic, toggle) |
+| `motion-fast` | 160ms | Hover, focus, transitions d'état |
+| `motion-base` | 240ms | Apparitions d'éléments, transitions de pages |
+| `motion-slow` | 400ms | Célébrations, animations de récompense (rare) |
+| `motion-celebrate` | 600ms | Streak atteint, première bio complétée — événement unique |
+
+### Easing
+
+| Token | Valeur | Use |
+|---|---|---|
+| `ease-out-soft` | `cubic-bezier(0.22, 1, 0.36, 1)` | Entrées d'éléments, apparitions |
+| `ease-in-out-soft` | `cubic-bezier(0.65, 0, 0.35, 1)` | Transformations réciproques |
+| `ease-celebrate` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Récompenses (un léger overshoot, jamais agressif) |
+
+### Réduite
+
+Toutes les animations doivent avoir un équivalent sous `@media (prefers-reduced-motion: reduce)` : passage instantané ou crossfade de 80ms. Pas d'exception. Tester en activant la préférence dans les DevTools avant chaque PR.
+
+### Patterns gamification (subtile, jamais agressive)
+
+- **Micro-célébration** : scale `1 → 1.05 → 1` sur l'élément validé, 240ms, ease-out-soft. Pas de popup, pas de son.
+- **Streak discret** : un point coral apparaît à côté de l'avatar quand on a 3 jours d'activité. Pas de compteur visible, pas de "3 jours !".
+- **Achievement** : badge rare (cœur plein + label court) qui apparaît dans le profil, jamais en popup. L'utilisateur le découvre en visitant son propre profil.
+- **Premier match** : une seule fois, animation de cœurs qui s'épanouissent (1.2s, ease-celebrate, se répète jamais). Sinon, animation standard.
+
+## Component Library
+
+La rationalisation CSS passe par cette couche. **Aucun composant ne devrait être créé en dehors de ce set.** Si tu as besoin d'un nouveau composant, propose-le ici d'abord.
+
+### Composants UI partagés (à créer dans `src/components/ui/`)
+
+| Composant | États obligatoires | Variantes | Remplace |
+|---|---|---|---|
+| `Button` | default, hover, focus, active, disabled, loading | primary, secondary, ghost, danger | Tous les `<button>` et les liens stylés CTA |
+| `Input` | default, hover, focus, error, disabled | text, email, password, search, textarea | Tous les `<input>` et `<textarea>` |
+| `Card` | default, hover (rare), interactive | profile, crossing, match, filter, modal | Tous les blocs `rounded-xl border` du site |
+| `Tag` | default, selected, hover, disabled | chip, badge | Tous les chips/badges dispersés |
+| `Avatar` | default, with-online-dot, with-badge, placeholder | sm, md, lg, xl | Tous les avatars inline |
+| `Modal` | open, closed | centered, bottom-sheet | Dialog, confirm, profile-modal |
+| `EmptyState` | — | error, no-data, no-results, no-crossings | Tous les états vides "Nothing here" |
+
+### Règles
+
+- Tous utilisent les tokens définis plus haut. Jamais de valeur inline.
+- Tous supportent `prefers-reduced-motion`.
+- Tous ont un équivalent dark mode.
+- Tous ont des props ARIA cohérentes (cf. section Accessibility de `PRODUCT.md`).
+- Aucun n'utilise `bg-gray-*` Tailwind brut : on passe par les tokens coral/blush/sand/abricot/miel/rose-poudré.
 
 ## Responsive
 
