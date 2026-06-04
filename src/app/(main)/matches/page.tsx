@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import Card from '@/components/ui/Card';
 import Pusher from 'pusher-js';
 import OnlineIndicator from '@/components/OnlineIndicator';
 import ProfileModal from '@/components/ProfileModal';
@@ -103,9 +104,9 @@ export default function MatchesPage() {
 
       <div className="space-y-4">
         {matches.map((match) => (
-          <div
+          <Card
             key={match.id}
-            className="cursor-pointer rounded-xl border border-gray-200 p-4 shadow-sm dark:border-gray-700"
+            interactive
             onClick={() => setSelectedUserId(match.user.id)}
           >
             <div className="flex items-center gap-3">
@@ -149,7 +150,7 @@ export default function MatchesPage() {
             ) : (
               <p className="mt-3 text-sm text-gray-600 dark:text-gray-500">Chat non disponible</p>
             )}
-          </div>
+          </Card>
         ))}
       </div>
       <ProfileModal userId={selectedUserId ?? ''} open={!!selectedUserId} onClose={() => setSelectedUserId(null)} />

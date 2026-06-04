@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Card from '@/components/ui/Card';
 
 interface VerificationRow {
   id: string;
@@ -78,7 +79,7 @@ export default function AdminVerificationsPage() {
       ) : (
         <div className="space-y-3">
           {verifications.map((v) => (
-            <div key={v.id} className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+            <Card key={v.id} variant="profile">
               <div className="flex items-start gap-4">
                 <img src={v.selfieUrl} alt="Selfie de vérification" className="h-24 w-24 rounded-lg object-cover" />
                 <div className="flex-1">
@@ -104,7 +105,7 @@ export default function AdminVerificationsPage() {
                   </div>
                 )}
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}
