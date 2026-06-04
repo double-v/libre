@@ -6,6 +6,8 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Turnstile } from '@marsidev/react-turnstile';
 import PrivacyTip from '@/components/PrivacyTip';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 
 const TURNSTILE_LOAD_TIMEOUT = 5000;
 
@@ -81,8 +83,6 @@ export default function RegisterPage() {
     }
   }
 
-  const inputClass = 'mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-coral focus:outline-none focus:ring-coral dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-coral-light';
-
   const canSubmit = !loading && consentGiven && (!siteKey || !!turnstileToken || turnstileBlocked);
 
   return (
@@ -106,52 +106,41 @@ export default function RegisterPage() {
 
       <form onSubmit={handleSubmit} aria-label="Formulaire d'inscription" className="space-y-4">
         <div>
-          <label htmlFor="displayName" className="block text-sm font-medium text-gray-800 dark:text-gray-200">
-            Pseudo
-          </label>
-          <input
+          <Input
             id="displayName"
             type="text"
+            label="Pseudo"
             required
+            autoComplete="username"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className={inputClass}
             placeholder="Un pseudo qui vous ressemble"
           />
           <PrivacyTip tip="Un pseudo, c'est plus safe qu'un vrai nom. Vos matches ne verront que ça." />
         </div>
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-800 dark:text-gray-200">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={inputClass}
-            placeholder="vous@exemple.com"
-          />
-        </div>
+        <Input
+          id="email"
+          type="email"
+          label="Email"
+          required
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="vous@exemple.com"
+        />
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-800 dark:text-gray-200">
-            Mot de passe
-          </label>
-          <input
-            id="password"
-            type="password"
-            required
-            aria-describedby="password-requirements"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={inputClass}
-            placeholder="Minimum 8 caractères"
-          />
-          <p id="password-requirements" className="mt-1 text-xs text-gray-600 dark:text-gray-400">8 caractères min, avec majuscule, minuscule et chiffre</p>
-        </div>
+        <Input
+          id="password"
+          type="password"
+          label="Mot de passe"
+          required
+          autoComplete="new-password"
+          hint="8 caractères min, avec majuscule, minuscule et chiffre"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Minimum 8 caractères"
+        />
 
         {siteKey && (
           <Turnstile
@@ -183,13 +172,15 @@ export default function RegisterPage() {
           </label>
         </div>
 
-        <button
+        <Button
           type="submit"
+          variant="primary"
+          fullWidth
           disabled={!canSubmit}
-          className="w-full rounded-md bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-terracotta focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
+          loading={loading}
         >
           {loading ? 'Création…' : 'Créer mon compte'}
-        </button>
+        </Button>
       </form>
 
       <p className="text-center text-sm text-gray-600 dark:text-gray-400">
