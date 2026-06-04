@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Card from './ui/Card';
 
 interface ThemeConfig {
   id: string;
@@ -176,7 +177,7 @@ export default function AdminSquareThemes() {
         <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Thèmes</h2>
         <div className="space-y-3">
           {themes.map((theme) => (
-            <div key={theme.id} className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+            <Card key={theme.id} variant="profile">
               {editingId === theme.id ? (
                 /* Edit form */
                 <div className="space-y-3">
@@ -301,7 +302,7 @@ export default function AdminSquareThemes() {
                   </button>
                 </div>
               )}
-            </div>
+            </Card>
           ))}
         </div>
       </div>
