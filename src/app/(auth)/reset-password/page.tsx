@@ -3,6 +3,8 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 
 function ResetForm() {
   const router = useRouter();
@@ -21,8 +23,6 @@ function ResetForm() {
       setTokenError('Lien de réinitialisation manquant ou invalide.');
     }
   }, [token]);
-
-  const inputClass = 'mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-coral focus:outline-none focus:ring-coral dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-coral-light';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -85,12 +85,12 @@ function ResetForm() {
           <p className="font-medium">Mot de passe mis à jour !</p>
           <p className="mt-1">Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</p>
           <div className="mt-3 text-center">
-            <button
+            <Button
+              variant="primary"
               onClick={() => router.push('/login?reset=success')}
-              className="inline-block rounded-md bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-terracotta"
             >
               Se connecter
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -103,43 +103,38 @@ function ResetForm() {
             </div>
           )}
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-800 dark:text-gray-200">
-              Nouveau mot de passe
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={inputClass}
-              placeholder="8 caractères min, majuscule, minuscule, chiffre"
-            />
-          </div>
+          <Input
+            id="password"
+            type="password"
+            label="Nouveau mot de passe"
+            required
+            autoComplete="new-password"
+            hint="8 caractères min, avec majuscule, minuscule et chiffre"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="8 caractères min, majuscule, minuscule, chiffre"
+          />
 
-          <div>
-            <label htmlFor="confirm" className="block text-sm font-medium text-gray-800 dark:text-gray-200">
-              Confirmer le mot de passe
-            </label>
-            <input
-              id="confirm"
-              type="password"
-              required
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              className={inputClass}
-              placeholder="Répétez le mot de passe"
-            />
-          </div>
+          <Input
+            id="confirm"
+            type="password"
+            label="Confirmer le mot de passe"
+            required
+            autoComplete="new-password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            placeholder="Répétez le mot de passe"
+          />
 
-          <button
+          <Button
             type="submit"
+            variant="primary"
+            fullWidth
             disabled={loading}
-            className="w-full rounded-md bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-terracotta focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
+            loading={loading}
           >
             {loading ? 'Mise à jour…' : 'Réinitialiser le mot de passe'}
-          </button>
+          </Button>
         </form>
       )}
     </div>
