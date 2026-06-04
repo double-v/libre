@@ -5,6 +5,7 @@ import ProfileCard from '@/components/ProfileCard';
 import ProfileModal from '@/components/ProfileModal';
 import DiscoverFilters from '@/components/DiscoverFilters';
 import EmptyStateCards from '@/components/EmptyStateCards';
+import Button from '@/components/ui/Button';
 
 type Tab = 'online' | 'nearby' | 'all';
 
@@ -168,15 +169,16 @@ export default function DiscoverPage() {
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Découvrir</h1>
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          size="sm"
           onClick={() => setShowFilters(!showFilters)}
-          className="rounded-full border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:border-gray-400 dark:border-gray-600 dark:text-gray-300 dark:hover:border-gray-500"
           aria-expanded={showFilters}
           aria-label="Filtres"
         >
           {showFilters ? 'Fermer' : 'Filtres'}
-        </button>
+        </Button>
       </div>
 
       {/* Tabs */}
@@ -243,14 +245,15 @@ export default function DiscoverPage() {
           ))}
 
           {cursor && (
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              fullWidth
               onClick={() => fetchPage(false)}
-              disabled={loading}
-              className="w-full rounded-full border border-gray-300 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+              loading={loading}
             >
               {loading ? 'Chargement…' : 'Charger plus'}
-            </button>
+            </Button>
           )}
         </div>
       )}
