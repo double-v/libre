@@ -8,6 +8,7 @@ import { Turnstile } from '@marsidev/react-turnstile';
 import PrivacyTip from '@/components/PrivacyTip';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import Alert from '@/components/ui/Alert';
 
 const TURNSTILE_LOAD_TIMEOUT = 5000;
 
@@ -93,15 +94,13 @@ export default function RegisterPage() {
       </div>
 
       {error && (
-        <div role="alert" aria-live="polite" className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
-          {error}
-        </div>
+        <Alert variant="error">{error}</Alert>
       )}
 
       {turnstileBlocked && !turnstileToken && (
-        <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+        <Alert variant="warning">
           Le captcha de sécurité n&apos;a pas pu se charger. Cela arrive souvent avec les bloqueurs de publicités. Vous pouvez quand même créer votre compte — si le problème persiste, essayez de désactiver temporairement votre bloqueur.
-        </div>
+        </Alert>
       )}
 
       <form onSubmit={handleSubmit} aria-label="Formulaire d'inscription" className="space-y-4">
