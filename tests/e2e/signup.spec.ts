@@ -1,5 +1,18 @@
 import { test, expect } from '@playwright/test';
 
+// Helper: wait for the submit button to be enabled, handling the 3 possible
+// Turnstile states (token obtained, blocked after 5s, no site key).
+// Capped at 8s so CI never races the 5s Turnstile timeout.
+async function waitForSubmitEnabled(page: import('@playwright/test').Page) {
+  await page.waitForFunction(
+    () => {
+      const btn = document.querySelector<HTMLButtonElement>('button[type="submit"]');
+      return btn !== null && !btn.disabled;
+    },
+    { timeout: 8000 },
+  );
+}
+
 test.describe('Registration flow', () => {
   test('registers a new user and sees confirmation on login', async ({ page }) => {
     const email = `beta-${Date.now()}@example.com`;
@@ -9,6 +22,7 @@ test.describe('Registration flow', () => {
     await page.fill('input[id="email"]', email);
     await page.fill('input[id="password"]', 'SecurePass123');
     await page.check('input[id="consent"]');
+    await waitForSubmitEnabled(page);
 
     await page.click('button[type="submit"]');
 
@@ -23,6 +37,7 @@ test.describe('Registration flow', () => {
     await page.fill('input[id="email"]', `weak-${Date.now()}@example.com`);
     await page.fill('input[id="password"]', 'short');
     await page.check('input[id="consent"]');
+    await waitForSubmitEnabled(page);
 
     await page.click('button[type="submit"]');
 
@@ -37,6 +52,7 @@ test.describe('Registration flow', () => {
     await page.fill('input[id="email"]', 'dup@example.com');
     await page.fill('input[id="password"]', 'SecurePass123');
     await page.check('input[id="consent"]');
+    await waitForSubmitEnabled(page);
 
     await page.click('button[type="submit"]');
 
@@ -50,6 +66,7 @@ test.describe('Registration flow', () => {
       await page.fill('input[id="email"]', 'dup@example.com');
       await page.fill('input[id="password"]', 'SecurePass123');
       await page.check('input[id="consent"]');
+      await waitForSubmitEnabled(page);
       await page.click('button[type="submit"]');
       await expect(page.getByText(/erreur/i)).toBeVisible({ timeout: 5000 });
     }

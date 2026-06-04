@@ -17,6 +17,18 @@ setup('authenticate', async ({ page }) => {
   await page.fill('input[id="email"]', email);
   await page.fill('input[id="password"]', password);
   await page.check('input[id="consent"]');
+  // Wait for the submit button to become enabled. This handles both paths:
+  // - Turnstile loaded successfully -> turnstileToken is set -> canSubmit = true
+  // - Turnstile blocked after 5s timeout -> turnstileBlocked = true -> canSubmit = true
+  // - No Turnstile (no site key) -> canSubmit is immediately true
+  // We cap at 8s (longer than the 5s Turnstile timeout) so CI never races.
+  await page.waitForFunction(
+    () => {
+      const btn = document.querySelector<HTMLButtonElement>('button[type="submit"]');
+      return btn !== null && !btn.disabled;
+    },
+    { timeout: 8000 },
+  );
   await page.click('button[type="submit"]');
   await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
 
