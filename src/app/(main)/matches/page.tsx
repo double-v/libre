@@ -40,13 +40,18 @@ export default function MatchesPage() {
   const fetchMatches = useCallback(async () => {
     try {
       const res = await fetch('/api/matches');
+      if (res.status === 401) {
+        setError('Votre session a expiré. Reconnectez-vous pour voir vos matches.');
+        return;
+      }
       if (!res.ok) {
-        throw new Error('Failed to fetch matches');
+        throw new Error(`Failed to fetch matches (${res.status})`);
       }
       const data = await res.json();
       setMatches(data.matches);
-    } catch {
-      setError('Impossible de charger les matches');
+    } catch (err) {
+      console.error('[matches] fetch error:', err);
+      setError('Impossible de charger les matches. Réessayez dans quelques instants.');
     } finally {
       setLoading(false);
     }
@@ -94,7 +99,22 @@ export default function MatchesPage() {
 
       {error && (
         <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-400">
-          {error}
+          <p>{error}</p>
+          {error.includes('session a expiré') && (
+            <div className="mt-2 space-y-2">
+              <a
+                href="/login"
+                className="inline-block rounded bg-red-700 px-3 py-1 text-xs font-medium text-white hover:bg-red-800"
+              >
+                Se reconnecter
+              </a>
+              <p className="text-xs text-red-600 dark:text-red-400">
+                Toujours bloqué ? Désactivez les extensions type Privacy Badger / uBlock / multi-comptes
+                sur getlibre.fr, ou testez en navigation privée. Plus d&apos;infos :{' '}
+                <a href="/faq/session-expiree" className="underline">FAQ session expirée</a>
+              </p>
+            </div>
+          )}
         </div>
       )}
 
