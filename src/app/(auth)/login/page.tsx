@@ -34,11 +34,17 @@ function LoginForm() {
     return () => clearTimeout(timer);
   }, [siteKey, turnstileToken]);
 
+  const justRegistered = searchParams.get('registered') === 'true';
+  const justVerified = searchParams.get('verified') === 'true';
+  const errorParam = searchParams.get('error');
+  const sessionExpired = errorParam === 'session_expiree';
+  const callbackUrl = searchParams.get('callbackUrl') || '/discover';
+
   useEffect(() => {
     if (status === 'authenticated') {
-      router.replace('/discover');
+      router.replace(callbackUrl);
     }
-  }, [status, router]);
+  }, [status, router, callbackUrl]);
 
   if (status === 'loading') {
     return (
@@ -47,10 +53,6 @@ function LoginForm() {
       </div>
     );
   }
-
-  const justRegistered = searchParams.get('registered') === 'true';
-  const justVerified = searchParams.get('verified') === 'true';
-  const errorParam = searchParams.get('error');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -77,7 +79,7 @@ function LoginForm() {
         return;
       }
 
-      router.push('/discover');
+      router.push(callbackUrl);
     } catch {
       setError('Erreur de connexion au serveur');
     } finally {
@@ -86,7 +88,7 @@ function LoginForm() {
   }
 
   async function handleOAuth(provider: string) {
-    await signIn(provider, { callbackUrl: '/discover' });
+    await signIn(provider, { callbackUrl });
   }
 
   const canSubmit = !loading && (!siteKey || !!turnstileToken || turnstileBlocked);
@@ -130,6 +132,13 @@ function LoginForm() {
 
       {errorParam === 'invalid-token' && (
         <Alert variant="error">Le lien de vérification est invalide ou a expiré.</Alert>
+      )}
+
+      {sessionExpired && (
+        <Alert variant="info" title="Votre session a expiré">
+          Pour votre sécurité, nous vous demandons de vous reconnecter. Vos
+          informations sont intactes.
+        </Alert>
       )}
 
       {justRegistered && (
