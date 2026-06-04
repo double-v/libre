@@ -1,5 +1,14 @@
 import { test, expect } from '@playwright/test';
 
+// Mock Turnstile globally for all signup tests (see TurnstileProvider.tsx).
+// The component checks window.__TURNSTILE_MOCK__ on mount and uses the
+// mock branch (instant fake token) instead of loading the Cloudflare widget.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __TURNSTILE_MOCK__?: boolean }).__TURNSTILE_MOCK__ = true;
+  });
+});
+
 test.describe('Registration flow', () => {
   test('registers a new user and sees confirmation on login', async ({ page }) => {
     const email = `beta-${Date.now()}@example.com`;
@@ -8,6 +17,7 @@ test.describe('Registration flow', () => {
     await page.fill('input[id="displayName"]', 'BetaTest');
     await page.fill('input[id="email"]', email);
     await page.fill('input[id="password"]', 'SecurePass123');
+    await page.check('input[id="consent"]');
 
     await page.click('button[type="submit"]');
 
@@ -21,6 +31,7 @@ test.describe('Registration flow', () => {
     await page.fill('input[id="displayName"]', 'BetaTest');
     await page.fill('input[id="email"]', `weak-${Date.now()}@example.com`);
     await page.fill('input[id="password"]', 'short');
+    await page.check('input[id="consent"]');
 
     await page.click('button[type="submit"]');
 
@@ -34,6 +45,7 @@ test.describe('Registration flow', () => {
     await page.fill('input[id="displayName"]', 'BetaDup');
     await page.fill('input[id="email"]', 'dup@example.com');
     await page.fill('input[id="password"]', 'SecurePass123');
+    await page.check('input[id="consent"]');
 
     await page.click('button[type="submit"]');
 
@@ -46,6 +58,7 @@ test.describe('Registration flow', () => {
       await page.fill('input[id="displayName"]', 'BetaDup2');
       await page.fill('input[id="email"]', 'dup@example.com');
       await page.fill('input[id="password"]', 'SecurePass123');
+      await page.check('input[id="consent"]');
       await page.click('button[type="submit"]');
       await expect(page.getByText(/erreur/i)).toBeVisible({ timeout: 5000 });
     }

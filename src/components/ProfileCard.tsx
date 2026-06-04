@@ -2,6 +2,8 @@ import VerificationBadge from '@/components/VerificationBadge';
 import OnlineIndicator from '@/components/OnlineIndicator';
 import Image from 'next/image';
 import { photoUrl } from '@/lib/photos';
+import Button from '@/components/ui/Button';
+import Tag from '@/components/ui/Tag';
 
 interface ProfileCardProps {
   id: string;
@@ -89,31 +91,31 @@ export default function ProfileCard({
       {((interests && interests.length > 0) || (practices && practices.length > 0)) && (
         <div className="mt-3 flex flex-wrap gap-1">
           {interests?.map((i) => (
-            <span key={i} className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">{i}</span>
+            <Tag key={i}>{i}</Tag>
           ))}
           {practices?.map((p) => (
-            <span key={p} className="inline-block rounded-full bg-sand/60 px-2 py-0.5 text-xs font-medium text-coral-dark dark:bg-coral/20 dark:text-coral-light">{p}</span>
+            <Tag key={p} variant="accent">{p}</Tag>
           ))}
         </div>
       )}
 
       <div className="mt-4 flex gap-3">
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={onPass}
           aria-label={`Passer ${displayName}`}
-          className="flex-1 rounded-full border border-gray-300 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
         >
           Passer
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="primary"
           onClick={onLike}
           aria-label={`Like ${displayName}`}
-          className="flex-1 rounded-full bg-terracotta py-2 text-sm font-medium text-white transition-colors hover:bg-coral-dark dark:bg-coral dark:hover:bg-terracotta"
         >
           Like
-        </button>
+        </Button>
       </div>
     </div>
   );
