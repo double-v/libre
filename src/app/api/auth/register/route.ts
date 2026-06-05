@@ -19,6 +19,7 @@ export async function POST(request: Request) {
     });
     console.error('[register] body keys:', body ? Object.keys(body) : 'null');
     const parsed = registerSchema.safeParse(body);
+    console.error('[register] parse ok:', parsed.success, parsed.success ? `consentGiven=${(parsed.data as Record<string, unknown>).consentGiven}` : `issues=${JSON.stringify(parsed.error.issues)}`);
 
     if (!parsed.success) {
       const firstError = parsed.error.issues[0];
