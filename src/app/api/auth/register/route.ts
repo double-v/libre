@@ -10,14 +10,9 @@ import { sendVerificationEmail } from '@/lib/email-send';
 export async function POST(request: Request) {
   try {
     // Diagnostic for #23 — see whether the route is even hit, and what
-    // shape the body has. Use console.error so Next.js dev forwards it
-    // to the WebServer output (console.log on API routes is silenced).
-    console.error('[register] POST hit, content-type:', request.headers.get('content-type'));
-    const body = await request.json().catch((e) => {
-      console.error('[register] body.json() failed:', (e as Error).message);
-      return null;
-    });
-    console.error('[register] body keys:', body ? Object.keys(body) : 'null');
+    // shape the body has. Kept until #23 is verified resolved in CI.
+    const body = await request.json();
+    console.error('[register] POST hit, keys:', Object.keys(body ?? {}));
     const parsed = registerSchema.safeParse(body);
     console.error('[register] parse ok:', parsed.success, parsed.success ? `consentGiven=${(parsed.data as Record<string, unknown>).consentGiven}` : `issues=${JSON.stringify(parsed.error.issues)}`);
 
