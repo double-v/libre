@@ -9,12 +9,8 @@ import { sendVerificationEmail } from '@/lib/email-send';
 
 export async function POST(request: Request) {
   try {
-    // Diagnostic for #23 — see whether the route is even hit, and what
-    // shape the body has. Kept until #23 is verified resolved in CI.
     const body = await request.json();
-    console.error('[register] POST hit, keys:', Object.keys(body ?? {}));
     const parsed = registerSchema.safeParse(body);
-    console.error('[register] parse ok:', parsed.success, parsed.success ? `consentGiven=${(parsed.data as Record<string, unknown>).consentGiven}` : `issues=${JSON.stringify(parsed.error.issues)}`);
 
     if (!parsed.success) {
       const firstError = parsed.error.issues[0];
