@@ -14,8 +14,9 @@ export async function GET() {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
 
-  // Pour les visiteurs non connectés on renvoie juste les messages (les
-  // boutons de réaction sont désactivés côté client de toute façon).
+  // Pour les visiteurs non connectés on renvoie des maps vides ; la
+  // forme de la réponse reste identique, juste vide. Les boutons de
+  // réaction sont désactivés côté client de toute façon.
   const reactions = userId
     ? await getReactionsForMessages(messages.map((m) => m.id), userId)
     : { counts: {}, mine: {} };

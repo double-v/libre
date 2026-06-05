@@ -9,21 +9,20 @@ import type { SquareReaction } from '@/lib/square/store';
 
 const ALLOWED_REACTION_EMOJIS = ['❤️', '😂', '🔥', '👋', '💯', '✨', '🤔', '😢'] as const;
 
-type ReactionToggleResult =
-  | { ok: true; added: true; count: number }
-  | { ok: true; added: false; count: number };
-
 /**
+ * POST /api/square/messages/:id/react
+ *
  * Toggle une réaction « à la Discord » :
  *  - si (messageId, emoji, userId) existe → DELETE
  *  - sinon                                → CREATE
- * On renvoie `added: boolean` pour que le client sachent s'il doit
- * activer ou désactiver visuellement le bouton.
  *
- * Côté SQL : on n'agrège plus sur le row lui-même, on compte les
- * lignes en place. Deux requêtes (toggle + count) sont OK pour des
- * 5/min. Le broadcast reste identique (Pusher ou SSE), seul le
- * payload gagne un `added`.
+ * Renvoie `added: boolean` pour que le client sache s'il doit
+ * activer ou désactiver visuellement le bouton. Le broadcast SSE
+ * est émis dans tous les cas avec le nouveau compte agrégé.
+ *
+ * ⚠️ Breaking : la route DELETE a été supprimée. Le toggle se fait
+ * maintenant exclusivement via POST. Les clients qui appelaient
+ * DELETE doivent basculer sur POST. (Issue #15)
  */
 export async function POST(
   request: NextRequest,
@@ -58,16 +57,32 @@ export async function POST(
     return NextResponse.json({ error: 'Emoji non autorisé' }, { status: 400 });
   }
 
-  // Le message doit exister (FK le ferait aussi, mais on veut un 404 propre)
+  // Le message doit exister (la FK le ferait aussi, mais on veut un 404 propre).
   const message = await getDb().squareMessage.findUnique({ where: { id: messageId } });
   if (!message) {
     return NextResponse.json({ error: 'Message non trouvé' }, { status: 404 });
   }
 
-  const result = await toggleReaction({ messageId, userId, emoji });
-
-  if (!result.ok) {
-    return NextResponse.json({ error: 'Réaction impossible' }, { status: 500 });
+  let result: { added: boolean; count: number };
+  try {
+    result = await toggleReaction({ messageId, userId, emoji });
+  } catch (err: unknown) {
+    // P2002 = race entre deux onglets du même user. L'autre onglet a déjà
+    // créé la ligne, donc côté user rien ne change visuellement : on
+    // re-compte et on renvoie l'état réel plutôt qu'un 500.
+    if (
+      typeof err === 'object' &&
+      err !== null &&
+      'code' in err &&
+      (err as { code: string }).code === 'P2002'
+    ) {
+      const count = await getDb().squareReaction.count({
+        where: { messageId, emoji },
+      });
+      result = { added: false, count };
+    } else {
+      throw err;
+    }
   }
 
   const broadcast: SquareReaction = {
@@ -84,12 +99,16 @@ export async function POST(
 /**
  * Logique de bascule : DELETE si la ligne existe, sinon CREATE.
  * Pure I/O, isolée pour pouvoir être testée sans Next ni SSE.
+ *
+ * Lève une `PrismaClientKnownRequestError` (code P2002) si deux requêtes
+ * concurrentes du même user tentent toutes les deux le CREATE : c'est
+ * rattrapé par le handler HTTP et traité comme « rien à faire ».
  */
 export async function toggleReaction(args: {
   messageId: string;
   userId: string;
   emoji: string;
-}): Promise<ReactionToggleResult> {
+}): Promise<{ added: boolean; count: number }> {
   const { messageId, userId, emoji } = args;
   const db = getDb();
 
@@ -109,5 +128,5 @@ export async function toggleReaction(args: {
     where: { messageId, emoji },
   });
 
-  return { ok: true, added: !existing, count };
+  return { added: !existing, count };
 }
