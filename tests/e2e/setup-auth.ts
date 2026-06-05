@@ -15,6 +15,26 @@ setup('authenticate', async ({ page }) => {
     (window as unknown as { __TURNSTILE_MOCK__?: boolean }).__TURNSTILE_MOCK__ = true;
   });
 
+  // Diagnostic instrumentation for #23 — log every response and console
+  // message so we can see what /api/auth/register actually returns (if
+  // anything) and whether the browser logs any error. Remove once #23
+  // is resolved.
+  page.on('response', (res) => {
+    const url = res.url();
+    if (url.includes('/api/') || url.includes('/register') || url.includes('/login')) {
+      // eslint-disable-next-line no-console
+      console.log(`[setup-auth response] ${res.status()} ${res.request().method()} ${url}`);
+    }
+  });
+  page.on('console', (msg) => {
+    // eslint-disable-next-line no-console
+    console.log(`[browser:${msg.type()}] ${msg.text()}`);
+  });
+  page.on('pageerror', (err) => {
+    // eslint-disable-next-line no-console
+    console.log(`[browser:pageerror] ${err.message}`);
+  });
+
   const email = `e2e-test-${Date.now()}@example.com`;
   const password = 'E2eTestPass123';
 

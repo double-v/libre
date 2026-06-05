@@ -9,7 +9,10 @@ import { sendVerificationEmail } from '@/lib/email-send';
 
 export async function POST(request: Request) {
   try {
+    // Diagnostic for #23 — see whether the route is even hit.
+    console.log('[register] POST hit, has-body:', !!request.headers.get('content-type'));
     const body = await request.json();
+    console.log('[register] body keys:', Object.keys(body ?? {}));
     const parsed = registerSchema.safeParse(body);
 
     if (!parsed.success) {
