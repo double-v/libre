@@ -13,9 +13,6 @@ DROP COLUMN "updatedAt",
 ADD COLUMN "userId" UUID NOT NULL;
 
 -- CreateIndex
-CREATE INDEX "square_reactions_messageId_idx" ON "square_reactions"("messageId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "square_reactions_messageId_emoji_userId_key" ON "square_reactions"("messageId", "emoji", "userId");
 
 -- AddForeignKey
