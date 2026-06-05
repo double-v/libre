@@ -13,6 +13,14 @@ setup('authenticate', async ({ page }) => {
   // window.__TURNSTILE_MOCK__ on mount and uses the mock branch.
   await page.addInitScript(() => {
     (window as unknown as { __TURNSTILE_MOCK__?: boolean }).__TURNSTILE_MOCK__ = true;
+    // Dismiss the cookie consent banner (CookieBanner.tsx) so its
+    // fixed-bottom overlay does not intercept pointer events on
+    // buttons/links in the form. Without this, tests that need to click
+    // "Se connecter" or the form submit see the banner intercept and
+    // timeout 30s.
+    try {
+      localStorage.setItem('libre_cookie_consent', JSON.stringify({ accepted: true, date: new Date().toISOString() }));
+    } catch {}
   });
 
   // (Diagnostic instrumentation removed — root cause of #23 was Zod
