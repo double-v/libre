@@ -24,6 +24,12 @@ setup('authenticate', async ({ page }) => {
   await page.fill('input[id="email"]', email);
   await page.fill('input[id="password"]', password);
   await page.check('input[id="consent"]');
+  // Wait for submit button to be enabled. In CI the canSubmit guard waits
+  // for either a real Turnstile token, a blocked Turnstile state, or the
+  // mock branch (window.__TURNSTILE_MOCK__). The mock branch sets a token
+  // asynchronously via useEffect after mount — without this wait the click
+  // can land on a still-disabled button if hydration is slow.
+  await expect(page.locator('button[type="submit"]')).toBeEnabled({ timeout: 5000 });
   await page.click('button[type="submit"]');
   await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
 
