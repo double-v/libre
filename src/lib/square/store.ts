@@ -14,7 +14,19 @@ export interface SquareMessage {
 export interface SquareReaction {
   messageId: string;
   emoji: string;
+  /** Agrégat : nombre total de réactions pour ce couple (messageId, emoji). */
   count: number;
+  /** Côté client : a-t-il été ajouté (true) ou supprimé (false) par l'auteur. */
+  added?: boolean;
+}
+
+/**
+ * Forme renvoyée à un user authentifié : à la fois les compteurs agrégés
+ * et les réactions qu'il a lui-même posées (pour l'état actif des boutons).
+ */
+export interface SquareReactionsBundle {
+  counts: Record<string, Record<string, number>>;
+  mine: Record<string, string[]>;
 }
 
 const MAX_MESSAGES = 84;
@@ -151,4 +163,49 @@ export function addConnection(controller: ReadableStreamDefaultController): () =
   return () => {
     connections.delete(controller);
   };
+}
+
+/**
+ * Récupère pour un ensemble de messages :
+ *  - counts : map (messageId -> emoji -> total)
+ *  - mine   : map (messageId -> liste d'emojis sur lesquels le user a réagi)
+ *
+ * Permet à la place de rendre l'état actif des boutons à la première
+ * connexion, sans nécessiter un appel séparé.
+ */
+export async function getReactionsForMessages(
+  messageIds: string[],
+  userId: string,
+): Promise<SquareReactionsBundle> {
+  const counts: Record<string, Record<string, number>> = {};
+  const mine: Record<string, string[]> = {};
+
+  if (messageIds.length === 0) {
+    return { counts, mine };
+  }
+
+  // Une seule requête pour les compteurs agrégés.
+  const grouped = await getDb().squareReaction.groupBy({
+    by: ['messageId', 'emoji'],
+    where: { messageId: { in: messageIds } },
+    _count: { _all: true },
+  });
+
+  for (const row of grouped) {
+    if (!counts[row.messageId]) counts[row.messageId] = {};
+    counts[row.messageId][row.emoji] = row._count._all;
+  }
+
+  // Et une pour savoir quelles lignes appartiennent au user courant.
+  const mineRows = await getDb().squareReaction.findMany({
+    where: { messageId: { in: messageIds }, userId },
+    select: { messageId: true, emoji: true },
+  });
+
+  for (const row of mineRows) {
+    if (!mine[row.messageId]) mine[row.messageId] = [];
+    mine[row.messageId].push(row.emoji);
+  }
+
+  return { counts, mine };
 }
