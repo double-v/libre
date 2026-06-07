@@ -41,7 +41,12 @@ export interface RateLimitPreset {
 
 /** Convenience presets */
 export const limits: Record<string, RateLimitPreset> = {
-  auth: { limit: 5, windowMs: 60_000 },
+  // Auth endpoints: 20 attempts per minute per IP.
+  // High enough for a human who's forgotten their password to retry
+  // comfortably; low enough to block basic brute-force. 5/min was too
+  // restrictive for the E2E test suite (multiple POSTs from the same
+  // runner IP) and for legitimate users who mistype credentials.
+  auth: { limit: 20, windowMs: 60_000 },
   message: { limit: 30, windowMs: 60_000 },
   geoloc: { limit: 12, windowMs: 60_000 },
   discover: { limit: 30, windowMs: 60_000 },
