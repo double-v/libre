@@ -1,5 +1,6 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { fileTypeFromBuffer } from 'file-type';
 
 function getR2Client(): S3Client | null {
   if (!process.env.R2_ACCOUNT_ID || !process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
@@ -27,6 +28,17 @@ export async function uploadPhoto(file: File, userId: string): Promise<string> {
     throw new Error('L\'image ne doit pas dépasser 5 Mo.');
   }
 
+  // Magic-bytes validation: trust the buffer content, not the declared MIME type.
+  // Prevents uploading e.g. an HTML/SVG file with `file.type === 'image/jpeg'`.
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const detected = await fileTypeFromBuffer(buffer);
+  if (!detected || !ALLOWED_TYPES.includes(detected.mime)) {
+    throw new Error('Le contenu de l\'image ne correspond pas à un format autorisé.');
+  }
+  if (detected.mime !== file.type) {
+    throw new Error('Le type déclaré et le contenu de l\'image ne correspondent pas.');
+  }
+
   const client = getR2Client();
   if (!client) {
     throw new Error('Stockage non configuré.');
@@ -35,8 +47,6 @@ export async function uploadPhoto(file: File, userId: string): Promise<string> {
   const bucket = process.env.R2_BUCKET_NAME!;
   const ext = file.type.split('/')[1] === 'jpeg' ? 'jpg' : file.type.split('/')[1];
   const key = `${userId}/${crypto.randomUUID()}.${ext}`;
-
-  const buffer = Buffer.from(await file.arrayBuffer());
 
   await client.send(new PutObjectCommand({
     Bucket: bucket,
