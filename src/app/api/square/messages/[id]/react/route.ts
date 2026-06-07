@@ -9,19 +9,34 @@ import type { SquareReaction } from '@/lib/square/store';
 
 const ALLOWED_REACTION_EMOJIS = ['❤️', '😂', '🔥', '👋', '💯', '✨', '🤔', '😢'] as const;
 
+/**
+ * POST /api/square/messages/:id/react
+ *
+ * Toggle une réaction « à la Discord » :
+ *  - si (messageId, emoji, userId) existe → DELETE
+ *  - sinon                                → CREATE
+ *
+ * Renvoie `added: boolean` pour que le client sache s'il doit
+ * activer ou désactiver visuellement le bouton. Le broadcast SSE
+ * est émis dans tous les cas avec le nouveau compte agrégé.
+ *
+ * ⚠️ Breaking : la route DELETE a été supprimée. Le toggle se fait
+ * maintenant exclusivement via POST. Les clients qui appelaient
+ * DELETE doivent basculer sur POST. (Issue #15)
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
   }
 
   const userId = session.user.id;
   const { id: messageId } = await params;
 
-  // Rate limit: 5 reactions per minute
+  // Rate limit : 5 réactions par minute
   const rl = rateLimit(`square:react:${userId}`, limits.squareReaction.limit, limits.squareReaction.windowMs);
   if (!rl.success) {
     return NextResponse.json(
@@ -38,85 +53,80 @@ export async function POST(
 
   const { emoji } = parsed.data;
 
-  // Validate emoji against allowed list
   if (!ALLOWED_REACTION_EMOJIS.includes(emoji as (typeof ALLOWED_REACTION_EMOJIS)[number])) {
-    return NextResponse.json(
-      { error: 'Emoji non autorisé' },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: 'Emoji non autorisé' }, { status: 400 });
   }
 
-  // Check message exists
+  // Le message doit exister (la FK le ferait aussi, mais on veut un 404 propre).
   const message = await getDb().squareMessage.findUnique({ where: { id: messageId } });
   if (!message) {
     return NextResponse.json({ error: 'Message non trouvé' }, { status: 404 });
   }
 
-  // Upsert reaction (increment count)
-  const reaction = await getDb().squareReaction.upsert({
-    where: { messageId_emoji: { messageId, emoji } },
-    update: { count: { increment: 1 } },
-    create: { messageId, emoji, count: 1 },
-  });
+  let result: { added: boolean; count: number };
+  try {
+    result = await toggleReaction({ messageId, userId, emoji });
+  } catch (err: unknown) {
+    // P2002 = race entre deux onglets du même user. L'autre onglet a déjà
+    // créé la ligne, donc côté user rien ne change visuellement : on
+    // re-compte et on renvoie l'état réel plutôt qu'un 500.
+    if (
+      typeof err === 'object' &&
+      err !== null &&
+      'code' in err &&
+      (err as { code: string }).code === 'P2002'
+    ) {
+      const count = await getDb().squareReaction.count({
+        where: { messageId, emoji },
+      });
+      result = { added: false, count };
+    } else {
+      throw err;
+    }
+  }
 
-  const broadcastData: SquareReaction = {
-    messageId: reaction.messageId,
-    emoji: reaction.emoji,
-    count: reaction.count,
+  const broadcast: SquareReaction = {
+    messageId,
+    emoji,
+    count: result.count,
+    added: result.added,
   };
-  broadcastReaction(broadcastData);
+  broadcastReaction(broadcast);
 
-  return NextResponse.json({ reaction: broadcastData });
+  return NextResponse.json({ reaction: broadcast });
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+/**
+ * Logique de bascule : DELETE si la ligne existe, sinon CREATE.
+ * Pure I/O, isolée pour pouvoir être testée sans Next ni SSE.
+ *
+ * Lève une `PrismaClientKnownRequestError` (code P2002) si deux requêtes
+ * concurrentes du même user tentent toutes les deux le CREATE : c'est
+ * rattrapé par le handler HTTP et traité comme « rien à faire ».
+ */
+export async function toggleReaction(args: {
+  messageId: string;
+  userId: string;
+  emoji: string;
+}): Promise<{ added: boolean; count: number }> {
+  const { messageId, userId, emoji } = args;
+  const db = getDb();
 
-  const { id: messageId } = await params;
-
-  const body = await request.json();
-  const parsed = squareReactionSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Emoji invalide' }, { status: 400 });
-  }
-
-  const { emoji } = parsed.data;
-
-  // Find and decrement
-  const existing = await getDb().squareReaction.findUnique({
-    where: { messageId_emoji: { messageId, emoji } },
+  // La PK logique est (messageId, emoji, userId) — on cherche par là.
+  const existing = await db.squareReaction.findFirst({
+    where: { messageId, userId, emoji },
   });
 
-  if (!existing) {
-    return NextResponse.json({ error: 'Réaction non trouvée' }, { status: 404 });
-  }
-
-  let reaction: SquareReaction;
-
-  if (existing.count <= 1) {
-    await getDb().squareReaction.delete({
-      where: { id: existing.id },
-    });
-    reaction = { messageId, emoji, count: 0 };
+  if (existing) {
+    await db.squareReaction.delete({ where: { id: existing.id } });
   } else {
-    const updated = await getDb().squareReaction.update({
-      where: { id: existing.id },
-      data: { count: { decrement: 1 } },
-    });
-    reaction = {
-      messageId: updated.messageId,
-      emoji: updated.emoji,
-      count: updated.count,
-    };
+    await db.squareReaction.create({ data: { messageId, userId, emoji } });
   }
 
-  broadcastReaction(reaction);
+  // Re-compte pour le broadcast (le user courant vient de basculer).
+  const count = await db.squareReaction.count({
+    where: { messageId, emoji },
+  });
 
-  return NextResponse.json({ reaction });
+  return { added: !existing, count };
 }
