@@ -8,19 +8,19 @@ datasource db {
 }
 
 model User {
-  id              String   @id @default(uuid()) @db.Uuid
-  email           String   @unique
-  normalizedEmail String   @unique @default("")
-  emailVerified   DateTime?
-  displayName     String
-  passwordHash     String?
-  deviceId        String?
-  role            String   @default("USER")
-  createdAt       DateTime @default(now())
-  isVerified      Boolean  @default(false)
-  isBanned        Boolean  @default(false)
+  id                String    @id @default(uuid()) @db.Uuid
+  email             String    @unique
+  normalizedEmail   String    @unique @default("")
+  emailVerified     DateTime?
+  displayName       String
+  passwordHash      String?
+  deviceId          String?
+  role              String    @default("USER")
+  createdAt         DateTime  @default(now())
+  isVerified        Boolean   @default(false)
+  isBanned          Boolean   @default(false)
   squareBannedUntil DateTime? @map("square_banned_until")
-  lastActive      DateTime @updatedAt
+  lastActive        DateTime  @updatedAt
 
   profile              Profile?
   userKey              UserKey?
@@ -44,33 +44,34 @@ model User {
   accounts             Account[]
   sessions             Session[]
   passwordResetTokens  PasswordResetToken[]
-  moderationActions   ModerationLog[] @relation("ModerationActions")
-  moderationTargets    ModerationLog[] @relation("ModerationTargets")
+  moderationActions    ModerationLog[]       @relation("ModerationActions")
+  moderationTargets    ModerationLog[]       @relation("ModerationTargets")
   consents             Consent[]
   squareReports        SquareMessageReport[] @relation("SquareReportsMade")
+  squareReactions      SquareReaction[]      @relation("SquareReactionsMade")
 
   @@map("users")
 }
 
 model Profile {
-  userId           String   @id @db.Uuid
-  bio              String   @default("")
+  userId           String    @id @db.Uuid
+  bio              String    @default("")
   birthDate        DateTime?
-  genderIdentity   String   @default("")
+  genderIdentity   String    @default("")
   orientation      String[]
   relationshipType String[]
   interests        String[]
-  practices        String[] @default([])
-  socialLinks      Json     @default("{}")
+  practices        String[]  @default([])
+  socialLinks      Json      @default("{}")
   photos           String[]
-  maxDistanceKm    Int      @default(50)
-  ageMin           Int      @default(18)
-  ageMax           Int      @default(99)
-  invisibleMode    Boolean  @default(false)
-  lastKnownLat     Float    @map("last_known_lat") @default(0)
-  lastKnownLng     Float    @map("last_known_lng") @default(0)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  maxDistanceKm    Int       @default(50)
+  ageMin           Int       @default(18)
+  ageMax           Int       @default(99)
+  invisibleMode    Boolean   @default(false)
+  lastKnownLat     Float     @default(0) @map("last_known_lat")
+  lastKnownLng     Float     @default(0) @map("last_known_lng")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -240,16 +241,16 @@ model ModerationLog {
 }
 
 model SquareMessage {
-  id            String    @id @default(uuid()) @db.Uuid
+  id            String   @id @default(uuid()) @db.Uuid
   pseudonym     String
   content       String
   type          String
-  isAdmin       Boolean   @default(false)
-  isSystem      Boolean   @default(false)
-  themeConfigId String?   @db.Uuid
-  createdAt     DateTime  @default(now())
+  isAdmin       Boolean  @default(false)
+  isSystem      Boolean  @default(false)
+  themeConfigId String?  @db.Uuid
+  createdAt     DateTime @default(now())
 
-  themeConfig SquareThemeConfig?  @relation(fields: [themeConfigId], references: [id])
+  themeConfig SquareThemeConfig?    @relation(fields: [themeConfigId], references: [id])
   reactions   SquareReaction[]
   reports     SquareMessageReport[]
 
@@ -301,14 +302,14 @@ model BannedWord {
 model SquareReaction {
   id        String   @id @default(uuid()) @db.Uuid
   messageId String   @db.Uuid
+  userId    String   @db.Uuid
   emoji     String
-  count     Int      @default(0)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   message SquareMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User          @relation("SquareReactionsMade", fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([messageId, emoji])
+  @@unique([messageId, emoji, userId])
   @@map("square_reactions")
 }
 
@@ -320,8 +321,8 @@ model SquareMessageReport {
   status     String   @default("pending")
   createdAt  DateTime @default(now())
 
-  message   SquareMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  reporter  User          @relation("SquareReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
+  message  SquareMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  reporter User          @relation("SquareReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
 
   @@index([status])
   @@map("square_message_reports")
@@ -359,12 +360,12 @@ model Session {
 }
 
 model PasswordResetToken {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
-  tokenHash String   @unique
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -374,14 +375,14 @@ model PasswordResetToken {
 
 /// Consent traceability — RGPD art. 7(1): "Where processing is based on consent, the controller shall be able to demonstrate that the data subject has consented"
 model Consent {
-  id         String   @id @default(uuid()) @db.Uuid
-  userId     String   @db.Uuid
-  type       String   // "cgu", "privacy_policy", "cookies_essential", "cookies_analytics", "e2e_messaging", "geolocation", "feedback_tracking"
-  version    String   @default("1") // version of the document/policy accepted
-  given      Boolean  @default(true)
-  ipAddress  String?
-  userAgent  String?
-  createdAt  DateTime @default(now())
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  type        String // "cgu", "privacy_policy", "cookies_essential", "cookies_analytics", "e2e_messaging", "geolocation", "feedback_tracking"
+  version     String    @default("1") // version of the document/policy accepted
+  given       Boolean   @default(true)
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime  @default(now())
   withdrawnAt DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

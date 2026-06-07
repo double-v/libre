@@ -5,13 +5,23 @@ import { getDb } from '@/lib/db';
 import { getTodayThemeConfig, getPseudonymFromConfig } from '@/lib/square/themes-server';
 import { checkContent } from '@/lib/square/moderation';
 import { rateLimit, limits } from '@/lib/rate-limit';
-import { getMessages, addMessage } from '@/lib/square/store';
+import { getMessages, addMessage, getReactionsForMessages } from '@/lib/square/store';
 import { squareMessageSchema } from '@/lib/square/validators';
 import type { SquareMessage } from '@/lib/square/store';
 
 export async function GET() {
   const messages = await getMessages();
-  return NextResponse.json({ messages });
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+
+  // Pour les visiteurs non connectés on renvoie des maps vides ; la
+  // forme de la réponse reste identique, juste vide. Les boutons de
+  // réaction sont désactivés côté client de toute façon.
+  const reactions = userId
+    ? await getReactionsForMessages(messages.map((m) => m.id), userId)
+    : { counts: {}, mine: {} };
+
+  return NextResponse.json({ messages, reactions });
 }
 
 export async function POST(request: NextRequest) {
