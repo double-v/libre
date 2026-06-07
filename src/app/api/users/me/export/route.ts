@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
+import { rateLimit, limits } from '@/lib/rate-limit';
 
 /**
  * RGPD art. 20 — Right to data portability
@@ -12,6 +13,11 @@ export async function GET() {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    }
+
+    const rl = rateLimit(`export:${session.user.id}`, limits.api.limit, limits.api.windowMs);
+    if (!rl.success) {
+      return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
     }
 
     const userId = session.user.id;
