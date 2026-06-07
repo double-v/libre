@@ -18,7 +18,7 @@ export async function PATCH(
   }
 
   const { action, reason } = parsed.data;
-  const report = await getDb().report.findUnique({ where: { id } });
+  const report = await getDb().report.findUnique({ where: { id }, select: { reportedId: true } });
   if (!report) {
     return NextResponse.json({ error: 'Signalement non trouvé' }, { status: 404 });
   }
