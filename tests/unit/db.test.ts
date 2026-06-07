@@ -22,20 +22,12 @@ describe('Database connection', () => {
   });
 
   it('connects to the database', async () => {
-    // GitHub Actions postgres service can take a few seconds to accept
-    // connections after the healthcheck. Retry up to 5 times with a short
-    // backoff to absorb the race. Timeout extended to 10s to fit the
-    // backoff (5 * 500ms = 2.5s of waits + connect time per attempt).
-    let lastError: unknown;
-    for (let attempt = 1; attempt <= 5; attempt++) {
-      try {
-        await expect(prisma.$queryRaw`SELECT 1`).resolves.toBeDefined();
-        return;
-      } catch (err) {
-        lastError = err;
-        await new Promise((r) => setTimeout(r, attempt * 500));
-      }
-    }
-    throw lastError;
-  }, 15_000);
+    // Note: this test is flaky on CI — see the issue tracking Playwright
+    // re-enable (#35) for context. The auth race here is similar: the
+    // service postgres can reject the first auth attempt with
+    // 'password authentication failed' even after passing the GitHub
+    // healthcheck. Kept as a smoke test; vitest's default 5s timeout
+    // is the right cutoff for a healthy run.
+    await expect(prisma.$queryRaw`SELECT 1`).resolves.toBeDefined();
+  });
 });
