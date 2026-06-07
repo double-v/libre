@@ -22,6 +22,12 @@ describe('Database connection', () => {
   });
 
   it('connects to the database', async () => {
+    // Note: this test is flaky on CI — see the issue tracking Playwright
+    // re-enable (#35) for context. The auth race here is similar: the
+    // service postgres can reject the first auth attempt with
+    // 'password authentication failed' even after passing the GitHub
+    // healthcheck. Kept as a smoke test; vitest's default 5s timeout
+    // is the right cutoff for a healthy run.
     await expect(prisma.$queryRaw`SELECT 1`).resolves.toBeDefined();
   });
 });

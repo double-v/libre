@@ -41,6 +41,17 @@ setup('authenticate', async ({ page }) => {
   // Bypass email verification in CI: mark email verified directly in DB
   if (process.env.DATABASE_URL) {
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    // Create the Profile row (1-to-1, not auto-created with User — see
+    // prisma/schema.prisma). Without this, /profile and /settings pages
+    // see profile=null and disable their UI (toggle switch, edit buttons).
+    // Provide defaults for NOT NULL columns (createdAt, updatedAt) since
+    // raw SQL bypasses Prisma's @default / @updatedAt handling.
+    await pool.query(
+      `INSERT INTO profiles ("userId", "createdAt", "updatedAt")
+       SELECT id, NOW(), NOW() FROM users WHERE email = $1
+       ON CONFLICT ("userId") DO NOTHING`,
+      [email],
+    );
     await pool.query(
       'UPDATE users SET "emailVerified" = NOW(), "isVerified" = true WHERE email = $1',
       [email],
