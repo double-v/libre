@@ -6,8 +6,21 @@ import { normalizeEmail } from '@/lib/email';
 import { createVerificationToken } from '@/lib/verify-token';
 import { verifyTurnstile } from '@/lib/turnstile';
 import { sendVerificationEmail } from '@/lib/email-send';
+import { rateLimit, limits } from '@/lib/rate-limit';
+import { getClientIp } from '@/lib/client-ip';
 
 export async function POST(request: Request) {
+  // Rate limit by IP: 5 attempts per minute (see #27). Protects against
+  // bot-driven account creation spam.
+  const ip = getClientIp(request);
+  const rl = rateLimit(`auth:register:${ip}`, limits.auth.limit, limits.auth.windowMs);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: 'Trop de tentatives. Réessayez dans une minute.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } },
+    );
+  }
+
   try {
     const body = await request.json();
     const parsed = registerSchema.safeParse(body);
