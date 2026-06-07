@@ -38,6 +38,7 @@ function LoginForm() {
   const justVerified = searchParams.get('verified') === 'true';
   const errorParam = searchParams.get('error');
   const sessionExpired = errorParam === 'session_expiree';
+  const accountBanned = errorParam === 'account_banned';
   const callbackUrlRaw = searchParams.get('callbackUrl') || '/discover';
   // Defense-in-depth: only allow relative paths starting with `/` (and not
   // protocol-relative `//evil.com`). The NextAuth `redirect` callback does
@@ -146,6 +147,13 @@ function LoginForm() {
         <Alert variant="info" title="Votre session a expiré">
           Pour votre sécurité, nous vous demandons de vous reconnecter. Vos
           informations sont intactes.
+        </Alert>
+      )}
+
+      {accountBanned && (
+        <Alert variant="error" title="Votre compte a été suspendu">
+          Si vous pensez qu&apos;il s&apos;agit d&apos;une erreur, contactez
+          le support à <a href="mailto:support@getlibre.fr" className="underline">support@getlibre.fr</a>.
         </Alert>
       )}
 

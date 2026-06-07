@@ -70,7 +70,7 @@ export async function proxy(request: NextRequest) {
   try {
     const user = await getDb().user.findUnique({
       where: { id: token.id as string },
-      select: { id: true },
+      select: { id: true, isBanned: true },
     });
 
     if (!user) {
@@ -79,6 +79,17 @@ export async function proxy(request: NextRequest) {
       const response = NextResponse.redirect(loginUrl);
       // Clear the stale session cookie so the user actually gets a fresh
       // login form instead of a redirect loop.
+      response.cookies.delete('next-auth.session-token');
+      response.cookies.delete('__Secure-next-auth.session-token');
+      return response;
+    }
+
+    // Enforce ban instantly: a banned user must not be able to use the app
+    // until JWT expiry (30 days). We clear the cookies and redirect.
+    if (user.isBanned) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('error', 'account_banned');
+      const response = NextResponse.redirect(loginUrl);
       response.cookies.delete('next-auth.session-token');
       response.cookies.delete('__Secure-next-auth.session-token');
       return response;
