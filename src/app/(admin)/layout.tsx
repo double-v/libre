@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { decode } from 'next-auth/jwt';
 import { notFound } from 'next/navigation';
 import { getDb } from '@/lib/db';
+import { debugLog } from '@/lib/logger';
 import Link from 'next/link';
 
 const adminNavItems = [
@@ -43,10 +44,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // Try secure cookie name first (HTTPS), fallback to plain name (HTTP)
   const cookieName = '__Secure-next-auth.session-token';
   const fallbackName = 'next-auth.session-token';
-  let tokenCookie = cookieStore.get(cookieName) ?? cookieStore.get(fallbackName);
+  const tokenCookie = cookieStore.get(cookieName) ?? cookieStore.get(fallbackName);
 
   if (!tokenCookie) {
-    console.log('[admin/layout] ACCESS DENIED → 404 (no JWT cookie)');
+    debugLog('[admin/layout] ACCESS DENIED → 404 (no JWT cookie)');
     notFound();
   }
 
@@ -64,11 +65,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     token = null;
   }
 
-  console.log('[admin/layout] token=%s sub=%s jwtRole=%s',
-    !!token, token?.sub ?? 'none', token?.role ?? 'none');
+  debugLog('[admin/layout] hasToken=%s hasSub=%s jwtRole=%s',
+    !!token, !!token?.sub, token?.role ?? 'none');
 
   if (!token?.sub) {
-    console.log('[admin/layout] ACCESS DENIED → 404 (JWT has no subject)');
+    debugLog('[admin/layout] ACCESS DENIED → 404 (JWT has no subject)');
     notFound();
   }
 
@@ -88,10 +89,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     dbRole = jwtRole;
   }
 
-  console.log('[admin/layout] userId=%s dbRole=%s jwtRole=%s', userId, dbRole ?? 'none', jwtRole);
+  debugLog('[admin/layout] hasDbRole=%s dbMatchesJwt=%s', !!dbRole, dbRole === jwtRole);
 
   if (dbRole !== 'ADMIN') {
-    console.log('[admin/layout] ACCESS DENIED → showing forbidden page (dbRole=%s)', dbRole);
+    debugLog('[admin/layout] ACCESS DENIED → showing forbidden page');
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-950">
         <div className="text-center">

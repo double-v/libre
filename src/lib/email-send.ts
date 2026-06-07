@@ -10,7 +10,14 @@ function getResend(): Resend | null {
 export async function sendVerificationEmail(to: string, verifyUrl: string) {
   const resend = getResend();
   if (!resend) {
-    console.log(`[DEV] Verification URL for ${to}: ${verifyUrl}`);
+    // NEVER log the verifyUrl in production — it contains a long-lived JWT
+    // (24h) that can be used to take over the account. In dev, log masked
+    // info only (recipient + presence of token), not the URL itself.
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[DEV] verify-email skipped (no RESEND_API_KEY) — recipient=${to}`);
+    } else {
+      console.error('[email] RESEND_API_KEY missing in production — verification email NOT sent');
+    }
     return;
   }
 
@@ -48,7 +55,13 @@ export async function sendVerificationEmail(to: string, verifyUrl: string) {
 export async function sendPasswordResetEmail(to: string, resetUrl: string) {
   const resend = getResend();
   if (!resend) {
-    console.log(`[DEV] Reset URL for ${to}: ${resetUrl}`);
+    // NEVER log the resetUrl in production — it contains a 15-min JWT that
+    // allows account takeover. In dev, log masked info only.
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[DEV] password-reset skipped (no RESEND_API_KEY) — recipient=${to}`);
+    } else {
+      console.error('[email] RESEND_API_KEY missing in production — password-reset email NOT sent');
+    }
     return;
   }
 
