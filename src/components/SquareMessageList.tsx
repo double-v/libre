@@ -61,7 +61,13 @@ export default function SquareMessageList({
 
   return (
     <>
-      <div className="flex-1 overflow-y-auto px-4 py-3">
+      <div
+        className="flex-1 overflow-y-auto px-4 py-3"
+        role="log"
+        aria-live="polite"
+        aria-relevant="additions"
+        aria-label="Messages de la Place"
+      >
         {messages.length === 0 && (
           <p className="text-center text-sm text-gray-400">La Place est calme pour le moment…</p>
         )}
