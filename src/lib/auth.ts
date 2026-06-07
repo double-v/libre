@@ -169,6 +169,34 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
+    /**
+     * Open-redirect protection: validate that the post-login URL points
+     * back to our own site. Without this, an attacker can craft
+     * /login?callbackUrl=https://evil.com and steal the session via OAuth.
+     *
+     * Accept:
+     *  - relative paths starting with `/` (e.g. /discover, /profile/123)
+     *  - absolute URLs whose origin matches the configured NEXTAUTH_URL
+     *
+     * Reject (silent fallback to baseUrl): anything else.
+     */
+    async redirect({ url, baseUrl }) {
+      // Relative path → allow as-is
+      if (url.startsWith('/')) {
+        // Block protocol-relative URLs (//evil.com → resolves as external)
+        if (url.startsWith('//')) return baseUrl;
+        return url;
+      }
+      // Absolute URL → must match our origin
+      try {
+        const allowed = new URL(baseUrl);
+        const target = new URL(url);
+        if (target.origin === allowed.origin) return url;
+      } catch {
+        // Malformed URL → fall through to baseUrl
+      }
+      return baseUrl;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;

@@ -38,7 +38,15 @@ function LoginForm() {
   const justVerified = searchParams.get('verified') === 'true';
   const errorParam = searchParams.get('error');
   const sessionExpired = errorParam === 'session_expiree';
-  const callbackUrl = searchParams.get('callbackUrl') || '/discover';
+  const callbackUrlRaw = searchParams.get('callbackUrl') || '/discover';
+  // Defense-in-depth: only allow relative paths starting with `/` (and not
+  // protocol-relative `//evil.com`). The NextAuth `redirect` callback does
+  // the authoritative check, but sanitizing here avoids round-tripping a
+  // malicious URL through signIn() in the first place.
+  const callbackUrl =
+    callbackUrlRaw.startsWith('/') && !callbackUrlRaw.startsWith('//')
+      ? callbackUrlRaw
+      : '/discover';
 
   useEffect(() => {
     if (status === 'authenticated') {
