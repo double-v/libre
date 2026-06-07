@@ -86,7 +86,8 @@ export async function proxy(request: NextRequest) {
   } catch (err) {
     // On DB error, let the request through. The downstream page will surface
     // its own error. We don't want to block everyone on a transient DB hiccup.
-    console.error('[proxy] DB check failed for userId=%s:', token.id, err);
+    // Log error type only — do NOT include the userId (PII in Vercel logs).
+    console.error('[proxy] DB check failed:', err instanceof Error ? err.message : 'unknown error');
   }
 
   return NextResponse.next();

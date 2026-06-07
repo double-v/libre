@@ -174,7 +174,9 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         // Normalize role to uppercase to handle DB inconsistencies
         token.role = String((user as any).role).toUpperCase();
-        console.log('[auth/jwt] sign-in: id=%s role=%s', user.id, token.role);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('[auth/jwt] sign-in: id=%s role=%s', user.id, token.role);
+        }
       } else if (token.id) {
         // JWT refresh: re-fetch role from DB so changes propagate
         // without requiring the user to sign out and back in
@@ -186,12 +188,14 @@ export const authOptions: NextAuthOptions = {
           if (dbUser) {
             // Normalize to uppercase — DB may store 'user' or 'admin' in lowercase
             token.role = dbUser.role.toUpperCase();
-            console.log('[auth/jwt] refresh: id=%s dbRole=%s', token.id, token.role);
-          } else {
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('[auth/jwt] refresh: id=%s dbRole=%s', token.id, token.role);
+            }
+          } else if (process.env.NODE_ENV !== 'production') {
             console.log('[auth/jwt] refresh: id=%s user NOT FOUND in DB', token.id);
           }
         } catch (err) {
-          console.error('[auth/jwt] refresh DB error for id=%s:', token.id, err);
+          console.error('[auth/jwt] refresh DB error:', err);
         }
       }
       return token;
