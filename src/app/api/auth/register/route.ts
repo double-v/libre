@@ -31,8 +31,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verify Turnstile captcha
-    if (process.env.TURNSTILE_SECRET_KEY) {
+    // Verify Turnstile captcha.
+    // In production, ALWAYS require Turnstile — even if the env var is
+    // missing (verifyTurnstile will throw). In dev, allow bypass when the
+    // env var is not set, so local dev doesn't require Cloudflare setup.
+    if (process.env.NODE_ENV === 'production' || process.env.TURNSTILE_SECRET_KEY) {
       if (!turnstileToken) {
         return NextResponse.json(
           { error: 'Veuillez compléter le captcha' },
