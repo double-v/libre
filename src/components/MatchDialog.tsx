@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Pusher from 'pusher-js';
 import { photoUrl } from '@/lib/photos';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface MatchEvent {
   matchId: string;
@@ -25,6 +26,7 @@ interface MatchDialogProps {
 export default function MatchDialog({ userId, pusherKey, pusherCluster }: MatchDialogProps) {
   const [match, setMatch] = useState<MatchEvent | null>(null);
   const seenIds = useRef<Set<string>>(new Set());
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const handleMatch = (data: MatchEvent) => {
     if (seenIds.current.has(data.matchId)) return;
@@ -61,15 +63,34 @@ export default function MatchDialog({ userId, pusherKey, pusherCluster }: MatchD
     };
   }, [userId, pusherKey, pusherCluster]);
 
+  // Close on Escape
+  useEffect(() => {
+    if (!match) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMatch(null);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [match]);
+
   if (!match) return null;
 
   const photo = match.matchedWith.photos?.[0];
 
+  // Trap focus inside the modal
+  useFocusTrap(dialogRef, true);
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl dark:bg-gray-900">
-        <div className="mb-2 text-3xl">🔥</div>
-        <h2 className="mb-1 text-xl font-bold text-gray-900 dark:text-gray-100">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="match-dialog-title"
+        className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl dark:bg-gray-900"
+      >
+        <div className="mb-2 text-3xl" aria-hidden="true">🔥</div>
+        <h2 id="match-dialog-title" className="mb-1 text-xl font-bold text-gray-900 dark:text-gray-100">
           C&apos;est un match !
         </h2>
         <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
