@@ -46,9 +46,14 @@ export async function POST(request: Request) {
 
     // Verify Turnstile captcha.
     // In production, ALWAYS require Turnstile — even if the env var is
-    // missing (verifyTurnstile will throw). In dev, allow bypass when the
-    // env var is not set, so local dev doesn't require Cloudflare setup.
-    if (process.env.NODE_ENV === 'production' || process.env.TURNSTILE_SECRET_KEY) {
+    // missing (verifyTurnstile will throw). In dev AND in Vercel preview
+    // deploys (which set NODE_ENV=production but lack a real Turnstile
+    // key), allow bypass when the env var is not set, so CI E2E tests
+    // can run.
+    const isProd = process.env.NODE_ENV === 'production';
+    const isVercelPreview = process.env.VERCEL_ENV === 'preview';
+    const requireTurnstile = (isProd && !isVercelPreview) || process.env.TURNSTILE_SECRET_KEY;
+    if (requireTurnstile) {
       if (!turnstileToken) {
         return NextResponse.json(
           { error: 'Veuillez compléter le captcha' },
