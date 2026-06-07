@@ -22,6 +22,7 @@
     "@upstash/redis": "^1.38.0",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
+    "file-type": "^22.0.1",
     "jose": "^6.2.3",
     "next": "16.2.6",
     "next-auth": "^4.24.14",
