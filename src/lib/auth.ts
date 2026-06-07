@@ -113,6 +113,16 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // Per-email rate limit: 20 attempts per minute. Complements the
+        // per-IP limit on /api/auth/register etc. (see #27). Protects
+        // against targeted brute-force on a specific account.
+        const normalizedForRateLimit = normalizeEmail(credentials.email as string);
+        const { rateLimit, limits } = await import('@/lib/rate-limit');
+        const rl = rateLimit(`auth:signin:${normalizedForRateLimit}`, limits.auth.limit, limits.auth.windowMs);
+        if (!rl.success) {
+          throw new Error('TOO_MANY_ATTEMPTS');
+        }
+
         // Verify Turnstile if configured
         if (credentials.turnstileToken && process.env.TURNSTILE_SECRET_KEY) {
           const { verifyTurnstile } = await import('@/lib/turnstile');
