@@ -1,6 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getDb } from '@/lib/db';
+import { debugLog } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -17,11 +18,11 @@ export interface AdminSession {
  */
 export async function verifyAdmin(): Promise<AdminSession | null> {
   const session = await getServerSession(authOptions);
-  console.log('[admin/verifyAdmin] session=%s userId=%s role=%s',
-    !!session, session?.user?.id ?? 'none', session?.user?.role ?? 'none');
+  debugLog('[admin/verifyAdmin] hasSession=%s hasUserId=%s jwtRole=%s',
+    !!session, !!session?.user?.id, session?.user?.role ?? 'none');
 
   if (!session?.user?.id) {
-    console.log('[admin/verifyAdmin] DENIED: no session or no user.id');
+    debugLog('[admin/verifyAdmin] DENIED: no session or no user.id');
     return null;
   }
 
@@ -32,11 +33,11 @@ export async function verifyAdmin(): Promise<AdminSession | null> {
       select: { role: true },
     });
     const dbRole = dbUser?.role?.toUpperCase();
-    console.log('[admin/verifyAdmin] userId=%s dbRole=%s jwtRole=%s',
-      session.user.id, dbRole ?? 'none', session.user.role);
+    debugLog('[admin/verifyAdmin] hasDbRole=%s dbMatchesJwt=%s',
+      !!dbRole, dbRole === session.user.role?.toUpperCase());
 
     if (dbRole !== 'ADMIN') {
-      console.log('[admin/verifyAdmin] DENIED: dbRole=%s is not ADMIN', dbRole);
+      debugLog('[admin/verifyAdmin] DENIED: role is not ADMIN');
       return null;
     }
 
@@ -49,7 +50,7 @@ export async function verifyAdmin(): Promise<AdminSession | null> {
     console.error('[admin/verifyAdmin] DB error:', err);
     // Fallback to JWT role if DB is unreachable
     if (session.user.role?.toUpperCase() === 'ADMIN') {
-      console.log('[admin/verifyAdmin] DB error but JWT has ADMIN — allowing (degraded)');
+      debugLog('[admin/verifyAdmin] DB error but JWT has ADMIN — allowing (degraded)');
       return {
         userId: session.user.id,
         email: session.user.email ?? '',
