@@ -22,6 +22,19 @@ describe('Database connection', () => {
   });
 
   it('connects to the database', async () => {
-    await expect(prisma.$queryRaw`SELECT 1`).resolves.toBeDefined();
+    // GitHub Actions postgres service can take a few seconds to accept
+    // connections after the healthcheck. Retry up to 5 times with a short
+    // backoff to absorb the race.
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      try {
+        await expect(prisma.$queryRaw`SELECT 1`).resolves.toBeDefined();
+        return;
+      } catch (err) {
+        lastError = err;
+        await new Promise((r) => setTimeout(r, attempt * 500));
+      }
+    }
+    throw lastError;
   });
 });
