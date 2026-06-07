@@ -44,8 +44,11 @@ setup('authenticate', async ({ page }) => {
     // Create the Profile row (1-to-1, not auto-created with User — see
     // prisma/schema.prisma). Without this, /profile and /settings pages
     // see profile=null and disable their UI (toggle switch, edit buttons).
+    // Provide defaults for NOT NULL columns (createdAt, updatedAt) since
+    // raw SQL bypasses Prisma's @default / @updatedAt handling.
     await pool.query(
-      `INSERT INTO profiles ("userId") SELECT id FROM users WHERE email = $1
+      `INSERT INTO profiles ("userId", "createdAt", "updatedAt")
+       SELECT id, NOW(), NOW() FROM users WHERE email = $1
        ON CONFLICT ("userId") DO NOTHING`,
       [email],
     );
