@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { haversineDistance } from '@/lib/geoloc';
+import { rateLimit, limits } from '@/lib/rate-limit';
 
 const PAGE_SIZE = 20;
 const ONLINE_THRESHOLD_MS = 15 * 60 * 1000;
@@ -12,6 +13,11 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const rl = rateLimit(`discover:${session.user.id}`, limits.discover.limit, limits.discover.windowMs);
+    if (!rl.success) {
+      return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
     }
 
     const userId = session.user.id;
