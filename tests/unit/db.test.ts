@@ -24,7 +24,8 @@ describe('Database connection', () => {
   it('connects to the database', async () => {
     // GitHub Actions postgres service can take a few seconds to accept
     // connections after the healthcheck. Retry up to 5 times with a short
-    // backoff to absorb the race.
+    // backoff to absorb the race. Timeout extended to 10s to fit the
+    // backoff (5 * 500ms = 2.5s of waits + connect time per attempt).
     let lastError: unknown;
     for (let attempt = 1; attempt <= 5; attempt++) {
       try {
@@ -36,5 +37,5 @@ describe('Database connection', () => {
       }
     }
     throw lastError;
-  });
+  }, 15_000);
 });
