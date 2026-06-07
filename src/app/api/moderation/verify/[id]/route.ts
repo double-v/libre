@@ -33,6 +33,7 @@ export async function PUT(
     // Find the verification request
     const verificationRequest = await getDb().verificationRequest.findUnique({
       where: { id },
+      select: { userId: true },
     });
 
     if (!verificationRequest) {
