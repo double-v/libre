@@ -5,8 +5,21 @@ import { verifyResetToken } from '@/lib/reset-token';
 import { normalizeEmail } from '@/lib/email';
 import { registerSchema } from '@/lib/validators';
 import { hashToken } from '@/lib/token-hash';
+import { rateLimit, limits } from '@/lib/rate-limit';
+import { getClientIp } from '@/lib/client-ip';
 
 export async function POST(request: Request) {
+  // Rate limit by IP: 5 attempts per minute. Protects against
+  // enumeration of valid reset tokens.
+  const ip = getClientIp(request);
+  const rl = rateLimit(`auth:reset:${ip}`, limits.auth.limit, limits.auth.windowMs);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: 'Trop de tentatives. Réessayez dans une minute.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } },
+    );
+  }
+
   try {
     const body = await request.json();
     const { token, password } = body;

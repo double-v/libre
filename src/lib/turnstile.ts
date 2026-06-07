@@ -1,7 +1,13 @@
 export async function verifyTurnstile(token: string): Promise<boolean> {
   const secret = process.env.TURNSTILE_SECRET_KEY;
   if (!secret) {
-    console.warn('[Turnstile] TURNSTILE_SECRET_KEY not configured, skipping verification');
+    if (process.env.NODE_ENV === 'production') {
+      // Fail closed: don't silently bypass the captcha in prod.
+      // Surface the misconfiguration explicitly so it shows up in alerts
+      // instead of being masked as a successful verification.
+      throw new Error('TURNSTILE_SECRET_KEY must be set in production');
+    }
+    console.error('[Turnstile] TURNSTILE_SECRET_KEY not configured, skipping verification (DEV ONLY)');
     return true;
   }
 
