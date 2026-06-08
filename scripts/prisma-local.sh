@@ -9,14 +9,13 @@
 
 set -e
 
-# Charge UNIQUEMENT l'env local, sans toucher à .env (Neon prod)
-# Prisma 7 rejette host vide : on met localhost, mais l'auth passe
-# par peer (socket Unix) car le format ne contient pas de mot de passe.
-# Vérifier que pg_hba.conf a bien trust/md5 sur 127.0.0.1 pour "w",
-# sinon basculer en socket direct via psql.
+# CRITICAL: force local DB, NEVER read .env (which points to Neon prod).
+# Prisma 7 reads .env by default, NOT .env.local. If you don't
+# override DATABASE_URL here, migrations WILL go to prod. This has
+# happened once (cf. commit 8e671bb): the trust_circle migration
+# ended up on Neon because the wrapper didn't exist yet.
+#
+# ALWAYS use this wrapper, never `npx prisma` raw.
 export DATABASE_URL="postgresql://w@localhost:5432/getlibre_dev"
-
-# Empêche dotenv de re-charger .env (override défensif)
-unset DATABASE_URL_UNPOOLED
 
 exec npx prisma "$@"
