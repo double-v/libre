@@ -33,6 +33,7 @@ export async function GET(
             interests: true,
             practices: true,
             photos: true,
+            invisibleMode: true,
           },
         },
         userKey: {
