@@ -8,19 +8,19 @@ datasource db {
 }
 
 model User {
-  id              String   @id @default(uuid()) @db.Uuid
-  email           String   @unique
-  normalizedEmail String   @unique @default("")
-  emailVerified   DateTime?
-  displayName     String
-  passwordHash     String?
-  deviceId        String?
-  role            String   @default("USER")
-  createdAt       DateTime @default(now())
-  isVerified      Boolean  @default(false)
-  isBanned        Boolean  @default(false)
+  id                String    @id @default(uuid()) @db.Uuid
+  email             String    @unique
+  normalizedEmail   String    @unique @default("")
+  emailVerified     DateTime?
+  displayName       String
+  passwordHash      String?
+  deviceId          String?
+  role              String    @default("USER")
+  createdAt         DateTime  @default(now())
+  isVerified        Boolean   @default(false)
+  isBanned          Boolean   @default(false)
   squareBannedUntil DateTime? @map("square_banned_until")
-  lastActive      DateTime @updatedAt
+  lastActive        DateTime  @updatedAt
 
   profile              Profile?
   userKey              UserKey?
@@ -44,33 +44,37 @@ model User {
   accounts             Account[]
   sessions             Session[]
   passwordResetTokens  PasswordResetToken[]
-  moderationActions   ModerationLog[] @relation("ModerationActions")
-  moderationTargets    ModerationLog[] @relation("ModerationTargets")
+  moderationActions    ModerationLog[]       @relation("ModerationActions")
+  moderationTargets    ModerationLog[]       @relation("ModerationTargets")
   consents             Consent[]
   squareReports        SquareMessageReport[] @relation("SquareReportsMade")
+  trustLevel           TrustLevel?
+  trustContactsOwned   TrustContact[]        @relation("TrustContactOwner")
+  trustContactsOf      TrustContact[]        @relation("TrustContactTarget")
+  safetyCheckins       SafetyCheckin[]
 
   @@map("users")
 }
 
 model Profile {
-  userId           String   @id @db.Uuid
-  bio              String   @default("")
+  userId           String    @id @db.Uuid
+  bio              String    @default("")
   birthDate        DateTime?
-  genderIdentity   String   @default("")
+  genderIdentity   String    @default("")
   orientation      String[]
   relationshipType String[]
   interests        String[]
-  practices        String[] @default([])
-  socialLinks      Json     @default("{}")
+  practices        String[]  @default([])
+  socialLinks      Json      @default("{}")
   photos           String[]
-  maxDistanceKm    Int      @default(50)
-  ageMin           Int      @default(18)
-  ageMax           Int      @default(99)
-  invisibleMode    Boolean  @default(false)
-  lastKnownLat     Float    @map("last_known_lat") @default(0)
-  lastKnownLng     Float    @map("last_known_lng") @default(0)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  maxDistanceKm    Int       @default(50)
+  ageMin           Int       @default(18)
+  ageMax           Int       @default(99)
+  invisibleMode    Boolean   @default(false)
+  lastKnownLat     Float     @default(0) @map("last_known_lat")
+  lastKnownLng     Float     @default(0) @map("last_known_lng")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -240,20 +244,20 @@ model ModerationLog {
 }
 
 model SquareMessage {
-  id            String    @id @default(uuid()) @db.Uuid
+  id            String   @id @default(uuid()) @db.Uuid
   pseudonym     String
   content       String
   type          String
-  isAdmin       Boolean   @default(false)
-  isSystem      Boolean   @default(false)
-  themeConfigId String?   @db.Uuid
+  isAdmin       Boolean  @default(false)
+  isSystem      Boolean  @default(false)
+  themeConfigId String?  @db.Uuid
   // When set, the message is a GIF (rendered as <img> in the feed). The URL
   // must point to media[0-9]?.giphy.com (validated server-side). Mutually exclusive
   // with rich text in V1.
-  gifUrl        String?   @map("gif_url")
-  createdAt     DateTime  @default(now())
+  gifUrl        String?  @map("gif_url")
+  createdAt     DateTime @default(now())
 
-  themeConfig SquareThemeConfig?  @relation(fields: [themeConfigId], references: [id])
+  themeConfig SquareThemeConfig?    @relation(fields: [themeConfigId], references: [id])
   reactions   SquareReaction[]
   reports     SquareMessageReport[]
 
@@ -324,8 +328,8 @@ model SquareMessageReport {
   status     String   @default("pending")
   createdAt  DateTime @default(now())
 
-  message   SquareMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  reporter  User          @relation("SquareReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
+  message  SquareMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  reporter User          @relation("SquareReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
 
   @@index([status])
   @@map("square_message_reports")
@@ -363,12 +367,12 @@ model Session {
 }
 
 model PasswordResetToken {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
-  tokenHash String   @unique
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -378,14 +382,14 @@ model PasswordResetToken {
 
 /// Consent traceability — RGPD art. 7(1): "Where processing is based on consent, the controller shall be able to demonstrate that the data subject has consented"
 model Consent {
-  id         String   @id @default(uuid()) @db.Uuid
-  userId     String   @db.Uuid
-  type       String   // "cgu", "privacy_policy", "cookies_essential", "cookies_analytics", "e2e_messaging", "geolocation", "feedback_tracking"
-  version    String   @default("1") // version of the document/policy accepted
-  given      Boolean  @default(true)
-  ipAddress  String?
-  userAgent  String?
-  createdAt  DateTime @default(now())
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  type        String // "cgu", "privacy_policy", "cookies_essential", "cookies_analytics", "e2e_messaging", "geolocation", "feedback_tracking"
+  version     String    @default("1") // version of the document/policy accepted
+  given       Boolean   @default(true)
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime  @default(now())
   withdrawnAt DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -393,4 +397,68 @@ model Consent {
   @@index([userId, type])
   @@index([createdAt])
   @@map("consents")
+}
+
+/// Trust circle — sécurité relationnelle.
+/// V1 = Libre-only (cf. decision #43, roadmap/chantiers/01-securite).
+/// V2 ajoutera contacts hors-app via flow d'invitation opt-in.
+model TrustLevel {
+  userId         String   @id @db.Uuid
+  score          Int      @default(0)
+  band           String   @default("newcomer") // newcomer | member | trusted | anchor
+  factors        Json     @default("{}")
+  lastComputedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([band])
+  @@map("trust_levels")
+}
+
+model TrustContact {
+  id        String   @id @default(uuid()) @db.Uuid
+  ownerId   String   @db.Uuid
+  contactId String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  owner   User @relation("TrustContactOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  contact User @relation("TrustContactTarget", fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, contactId])
+  @@index([ownerId])
+  @@index([contactId])
+  @@map("trust_contacts")
+}
+
+model SafetyCheckin {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  status      String    @default("active") // active | validated | expired | cancelled
+  triggeredAt DateTime  @default(now())
+  expiresAt   DateTime
+  resolvedAt  DateTime?
+  lastLat     Float?    @map("last_lat")
+  lastLng     Float?    @map("last_lng")
+  notes       String?   @db.Text
+
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alerts CheckinAlert[]
+
+  @@index([userId, status])
+  @@index([expiresAt, status])
+  @@map("safety_checkins")
+}
+
+model CheckinAlert {
+  id             String   @id @default(uuid()) @db.Uuid
+  checkinId      String   @db.Uuid
+  contactId      String   @db.Uuid
+  deliveryStatus String   @default("queued") // queued | sent | failed | handled
+  sentAt         DateTime @default(now())
+
+  checkin SafetyCheckin @relation(fields: [checkinId], references: [id], onDelete: Cascade)
+
+  @@index([checkinId])
+  @@index([contactId])
+  @@map("checkin_alerts")
 }
