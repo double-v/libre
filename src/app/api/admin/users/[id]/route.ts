@@ -13,10 +13,39 @@ export async function GET(
 
   const user = await getDb().user.findUnique({
     where: { id },
-    include: {
-      profile: true,
-      reportsReceived: { where: { status: 'pending' }, take: 10, orderBy: { createdAt: 'desc' } },
-      verificationRequests: { orderBy: { createdAt: 'desc' }, take: 5 },
+    select: {
+      id: true,
+      email: true,
+      displayName: true,
+      role: true,
+      isBanned: true,
+      isVerified: true,
+      createdAt: true,
+      lastActive: true,
+      profile: {
+        select: {
+          bio: true,
+          birthDate: true,
+          genderIdentity: true,
+          orientation: true,
+          relationshipType: true,
+          interests: true,
+          practices: true,
+          photos: true,
+          invisibleMode: true,
+        },
+      },
+      reportsReceived: {
+        where: { status: 'pending' },
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, reason: true, createdAt: true, reporterId: true },
+      },
+      verificationRequests: {
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        select: { id: true, status: true, createdAt: true, selfieUrl: true },
+      },
     },
   });
 

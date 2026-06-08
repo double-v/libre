@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
+import { rateLimit, limits } from '@/lib/rate-limit';
 
 async function isValidECDHPublicKey(base64: string): Promise<boolean> {
   try {
@@ -28,6 +29,11 @@ export async function POST(request: Request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const rl = rateLimit(`api:${session.user.id}`, limits.api.limit, limits.api.windowMs);
+    if (!rl.success) {
+      return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
     }
 
     const body = await request.json();

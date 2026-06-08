@@ -27,6 +27,17 @@ export async function GET(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    // Privacy: invisible users are not visible to anyone but themselves.
+    // Return 404 (not 403) to avoid leaking the account's existence.
+    if (user.profile?.invisibleMode && user.id !== session.user.id) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Compute age from birthDate — never expose the raw date.
+    const age = user.profile?.birthDate
+      ? Math.floor((Date.now() - user.profile.birthDate.getTime()) / (365.25 * 24 * 3600 * 1000))
+      : null;
+
     // Strip email and passwordHash for privacy
     const publicProfile: Record<string, unknown> = {
       id: user.id,
@@ -36,8 +47,8 @@ export async function GET(
     };
 
     if (user.profile) {
+      publicProfile.age = age;
       publicProfile.bio = user.profile.bio;
-      publicProfile.birthDate = user.profile.birthDate;
       publicProfile.genderIdentity = user.profile.genderIdentity;
       publicProfile.orientation = user.profile.orientation;
       publicProfile.relationshipType = user.profile.relationshipType;

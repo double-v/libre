@@ -4,6 +4,7 @@ import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { messageSchema } from '@/lib/validators';
 import { pusher, getPusherChannel } from '@/lib/pusher';
+import { rateLimit, limits } from '@/lib/rate-limit';
 
 // ---------------------------------------------------------------------------
 // Helper: verify the authenticated user is a participant in the conversation
@@ -82,6 +83,11 @@ export async function POST(
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const rl = rateLimit(`message:${session.user.id}`, limits.message.limit, limits.message.windowMs);
+    if (!rl.success) {
+      return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
     }
 
     const { conversationId } = await params;

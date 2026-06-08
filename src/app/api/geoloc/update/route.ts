@@ -4,6 +4,7 @@ import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { geolocUpdateSchema } from '@/lib/validators';
 import { fuzzLocation, haversineDistance, roundDistance, isWithinRadius } from '@/lib/geoloc';
+import { rateLimit, limits } from '@/lib/rate-limit';
 
 const CROSSING_RADIUS_M = 500;
 const CROSSING_COOLDOWN_H = 24;
@@ -13,6 +14,11 @@ export async function POST(request: Request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const rl = rateLimit(`geoloc:${session.user.id}`, limits.geoloc.limit, limits.geoloc.windowMs);
+    if (!rl.success) {
+      return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
     }
 
     const body = await request.json();

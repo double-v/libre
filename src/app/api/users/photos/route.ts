@@ -3,12 +3,18 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { uploadPhoto, isR2Configured } from '@/lib/r2';
+import { rateLimit, limits } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    }
+
+    const rl = rateLimit(`api:${session.user.id}`, limits.api.limit, limits.api.windowMs);
+    if (!rl.success) {
+      return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
     }
 
     if (!isR2Configured()) {

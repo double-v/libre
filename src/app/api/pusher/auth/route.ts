@@ -3,6 +3,10 @@ import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { pusher } from '@/lib/pusher';
+import { rateLimit, limits } from '@/lib/rate-limit';
+
+const PUSHER_MAX_SOCKET_ID = 200;
+const PUSHER_MAX_CHANNEL_NAME = 200;
 
 export async function POST(request: Request) {
   try {
@@ -11,12 +15,21 @@ export async function POST(request: Request) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
+    const rl = rateLimit(`pusher:${session.user.id}`, limits.api.limit, limits.api.windowMs);
+    if (!rl.success) {
+      return new NextResponse('Too Many Requests', { status: 429 });
+    }
+
     const formData = await request.formData();
     const socketId = formData.get('socket_id') as string;
     const channelName = formData.get('channel_name') as string;
 
     if (!socketId || !channelName) {
       return new NextResponse('Missing socket_id or channel_name', { status: 400 });
+    }
+
+    if (socketId.length > PUSHER_MAX_SOCKET_ID || channelName.length > PUSHER_MAX_CHANNEL_NAME) {
+      return new NextResponse('socket_id or channel_name too long', { status: 400 });
     }
 
     // Allow private-chat- and private-user- channels
