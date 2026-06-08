@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
+import { rateLimit, limits } from '@/lib/rate-limit';
 
 /**
  * RGPD art. 20 — Right to data portability
@@ -14,10 +15,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
+    const rl = rateLimit(`export:${session.user.id}`, limits.api.limit, limits.api.windowMs);
+    if (!rl.success) {
+      return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+    }
+
     const userId = session.user.id;
 
     // Fetch all user data
-    const [user, profile, sentLikes, receivedLikes, matchesAsA, matchesAsB, conversations, encountersAsA, encountersAsB, blocksMade, blocksReceived, reportsMade, reportsReceived, verificationRequests, feedback, consents] = await Promise.all([
+    const [user, profile, userKey, sentLikes, receivedLikes, matchesAsA, matchesAsB, conversations, encountersAsA, encountersAsB, blocksMade, blocksReceived, reportsMade, reportsReceived, verificationRequests, feedback, consents] = await Promise.all([
       getDb().user.findUnique({
         where: { id: userId },
         select: {
@@ -49,6 +55,13 @@ export async function GET() {
           createdAt: true,
           updatedAt: true,
         },
+      }),
+      // E2E public key — RGPD art. 20 (portability): the user owns the key
+      // material they need to read their encrypted history. Only the public
+      // half is ever stored on the server, so it is safe to export.
+      getDb().userKey.findUnique({
+        where: { userId },
+        select: { publicKey: true, keyCreatedAt: true },
       }),
       getDb().like.findMany({
         where: { likerId: userId },
@@ -117,6 +130,16 @@ export async function GET() {
       format: 'Libre_RGPD_Portability_v1',
       user,
       profile,
+      // E2E public key (the only key material the server ever sees).
+      // Without it the user cannot decrypt their exported ciphertexts
+      // elsewhere — this is the "key portability" piece of art. 20.
+      e2e: {
+        publicKey: userKey?.publicKey ?? null,
+        keyCreatedAt: userKey?.keyCreatedAt ?? null,
+        note: userKey
+          ? 'Clé publique de chiffrement E2E. La clé privée reste dans votre navigateur (IndexedDB) et n\'est jamais exportée par le serveur.'
+          : 'Aucune clé E2E enregistrée (compte créé avant l\'activation du chiffrement, ou clés jamais initialisées).',
+      },
       social: {
         sentLikes,
         receivedLikes,
@@ -139,7 +162,7 @@ export async function GET() {
         consents,
       },
       // Note: messages are E2E encrypted and cannot be exported in readable form
-      messageContentDisclaimer: 'Le contenu de vos messages est chiffré de bout en bout (E2E). Il ne peut être exporté en clair car seul vous et votre correspondant possédez les clés de déchiffrement.',
+      messageContentDisclaimer: 'Le contenu de vos messages est chiffré de bout en bout (E2E). Il ne peut être exporté en clair car seul vous et votre correspondant possédez les clés de déchiffrement. Les identifiants de conversation sont inclus dans la section "social" ci-dessus, mais le contenu (table "messages", colonne "content") reste un blob chiffré illisible sans votre clé privée.',
     };
 
     return new NextResponse(JSON.stringify(exportData, null, 2), {

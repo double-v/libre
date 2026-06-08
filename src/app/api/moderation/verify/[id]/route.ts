@@ -1,23 +1,17 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
-import { authOptions } from '@/lib/auth';
+import { requireAdmin, isAdminSession } from '@/lib/admin';
 
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const adminResult = await requireAdmin();
+    if (!isAdminSession(adminResult)) {
+      return adminResult;
     }
-
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const reviewerId = session.user.id;
+    const reviewerId = adminResult.userId;
     const { id } = await params;
 
     const body = await request.json();
@@ -33,6 +27,7 @@ export async function PUT(
     // Find the verification request
     const verificationRequest = await getDb().verificationRequest.findUnique({
       where: { id },
+      select: { userId: true },
     });
 
     if (!verificationRequest) {

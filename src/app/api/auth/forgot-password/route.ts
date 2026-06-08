@@ -4,11 +4,24 @@ import { sendPasswordResetEmail } from '@/lib/email-send';
 import { normalizeEmail } from '@/lib/email';
 import { getDb } from '@/lib/db';
 import { hashToken } from '@/lib/token-hash';
+import { rateLimit, limits } from '@/lib/rate-limit';
+import { getClientIp } from '@/lib/client-ip';
 
 const FORGET_LIMIT = 3;
 const FORGET_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 export async function POST(request: Request) {
+  // Rate limit by IP: 5 attempts per minute. Protects against flood
+  // of password-reset emails (each one costs us a Resend API call).
+  const ip = getClientIp(request);
+  const rl = rateLimit(`auth:forgot:${ip}`, limits.auth.limit, limits.auth.windowMs);
+  if (!rl.success) {
+    return NextResponse.json(
+      { message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.' },
+      { status: 200, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } },
+    );
+  }
+
   try {
     const body = await request.json();
     const email = (body.email as string)?.trim().toLowerCase();

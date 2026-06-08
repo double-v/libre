@@ -3,8 +3,21 @@ import { createVerificationToken } from '@/lib/verify-token';
 import { sendVerificationEmail } from '@/lib/email-send';
 import { normalizeEmail } from '@/lib/email';
 import { getDb } from '@/lib/db';
+import { rateLimit, limits } from '@/lib/rate-limit';
+import { getClientIp } from '@/lib/client-ip';
 
 export async function POST(request: Request) {
+  // Rate limit by IP: 5 attempts per minute. Protects against spam of
+  // verification emails to arbitrary recipients.
+  const ip = getClientIp(request);
+  const rl = rateLimit(`auth:verify:${ip}`, limits.auth.limit, limits.auth.windowMs);
+  if (!rl.success) {
+    return NextResponse.json(
+      { message: 'Si un compte existe avec cet email, un lien de vérification a été envoyé.' },
+      { status: 200, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } },
+    );
+  }
+
   try {
     const body = await request.json();
     const email = (body.email as string)?.trim().toLowerCase();

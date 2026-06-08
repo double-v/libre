@@ -113,6 +113,16 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // Per-email rate limit: 20 attempts per minute. Complements the
+        // per-IP limit on /api/auth/register etc. (see #27). Protects
+        // against targeted brute-force on a specific account.
+        const normalizedForRateLimit = normalizeEmail(credentials.email as string);
+        const { rateLimit, limits } = await import('@/lib/rate-limit');
+        const rl = rateLimit(`auth:signin:${normalizedForRateLimit}`, limits.auth.limit, limits.auth.windowMs);
+        if (!rl.success) {
+          throw new Error('TOO_MANY_ATTEMPTS');
+        }
+
         // Verify Turnstile if configured
         if (credentials.turnstileToken && process.env.TURNSTILE_SECRET_KEY) {
           const { verifyTurnstile } = await import('@/lib/turnstile');
@@ -169,12 +179,42 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
+    /**
+     * Open-redirect protection: validate that the post-login URL points
+     * back to our own site. Without this, an attacker can craft
+     * /login?callbackUrl=https://evil.com and steal the session via OAuth.
+     *
+     * Accept:
+     *  - relative paths starting with `/` (e.g. /discover, /profile/123)
+     *  - absolute URLs whose origin matches the configured NEXTAUTH_URL
+     *
+     * Reject (silent fallback to baseUrl): anything else.
+     */
+    async redirect({ url, baseUrl }) {
+      // Relative path → allow as-is
+      if (url.startsWith('/')) {
+        // Block protocol-relative URLs (//evil.com → resolves as external)
+        if (url.startsWith('//')) return baseUrl;
+        return url;
+      }
+      // Absolute URL → must match our origin
+      try {
+        const allowed = new URL(baseUrl);
+        const target = new URL(url);
+        if (target.origin === allowed.origin) return url;
+      } catch {
+        // Malformed URL → fall through to baseUrl
+      }
+      return baseUrl;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         // Normalize role to uppercase to handle DB inconsistencies
         token.role = String((user as any).role).toUpperCase();
-        console.log('[auth/jwt] sign-in: id=%s role=%s', user.id, token.role);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('[auth/jwt] sign-in: id=%s role=%s', user.id, token.role);
+        }
       } else if (token.id) {
         // JWT refresh: re-fetch role from DB so changes propagate
         // without requiring the user to sign out and back in
@@ -186,12 +226,14 @@ export const authOptions: NextAuthOptions = {
           if (dbUser) {
             // Normalize to uppercase — DB may store 'user' or 'admin' in lowercase
             token.role = dbUser.role.toUpperCase();
-            console.log('[auth/jwt] refresh: id=%s dbRole=%s', token.id, token.role);
-          } else {
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('[auth/jwt] refresh: id=%s dbRole=%s', token.id, token.role);
+            }
+          } else if (process.env.NODE_ENV !== 'production') {
             console.log('[auth/jwt] refresh: id=%s user NOT FOUND in DB', token.id);
           }
         } catch (err) {
-          console.error('[auth/jwt] refresh DB error for id=%s:', token.id, err);
+          console.error('[auth/jwt] refresh DB error:', err);
         }
       }
       return token;

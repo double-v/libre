@@ -37,6 +37,7 @@ export default function SquareChat({ userId }: { userId: string }) {
   const [messages, setMessages] = useState<SquareMessage[]>([]);
   const [theme, setTheme] = useState<ThemeInfo | null>(null);
   const [reactions, setReactions] = useState<Record<string, Record<string, number>>>({});
+  const [myReactions, setMyReactions] = useState<Record<string, Set<string>>>({});
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -60,6 +61,18 @@ export default function SquareChat({ userId }: { userId: string }) {
       .then((data) => {
         if (data.messages) {
           setMessages(data.messages);
+        }
+        if (data.reactions) {
+          setReactions(data.reactions.counts ?? {});
+          // Wire shape: Record<messageId, string[]>. On convertit en Set<>
+          // une seule fois à l'hydratation (les .has() répétés sont plus
+          // rapides que .includes()). Cf. api-orm-patterns #3.
+          const mineArr = (data.reactions.mine ?? {}) as Record<string, string[]>;
+          const mineSets: Record<string, Set<string>> = {};
+          for (const [mid, emojis] of Object.entries(mineArr)) {
+            mineSets[mid] = new Set(emojis);
+          }
+          setMyReactions(mineSets);
         }
       })
       .catch(() => {
@@ -99,6 +112,7 @@ export default function SquareChat({ userId }: { userId: string }) {
     eventSource.addEventListener('reset', () => {
       setMessages([]);
       setReactions({});
+      setMyReactions({});
       // Re-fetch messages after a brief delay to get any post-reset system messages
       setTimeout(() => {
         fetch('/api/square/messages')
@@ -106,6 +120,15 @@ export default function SquareChat({ userId }: { userId: string }) {
           .then((data) => {
             if (data.messages) {
               setMessages(data.messages);
+            }
+            if (data.reactions) {
+              setReactions(data.reactions.counts ?? {});
+              const mineArr = (data.reactions.mine ?? {}) as Record<string, string[]>;
+              const mineSets: Record<string, Set<string>> = {};
+              for (const [mid, emojis] of Object.entries(mineArr)) {
+                mineSets[mid] = new Set(emojis);
+              }
+              setMyReactions(mineSets);
             }
           })
           .catch(() => {});
@@ -115,6 +138,7 @@ export default function SquareChat({ userId }: { userId: string }) {
     eventSource.addEventListener('reaction', (event) => {
       try {
         const data: SquareReaction = JSON.parse(event.data);
+        // Update agrégé (toujours).
         setReactions((prev) => ({
           ...prev,
           [data.messageId]: {
@@ -122,6 +146,22 @@ export default function SquareChat({ userId }: { userId: string }) {
             [data.emoji]: data.count,
           },
         }));
+        // Update "mes réactions" si le broadcast porte le flag `added`
+        // (toujours présent depuis #15). Si absent (legacy), on n'agit
+        // pas sur myReactions : c'est la situation "broadcast sans
+        // owner", on ne sait pas si c'est nous.
+        if (typeof data.added === 'boolean') {
+          setMyReactions((prev) => {
+            const current = prev[data.messageId] ?? new Set<string>();
+            const next = new Set(current);
+            if (data.added === true) {
+              next.add(data.emoji);
+            } else {
+              next.delete(data.emoji);
+            }
+            return { ...prev, [data.messageId]: next };
+          });
+        }
       } catch {
         // Ignore malformed data
       }
@@ -197,13 +237,51 @@ export default function SquareChat({ userId }: { userId: string }) {
     [],
   );
 
+  /**
+   * Optimistic update : on applique la réponse du POST immédiatement
+   * (count + myReactions) sans attendre le SSE. Le SSE qui arrive
+   * ensuite applique le même état, donc idempotent.
+   *
+   * Si la réponse POST manque `added` (improbable mais possible si le
+   * serveur ne suit pas le contrat), on n'agit pas sur myReactions.
+   */
+  const handleReactionUpdate = useCallback(
+    (messageId: string, emoji: string, added: boolean, count: number) => {
+      setReactions((prev) => ({
+        ...prev,
+        [messageId]: {
+          ...prev[messageId],
+          [emoji]: count,
+        },
+      }));
+      if (typeof added === 'boolean') {
+        setMyReactions((prev) => {
+          const current = prev[messageId] ?? new Set<string>();
+          const next = new Set(current);
+          if (added) {
+            next.add(emoji);
+          } else {
+            next.delete(emoji);
+          }
+          return { ...prev, [messageId]: next };
+        });
+      }
+    },
+    [],
+  );
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <SquareThemeBanner theme={theme} pseudonym={pseudonym} />
       {error && (
         <div className="px-4 py-1 text-xs text-red-600 dark:text-red-400">{error}</div>
       )}
-      <SquareMessageList messages={messages} reactions={reactions} />
+      <SquareMessageList
+        messages={messages}
+        reactions={reactions}
+        myReactions={myReactions}
+        onReactionUpdate={handleReactionUpdate}
+      />
       <SquareInputArea theme={theme} onSend={handleSend} sending={sending} />
       <div ref={messagesEndRef} />
     </div>

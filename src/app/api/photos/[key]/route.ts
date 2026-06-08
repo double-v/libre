@@ -40,6 +40,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       }
     }
 
+    // Verify the key actually belongs to the owner's profile. Without this check,
+    // any authenticated user who is a match (or the owner themselves) could obtain
+    // a signed URL for an arbitrary key, even one that was never uploaded.
+    const ownerProfile = await getDb().profile.findUnique({
+      where: { userId: ownerId },
+      select: { photos: true },
+    });
+    const ownerPhotos = (ownerProfile?.photos as string[] | null) ?? [];
+    if (!ownerPhotos.includes(decodedKey)) {
+      return NextResponse.json({ error: 'Photo introuvable' }, { status: 404 });
+    }
+
     const signedUrl = await getPhotoSignedUrl(decodedKey);
     return NextResponse.redirect(signedUrl);
   } catch (error) {

@@ -13,7 +13,18 @@ setup('authenticate', async ({ page }) => {
   // window.__TURNSTILE_MOCK__ on mount and uses the mock branch.
   await page.addInitScript(() => {
     (window as unknown as { __TURNSTILE_MOCK__?: boolean }).__TURNSTILE_MOCK__ = true;
+    // Dismiss the cookie consent banner (CookieBanner.tsx) so its
+    // fixed-bottom overlay does not intercept pointer events on
+    // buttons/links in the form. Without this, tests that need to click
+    // "Se connecter" or the form submit see the banner intercept and
+    // timeout 30s.
+    try {
+      localStorage.setItem('libre_cookie_consent', JSON.stringify({ accepted: true, date: new Date().toISOString() }));
+    } catch {}
   });
+
+  // (Diagnostic instrumentation removed — root cause of #23 was Zod
+  // stripping consentGiven. Fixed in the client body and the schema.)
 
   const email = `e2e-test-${Date.now()}@example.com`;
   const password = 'E2eTestPass123';
@@ -30,6 +41,17 @@ setup('authenticate', async ({ page }) => {
   // Bypass email verification in CI: mark email verified directly in DB
   if (process.env.DATABASE_URL) {
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    // Create the Profile row (1-to-1, not auto-created with User — see
+    // prisma/schema.prisma). Without this, /profile and /settings pages
+    // see profile=null and disable their UI (toggle switch, edit buttons).
+    // Provide defaults for NOT NULL columns (createdAt, updatedAt) since
+    // raw SQL bypasses Prisma's @default / @updatedAt handling.
+    await pool.query(
+      `INSERT INTO profiles ("userId", "createdAt", "updatedAt")
+       SELECT id, NOW(), NOW() FROM users WHERE email = $1
+       ON CONFLICT ("userId") DO NOTHING`,
+      [email],
+    );
     await pool.query(
       'UPDATE users SET "emailVerified" = NOW(), "isVerified" = true WHERE email = $1',
       [email],

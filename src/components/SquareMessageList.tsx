@@ -6,12 +6,25 @@ import SquareReportModal from './SquareReportModal';
 
 const DISPLAY_REACTION_EMOJIS = ['❤️', '😂', '🔥', '👋'];
 
+/**
+ * Map<messageId, Set<emoji>> des réactions du user courant.
+ * Vide (ou manquant) → le user n'a réagi à rien.
+ *
+ * Convention visuelle : un bouton dans `myReactions[msgId]` est "actif",
+ * avec bordure + fond léger. Voir `activeReactionClasses` plus bas.
+ */
+type MyReactions = Record<string, Set<string>>;
+
 export default function SquareMessageList({
   messages,
   reactions,
+  myReactions = {},
+  onReactionUpdate,
 }: {
   messages: SquareMessage[];
   reactions: Record<string, Record<string, number>>;
+  myReactions?: MyReactions;
+  onReactionUpdate?: (messageId: string, emoji: string, added: boolean, count: number) => void;
 }) {
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
   const [reportedMessages, setReportedMessages] = useState<Set<string>>(new Set());
@@ -25,19 +38,36 @@ export default function SquareMessageList({
 
   const handleReact = async (messageId: string, emoji: string) => {
     try {
-      await fetch(`/api/square/messages/${messageId}/react`, {
+      const res = await fetch(`/api/square/messages/${messageId}/react`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ emoji }),
       });
+      if (!res.ok) return;
+      const body = await res.json();
+      // Réponse attendue : { reaction: { messageId, emoji, count, added } }
+      if (body?.reaction && onReactionUpdate) {
+        onReactionUpdate(
+          body.reaction.messageId,
+          body.reaction.emoji,
+          body.reaction.added,
+          body.reaction.count,
+        );
+      }
     } catch {
-      // Reactions are best-effort
+      // Best-effort : on laisse le SSE faire la mise à jour si le POST échoue.
     }
   };
 
   return (
     <>
-      <div className="flex-1 overflow-y-auto px-4 py-3">
+      <div
+        className="flex-1 overflow-y-auto px-4 py-3"
+        role="log"
+        aria-live="polite"
+        aria-relevant="additions"
+        aria-label="Messages de la Place"
+      >
         {messages.length === 0 && (
           <p className="text-center text-sm text-gray-400">La Place est calme pour le moment…</p>
         )}
@@ -53,6 +83,7 @@ export default function SquareMessageList({
           }
 
           const msgReactions = reactions[msg.id] ?? {};
+          const myMsgReactions = myReactions[msg.id];
           const isReported = reportedMessages.has(msg.id);
 
           return (
@@ -100,18 +131,27 @@ export default function SquareMessageList({
               </div>
               {/* Reaction bar */}
               <div className="mt-1 flex gap-1">
-                {DISPLAY_REACTION_EMOJIS.map((emoji) => (
-                  <button
-                    key={emoji}
-                    onClick={() => handleReact(msg.id, emoji)}
-                    className="rounded-full px-1.5 py-0.5 text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-                  >
-                    {emoji}
-                    {msgReactions[emoji] ? (
-                      <span className="ml-0.5 text-[10px] text-gray-500">{msgReactions[emoji]}</span>
-                    ) : null}
-                  </button>
-                ))}
+                {DISPLAY_REACTION_EMOJIS.map((emoji) => {
+                  const isActive = myMsgReactions?.has(emoji) ?? false;
+                  return (
+                    <button
+                      key={emoji}
+                      onClick={() => handleReact(msg.id, emoji)}
+                      className={
+                        isActive
+                          ? 'rounded-full border border-coral bg-blush px-1.5 py-0.5 text-xs transition-colors dark:border-coral-light dark:bg-coral/10'
+                          : 'rounded-full border border-transparent px-1.5 py-0.5 text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-800'
+                      }
+                      aria-pressed={isActive}
+                      aria-label={`Réagir avec ${emoji}`}
+                    >
+                      {emoji}
+                      {msgReactions[emoji] ? (
+                        <span className="ml-0.5 text-[10px] text-gray-500">{msgReactions[emoji]}</span>
+                      ) : null}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           );

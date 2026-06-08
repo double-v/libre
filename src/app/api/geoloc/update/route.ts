@@ -4,6 +4,7 @@ import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { geolocUpdateSchema } from '@/lib/validators';
 import { fuzzLocation, haversineDistance, roundDistance, isWithinRadius } from '@/lib/geoloc';
+import { rateLimit, limits } from '@/lib/rate-limit';
 
 const CROSSING_RADIUS_M = 500;
 const CROSSING_COOLDOWN_H = 24;
@@ -13,6 +14,11 @@ export async function POST(request: Request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const rl = rateLimit(`geoloc:${session.user.id}`, limits.geoloc.limit, limits.geoloc.windowMs);
+    if (!rl.success) {
+      return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
     }
 
     const body = await request.json();
@@ -70,6 +76,8 @@ export async function POST(request: Request) {
     const crossings: string[] = [];
     const cutoff = new Date(Date.now() - CROSSING_COOLDOWN_H * 60 * 60 * 1000);
 
+    // Step 1: filter candidates locally (in-app, no extra query per profile)
+    const candidates: { otherUserId: string; distanceM: number }[] = [];
     for (const otherProfile of otherProfiles) {
       const otherUserId = otherProfile.userId;
 
@@ -94,33 +102,52 @@ export async function POST(request: Request) {
         continue;
       }
 
-      // Check for existing encounter in the last 24h for this pair
-      const existing = await getDb().encounter.findFirst({
+      candidates.push({ otherUserId, distanceM });
+    }
+
+    // Step 2: one findMany to fetch all existing encounters in the cooldown window
+    // for the (userId, candidates) pairs — replaces N findFirst calls
+    if (candidates.length > 0) {
+      const candidateIds = candidates.map((c) => c.otherUserId);
+      const existingEncounters = await getDb().encounter.findMany({
         where: {
           OR: [
-            { userA: userId, userB: otherUserId, happenedAt: { gte: cutoff } },
-            { userA: otherUserId, userB: userId, happenedAt: { gte: cutoff } },
+            { userA: userId, userB: { in: candidateIds }, happenedAt: { gte: cutoff } },
+            { userB: userId, userA: { in: candidateIds }, happenedAt: { gte: cutoff } },
           ],
         },
+        select: { userA: true, userB: true },
       });
 
-      if (existing) continue;
+      // Build a set of "other user ids" that already have a recent encounter
+      const alreadyEncountered = new Set<string>();
+      for (const e of existingEncounters) {
+        alreadyEncountered.add(e.userA === userId ? e.userB : e.userA);
+      }
 
-      // Create encounter with fuzzed position and rounded distance
+      // Step 3: one createMany for the new encounters — replaces N create calls
       const fuzzed = fuzzLocation(latitude, longitude);
-      const rounded = roundDistance(distanceM);
-
-      await getDb().encounter.create({
-        data: {
+      const newEncounters = candidates
+        .filter((c) => !alreadyEncountered.has(c.otherUserId))
+        .map((c) => ({
           userA: userId,
-          userB: otherUserId,
+          userB: c.otherUserId,
           latitude: fuzzed.lat,
           longitude: fuzzed.lng,
-          distanceM: rounded,
-        },
-      });
+          distanceM: roundDistance(c.distanceM),
+        }));
 
-      crossings.push(otherUserId);
+      if (newEncounters.length > 0) {
+        await getDb().encounter.createMany({
+          data: newEncounters,
+        });
+      }
+
+      for (const c of candidates) {
+        if (!alreadyEncountered.has(c.otherUserId)) {
+          crossings.push(c.otherUserId);
+        }
+      }
     }
 
     return NextResponse.json({ crossings }, { status: 200 });

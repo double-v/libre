@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { decode } from 'next-auth/jwt';
 import { notFound } from 'next/navigation';
 import { getDb } from '@/lib/db';
+import { debugLog } from '@/lib/logger';
 import Link from 'next/link';
 
 const adminNavItems = [
@@ -11,6 +12,7 @@ const adminNavItems = [
   { href: '/admin/verifications', label: 'Vérifications', icon: 'verifications' },
   { href: '/admin/logs', label: 'Logs', icon: 'logs' },
   { href: '/admin/square', label: 'La Place', icon: 'square' },
+  { href: '/admin/rate-limits', label: 'Rate-limits', icon: 'gauge' },
 ];
 
 function SidebarIcon({ icon }: { icon: string }) {
@@ -27,6 +29,8 @@ function SidebarIcon({ icon }: { icon: string }) {
       return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>;
     case 'square':
       return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>;
+    case 'gauge':
+      return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 14l4-4"/><path d="M3.34 19a10 10 0 1117.32 0"/></svg>;
     default:
       return null;
   }
@@ -43,10 +47,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // Try secure cookie name first (HTTPS), fallback to plain name (HTTP)
   const cookieName = '__Secure-next-auth.session-token';
   const fallbackName = 'next-auth.session-token';
-  let tokenCookie = cookieStore.get(cookieName) ?? cookieStore.get(fallbackName);
+  const tokenCookie = cookieStore.get(cookieName) ?? cookieStore.get(fallbackName);
 
   if (!tokenCookie) {
-    console.log('[admin/layout] ACCESS DENIED → 404 (no JWT cookie)');
+    debugLog('[admin/layout] ACCESS DENIED → 404 (no JWT cookie)');
     notFound();
   }
 
@@ -64,11 +68,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     token = null;
   }
 
-  console.log('[admin/layout] token=%s sub=%s jwtRole=%s',
-    !!token, token?.sub ?? 'none', token?.role ?? 'none');
+  debugLog('[admin/layout] hasToken=%s hasSub=%s jwtRole=%s',
+    !!token, !!token?.sub, token?.role ?? 'none');
 
   if (!token?.sub) {
-    console.log('[admin/layout] ACCESS DENIED → 404 (JWT has no subject)');
+    debugLog('[admin/layout] ACCESS DENIED → 404 (JWT has no subject)');
     notFound();
   }
 
@@ -88,10 +92,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     dbRole = jwtRole;
   }
 
-  console.log('[admin/layout] userId=%s dbRole=%s jwtRole=%s', userId, dbRole ?? 'none', jwtRole);
+  debugLog('[admin/layout] hasDbRole=%s dbMatchesJwt=%s', !!dbRole, dbRole === jwtRole);
 
   if (dbRole !== 'ADMIN') {
-    console.log('[admin/layout] ACCESS DENIED → showing forbidden page (dbRole=%s)', dbRole);
+    debugLog('[admin/layout] ACCESS DENIED → showing forbidden page');
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-950">
         <div className="text-center">

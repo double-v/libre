@@ -3,12 +3,18 @@ import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { haversineDistance } from '@/lib/geoloc';
+import { rateLimit, limits } from '@/lib/rate-limit';
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const rl = rateLimit(`geoloc:${session.user.id}`, limits.geoloc.limit, limits.geoloc.windowMs);
+    if (!rl.success) {
+      return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
     }
 
     const userId = session.user.id;
@@ -29,7 +35,15 @@ export async function GET() {
         lastKnownLat: { not: 0 },
         lastKnownLng: { not: 0 },
       },
-      include: { user: true },
+      include: {
+        user: {
+          select: {
+            isBanned: true,
+            displayName: true,
+            isVerified: true,
+          },
+        },
+      },
     });
 
     // Check for blocks involving the current user

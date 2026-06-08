@@ -6,6 +6,11 @@ import { test, expect } from '@playwright/test';
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     (window as unknown as { __TURNSTILE_MOCK__?: boolean }).__TURNSTILE_MOCK__ = true;
+    // Dismiss the cookie consent banner so its fixed-bottom overlay does
+    // not intercept pointer events on form controls below it.
+    try {
+      localStorage.setItem('libre_cookie_consent', JSON.stringify({ accepted: true, date: new Date().toISOString() }));
+    } catch {}
   });
 });
 

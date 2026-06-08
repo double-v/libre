@@ -48,11 +48,15 @@ model User {
   moderationTargets    ModerationLog[]       @relation("ModerationTargets")
   consents             Consent[]
   squareReports        SquareMessageReport[] @relation("SquareReportsMade")
+
   trustLevel           TrustLevel?
   trustContactsOwned   TrustContact[]        @relation("TrustContactOwner")
   trustContactsOf      TrustContact[]        @relation("TrustContactTarget")
   safetyCheckins       SafetyCheckin[]
+  squareReactions      SquareReaction[]      @relation("SquareReactionsMade")
 
+
+  @@index([isBanned, lastActive])
   @@map("users")
 }
 
@@ -180,6 +184,7 @@ model Report {
   reported User  @relation("ReportsReceived", fields: [reportedId], references: [id], onDelete: Cascade)
   reviewer User? @relation("ReportReviewer", fields: [reviewedBy], references: [id], onDelete: Cascade)
 
+  @@index([status])
   @@map("reports")
 }
 
@@ -251,6 +256,7 @@ model SquareMessage {
   isAdmin       Boolean  @default(false)
   isSystem      Boolean  @default(false)
   themeConfigId String?  @db.Uuid
+
   // When set, the message is a GIF (rendered as <img> in the feed). The URL
   // must point to media[0-9]?.giphy.com (validated server-side). Mutually exclusive
   // with rich text in V1.
@@ -309,14 +315,14 @@ model BannedWord {
 model SquareReaction {
   id        String   @id @default(uuid()) @db.Uuid
   messageId String   @db.Uuid
+  userId    String   @db.Uuid
   emoji     String
-  count     Int      @default(0)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   message SquareMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User          @relation("SquareReactionsMade", fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([messageId, emoji])
+  @@unique([messageId, emoji, userId])
   @@map("square_reactions")
 }
 

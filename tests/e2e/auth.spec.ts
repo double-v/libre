@@ -1,6 +1,17 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Login flow', () => {
+  test.beforeEach(async ({ page }) => {
+    // Dismiss the cookie consent banner so its fixed-bottom overlay
+    // does not intercept pointer events on the "Se connecter" link
+    // at the bottom of /login and /register pages.
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem('libre_cookie_consent', JSON.stringify({ accepted: true, date: new Date().toISOString() }));
+      } catch {}
+    });
+  });
+
   test('login page is accessible', async ({ page }) => {
     await page.goto('/login');
     await expect(page.getByRole('heading', { name: 'Se connecter' })).toBeVisible();
