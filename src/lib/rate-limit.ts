@@ -6,6 +6,31 @@
 
 const store = new Map<string, { count: number; resetAt: number }>();
 
+/**
+ * Ring buffer of the most recent 429 events, for the admin observability
+ * endpoint. Stays in memory — resets on deploy, that's acceptable for V1.
+ */
+export interface RateLimitHit {
+  key: string;
+  at: number;
+  limit: number;
+  windowMs: number;
+}
+const HIT_BUFFER_MAX = 500;
+const recentHits: RateLimitHit[] = [];
+
+function recordHit(key: string, limit: number, windowMs: number): void {
+  recentHits.push({ key, at: Date.now(), limit, windowMs });
+  if (recentHits.length > HIT_BUFFER_MAX) {
+    recentHits.splice(0, recentHits.length - HIT_BUFFER_MAX);
+  }
+}
+
+/** Read-only view of the most recent rate-limit 429s. Used by /api/admin/rate-limits. */
+export function getRecentRateLimitHits(): readonly RateLimitHit[] {
+  return recentHits;
+}
+
 interface RateLimitResult {
   success: boolean;
   remaining: number;
@@ -27,11 +52,28 @@ export function rateLimit(
   }
 
   if (entry.count >= limit) {
+    recordHit(key, limit, windowMs);
     return { success: false, remaining: 0, resetAt: entry.resetAt };
   }
 
   entry.count++;
   return { success: true, remaining: limit - entry.count, resetAt: entry.resetAt };
+}
+
+/**
+ * Build rate-limit response headers from a {@link RateLimitResult}.
+ * Spread into a NextResponse so the client knows the limit, remaining
+ * count, and Unix-epoch second at which the bucket resets.
+ */
+export function rateLimitHeaders(
+  result: RateLimitResult,
+  limit: number,
+): Record<string, string> {
+  return {
+    'X-RateLimit-Limit': String(limit),
+    'X-RateLimit-Remaining': String(result.remaining),
+    'X-RateLimit-Reset': String(Math.ceil(result.resetAt / 1000)),
+  };
 }
 
 export interface RateLimitPreset {
