@@ -48,7 +48,13 @@ model User {
   moderationTargets    ModerationLog[]       @relation("ModerationTargets")
   consents             Consent[]
   squareReports        SquareMessageReport[] @relation("SquareReportsMade")
+
+  trustLevel           TrustLevel?
+  trustContactsOwned   TrustContact[]        @relation("TrustContactOwner")
+  trustContactsOf      TrustContact[]        @relation("TrustContactTarget")
+  safetyCheckins       SafetyCheckin[]
   squareReactions      SquareReaction[]      @relation("SquareReactionsMade")
+
 
   @@index([isBanned, lastActive])
   @@map("users")
@@ -250,6 +256,11 @@ model SquareMessage {
   isAdmin       Boolean  @default(false)
   isSystem      Boolean  @default(false)
   themeConfigId String?  @db.Uuid
+
+  // When set, the message is a GIF (rendered as <img> in the feed). The URL
+  // must point to media[0-9]?.giphy.com (validated server-side). Mutually exclusive
+  // with rich text in V1.
+  gifUrl        String?  @map("gif_url")
   createdAt     DateTime @default(now())
 
   themeConfig SquareThemeConfig?    @relation(fields: [themeConfigId], references: [id])
@@ -392,4 +403,68 @@ model Consent {
   @@index([userId, type])
   @@index([createdAt])
   @@map("consents")
+}
+
+/// Trust circle — sécurité relationnelle.
+/// V1 = Libre-only (cf. decision #43, roadmap/chantiers/01-securite).
+/// V2 ajoutera contacts hors-app via flow d'invitation opt-in.
+model TrustLevel {
+  userId         String   @id @db.Uuid
+  score          Int      @default(0)
+  band           String   @default("newcomer") // newcomer | member | trusted | anchor
+  factors        Json     @default("{}")
+  lastComputedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([band])
+  @@map("trust_levels")
+}
+
+model TrustContact {
+  id        String   @id @default(uuid()) @db.Uuid
+  ownerId   String   @db.Uuid
+  contactId String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  owner   User @relation("TrustContactOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  contact User @relation("TrustContactTarget", fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, contactId])
+  @@index([ownerId])
+  @@index([contactId])
+  @@map("trust_contacts")
+}
+
+model SafetyCheckin {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  status      String    @default("active") // active | validated | expired | cancelled
+  triggeredAt DateTime  @default(now())
+  expiresAt   DateTime
+  resolvedAt  DateTime?
+  lastLat     Float?    @map("last_lat")
+  lastLng     Float?    @map("last_lng")
+  notes       String?   @db.Text
+
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alerts CheckinAlert[]
+
+  @@index([userId, status])
+  @@index([expiresAt, status])
+  @@map("safety_checkins")
+}
+
+model CheckinAlert {
+  id             String   @id @default(uuid()) @db.Uuid
+  checkinId      String   @db.Uuid
+  contactId      String   @db.Uuid
+  deliveryStatus String   @default("queued") // queued | sent | failed | handled
+  sentAt         DateTime @default(now())
+
+  checkin SafetyCheckin @relation(fields: [checkinId], references: [id], onDelete: Cascade)
+
+  @@index([checkinId])
+  @@index([contactId])
+  @@map("checkin_alerts")
 }

@@ -48,3 +48,12 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# test artifacts (NEVER commit)
+/playwright-report/
+/test-results/
+/blob-report/
+/playwright/.cache/
+
+# local debug/notes
+/todo.txt
