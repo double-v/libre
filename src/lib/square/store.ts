@@ -8,6 +8,8 @@ export interface SquareMessage {
   isAdmin: boolean;
   isSystem: boolean;
   themeConfigId?: string | null;
+  /** GIPHY media URL when type === 'gif', otherwise undefined. */
+  gifUrl?: string | null;
   timestamp: number;
 }
 
@@ -66,6 +68,7 @@ export async function addMessage(msg: Omit<SquareMessage, 'id' | 'timestamp' | '
       isAdmin: msg.isAdmin,
       isSystem: false,
       themeConfigId: msg.themeConfigId ?? null,
+      gifUrl: msg.gifUrl ?? null,
     },
   });
 
@@ -77,6 +80,7 @@ export async function addMessage(msg: Omit<SquareMessage, 'id' | 'timestamp' | '
     isAdmin: row.isAdmin,
     isSystem: row.isSystem,
     themeConfigId: row.themeConfigId,
+    gifUrl: row.gifUrl,
     timestamp: row.createdAt.getTime(),
   };
 

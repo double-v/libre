@@ -208,7 +208,7 @@ export default function SquareChat({ userId }: { userId: string }) {
   }, [messages]);
 
   const handleSend = useCallback(
-    async (content: string, type: string) => {
+    async (content: string, type: string, gifUrl?: string) => {
       setSending(true);
       setError('');
 
@@ -216,7 +216,11 @@ export default function SquareChat({ userId }: { userId: string }) {
         const res = await fetch('/api/square/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content, type }),
+          body: JSON.stringify({
+            content,
+            type,
+            ...(gifUrl ? { gifUrl } : {}),
+          }),
         });
 
         if (!res.ok) {
@@ -267,7 +271,7 @@ export default function SquareChat({ userId }: { userId: string }) {
   );
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <SquareThemeBanner theme={theme} pseudonym={pseudonym} />
       {error && (
         <div className="px-4 py-1 text-xs text-red-600 dark:text-red-400">{error}</div>

@@ -106,7 +106,17 @@ export default function SquareMessageList({
                 </span>
               </div>
               <div className="flex items-end gap-2">
-                <p className="text-sm text-gray-800 dark:text-gray-200">{msg.content}</p>
+                {msg.gifUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={msg.gifUrl}
+                    alt={msg.content || 'GIF'}
+                    loading="lazy"
+                    className="max-h-60 max-w-[240px] rounded-md object-contain"
+                  />
+                ) : (
+                  <p className="text-sm text-gray-800 dark:text-gray-200">{msg.content}</p>
+                )}
                 {isReported ? (
                   <span className="text-xs text-green-600 dark:text-green-400">✓</span>
                 ) : (
