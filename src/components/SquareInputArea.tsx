@@ -95,15 +95,20 @@ export default function SquareInputArea({
 
     if (theme.inputType === 'gif' && theme.options && theme.options.length > 0) {
       return (
-        <div className="grid grid-cols-4 gap-2">
+        <div
+          className="grid grid-cols-4 gap-2"
+          role="group"
+          aria-label="Choisir un GIF à envoyer"
+        >
           {theme.options.slice(0, 8).map((opt, i) => (
             <button
               key={i}
               onClick={() => handleQuickSend(opt, 'gif')}
               disabled={sending}
+              aria-label={`Envoyer le GIF ${i + 1}`}
               className="aspect-square overflow-hidden rounded-lg border border-gray-200 bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800"
             >
-              <img src={opt} alt="GIF" className="h-full w-full object-cover" />
+              <img src={opt} alt="" className="h-full w-full object-cover" />
             </button>
           ))}
         </div>
