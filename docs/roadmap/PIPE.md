@@ -13,11 +13,13 @@
 
 | # | Titre | Size | Dépendances |
 |---|---|---|---|
-| **#44** | **db Ajouter schema TrustCircle (4 tables)** ← **prochain** | S | Débloqué ✅ |
-| #45 | api Validators Zod pour TrustContact | S | — |
-| #46 | api GET /api/circle/contacts | S | #44 |
-| #47 | api POST /api/circle/contacts | M | #44 + #45 |
-| #48 | api DELETE /api/circle/contacts/:id | S | #46 |
+| # | Titre | Size | Dépendances | Statut |
+|---|---|---|---|---|
+| ✅ #44 | db Schema TrustCircle (4 tables) | S | — | **FERMÉ** (commit `8e671bb`) |
+| 🟢 #45 | api Validators Zod pour TrustContact | S | — | ready |
+| 🟢 #46 | api GET /api/circle/contacts | S | #44 ✅ | ready |
+| 🟢 #47 | api POST /api/circle/contacts | M | #44 ✅ + #45 | ready |
+| 🟢 #48 | api DELETE /api/circle/contacts/:id | S | #46 | ready |
 
 ## 🟡 Prêt mais à planifier (Phase 2 — Check-in + cron)
 
