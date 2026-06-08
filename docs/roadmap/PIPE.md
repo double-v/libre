@@ -17,9 +17,10 @@
 |---|---|---|---|---|
 | ✅ #44 | db Schema TrustCircle (4 tables) | S | — | FERMÉ (commit `8e671bb`) |
 | ✅ #45 | api Validators Zod pour TrustContact | S | — | FERMÉ (commit `df0cfa1`) |
-| 🟢 #46 | api GET /api/circle/contacts | S | #44 ✅ | ready |
-| 🟢 #47 | api POST /api/circle/contacts | M | #44 ✅ + #45 ✅ | ready |
-| 🟢 #48 | api DELETE /api/circle/contacts/:id | S | #46 | ready |
+| ✅ #46 | api GET /api/circle/contacts | S | #44 ✅ | FERMÉ (commit `a022846`) |
+| ✅ #47 | api POST /api/circle/contacts | M | #44 ✅ + #45 ✅ | FERMÉ (commit `a022846`) |
+| ✅ #48 | api DELETE /api/circle/contacts/:id | S | #46 ✅ | FERMÉ (commit `a022846`) |
+| 🎉 **Phase 1** | **100% complète** | **~10h** | — | **4/4 tickets fermés** |
 
 ## 🟡 Prêt mais à planifier (Phase 2 — Check-in + cron)
 
