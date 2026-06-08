@@ -120,7 +120,19 @@ export async function GET() {
       }),
       getDb().consent.findMany({
         where: { userId },
-        select: { type: true, version: true, given: true, createdAt: true, withdrawnAt: true },
+        select: {
+          type: true,
+          version: true,
+          given: true,
+          createdAt: true,
+          withdrawnAt: true,
+          // RGPD art. 7(1) — the controller must be able to demonstrate
+          // that the user consented. Logging IP + UA at consent time is
+          // the standard way to do this, and the user is entitled to
+          // see what was recorded.
+          ipAddress: true,
+          userAgent: true,
+        },
       }),
     ]);
 
