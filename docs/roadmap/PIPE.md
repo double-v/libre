@@ -20,7 +20,9 @@
 | ✅ #46 | api GET /api/circle/contacts | S | #44 ✅ | FERMÉ (commit `a022846`) |
 | ✅ #47 | api POST /api/circle/contacts | M | #44 ✅ + #45 ✅ | FERMÉ (commit `a022846`) |
 | ✅ #48 | api DELETE /api/circle/contacts/:id | S | #46 ✅ | FERMÉ (commit `a022846`) |
+| ✅ #49 | api Validators Zod pour SafetyCheckin | S | #44 ✅ | FERMÉ |
 | 🎉 **Phase 1** | **100% complète** | **~10h** | — | **4/4 tickets fermés** |
+| 🟢 #50 | api POST /api/circle/check-in (démarrer) | M | #44 + #49 + #46 | ready |
 
 ## 🟡 Prêt mais à planifier (Phase 2 — Check-in + cron)
 
