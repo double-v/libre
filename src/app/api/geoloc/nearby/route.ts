@@ -35,7 +35,15 @@ export async function GET() {
         lastKnownLat: { not: 0 },
         lastKnownLng: { not: 0 },
       },
-      include: { user: true },
+      include: {
+        user: {
+          select: {
+            isBanned: true,
+            displayName: true,
+            isVerified: true,
+          },
+        },
+      },
     });
 
     // Check for blocks involving the current user

@@ -17,9 +17,29 @@ export async function GET(
 
     const user = await getDb().user.findUnique({
       where: { id },
-      include: {
-        profile: true,
-        userKey: true,
+      select: {
+        id: true,
+        displayName: true,
+        isVerified: true,
+        lastActive: true,
+        isBanned: true,
+        profile: {
+          select: {
+            bio: true,
+            birthDate: true,
+            genderIdentity: true,
+            orientation: true,
+            relationshipType: true,
+            interests: true,
+            practices: true,
+            photos: true,
+          },
+        },
+        userKey: {
+          select: {
+            publicKey: true,
+          },
+        },
       },
     });
 
