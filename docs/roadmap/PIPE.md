@@ -3,19 +3,19 @@
 > Le pipe que tu/moi/sub-agent peut piocher. Synchronisé avec
 > GitHub Issues.
 
-## 🔴 Bloqué (rien ne part sans décision)
+## ✅ Décision tranchée
 
-| # | Titre | Pourquoi bloqué |
+| # | Décision | Statut |
 |---|---|---|
-| #43 | [chantier-01] arch Décision: contacts Libre-only ou hors-app en V1 ? | Trancher A / B / C avant tout |
-| #44 | [chantier-01] db Ajouter schema TrustCircle (4 tables) | Bloqué par #43 |
+| #43 | **A. V1 = Libre-only** (pas de contacts hors-app en V1) | ✅ Fermée |
 
 ## 🟢 Prêt à piocher (Phase 1 — Fondation API)
 
-| # | Titre | Size | Bloqué par |
+| # | Titre | Size | Dépendances |
 |---|---|---|---|
+| **#44** | **db Ajouter schema TrustCircle (4 tables)** ← **prochain** | S | Débloqué ✅ |
 | #45 | api Validators Zod pour TrustContact | S | — |
-| #46 | api GET /api/circle/contacts | S | #44 (peut se faire en TDD sans DB si mock) |
+| #46 | api GET /api/circle/contacts | S | #44 |
 | #47 | api POST /api/circle/contacts | M | #44 + #45 |
 | #48 | api DELETE /api/circle/contacts/:id | S | #46 |
 
