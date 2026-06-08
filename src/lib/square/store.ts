@@ -8,7 +8,7 @@ export interface SquareMessage {
   isAdmin: boolean;
   isSystem: boolean;
   themeConfigId?: string | null;
-  /** Tenor media URL when type === 'gif', otherwise undefined. */
+  /** GIPHY media URL when type === 'gif', otherwise undefined. */
   gifUrl?: string | null;
   timestamp: number;
 }

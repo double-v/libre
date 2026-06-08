@@ -1,7 +1,11 @@
 'use client';
 
 /**
- * GifPicker — modal de recherche/sélection de GIFs via Tenor.
+ * GifPicker — modal de recherche/sélection de GIFs via GIPHY.
+ *
+ * Migration Tenor → GIPHY v1 (Tenor API shuts down June 30, 2026).
+ * GIPHY a racheté Tenor en 2018 et fournit un guide de migration officiel
+ * https://developers.giphy.com/docs/api/tenor-migration
  *
  * Affiche un input avec debounce 300ms (recherche côté serveur
  * /api/place/gifs/search) + un onglet Trending par défaut
@@ -24,7 +28,7 @@ export interface SelectedGif {
   title: string;
 }
 
-interface TenorGif {
+interface GiphyGif {
   id: string;
   title: string;
   url: string;
@@ -33,8 +37,8 @@ interface TenorGif {
   height: number;
 }
 
-interface TenorResponse {
-  gifs: TenorGif[];
+interface GiphyResponse {
+  gifs: GiphyGif[];
   notConfigured: boolean;
 }
 
@@ -50,7 +54,7 @@ export default function GifPicker({
   const [mode, setMode] = useState<Mode>('trending');
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [gifs, setGifs] = useState<TenorGif[]>([]);
+  const [gifs, setGifs] = useState<GiphyGif[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notConfigured, setNotConfigured] = useState(false);
@@ -86,7 +90,7 @@ export default function GifPicker({
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }
-        return (await res.json()) as TenorResponse;
+        return (await res.json()) as GiphyResponse;
       })
       .then((data) => {
         if (cancelled) return;
@@ -171,7 +175,7 @@ export default function GifPicker({
         <div className="flex-1 overflow-y-auto px-4 py-3">
           {notConfigured && (
             <div className="mb-3 rounded-md bg-yellow-50 px-3 py-2 text-xs text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300">
-              ⚠️ Clé Tenor non configurée. Les GIFs sont temporairement
+              ⚠️ Clé GIPHY non configurée. Les GIFs sont temporairement
               indisponibles.
             </div>
           )}

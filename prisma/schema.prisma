@@ -248,7 +248,7 @@ model SquareMessage {
   isSystem      Boolean   @default(false)
   themeConfigId String?   @db.Uuid
   // When set, the message is a GIF (rendered as <img> in the feed). The URL
-  // must point to media.tenor.com (validated server-side). Mutually exclusive
+  // must point to media[0-9]?.giphy.com (validated server-side). Mutually exclusive
   // with rich text in V1.
   gifUrl        String?   @map("gif_url")
   createdAt     DateTime  @default(now())
