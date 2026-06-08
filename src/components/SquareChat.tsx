@@ -198,7 +198,7 @@ export default function SquareChat({ userId }: { userId: string }) {
   );
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <SquareThemeBanner theme={theme} pseudonym={pseudonym} />
       {error && (
         <div className="px-4 py-1 text-xs text-red-600 dark:text-red-400">{error}</div>
