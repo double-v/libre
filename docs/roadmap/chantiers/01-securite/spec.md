@@ -44,8 +44,10 @@ si elle ne valide pas un check-in de sécurité.
    mais une jauge qui monte avec : vérif + ancienneté + signalements
    reçus (négatif) + participation La Place + cercle déclaré
 3. **Cercle de Confiance** : 3-5 personnes désignées par
-   l'utilisateur. Si un check-in de sécurité expire, ils sont
-   prévenus.
+   l'utilisateur. **V1 = Libre-only** (cf. décision #43) : les
+   contacts doivent être des users Libre. V2 ajoutera le flow
+   d'invitation hors-app. Si un check-in de sécurité expire, ils
+   sont prévenus.
 4. **Check-in de sécurité** : bouton « je suis safe » avec timer.
    À activer **avant ou pendant** un RDV. Si timer expire sans
    validation, le cercle est alerté avec la dernière position

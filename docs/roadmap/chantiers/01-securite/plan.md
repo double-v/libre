@@ -103,12 +103,10 @@ Twilio optionnel (SMS), Vercel Cron.
 > problème RGPD. On le fait bien en V2, avec un parcours
 > d'invitation explicite.
 
-- [ ] **Si décision = Libre-only** : supprimer les champs
-  `contactEmail`, `contactPhone`, `channel` du schema, simplifier
-  la tâche 1.2 en conséquence.
-- [ ] **Estim** : 0h (déjà fait si on a tranché avant)
-- [ ] **Ticket** : décision-architecture-V1 (à trancher avant
-  de merger la 1.1)
+- [x] **Décision tranchée** : **A. V1 = Libre-only** (cf. issue #43 fermée).
+  - Schema `TrustContact` simplifié : suppression de `contactEmail`, `contactPhone`, `channel`
+  - Tâche 1.2 (validators) simplifiée en conséquence
+  - V2 reporter dans `chantiers/_idees-a-explorer.md`
 
 ### ✅ Fin de Phase 1
 
