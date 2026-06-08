@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import OnlineIndicator from '@/components/OnlineIndicator';
 import VerificationBadge from '@/components/VerificationBadge';
 import { isOnline, formatLastSeen } from '@/lib/time';
 import Image from 'next/image';
 import { photoUrl } from '@/lib/photos';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface PublicProfile {
   id: string;
@@ -121,6 +122,10 @@ export default function ProfileModal({ userId, open, onClose }: ProfileModalProp
     [onClose],
   );
 
+  // Trap focus inside the modal and restore it on close.
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, open);
+
   if (!open) return null;
 
   const online = profile ? isOnline(new Date(profile.lastActive)) : false;
@@ -135,7 +140,17 @@ export default function ProfileModal({ userId, open, onClose }: ProfileModalProp
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={handleBackdropClick}
     >
-      <div className="mx-4 w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl bg-white shadow-xl dark:bg-gray-900">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profile-modal-title"
+        className="mx-4 w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl bg-white shadow-xl dark:bg-gray-900"
+      >
+        {/* sr-only title for screen readers */}
+        <h2 id="profile-modal-title" className="sr-only">
+          Profil de {profile?.displayName ?? 'utilisateur'}
+        </h2>
         {/* Close button */}
         <button
           type="button"
