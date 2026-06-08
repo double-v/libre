@@ -244,10 +244,21 @@ model SquareMessage {
   pseudonym     String
   content       String
   type          String
+<<<<<<< Updated upstream
   isAdmin       Boolean   @default(false)
   isSystem      Boolean   @default(false)
   themeConfigId String?   @db.Uuid
   createdAt     DateTime  @default(now())
+=======
+  isAdmin       Boolean  @default(false)
+  isSystem      Boolean  @default(false)
+  themeConfigId String?  @db.Uuid
+  // When set, the message is a GIF (rendered as <img> in the feed). The URL
+  // must point to media.tenor.com (validated server-side). Mutually exclusive
+  // with rich text in V1.
+  gifUrl        String?  @map("gif_url")
+  createdAt     DateTime @default(now())
+>>>>>>> Stashed changes
 
   themeConfig SquareThemeConfig?  @relation(fields: [themeConfigId], references: [id])
   reactions   SquareReaction[]
