@@ -49,29 +49,35 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Message invalide' }, { status: 400 });
   }
 
-  const { content, type } = parsed.data;
+  const { content, type, gifUrl } = parsed.data;
 
   // Validate message against today's theme rules
   if (!theme.allowFreeText && theme.options && !theme.options.includes(content)) {
     // For emoji/reaction types, content is single characters, skip strict validation
     if (type === 'emoji' || type === 'reaction') {
       // Emoji/reaction content is single characters, skip strict validation
-    } else if (type === 'polite' || type === 'gif') {
+    } else if (type === 'polite') {
       return NextResponse.json({ error: 'Message non autorisé pour le thème du jour' }, { status: 400 });
     }
+    // GIFs are handled separately: the URL was already validated as a Tenor media URL.
   }
 
   if (content.length > theme.maxLength) {
     return NextResponse.json({ error: 'Message trop long' }, { status: 400 });
   }
 
-  // Moderation check
-  const moderationResult = await checkContent(content);
-  if (!moderationResult.allowed) {
-    return NextResponse.json(
-      { error: 'Ce message contient du contenu non autorisé' },
-      { status: 403 },
-    );
+  // Moderation check (skip for GIFs: the URL is already restricted to Tenor,
+  // and Tenor enforces pg-13 via the API key)
+  let censored = content;
+  if (type !== 'gif') {
+    const moderationResult = await checkContent(content);
+    if (!moderationResult.allowed) {
+      return NextResponse.json(
+        { error: 'Ce message contient du contenu non autorisé' },
+        { status: 403 },
+      );
+    }
+    censored = moderationResult.censored;
   }
 
   const pseudonym = await getPseudonymFromConfig(userId);
@@ -79,10 +85,11 @@ export async function POST(request: NextRequest) {
 
   const message = await addMessage({
     pseudonym,
-    content: moderationResult.censored,
+    content: censored,
     type: type as SquareMessage['type'],
     isAdmin,
     themeConfigId: theme.id,
+    gifUrl: gifUrl ?? null,
   });
 
   return NextResponse.json({ message }, { status: 201 });
