@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { trendingGifs, type TenorGif } from '@/lib/tenor';
+import { trendingGifs, type GiphyGif } from '@/lib/giphy';
 import { rateLimit, limits } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function toClient(g: TenorGif) {
+function toClient(g: GiphyGif) {
   return {
     id: g.id,
     title: g.title,

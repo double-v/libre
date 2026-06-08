@@ -59,15 +59,15 @@ export async function POST(request: NextRequest) {
     } else if (type === 'polite') {
       return NextResponse.json({ error: 'Message non autorisé pour le thème du jour' }, { status: 400 });
     }
-    // GIFs are handled separately: the URL was already validated as a Tenor media URL.
+    // GIFs are handled separately: the URL was already validated as a GIPHY media URL.
   }
 
   if (content.length > theme.maxLength) {
     return NextResponse.json({ error: 'Message trop long' }, { status: 400 });
   }
 
-  // Moderation check (skip for GIFs: the URL is already restricted to Tenor,
-  // and Tenor enforces pg-13 via the API key)
+  // Moderation check (skip for GIFs: the URL is already restricted to GIPHY,
+  // and GIPHY enforces pg-13 via the API key)
   let censored = content;
   if (type !== 'gif') {
     const moderationResult = await checkContent(content);

@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { searchGifs, type TenorGif } from '@/lib/tenor';
+import { searchGifs, type GiphyGif } from '@/lib/giphy';
 import { rateLimit, limits } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  // Auth required to avoid burning the Tenor quota on anonymous abuse
+  // Auth required to avoid burning the Giphy quota on anonymous abuse
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
@@ -36,13 +36,13 @@ export async function GET(request: NextRequest) {
       notConfigured: result.notConfigured,
     });
   } catch (err) {
-    // Tenor down? Don't break the picker — return empty.
+    // Giphy down? Don't break the picker — return empty.
     console.error('[gifs/search] error:', err);
     return NextResponse.json({ gifs: [], notConfigured: false });
   }
 }
 
-function toClient(g: TenorGif) {
+function toClient(g: GiphyGif) {
   return {
     id: g.id,
     title: g.title,

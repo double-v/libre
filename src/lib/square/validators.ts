@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
-// Tenor's media URLs are served from c.tenor.com / media.tenor.com.
+// GIPHY's media URLs are served from media0/1/2/3.giphy.com.
 // We restrict the gifUrl to those hostnames to prevent SSRF / hotlinking
 // of attacker-controlled images.
-const tenorUrl = z
+const giphyUrl = z
   .string()
   .url()
   .max(500)
@@ -11,19 +11,20 @@ const tenorUrl = z
     (u) => {
       try {
         const host = new URL(u).hostname;
-        return host === 'media.tenor.com' || host === 'c.tenor.com';
+        // GIPHY serves from media0-3.giphy.com (subdomain varies for load balancing).
+        return /^media[0-9]?\.giphy\.com$/.test(host);
       } catch {
         return false;
       }
     },
-    { message: 'gifUrl must be a Tenor media URL' },
+    { message: 'gifUrl must be a GIPHY media URL' },
   );
 
 export const squareMessageSchema = z
   .object({
     content: z.string().min(1).max(500),
     type: z.enum(['text', 'emoji', 'reaction', 'gif', 'polite', 'riddle']).default('text'),
-    gifUrl: tenorUrl.optional(),
+    gifUrl: giphyUrl.optional(),
   })
   .refine(
     (data) => {
