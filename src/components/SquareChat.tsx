@@ -168,7 +168,7 @@ export default function SquareChat({ userId }: { userId: string }) {
   }, [messages]);
 
   const handleSend = useCallback(
-    async (content: string, type: string) => {
+    async (content: string, type: string, gifUrl?: string) => {
       setSending(true);
       setError('');
 
@@ -176,7 +176,11 @@ export default function SquareChat({ userId }: { userId: string }) {
         const res = await fetch('/api/square/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content, type }),
+          body: JSON.stringify({
+            content,
+            type,
+            ...(gifUrl ? { gifUrl } : {}),
+          }),
         });
 
         if (!res.ok) {

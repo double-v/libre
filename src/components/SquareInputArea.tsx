@@ -1,15 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-
-interface ThemeInfo {
-  themeId: string;
-  inputType: string;
-  placeholder: string;
-  maxLength: number;
-  allowFreeText: boolean;
-  options: string[] | null;
-}
+import type { ThemeInfo } from './SquareThemeBanner';
+import GifPicker from './GifPicker';
 
 const typeMap: Record<string, string> = {
   text: 'text',
@@ -26,11 +19,12 @@ export default function SquareInputArea({
   sending,
 }: {
   theme: ThemeInfo | null;
-  onSend: (content: string, type: string) => Promise<void>;
+  onSend: (content: string, type: string, gifUrl?: string) => void;
   sending: boolean;
 }) {
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
+  const [showGifPicker, setShowGifPicker] = useState(false);
 
   if (!theme) {
     return null;
@@ -38,24 +32,23 @@ export default function SquareInputArea({
 
   const messageType = typeMap[theme.inputType] ?? 'text';
 
-  const handleSendText = async () => {
+  const handleSendText = () => {
     if (!input.trim() || sending) return;
     setError('');
-    try {
-      await onSend(input.trim(), messageType);
-      setInput('');
-    } catch {
-      setError('Erreur de connexion');
-    }
+    onSend(input.trim(), messageType);
+    setInput('');
   };
 
-  const handleQuickSend = async (content: string, type: string) => {
+  const handleQuickSend = (content: string, type: string) => {
     setError('');
-    try {
-      await onSend(content, type);
-    } catch {
-      setError('Erreur de connexion');
-    }
+    onSend(content, type);
+  };
+
+  const handleGifSelect = (gif: { id: string; url: string; title: string }) => {
+    setShowGifPicker(false);
+    setError('');
+    // Content vide : le message affichera uniquement le GIF.
+    onSend('', 'gif', gif.url);
   };
 
   const renderInput = () => {
@@ -65,7 +58,12 @@ export default function SquareInputArea({
           {(theme.options ?? []).map((opt) => (
             <button
               key={opt}
-              onClick={() => handleQuickSend(opt, theme.inputType === 'emoji' ? 'emoji' : 'reaction')}
+              onClick={() =>
+                handleQuickSend(
+                  opt,
+                  theme.inputType === 'emoji' ? 'emoji' : 'reaction',
+                )
+              }
               disabled={sending}
               className="rounded-full bg-gray-100 px-3 py-1.5 text-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:hover:bg-gray-700"
             >
@@ -93,20 +91,24 @@ export default function SquareInputArea({
       );
     }
 
-    if (theme.inputType === 'gif' && theme.options && theme.options.length > 0) {
+    if (theme.inputType === 'gif') {
       return (
-        <div className="grid grid-cols-4 gap-2">
-          {theme.options.slice(0, 8).map((opt, i) => (
-            <button
-              key={i}
-              onClick={() => handleQuickSend(opt, 'gif')}
-              disabled={sending}
-              className="aspect-square overflow-hidden rounded-lg border border-gray-200 bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800"
-            >
-              <img src={opt} alt="GIF" className="h-full w-full object-cover" />
-            </button>
-          ))}
-        </div>
+        <>
+          <button
+            onClick={() => setShowGifPicker(true)}
+            disabled={sending}
+            className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-dashed border-coral/40 bg-blush px-4 py-3 text-sm font-medium text-coral transition-colors hover:bg-coral/10 disabled:opacity-50 dark:border-coral/30 dark:hover:bg-coral/10"
+            aria-label="Choisir un GIF"
+          >
+            🎬 Choisir un GIF
+          </button>
+          {showGifPicker && (
+            <GifPicker
+              onSelect={handleGifSelect}
+              onClose={() => setShowGifPicker(false)}
+            />
+          )}
+        </>
       );
     }
 
