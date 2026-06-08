@@ -24,6 +24,16 @@ export async function POST(request: Request) {
     const { selfieUrl } = parsed.data;
     const userId = session.user.id;
 
+    // selflieUrl must point to a photo the user uploaded (R2 path /api/photos/<userId>/...).
+    // This prevents SSRF and tracking-pixel attacks via attacker-controlled URLs.
+    const allowedPrefix = `/api/photos/${userId}/`;
+    if (!selfieUrl.startsWith(allowedPrefix)) {
+      return NextResponse.json(
+        { error: 'selfieUrl must be a photo the user uploaded' },
+        { status: 400 },
+      );
+    }
+
     // Check for existing pending verification request
     const existingPending = await getDb().verificationRequest.findFirst({
       where: {
