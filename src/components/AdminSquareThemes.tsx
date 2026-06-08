@@ -17,6 +17,11 @@ interface ThemeConfig {
   active: boolean;
 }
 
+type ThemeForm = Pick<
+  ThemeConfig,
+  'label' | 'description' | 'placeholder' | 'maxLength' | 'allowFreeText' | 'options' | 'pseudonymNames' | 'active'
+>;
+
 interface ScheduleSlot {
   id: string;
   dayOfWeek: number;
@@ -43,7 +48,7 @@ export default function AdminSquareThemes() {
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Record<string, string | number | boolean | string[] | null>>({});
+  const [editForm, setEditForm] = useState<Partial<ThemeForm>>({});
 
   // Schedule edit state
   const [scheduleDraft, setScheduleDraft] = useState<Record<number, string>>({});
@@ -110,10 +115,10 @@ export default function AdminSquareThemes() {
       if (editForm.active !== original.active) body.active = editForm.active;
 
       // Handle array fields — always send even if unchanged since they're textareas
-      const options = (editForm.options as string[] | null) ?? [];
+      const options = editForm.options ?? [];
       body.options = options.length > 0 ? options : null;
 
-      const pseudonyms = (editForm.pseudonymNames as string[] | null) ?? [];
+      const pseudonyms = editForm.pseudonymNames ?? [];
       body.pseudonymNames = pseudonyms.length > 0 ? pseudonyms : null;
 
       const res = await fetch(`/api/admin/square/themes/${id}`, {
@@ -185,7 +190,7 @@ export default function AdminSquareThemes() {
                     <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Label</label>
                     <input
                       type="text"
-                      value={editForm.label as string ?? ''}
+                      value={editForm.label ?? ''}
                       onChange={(e) => setEditForm({ ...editForm, label: e.target.value })}
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                     />
@@ -193,7 +198,7 @@ export default function AdminSquareThemes() {
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Description</label>
                     <textarea
-                      value={editForm.description as string ?? ''}
+                      value={editForm.description ?? ''}
                       onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                       rows={2}
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
@@ -203,7 +208,7 @@ export default function AdminSquareThemes() {
                     <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Placeholder</label>
                     <input
                       type="text"
-                      value={editForm.placeholder as string ?? ''}
+                      value={editForm.placeholder ?? ''}
                       onChange={(e) => setEditForm({ ...editForm, placeholder: e.target.value })}
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                     />
@@ -213,7 +218,7 @@ export default function AdminSquareThemes() {
                       <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Longueur max</label>
                       <input
                         type="number"
-                        value={editForm.maxLength as number ?? 200}
+                        value={editForm.maxLength ?? 200}
                         onChange={(e) => setEditForm({ ...editForm, maxLength: Number(e.target.value) })}
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                       />
@@ -222,7 +227,7 @@ export default function AdminSquareThemes() {
                       <label className="flex items-center gap-1 text-sm dark:text-gray-300">
                         <input
                           type="checkbox"
-                          checked={editForm.allowFreeText as boolean ?? false}
+                          checked={editForm.allowFreeText ?? false}
                           onChange={(e) => setEditForm({ ...editForm, allowFreeText: e.target.checked })}
                           className="rounded"
                         />
@@ -231,7 +236,7 @@ export default function AdminSquareThemes() {
                       <label className="flex items-center gap-1 text-sm dark:text-gray-300">
                         <input
                           type="checkbox"
-                          checked={editForm.active as boolean ?? true}
+                          checked={editForm.active ?? true}
                           onChange={(e) => setEditForm({ ...editForm, active: e.target.checked })}
                           className="rounded"
                         />
@@ -242,7 +247,7 @@ export default function AdminSquareThemes() {
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Options (une par ligne)</label>
                     <textarea
-                      value={arrayToTextarea(editForm.options as string[] | null)}
+                      value={arrayToTextarea(editForm.options ?? null)}
                       onChange={(e) => setEditForm({ ...editForm, options: textareaToArray(e.target.value) })}
                       rows={4}
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
@@ -251,7 +256,7 @@ export default function AdminSquareThemes() {
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Pseudonymes (un par ligne)</label>
                     <textarea
-                      value={arrayToTextarea(editForm.pseudonymNames as string[] | null)}
+                      value={arrayToTextarea(editForm.pseudonymNames ?? null)}
                       onChange={(e) => setEditForm({ ...editForm, pseudonymNames: textareaToArray(e.target.value) })}
                       rows={4}
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
