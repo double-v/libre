@@ -50,6 +50,7 @@ model User {
   squareReports        SquareMessageReport[] @relation("SquareReportsMade")
   squareReactions      SquareReaction[]      @relation("SquareReactionsMade")
 
+  @@index([isBanned, lastActive])
   @@map("users")
 }
 
@@ -177,6 +178,7 @@ model Report {
   reported User  @relation("ReportsReceived", fields: [reportedId], references: [id], onDelete: Cascade)
   reviewer User? @relation("ReportReviewer", fields: [reviewedBy], references: [id], onDelete: Cascade)
 
+  @@index([status])
   @@map("reports")
 }
 
