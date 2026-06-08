@@ -103,7 +103,16 @@ export async function GET() {
       }),
       getDb().verificationRequest.findMany({
         where: { userId },
-        select: { status: true, createdAt: true, resolvedAt: true },
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
+          resolvedAt: true,
+          // RGPD: include the selfie URL so the user knows what was
+          // submitted to moderation. The actual binary is not bundled
+          // in this export — see #36 for the async export follow-up.
+          selfieUrl: true,
+        },
       }),
       getDb().feedback.findMany({
         where: { userId },
