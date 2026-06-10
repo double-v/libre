@@ -51,23 +51,23 @@ async function getUserCount() {
 const faqItems = [
   {
     q: 'Est-ce vraiment gratuit ?',
-    a: "Oui, à 100 %. Pas d'abonnement, pas de microtransaction, pas de version premium cachée. Toutes les fonctionnalités sont accessibles à tout le monde, toujours.",
+    a: "100 % gratuit. Pas d'abonnement, pas de boost, pas de Super Like à 5 €, pas de version premium planquée. Tout est accessible, tout le temps, à tout le monde.",
   },
   {
     q: 'Comment gagnez-vous de l\'argent alors ?',
-    a: "Libre est un projet à but non lucratif porté par des bénévoles convaincus que la rencontre ne devrait pas être un marché. Les coûts de fonctionnement sont couverts par des dons. Nous ne vendons rien : ni abonnements, ni données, ni publicité.",
+    a: "On ne gagne pas d'argent. Libre est un projet à but non lucratif porté par des bénévoles. Les coûts de fonctionnement (serveurs, modération) sont couverts par des dons. On ne vend rien : ni abonnements, ni données, ni pub.",
   },
   {
     q: 'Mes messages sont-ils vraiment privés ?',
-    a: "Oui. Vos messages sont chiffrés de bout en bout (E2E). Cela signifie que même nos serveurs ne peuvent pas les lire. Seul vous et votre correspondant avez les clés de déchiffrement.",
+    a: "Oui, vraiment. Vos messages sont chiffrés de bout en bout (E2E). Même nos serveurs ne les lisent pas — on n'a pas la clé, et on ne veut pas l'avoir. Vous seul·e et votre correspondant·e pouvez les déchiffrer.",
   },
   {
     q: 'Y a-t-il des faux profils ?',
-    a: "Nous luttons activement contre les faux profils grâce au système de badge vérifié (vérification par selfie), à la modération communautaire (signalement, blocage) et à une équipe de modération humaine. Contrairement à d'autres plateformes, nous n'avons jamais créé et ne créerons jamais de faux profils pour gonfler artificiellement nos chiffres.",
+    a: "On lutte contre les faux profils avec trois outils : badge vérifié par selfie, modération humaine (pas un bot, pas un script), signalement et blocage communautaires. Contrairement à d'autres plateformes, on n'a jamais créé — et on ne créera jamais — de faux profils pour gonfler les chiffres.",
   },
   {
-    q: 'Quelles différences avec Tinder, Happn ou Bumble ?',
-    a: "La différence fondamentale : chez Libre, la version gratuite n'est pas conçue pour frustrer. Pas de likes limités, pas de boost à acheter, pas de prix variable selon votre âge ou votre genre. Tout est gratuit, pour tout le monde, sans piège.",
+    q: "C'est quoi la différence avec Tinder, Happn ou Bumble ?",
+    a: "La version gratuite est vraiment gratuite. Pas de likes bridés, pas de boost à acheter, pas de prix variable selon votre âge ou votre genre. Pas de piège. Tout est gratuit, pour tout le monde, point.",
   },
 ];
 
@@ -524,6 +524,18 @@ export default async function Home() {
             </svg>
           </a>
         </div>
+        {/* Open source */}
+        <p className="mb-3 text-xs text-gray-300 dark:text-gray-600">
+          Code source ouvert :{' '}
+          <a
+            href="https://github.com/double-v/libre"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-coral hover:underline"
+          >
+            github.com/double-v/libre
+          </a>
+        </p>
         {/* Mention presse — placeholder */}
         <p className="text-xs text-gray-300 dark:text-gray-600">
           Presse &amp; médias : contact@getlibre.fr
