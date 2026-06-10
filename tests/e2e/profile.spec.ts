@@ -56,6 +56,9 @@ test.describe('Profile editing', () => {
   });
 
   test('shows profile completeness', async ({ page }) => {
-    await expect(page.locator('text=/Complétude|Profil complété/i')).toBeVisible();
+    // Wording varies by completion state (vide / timide / complet). Match
+    // the banner's structural shape (the "X/6" counter) instead of locking
+    // to a specific phrase, so copy iterations don't break this test.
+    await expect(page.getByText(/\d+\/6/)).toBeVisible();
   });
 });
