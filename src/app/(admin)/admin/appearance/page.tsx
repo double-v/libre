@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import SiteThemeSelector from '@/components/admin/SiteThemeSelector';
+import { useSiteThemeApply } from '@/hooks/useSiteThemeApply';
+import { getSiteTheme } from '@/lib/site-themes';
 
 export default function AdminAppearancePage() {
   const [current, setCurrent] = useState<string>('default');
@@ -9,6 +11,17 @@ export default function AdminAppearancePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Resolve the full SiteTheme for the currently-selected id. The theme
+  // registry is bundled with the client, so we don't need a second fetch
+  // — getCurrentSiteTheme is reserved for the server-side RootLayout.
+  const currentTheme = useMemo(
+    () => getSiteTheme(current) ?? getSiteTheme('default')!,
+    [current],
+  );
+
+  // Live preview: as soon as `current` changes, apply the theme to <html>.
+  useSiteThemeApply(currentTheme);
 
   const load = useCallback(async () => {
     try {
@@ -41,7 +54,7 @@ export default function AdminAppearancePage() {
       }
       const data = await res.json();
       setCurrent(data.currentTheme);
-      setSuccess('Thème mis à jour. Rafraîchissez la page pour le voir partout.');
+      setSuccess('Thème appliqué. Le changement est visible immédiatement et pour tous les visiteurs.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur');
     } finally {
@@ -55,9 +68,9 @@ export default function AdminAppearancePage() {
         Apparence du site
       </h1>
       <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
-        Choisissez le thème de couleur du site. Le changement s'applique à
-        toutes les pages, mais nécessite un rafraîchissement pour propager côté
-        serveur (cache Next.js).
+        Choisissez le thème de couleur du site. Le changement s'applique
+        immédiatement à votre écran et est enregistré pour tous les
+        visiteurs.
       </p>
 
       {error && (

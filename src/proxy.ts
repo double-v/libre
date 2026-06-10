@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { getDb } from '@/lib/db';
+import {
+  PREVIEW_COOKIE_NAME,
+  buildPreviewCookieHeader,
+  buildPreviewClearCookieHeader,
+  resolvePreviewTheme,
+} from '@/lib/site-theme-preview';
 
 // ---------------------------------------------------------------------------
 // Session guard for (main)/* and (admin)/* pages.
@@ -37,8 +43,43 @@ function isProtectedPath(pathname: string): boolean {
   );
 }
 
+/**
+ * Strip the ?preview=... query param from the URL the user sees on the
+ * NEXT request, by redirecting to the same URL without the query. The
+ * cookie survives across navigations, but the URL should not — otherwise
+ * every link click on the page would re-trigger the preview handling
+ * (harmless but noisy) and the user could not share a normal URL.
+ */
+function redirectStrippingPreview(request: NextRequest): NextResponse {
+  const cleanUrl = request.nextUrl.clone();
+  cleanUrl.searchParams.delete('preview');
+  return NextResponse.redirect(cleanUrl, { status: 303 });
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // --- Preview theme handling (admin) -----------------------------------
+  // ?preview=<theme-id> sets a 24h cookie that overrides the active theme
+  // for this visitor only. ?preview=reset clears it. Unknown ids are
+  // silently ignored. The cookie is then read by getCurrentSiteTheme().
+  // We do this BEFORE the auth gate so admins can preview on the login
+  // page or any public URL too.
+  const previewParam = request.nextUrl.searchParams.get('preview');
+  if (previewParam === 'reset') {
+    // Clear the cookie and redirect to the same URL without ?preview so
+    // the page renders with the persisted theme (and the URL is shareable).
+    const response = redirectStrippingPreview(request);
+    response.headers.append('Set-Cookie', buildPreviewClearCookieHeader());
+    return response;
+  }
+  if (previewParam && resolvePreviewTheme(previewParam)) {
+    // Set the cookie and redirect to the same URL without ?preview so the
+    // page renders with the previewed theme (and the URL is shareable).
+    const response = redirectStrippingPreview(request);
+    response.headers.append('Set-Cookie', buildPreviewCookieHeader(previewParam));
+    return response;
+  }
 
   if (!isProtectedPath(pathname)) {
     return NextResponse.next();
