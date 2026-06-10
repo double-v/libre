@@ -103,7 +103,14 @@ export async function proxy(request: NextRequest) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('callbackUrl', pathname);
     loginUrl.searchParams.set('error', 'session_expiree');
-    return NextResponse.redirect(loginUrl);
+    const response = NextResponse.redirect(loginUrl);
+    // Clear the stale session cookie so the user actually gets a fresh
+    // login form instead of a redirect loop. Without this, the cookie is
+    // still cryptographically valid and the login page bounces straight
+    // back to the protected route, which bounces back to /login, etc.
+    response.cookies.delete('next-auth.session-token');
+    response.cookies.delete('__Secure-next-auth.session-token');
+    return response;
   }
 
   // Verify the user still exists. This is the actual fix: a JWT can be valid
