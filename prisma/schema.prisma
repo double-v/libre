@@ -51,6 +51,7 @@ model User {
 
   trustLevel           TrustLevel?
   trustContactsOwned   TrustContact[]        @relation("TrustContactOwner")
+  siteConfigsUpdated  SiteConfig[]          @relation("SiteConfigUpdatedBy")
   trustContactsOf      TrustContact[]        @relation("TrustContactTarget")
   safetyCheckins       SafetyCheckin[]
   squareReactions      SquareReaction[]      @relation("SquareReactionsMade")
@@ -83,6 +84,16 @@ model Profile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("profiles")
+}
+
+model SiteConfig {
+  id           String   @id @default("singleton")
+  currentTheme String   @default("default") @map("current_theme")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  updatedBy    String?  @db.Uuid @map("updated_by")
+  updatedByUser User?   @relation("SiteConfigUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@map("site_config")
 }
 
 model UserKey {
