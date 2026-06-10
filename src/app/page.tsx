@@ -181,7 +181,15 @@ export default async function Home() {
       <section className="bg-blush px-6 py-16 dark:bg-coral/10">
         <div className="mx-auto max-w-xl">
           <div className="flex flex-col items-center gap-4 text-center">
-            <p className="text-6xl font-extrabold tracking-tight text-coral sm:text-7xl">0 € 🎉</p>
+            <div className="flex items-center justify-center gap-4">
+              <img
+                src="/illustrations/empty-wallet_j0kn.svg"
+                alt=""
+                aria-hidden="true"
+                className="h-24 w-24"
+              />
+              <p className="text-6xl font-extrabold tracking-tight text-coral sm:text-7xl">0 € 🎉</p>
+            </div>
             <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Pour toujours. Pour tout le monde. Pour de vrai.
             </p>
@@ -232,9 +240,17 @@ export default async function Home() {
                 <div className="mb-3 flex items-center gap-3">
                   <span
                     aria-hidden="true"
-                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-coral/10 text-2xl"
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-coral/10 p-2"
                   >
-                    {item.icon}
+                    {item.step === '1' && (
+                      <img src="/illustrations/user-account_fvqa.svg" alt="" className="h-full w-full" />
+                    )}
+                    {item.step === '2' && (
+                      <img src="/illustrations/location-search_9mdg.svg" alt="" className="h-full w-full" />
+                    )}
+                    {item.step === '3' && (
+                      <img src="/illustrations/messages_okui.svg" alt="" className="h-full w-full" />
+                    )}
                   </span>
                   <span className="text-sm font-bold text-coral">Étape {item.step}</span>
                 </div>
@@ -249,9 +265,17 @@ export default async function Home() {
       {/* ====== CONSTAT ====== */}
       <section className="bg-blush px-6 py-16 dark:bg-coral/10">
         <div className="mx-auto max-w-xl">
-          <h2 className="mb-2 text-center text-3xl font-bold text-gray-900 dark:text-gray-100">
-            Les autres apps facturent l&apos;espoir 💸
-          </h2>
+          <div className="relative mb-2 text-center">
+            <img
+              src="/illustrations/connection-lost_am29.svg"
+              alt=""
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-2 -top-2 h-28 w-28 opacity-80 sm:-right-8"
+            />
+            <h2 className="text-center text-3xl font-bold text-gray-900 dark:text-gray-100">
+              Les autres apps facturent l&apos;espoir 💸
+            </h2>
+          </div>
           <p className="mb-10 text-center text-base text-gray-600 dark:text-gray-400">
             Swipes bridés, boosts à l&apos;unité, prix qui changent selon votre profil&nbsp;: la version gratuite est un piège à fric.
           </p>
@@ -310,6 +334,7 @@ export default async function Home() {
                 title: 'Chat E2E',
                 detail:
                   'Même nous on ne lit pas vos messages. Et on ne veut pas, pour de vrai.',
+                illustration: '/illustrations/firewall_cfej.svg',
               },
               {
                 icon: '🛡️',
@@ -322,9 +347,18 @@ export default async function Home() {
                 key={item.title}
                 className="rounded-2xl bg-white/70 p-6 text-left shadow-sm dark:bg-gray-900/30"
               >
-                <div aria-hidden="true" className="mb-3 text-3xl">
-                  {item.icon}
-                </div>
+                {item.illustration ? (
+                  <img
+                    src={item.illustration}
+                    alt=""
+                    aria-hidden="true"
+                    className="mb-3 h-10 w-10"
+                  />
+                ) : (
+                  <div aria-hidden="true" className="mb-3 text-3xl">
+                    {item.icon}
+                  </div>
+                )}
                 <p className="font-semibold text-gray-900 dark:text-gray-100">{item.title}</p>
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{item.detail}</p>
               </div>
