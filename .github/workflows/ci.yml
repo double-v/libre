@@ -12,12 +12,12 @@ jobs:
 
     # Database: the DATABASE_URL secret is configured at the repo level
     # (Settings → Secrets and variables → Actions) and points at the dev
-    # Neon database (user: neondb_owner). GitHub Actions auto-injects
-    # repo secrets into the runner's process.env, so steps that don't
-    # override DATABASE_URL pick it up. Do NOT add an `env: DATABASE_URL`
-    # block on any step here — that would override the secret and
-    # silently re-route the test job at a non-existent local user
-    # (the previous YAML did exactly that and broke CI for days).
+    # Neon database (user: neondb_owner). GH Actions does NOT auto-inject
+    # repo secrets into process.env of a step — they have to be referenced
+    # via ${{ secrets.DATABASE_URL }} in an env: block. Each step that
+    # needs the database therefore has an explicit env: block. The
+    # previous version of this workflow set the env via plain hardcoded
+    # localhost:5432 which silently shadowed the secret and broke CI.
     # See #88 for the post-mortem.
 
     steps:
@@ -31,14 +31,17 @@ jobs:
       - run: npm ci
 
       - run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - run: npx prisma migrate deploy
-        # Inherits DATABASE_URL from the repo secret (dev Neon).
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - run: npx vitest run
         env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXTAUTH_SECRET: test-secret-for-ci
-        # Inherits DATABASE_URL from the repo secret (dev Neon).
 
       # Playwright E2E tests are intentionally DISABLED on CI for now.
       # Reason: the Vercel preview deploy used for E2E doesn't have the
