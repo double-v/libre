@@ -461,20 +461,24 @@ export default async function Home() {
       </section>
 
       {/* ====== CTA FINAL ====== */}
-      <section className="bg-gradient-to-br from-coral to-terracotta px-6 py-16 text-center">
-        <p className="mb-2 text-3xl font-extrabold text-white">0 €. Pas d&apos;abonnement. Pas de pièges.</p>
-        <p className="mb-8 text-base text-white/90">Rejoignez ceux qui refusent de payer pour espérer.</p>
-        {totalUsers > 0 && (
-          <p className="mb-6 text-sm text-white/80">
-            Déjà {totalUsers.toLocaleString('fr-FR')} célibataires nous font confiance
+      <section className="bg-gradient-to-br from-coral to-terracotta px-6 py-20 text-center text-white sm:py-24">
+        <div className="mx-auto max-w-2xl">
+          <h2 className="mb-4 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
+            Prêt·e à rencontrer sans payer ? 🚀
+          </h2>
+          <p className="mb-8 text-lg text-white/90 sm:text-xl">
+            100% gratuit · 0 pub · 0 revente de données · pour toujours.
           </p>
-        )}
-        <Link
-          href="/register"
-          className="inline-block rounded-full bg-white px-8 py-3 text-sm font-bold text-terracotta transition-colors hover:bg-gray-50"
-        >
-          Créer un compte
-        </Link>
+          <Link
+            href="/register"
+            className="inline-block rounded-full bg-white px-10 py-4 text-lg font-bold text-coral shadow-lg transition-transform hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-white focus:ring-offset-2 focus:ring-offset-coral"
+          >
+            <span aria-hidden="true">🔥</span> Créer mon profil
+          </Link>
+          <p className="mt-6 text-sm text-white/80">
+            Déjà {totalUsers > 0 ? totalUsers.toLocaleString('fr-FR') : '1 200+'} célibataires ont rejoint Libre.
+          </p>
+        </div>
       </section>
 
       {/* ====== FOOTER ====== */}
