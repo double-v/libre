@@ -58,11 +58,9 @@ Découplage propre : la home garde sa DB read (compteur), la /manifesto devient 
 | **Bounce rate** (sortie < 30s) | à mesurer J0 | **-15%** | 20% |
 
 **Mesure** :
-- J0 (avant refonte) : snapshot Plausible / Vercel Analytics pendant 7 jours
-- J+7 / J+30 / J+60 : snapshots successifs
-- Si pas d'analytics branché : ajouter Plausible (1 ligne dans `layout.tsx` + env var) **avant** la refonte pour avoir la baseline
-
-**Porte de succès** : score pondéré ≥ +15% à J+60 → chantier validé.
+- ❌ **Zéro tracking** (décision 2026-06-10, choix éthique) → pas de baseline mesurable scientifiquement
+- ✅ **Mesures qualitatives** : retours utilisateurs sur les réseaux (mastodon surtout), volume de tickets support, témoignages spontanés, observations directes en navigation privée
+- **Porte de succès** (subjective) : à J+60, est-ce que la home "donne envie de cliquer Créer mon profil" ? Réponse par triangulation des retours quali, pas par un dashboard.
 
 ## 6. Structure cible de la home (mockup ASCII)
 
@@ -131,12 +129,19 @@ Tickets ordonnés pour limiter les régressions (chaque PR = 1 chose testable, V
 
 | # | Ticket | Taille | Dépendances | Description |
 |---|---|---|---|---|
-| 1 | **#T1 — Ajouter Plausible analytics** | XS | — | 1 ligne dans `layout.tsx` + env var, mesure baseline J0 sur 7 jours |
-| 2 | **#T2 — Manifeste (ISR pur) + redirection depuis home** | M | — | Créer `/manifesto` (ISR `revalidate=3600`), ajouter lien dans nav, route `/manifesto` |
-| 3 | **#T3 — Hero redesign (fun/punchy + photo lifestyle + animations)** | L | T1 (Plausible) | Refonte du hero uniquement : photo Pexels, micro-copy drôle, animations CSS, compteur users live conservé |
-| 4 | **#T4 — Sections 1+2 (Comment ça marche + Pourquoi Libre) avec illustrations unDraw** | L | T3 | Remplacer emojis par illustrations vectorielles, garder structure 3+4 cards |
-| 5 | **#T5 — Section 3+CTA final (Ce que Libre n'est PAS + gros CTA)** | M | T4 | Refondre "ce que Libre n'est pas" en ton fun cash, CTA final pleine largeur |
-| 6 | **#T6 — FAQ redesign (accordions + micro-copy) + footer** | S | T5 | FAQ en accordions (déjà présents dans Tailwind), footer avec mastodon + contact |
+**Décision 2026-06-10 (post-spec)** : **zéro tracking** (choix éthique de Skoff).
+- T1 (Plausible) est **supprimé**
+- La baseline KPIs ne peut **pas** être mesurée avec des outils maison → les cibles chiffrées (conversion +20%, scroll +25%, bounce -15%) restent comme **objectifs à dire d'expert**, pas comme mesures scientifiques
+- Le critère "score pondéré ≥ +15% à J+60" devient **subjectif** : ressenti utilisateur, retours quali sur les réseaux, volume de demandes au support, témoignages directs
+- C'est un trade-off assumé, à reverifier si on ajoute un jour un outil de mesure (Plausible auto-hébergé, Vercel Analytics opt-in, ou logs serveur anonymisés)
+
+| # | Ticket | Taille | Dépendances | Description |
+|---|---|---|---|---|
+| 1 | **#T1 — Manifeste (ISR pur) + lien nav** | M | — | Créer `/manifesto` (ISR `revalidate=3600`), ajouter lien dans nav, route `/manifesto` |
+| 2 | **#T2 — Hero redesign (fun/punchy + photo lifestyle + animations)** | L | — | Refonte du hero uniquement : photo Pexels, micro-copy drôle, animations CSS, compteur users live conservé |
+| 3 | **#T3 — Sections 1+2 (Comment ça marche + Pourquoi Libre) avec illustrations unDraw** | L | T2 | Remplacer emojis par illustrations vectorielles, garder structure 3+4 cards |
+| 4 | **#T4 — Section 3+CTA final (Ce que Libre n'est PAS + gros CTA)** | M | T3 | Refondre "ce que Libre n'est pas" en ton fun cash, CTA final pleine largeur |
+| 5 | **#T5 — FAQ redesign (accordions + micro-copy) + footer** | S | T4 | FAQ en accordions (déjà présents dans Tailwind), footer avec mastodon + contact |
 
 **Ordre choisi** : home du haut vers le bas (hero → sections → CTA → footer) + manifesto en parallèle (T2) pour découpler le risque SEO.
 
@@ -152,10 +157,10 @@ Tickets ordonnés pour limiter les régressions (chaque PR = 1 chose testable, V
 
 ## 10. Hors-scope explicite (rappel)
 
-- Pas d'A/B test infra (Plausible events oui si on veut, mais pas de feature flag)
+- Pas d'A/B test infra
 - Pas de CMS ou de contenu dynamique hors compteur
 - Pas de redesign de l'app (la home est marketing, l'app vit dans `(main)/`)
-- Pas de tracking personnalisé (Plausique suffit)
+- **Pas de tracking du tout** (zéro analytics, zéro cookies, zéro logs serveur personnalisés)
 
 ## 11. Liens
 
