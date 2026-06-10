@@ -110,60 +110,69 @@ export default async function Home() {
 
       {/* ====== HERO ====== */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0">
-          <Image
-            src="https://images.unsplash.com/photo-1767790693308-b630592ab50f?w=1200&q=80"
-            alt=""
-            fill
-            className="object-cover blur-[6px] brightness-110 scale-110"
-          />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-blush/90 via-blush/90 to-sand/85" />
+        {/* Subtle background wash, much lighter than before so the photo is the star */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blush/40 via-blush/30 to-sand/40 dark:from-blush/10 dark:via-transparent dark:to-sand/10" aria-hidden="true" />
         <div className="relative mx-auto flex max-w-2xl flex-col items-center gap-10 px-6 py-16 sm:flex-row sm:py-24">
-          <div className="flex-1 text-center sm:text-left">
-            <h1 className="mb-3 text-5xl font-extrabold tracking-tight sm:text-6xl">
-              <span className="text-coral">Libre</span>
+          <div className="flex-1 text-center sm:text-left animate-fade-in">
+            <h1 className="mb-4 text-4xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-5xl dark:text-gray-50">
+              Rencontrer devrait pas{' '}
+              <span className="text-coral">coûter un rond</span>. 🫶
             </h1>
-            <p className="mb-2 text-xl font-semibold text-gray-800 dark:text-gray-200 sm:text-2xl">
-              Parce que rencontrer ne devrait rien coûter.
-            </p>
-            <p className="mb-4 text-base text-gray-600 dark:text-gray-400">
-              Rencontre gratuite. Sans abonnement. Sans microtransaction. Sans revente de données.
-              <br />
-              Parce que quand c&apos;est gratuit, tout le monde est là.
-            </p>
+            <div className="mb-6 flex flex-wrap justify-center gap-2 sm:justify-start">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-sm font-medium text-gray-700 shadow-sm dark:bg-gray-800/80 dark:text-gray-200">
+                <span aria-hidden="true">🆓</span> Gratuit
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-sm font-medium text-gray-700 shadow-sm dark:bg-gray-800/80 dark:text-gray-200">
+                <span aria-hidden="true">🚫</span> Sans pub
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-sm font-medium text-gray-700 shadow-sm dark:bg-gray-800/80 dark:text-gray-200">
+                <span aria-hidden="true">🔒</span> Sans revente data
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-sm font-medium text-gray-700 shadow-sm dark:bg-gray-800/80 dark:text-gray-200">
+                <span aria-hidden="true">🛡️</span> Modération humaine
+              </span>
+            </div>
             {totalUsers > 0 && (
-              <p className="mb-8 text-sm font-medium text-coral">
-                Rejoignez déjà {totalUsers.toLocaleString('fr-FR')} célibataires inscrits
+              <p className="mb-6 inline-flex items-center gap-2 rounded-full bg-coral/10 px-4 py-1.5 text-sm font-medium text-coral">
+                <span aria-hidden="true">👥</span>
+                {totalUsers.toLocaleString('fr-FR')} célibataires ont déjà rejoint
               </p>
             )}
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
               <Link
                 href="/register"
-                className="rounded-full bg-terracotta px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-coral-dark focus:outline-none focus:ring-2 focus:ring-terracotta focus:ring-offset-2 dark:focus:ring-offset-gray-950"
+                className="rounded-full bg-coral px-8 py-3.5 text-base font-semibold text-white shadow-md transition-transform hover:scale-105 hover:bg-coral-dark hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2 dark:focus:ring-offset-gray-950"
               >
-                Créer mon profil gratuitement
+                <span aria-hidden="true">🔥</span> Créer mon profil
               </Link>
               <Link
                 href="/login"
-                className="rounded-full bg-white/70 px-8 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 dark:bg-gray-800/70 dark:text-gray-200 dark:hover:bg-gray-800/90 dark:focus:ring-offset-gray-950"
+                className="rounded-full bg-white/70 px-8 py-3.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 dark:bg-gray-800/70 dark:text-gray-200 dark:hover:bg-gray-800/90 dark:focus:ring-offset-gray-950"
               >
                 Se connecter
               </Link>
             </div>
           </div>
-          <div className="relative flex flex-1 items-center justify-center">
-            <svg viewBox="76 36 360 360" className="h-44 w-44 opacity-15" fill="currentColor" aria-hidden="true">
-              <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(-60 256 188)" />
-              <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(-30 256 188)" />
-              <rect x="236" y="42" width="40" height="120" rx="20" />
-              <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(30 256 188)" />
-              <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(60 256 188)" />
-              <path d="M256,195 C256,170 218,130 180,130 C130,130 105,175 105,215 C105,300 256,375 256,390 C256,375 407,300 407,215 C407,175 382,130 332,130 C294,130 256,170 256,195 Z" />
-            </svg>
-            <span className="absolute -top-2 -right-3 rounded-xl bg-white px-3 py-1.5 text-xs font-semibold text-coral shadow-sm dark:bg-gray-800">🔒 Chiffré E2E</span>
-            <span className="absolute -bottom-1 -left-4 rounded-xl bg-white px-3 py-1.5 text-xs font-semibold text-coral shadow-sm dark:bg-gray-800">✅ Badge vérifié</span>
-            <span className="absolute right-[-1.25rem] top-1/2 -translate-y-1/2 rounded-xl bg-white px-3 py-1.5 text-xs font-semibold text-coral shadow-sm dark:bg-gray-800">👥 Modération</span>
+          <div className="relative w-full flex-1 overflow-hidden rounded-3xl shadow-xl aspect-[4/3] animate-fade-in">
+            {/* Brand-gradient fallback behind the photo so a broken image still looks intentional */}
+            <div
+              className="absolute inset-0 bg-gradient-to-br from-blush via-coral to-sand"
+              aria-hidden="true"
+            />
+            <Image
+              src="/images/hero-lifestyle.jpg"
+              alt=""
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              priority
+              quality={80}
+              className="relative object-cover"
+            />
+            {/* Light overlay so the photo stays warm and integrates with the gradient fallback */}
+            <div
+              className="absolute inset-0 bg-gradient-to-tr from-blush/20 via-transparent to-transparent"
+              aria-hidden="true"
+            />
           </div>
         </div>
       </section>
