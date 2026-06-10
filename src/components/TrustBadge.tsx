@@ -26,8 +26,8 @@ export interface TrustBadgeProps {
   size?: TrustBadgeSize;
   /** Si true, affiche un label texte à côté du halo (« Membre », « Ancre »). */
   showLabel?: boolean;
-  /** L'élément à wrapper (avatar, etc.). */
-  children: ReactNode;
+  /** L'élément à wrapper (avatar, etc.). Optionnel — un TrustBadge peut s'utiliser seul (halo vide). */
+  children?: ReactNode;
   /** Classes additionnelles sur le wrapper. */
   className?: string;
 }
