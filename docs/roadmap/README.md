@@ -67,5 +67,6 @@ Exemples :
 | 05 — Narration des Croisements | 📝 | — | — | Spéculé |
 | 06 — UGC communautaire | 📝 | — | — | Spéculé |
 | 07 — Monétisation éthique | 📝 | — | — | Spéculé |
+| 08 — Home page redesign | 📝 | — | — | Spéculé (issue #66, besoin d'inputs) |
 
 Légende : ✅ = existe / 🔄 = en cours / 📝 = spéculé, à formaliser / — = pas commencé
