@@ -1,5 +1,7 @@
 # Profile Page Redesign Implementation Plan
 
+> **STATUS: SUPERSEDED** — Exécuté en grande partie via les commits `3a384bd`, `4bb2df7`, `1f40ec1`, `c26741b` (cf. `git log -- src/components/ProfileSection.tsx src/components/ProfileField.tsx src/components/ThemeToggle.tsx src/components/ProfileCompleteness.tsx`). Les composants sont créés et en place. Le plan est conservé ici comme trace historique ; **ne pas le re-exécuter**. Pour la suite de la refonte UX (vitrine personnelle, photo hero, aperçu public), voir l'issue **#79** "Reflexion UI / UX design du site" qui va au-delà du périmètre DESIGN.md de ce plan.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Redesign the profile page to comply with DESIGN.md — extracted components, dark mode, surface hierarchy, pencil icon edit triggers, theme toggle.

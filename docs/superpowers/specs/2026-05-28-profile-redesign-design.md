@@ -1,7 +1,9 @@
 # Profile Page Redesign — Design Spec
 
 **Date**: 2026-05-28
-**Status**: Approved
+**Status**: Superseded by issue #79 (2026-06-10)
+
+> Cette spec ne couvrait que les correctifs **DESIGN.md / design system** (dark mode, surface tokens, contraste WCAG, touch target 44px, extraction de composants). Elle a été exécutée — voir les commits référencés dans le plan associé `2026-05-28-profile-redesign.md`. La suite de la refonte UX (vitrine personnelle vs formulaire, photo hero, aperçu public, principes Tinder/Bumble/Hinge) est traitée dans l'issue **#79**, qui étend le périmètre au-delà des simples correctifs de tokens.
 
 ## Problem
 
