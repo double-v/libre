@@ -9,6 +9,7 @@ import { photoUrl } from '@/lib/photos';
 import { useEncryptedChat } from '@/hooks/useEncryptedChat';
 import ShareContactButton from '@/components/ShareContactButton';
 import ProfileModal from '@/components/ProfileModal';
+import { CheckinButton } from '@/components/CheckinButton';
 
 interface Message {
   id: string;
@@ -312,7 +313,10 @@ export default function ChatConversationPage() {
           </h1>
         </div>
         {otherUser && (
-          <ShareContactButton conversationId={conversationId} onSend={handleShareContact} />
+          <div className="flex items-center gap-2">
+            <CheckinButton />
+            <ShareContactButton conversationId={conversationId} onSend={handleShareContact} />
+          </div>
         )}
       </div>
 
