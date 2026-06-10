@@ -7,6 +7,7 @@ import TagButton from '@/components/TagButton';
 import TagSelector from '@/components/TagSelector';
 import PrivacyTip from '@/components/PrivacyTip';
 import ProfileCompleteness from '@/components/ProfileCompleteness';
+import ProfilePhotoHero from '@/components/ProfilePhotoHero';
 import ProfileSection from '@/components/ProfileSection';
 import ProfileField from '@/components/ProfileField';
 import ChipList from '@/components/ChipList';
@@ -398,10 +399,11 @@ export default function ProfilePage() {
                 </button>
               </div>
             ) : (
-              <div className="mt-2 flex gap-2 overflow-x-auto">
-                {profile.photos.length > 0 ? profile.photos.map((url, i) => (
-                  <Image key={i} src={`/api/photos/${encodeURIComponent(url)}`} alt={`Photo ${i + 1}`} width={80} height={80} className="shrink-0 rounded-lg object-cover" unoptimized />
-                )) : <span className="text-xs italic text-gray-600 dark:text-gray-400">Non renseigné</span>}
+              <div className="mt-2">
+                <ProfilePhotoHero
+                  photos={profile.photos}
+                  onAddClick={() => setEditingSection('photos')}
+                />
               </div>
             )}
           </ProfileSection>
