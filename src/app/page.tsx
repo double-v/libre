@@ -181,53 +181,65 @@ export default async function Home() {
       <section className="bg-blush px-6 py-16 dark:bg-coral/10">
         <div className="mx-auto max-w-xl">
           <div className="flex flex-col items-center gap-4 text-center">
-            <p className="text-6xl font-extrabold tracking-tight text-coral sm:text-7xl">0 €</p>
-            <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">Pour toujours. Pas d&apos;abonnement, pas de piège.</p>
-            <p className="max-w-sm text-sm text-gray-600 dark:text-gray-400">La concurrence facture ~240 €/an et 47 % des abonnés regrettent leur achat (UFC-Que Choisir, 2025). Libre ne facture rien, jamais.</p>
+            <p className="text-6xl font-extrabold tracking-tight text-coral sm:text-7xl">0 € 🎉</p>
+            <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Pour toujours. Pour tout le monde. Pour de vrai.
+            </p>
+            <p className="max-w-sm text-sm text-gray-600 dark:text-gray-400">
+              La concurrence facture ~240&nbsp;€/an et 47&nbsp;% des abonnés regrettent l&apos;achat (UFC-Que Choisir, 2025). Libre reste à 0&nbsp;€&nbsp;: pas d&apos;abonnement, pas de boost, pas de mauvaise surprise sur votre relevé.
+            </p>
           </div>
         </div>
       </section>
 
       {/* ====== COMMENT ÇA MARCHE ====== */}
       <section className="px-6 py-16">
-        <div className="mx-auto max-w-xl">
+        <div className="mx-auto max-w-3xl">
           <h2 className="mb-2 text-center text-3xl font-bold text-gray-900 dark:text-gray-100">
-            Comment ça marche ?
+            Comment ça marche&nbsp;?
           </h2>
           <p className="mb-10 text-center text-base text-gray-600 dark:text-gray-400">
-            Trois étapes pour rejoindre la communauté Libre.
+            Trois étapes. Aucune ne coûte un rond, aucune ne vous demande de lier votre Facebook.
           </p>
-          <div className="space-y-8">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-8">
             {[
               {
                 step: '1',
                 icon: '✍️',
-                title: 'Créez votre profil en 2 minutes',
-                detail: 'Prénom, âge, une photo, quelques mots sur vous. Pas de questionnaire interminable, pas de sync Facebook obligatoire.',
+                title: 'Créez votre profil',
+                detail:
+                  'Prénom, âge, une photo, quelques mots sur vous. On ne vous demande pas 50 infos ni de questionnaire à rallonge.',
               },
               {
                 step: '2',
                 icon: '🔍',
-                title: 'Découvrez les célibataires autour de vous',
-                detail: 'Grâce à la géolocalisation, voyez qui vous croisez au quotidien ou qui se trouve à proximité. Sans limite de likes.',
+                title: 'Voyez qui vous croisez',
+                detail:
+                  'Géolocalisation activée&nbsp;: les célibataires de votre quartier, votre métro, votre bar du vendredi. Sans limite de likes.',
               },
               {
                 step: '3',
                 icon: '💬',
-                title: 'Chattez en toute sécurité',
-                detail: 'Quand le courant passe, lancez la conversation. Vos messages sont chiffrés de bout en bout — personne d\'autre ne les lit.',
+                title: 'Échangez en privé',
+                detail:
+                  'Vos messages sont chiffrés de bout en bout. Même nous, on ne lit pas ce que vous racontez. Promis.',
               },
             ].map((item) => (
-              <div key={item.step} className="flex items-start gap-4">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-coral/10 text-2xl">
-                  {item.icon}
-                </span>
-                <div>
-                  <p className="font-semibold text-gray-800 dark:text-gray-200">
-                    <span className="text-coral">Étape {item.step}.</span> {item.title}
-                  </p>
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{item.detail}</p>
+              <div
+                key={item.step}
+                className="rounded-2xl bg-white/60 p-6 shadow-sm dark:bg-gray-900/40"
+              >
+                <div className="mb-3 flex items-center gap-3">
+                  <span
+                    aria-hidden="true"
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-coral/10 text-2xl"
+                  >
+                    {item.icon}
+                  </span>
+                  <span className="text-sm font-bold text-coral">Étape {item.step}</span>
                 </div>
+                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{item.title}</p>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{item.detail}</p>
               </div>
             ))}
           </div>
@@ -238,27 +250,37 @@ export default async function Home() {
       <section className="bg-blush px-6 py-16 dark:bg-coral/10">
         <div className="mx-auto max-w-xl">
           <h2 className="mb-2 text-center text-3xl font-bold text-gray-900 dark:text-gray-100">
-            Les apps de rencontre font payer l&apos;espoir
+            Les autres apps facturent l&apos;espoir 💸
           </h2>
           <p className="mb-10 text-center text-base text-gray-600 dark:text-gray-400">
-            Swipes bridés, boosts à l&apos;unité, prix variables selon le profil : la version gratuite est conçue pour frustrer et pousser à payer.
+            Swipes bridés, boosts à l&apos;unité, prix qui changent selon votre profil&nbsp;: la version gratuite est un piège à fric.
           </p>
 
           <div className="space-y-4">
             {[
-              { title: 'Likes limités sans abonnement', detail: 'Swipes bridés, fonctionnalités verrouillées — la version gratuite pousse à payer.' },
-              { title: 'Microtransactions à chaque action', detail: "Super Like à 5 €, Boost à l'unité... Le coût réel dépasse vite l'abonnement." },
-              { title: 'Prix variables selon votre profil', detail: 'Deux personnes voient des prix différents pour le même abonnement.' },
-              { title: 'Renouvellement automatique piège', detail: "On s'abonne un mois, on oublie d'annuler, et les prélèvements continuent." },
-            ].map((item, i) => (
-              <div key={item.title} className="rounded-xl bg-white/60 px-5 py-4 shadow-sm dark:bg-gray-900/40">
-                <div className="flex items-start gap-4">
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-coral/10 text-sm font-bold text-coral">{i + 1}</span>
-                  <div>
-                    <p className="font-semibold text-gray-800 dark:text-gray-200">{item.title}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{item.detail}</p>
-                  </div>
-                </div>
+              {
+                title: '💸 Likes bridés → frustration payante',
+                detail: "Swipes bloqués, fonctionnalités verrouillées : la version gratuite est conçue pour vous faire sortir la CB.",
+              },
+              {
+                title: '🎯 Boost à l’unité → piège à fric',
+                detail: 'Super Like à 5 €, Boost à l’unité, remontée expresse… le coût réel dépasse vite l’abonnement annuel.',
+              },
+              {
+                title: '🎰 Prix variables selon votre tête → discrim',
+                detail: 'Deux personnes voient des prix différents pour le même abonnement. Oui, vraiment.',
+              },
+              {
+                title: '🔁 Abonnement silencieux → CB oubliée',
+                detail: 'On s’abonne un mois, on oublie d’annuler, et les prélèvements continuent en douce.',
+              },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="rounded-xl bg-white/60 px-5 py-4 shadow-sm dark:bg-gray-900/40"
+              >
+                <p className="font-semibold text-gray-800 dark:text-gray-200">{item.title}</p>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{item.detail}</p>
               </div>
             ))}
           </div>
@@ -267,30 +289,50 @@ export default async function Home() {
 
       {/* ====== ARGUMENT LIBRE ====== */}
       <section className="bg-sand px-6 py-16 dark:bg-coral/5">
-        <div className="mx-auto max-w-xl text-center">
+        <div className="mx-auto max-w-3xl text-center">
           <h2 className="mb-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
-            Gratuit = plus de célibataires = plus de chances
+            Ce que Libre fait (et que les autres font pas)
           </h2>
           <p className="mb-10 text-base text-gray-600 dark:text-gray-400">
-            Pas de barrière financière, pas de fonctionnalité verrouillée, pas de boost à acheter. Tout le monde a accès à tout.
+            Trois piliers, zéro zone grise, zéro petit astérisque en bas de page.
           </p>
 
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
             {[
-              { icon: '🚶', title: 'Croisements en chemin', detail: 'Découvrez les célibataires que vous croisez au quotidien' },
-              { icon: '🔐', title: 'Chat chiffré E2E', detail: 'Le serveur ne lit jamais vos messages' },
-              { icon: '🛡️', title: 'Modération communautaire', detail: 'Signalement, blocage, badge vérifié' },
+              {
+                icon: '📍',
+                title: 'Croisements en vrai',
+                detail:
+                  'Vous voyez qui vous croisez vraiment, pas un algo qui vous vend du rêve à coup de Boost.',
+              },
+              {
+                icon: '🔒',
+                title: 'Chat E2E',
+                detail:
+                  'Même nous on ne lit pas vos messages. Et on ne veut pas, pour de vrai.',
+              },
+              {
+                icon: '🛡️',
+                title: 'Modération humaine',
+                detail:
+                  'De vraies personnes lisent les signalements. Pas un bot, pas un script, pas un LLM qui dort.',
+              },
             ].map((item) => (
-              <div key={item.title} className="rounded-xl bg-white/70 px-6 py-5 shadow-sm dark:bg-gray-900/30">
-                <div className="mb-2 text-2xl">{item.icon}</div>
-                <p className="font-semibold text-gray-800 dark:text-gray-200">{item.title}</p>
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{item.detail}</p>
+              <div
+                key={item.title}
+                className="rounded-2xl bg-white/70 p-6 text-left shadow-sm dark:bg-gray-900/30"
+              >
+                <div aria-hidden="true" className="mb-3 text-3xl">
+                  {item.icon}
+                </div>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">{item.title}</p>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{item.detail}</p>
               </div>
             ))}
           </div>
 
           <p className="mt-10 text-base text-gray-600 dark:text-gray-400">
-            Une fois le contact établi, vous choisissez comment aller plus loin. Le chat est un pont, pas une fin en soi.
+            Une fois le contact établi, vous choisissez la suite. Le chat est un pont, pas une fin en soi.
           </p>
         </div>
       </section>
