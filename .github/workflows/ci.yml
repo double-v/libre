@@ -10,20 +10,15 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgis/postgis:15-3.4
-        env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: libre_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    # Database: the DATABASE_URL secret is configured at the repo level
+    # (Settings → Secrets and variables → Actions) and points at the dev
+    # Neon database (user: neondb_owner). GH Actions does NOT auto-inject
+    # repo secrets into process.env of a step — they have to be referenced
+    # via ${{ secrets.DATABASE_URL }} in an env: block. Each step that
+    # needs the database therefore has an explicit env: block. The
+    # previous version of this workflow set the env via plain hardcoded
+    # localhost:5432 which silently shadowed the secret and broke CI.
+    # See #88 for the post-mortem.
 
     steps:
       - uses: actions/checkout@v4
@@ -37,15 +32,15 @@ jobs:
 
       - run: npx prisma generate
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/libre_test
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - run: npx prisma migrate deploy
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/libre_test
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - run: npx vitest run
         env:
-          DATABASE_URL: postgresql://test:***@localhost:5432/libre_test
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXTAUTH_SECRET: test-secret-for-ci
 
       # Playwright E2E tests are intentionally DISABLED on CI for now.
@@ -65,5 +60,4 @@ jobs:
       #
       # - run: npx playwright test
       #   env:
-      #     DATABASE_URL: postgresql://test:***@localhost:5432/libre_test
       #     NEXTAUTH_SECRET: test-secret-for-ci
