@@ -1,12 +1,29 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
+import VersionWatcher from '@/components/VersionWatcher';
+
+// Kill Vercel/Next HTML caching on the home. The page is essentially static
+// (FAQ + user count) but Google Search Console flagged the cached 5-min
+// version as "page with redirect" during the getlibre.fr -> www.getlibre.fr
+// domain history. Forcing dynamic render also keeps the canonical in sync
+// with the eventual final URL (no stale HTML pointing at a moved domain).
+// Trade-off: 1 DB read per request for the counter; the 5-min ISR version
+// made the same call once per 5 min. Acceptable for the home.
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const CANONICAL_ORIGIN = 'https://www.getlibre.fr';
+const BUILD_SHA =
+  process.env.VERCEL_GIT_COMMIT_SHA ??
+  process.env.NEXT_PUBLIC_BUILD_SHA ??
+  'dev';
 
 export const metadata: Metadata = {
   title: 'Libre — Rencontre gratuite, sans abonnement ni revente de données',
   description:
     "Application de rencontre 100% gratuite. Pas d'abonnement, pas de microtransactions, pas de revente de données. Parce que rencontrer ne devrait rien coûter.",
-  alternates: { canonical: '/' },
+  alternates: { canonical: `${CANONICAL_ORIGIN}/` },
 };
 
 /* ------------------------------------------------------------------ */
@@ -14,9 +31,12 @@ export const metadata: Metadata = {
 /* ------------------------------------------------------------------ */
 async function getUserCount() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || ''}/api/stats/public`, {
-      next: { revalidate: 300 },
-    });
+    // No revalidate: page is force-dynamic anyway, and the 5-min cache was
+    // for the old ISR HTML, not this fetch.
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL || ''}/api/stats/public`,
+      { cache: 'no-store' },
+    );
     if (!res.ok) return { totalUsers: 0, verifiedUsers: 0 };
     return res.json() as Promise<{ totalUsers: number; verifiedUsers: number }>;
   } catch {
@@ -443,6 +463,7 @@ export default async function Home() {
           Presse &amp; médias : contact@getlibre.fr
         </p>
       </footer>
+      <VersionWatcher initialSha={BUILD_SHA} />
       </main>
     </div>
   );
