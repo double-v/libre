@@ -162,13 +162,26 @@ Tickets ordonnés pour limiter les régressions (chaque PR = 1 chose testable, V
 - Pas de redesign de l'app (la home est marketing, l'app vit dans `(main)/`)
 - **Pas de tracking du tout** (zéro analytics, zéro cookies, zéro logs serveur personnalisés)
 
-## 11. Liens
+## 11. État d'avancement
+
+✅ **Chantier complet (5/5 livré, 2026-06-10)** :
+- T1 (manifesto ISR) — PR #95 + #97, mergé
+- T2 (hero redesign) — PR #100, mergé
+- T3a (sections 1+2 copy) — PR #103, mergé
+- T3b (illustrations unDraw) — PR #105, mergé
+- T4 (CTA final) — PR #107, mergé
+- T5 (FAQ + footer) — PR #110, mergé
+
+main = `310930a` après trigger deploy Vercel. Aucun ticket de suivi à ouvrir (sauf Mastodon si tu décides d'ouvrir un compte, voir issue #109).
+
+## 12. Liens
 
 - Ticket d'origine : [#66](https://github.com/double-v/libre/issues/66)
 - PR SEO compatible : #65
 - Chantiers connexes à ne pas casser : 01 (sécurité), 02 (La Place)
 - Chantier theme (couleurs overriddables) : chantier-theme PR 1+2 mergés
-- Plan détaillé d'implémentation : `docs/roadmap/chantiers/08-homepage-redesign/plan.md` (à créer post-validation spec)
+- Toutes les PRs du chantier 08 : #95, #97, #100, #103, #105, #107, #110
+- Plan détaillé d'implémentation : archivé dans l'historique git, la spec a servi de référence pour les sub-agents
 
 ---
 
@@ -178,3 +191,9 @@ Tickets ordonnés pour limiter les régressions (chaque PR = 1 chose testable, V
 - Périmètre : home complète + /manifesto
 - Rendu : force-dynamic home + ISR /manifesto
 - KPIs : mix 50/30/20 (conversion / scroll / bounce)
+- Zéro tracking (décision post-spec, T1 Plausible supprimé, KPIs subjectifs)
+- Vouvoiement cohérent
+- Pas de Mastodon / X / Instagram (choix éthique), TikTok acceptable
+- Pas de refonte du flow auth, de l'app interne, des pages légales
+- T4 = CTA final seule (CONSTAT T3a couvre déjà "ce que PAS")
+- T5 = polish FAQ + mention open source (accordions déjà en place, footer déjà structuré)
