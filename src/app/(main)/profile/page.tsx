@@ -9,6 +9,7 @@ import PrivacyTip from '@/components/PrivacyTip';
 import ProfileCompleteness from '@/components/ProfileCompleteness';
 import ProfilePhotoHero from '@/components/ProfilePhotoHero';
 import ProfileSection from '@/components/ProfileSection';
+import PublicProfilePreview from '@/components/PublicProfilePreview';
 import ProfileField from '@/components/ProfileField';
 import ChipList from '@/components/ChipList';
 import Image from 'next/image';
@@ -186,6 +187,17 @@ export default function ProfilePage() {
         <div role="alert" className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
           {error}
         </div>
+      )}
+
+      {profile && (
+        <PublicProfilePreview
+          displayName="Vous"
+          age={age ?? undefined}
+          bio={profile.bio}
+          photos={profile.photos}
+          interests={profile.interests}
+          isVerified={false}
+        />
       )}
 
       {profile && (
