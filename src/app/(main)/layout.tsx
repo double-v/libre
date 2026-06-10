@@ -164,6 +164,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       {/* Legal footer — RGPD compliance */}
       <div className="fixed bottom-16 left-0 right-0 flex items-center justify-center gap-3 bg-white/60 py-1 text-[10px] text-gray-400 backdrop-blur-sm dark:bg-gray-950/60 dark:text-gray-500">
+        <Link href="/manifesto" className="hover:text-gray-600 dark:hover:text-gray-300">Manifesto</Link>
         <Link href="/cgu" className="hover:text-gray-600 dark:hover:text-gray-300">CGU</Link>
         <Link href="/confidentialite" className="hover:text-gray-600 dark:hover:text-gray-300">Confidentialité</Link>
         <Link href="/mentions-legales" className="hover:text-gray-600 dark:hover:text-gray-300">Mentions légales</Link>
