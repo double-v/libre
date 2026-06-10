@@ -12,6 +12,7 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com",
       "style-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
       "img-src 'self' data: blob: https:",
+      "media-src 'self' https://*.giphy.com",
       "connect-src 'self' wss://ws-*.pusher.com:443 https://*.pusher.com https://challenges.cloudflare.com",
       "frame-src https://challenges.cloudflare.com",
       "frame-ancestors 'none'",
