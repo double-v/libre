@@ -36,6 +36,62 @@ export interface TrustLevelResult {
   factors: TrustFactors;
 }
 
+/**
+ * Format affichable d'un facteur (pour l'API et l'UI).
+ * `label` est en français. `delta` est signé (+/- points).
+ */
+export interface TrustFactorDisplay {
+  label: string;
+  delta: number;
+  achieved: boolean;
+}
+
+/**
+ * Convertit les facteurs techniques en liste affichable.
+ * L'ordre est significatif : on liste les positifs (du + gros au + petit) puis
+ * les négatifs, pour faciliter la lecture côté UI.
+ */
+export function factorsToDisplay(f: TrustFactors): TrustFactorDisplay[] {
+  const out: TrustFactorDisplay[] = [];
+
+  // Positifs
+  if (f.selfieVerified) out.push({ label: 'Selfie vérifié', delta: 20, achieved: true });
+  out.push({
+    label: 'Ancienneté ≥ 30 jours',
+    delta: 10,
+    achieved: f.accountAgeDays >= 30,
+  });
+  out.push({
+    label: 'Ancienneté ≥ 90 jours',
+    delta: 10,
+    achieved: f.accountAgeDays >= 90,
+  });
+  out.push({
+    label: 'Ancienneté ≥ 365 jours',
+    delta: 10,
+    achieved: f.accountAgeDays >= 365,
+  });
+  if (f.emailVerified) out.push({ label: 'Email vérifié', delta: 10, achieved: true });
+  if (f.hasTrustCircle) out.push({ label: 'Cercle déclaré', delta: 10, achieved: true });
+  if (f.hasLaPlaceMessage) out.push({ label: 'A réagi sur La Place', delta: 5, achieved: true });
+  out.push({
+    label: '1 match validé',
+    delta: 5,
+    achieved: f.validatedMatchesCount >= 1,
+  });
+  out.push({
+    label: '3 matchs validés (cumulé)',
+    delta: 5,
+    achieved: f.validatedMatchesCount >= 3,
+  });
+
+  // Négatifs
+  if (f.hasActiveReport) out.push({ label: 'Signalement actif', delta: -15, achieved: true });
+  if (f.wasBanned) out.push({ label: 'Compte banni', delta: -30, achieved: true });
+
+  return out;
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // Logique pure (testable sans DB)
 // ────────────────────────────────────────────────────────────────────────────

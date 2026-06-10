@@ -10,7 +10,7 @@
  * ils requêtent la DB et seront testés en e2e (#60) ou via mocks explicites.
  */
 import { describe, it, expect } from 'vitest';
-import { scoreFactors, bandFor, type TrustFactors } from '../compute-level';
+import { scoreFactors, bandFor, factorsToDisplay, type TrustFactors } from '../compute-level';
 
 const ZERO: TrustFactors = {
   emailVerified: false,
@@ -209,5 +209,94 @@ describe('scoreFactors + bandFor round-trip', () => {
       hasTrustCircle: true,
     };
     expect(bandFor(scoreFactors(advanced))).toBe('trusted');
+  });
+});
+
+describe('factorsToDisplay', () => {
+  it('ZERO factors : retourne 5 entrées (3 paliers + 2 paliers matchs), aucune achieved sauf celles sans condition', () => {
+    const out = factorsToDisplay(ZERO);
+    // 3 paliers d'ancienneté + 2 paliers de match = 5
+    expect(out).toHaveLength(5);
+    expect(out.every((f) => f.achieved === false)).toBe(true);
+    expect(out.every((f) => f.delta > 0)).toBe(true); // que des positifs ici
+  });
+
+  it('tous facteurs positifs : retourne 9 entrées (toutes achieved)', () => {
+    const out = factorsToDisplay({
+      emailVerified: true,
+      selfieVerified: true,
+      accountAgeDays: 400,
+      hasLaPlaceMessage: true,
+      validatedMatchesCount: 5,
+      hasTrustCircle: true,
+      hasActiveReport: false,
+      wasBanned: false,
+    });
+    // selfie + 3 paliers âge + email + cercle + LaPlace + 2 paliers matchs = 9
+    expect(out).toHaveLength(9);
+    expect(out.every((f) => f.achieved === true)).toBe(true);
+    expect(out.every((f) => f.delta > 0)).toBe(true);
+  });
+
+  it('préserve le delta signé : signalement -15, banni -30', () => {
+    const out = factorsToDisplay({
+      ...ZERO,
+      hasActiveReport: true,
+      wasBanned: true,
+    });
+    const report = out.find((f) => f.label === 'Signalement actif');
+    const banned = out.find((f) => f.label === 'Compte banni');
+    expect(report?.delta).toBe(-15);
+    expect(report?.achieved).toBe(true);
+    expect(banned?.delta).toBe(-30);
+    expect(banned?.achieved).toBe(true);
+  });
+
+  it('les négatifs apparaissent APRÈS les positifs dans la liste', () => {
+    const out = factorsToDisplay({
+      ...ZERO,
+      emailVerified: true,
+      hasActiveReport: true,
+    });
+    // Le dernier item doit être un négatif (Signalement actif, le seul négatif)
+    const lastIdx = out.length - 1;
+    expect(out[lastIdx].label).toBe('Signalement actif');
+    expect(out[lastIdx].delta).toBeLessThan(0);
+    // L'avant-dernier item doit être un positif (le "1 match" palier, non-achieved)
+    const beforeLast = out[lastIdx - 1];
+    expect(beforeLast.delta).toBeGreaterThan(0);
+  });
+
+  it('les labels sont en français (caractères accentués)', () => {
+    const out = factorsToDisplay(ZERO);
+    const label0 = out[0].label;
+    expect(label0).toMatch(/[éèàùç]/); // au moins un caractère accentué dans le 1er
+  });
+
+  it('"3 matchs validés (cumulé)" est achieved à partir de validatedMatchesCount >= 3', () => {
+    const f1 = factorsToDisplay({ ...ZERO, validatedMatchesCount: 2 });
+    const f2 = factorsToDisplay({ ...ZERO, validatedMatchesCount: 3 });
+    const f3 = factorsToDisplay({ ...ZERO, validatedMatchesCount: 10 });
+    const cumulative = (out: typeof f1) =>
+      out.find((f) => f.label.startsWith('3 matchs'))!;
+    expect(cumulative(f1).achieved).toBe(false);
+    expect(cumulative(f2).achieved).toBe(true);
+    expect(cumulative(f3).achieved).toBe(true);
+  });
+
+  it('chaque entrée a exactement 3 clés : label, delta, achieved', () => {
+    const out = factorsToDisplay({
+      emailVerified: true,
+      selfieVerified: true,
+      accountAgeDays: 100,
+      hasLaPlaceMessage: true,
+      validatedMatchesCount: 4,
+      hasTrustCircle: true,
+      hasActiveReport: true,
+      wasBanned: true,
+    });
+    for (const f of out) {
+      expect(Object.keys(f).sort()).toEqual(['achieved', 'delta', 'label']);
+    }
   });
 });
