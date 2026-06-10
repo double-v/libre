@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ProfileSectionProps {
   title: string;
@@ -9,6 +9,12 @@ interface ProfileSectionProps {
   surface?: 'white' | 'blush' | 'sand';
   complete?: boolean;
   defaultOpen?: boolean;
+  /**
+   * Stable id used to persist the open/collapsed state in localStorage
+   * across mounts. When set, the user comes back to the same expansion
+   * state they left. When omitted, state is in-memory only (back-compat).
+   */
+  sectionId?: string;
   children: React.ReactNode;
 }
 
@@ -18,6 +24,30 @@ const surfaceClasses: Record<string, string> = {
   sand: 'bg-sand dark:bg-coral-dark/20',
 };
 
+const STORAGE_PREFIX = 'libre-profile-section-';
+
+function readPersisted(sectionId: string): boolean | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_PREFIX + sectionId);
+    if (raw === '1') return true;
+    if (raw === '0') return false;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function writePersisted(sectionId: string, open: boolean): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(STORAGE_PREFIX + sectionId, open ? '1' : '0');
+  } catch {
+    // Quota exceeded or storage disabled — fail silently, the section
+    // still works in-memory for this session.
+  }
+}
+
 export default function ProfileSection({
   title,
   onEdit,
@@ -25,13 +55,35 @@ export default function ProfileSection({
   surface = 'white',
   complete = false,
   defaultOpen = true,
+  sectionId,
   children,
 }: ProfileSectionProps) {
   // When editing, the user MUST see the form. We force open and disable the toggle.
-  const forceOpen = !!editing;
+  // Sections marked complete are also always open — collapsing them would hide
+  // good content and re-open them later for no reason, so we lock them open.
+  const forceOpen = !!editing || complete;
+
+  // Initial value: persisted > defaultOpen. We seed with defaultOpen and
+  // let the effect below read the storage value on mount to avoid SSR
+  // hydration mismatches.
   const [open, setOpen] = useState(defaultOpen);
+  useEffect(() => {
+    if (!sectionId) return;
+    const persisted = readPersisted(sectionId);
+    if (persisted !== null) setOpen(persisted);
+  }, [sectionId]);
+
   const isOpen = forceOpen || open;
   const showPencil = !!onEdit && !editing;
+
+  const toggle = () => {
+    if (forceOpen) return;
+    setOpen((v) => {
+      const next = !v;
+      if (sectionId) writePersisted(sectionId, next);
+      return next;
+    });
+  };
 
   return (
     <section
@@ -40,9 +92,9 @@ export default function ProfileSection({
       <div className="flex items-center justify-between gap-2">
         <button
           type="button"
-          onClick={() => !forceOpen && setOpen((v) => !v)}
+          onClick={toggle}
           aria-expanded={isOpen}
-          aria-controls={`profile-section-${title}`}
+          aria-controls={`profile-section-${sectionId ?? title}`}
           className="flex flex-1 items-center gap-2 rounded text-left transition-colors hover:text-coral focus:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-1 disabled:cursor-default"
           disabled={forceOpen}
         >
@@ -106,7 +158,7 @@ export default function ProfileSection({
         )}
       </div>
       {isOpen && (
-        <div id={`profile-section-${title}`}>
+        <div id={`profile-section-${sectionId ?? title}`}>
           {children}
         </div>
       )}
