@@ -31,6 +31,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { startCheckinSchema } from '@/lib/trust/checkin-validators';
+import { expireOverdueCheckins } from '@/lib/trust/expire';
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,6 +67,12 @@ export async function POST(request: NextRequest) {
     const { durationMinutes } = parsed.data;
 
     const db = getDb();
+    const now = new Date();
+
+    // Lazy expiration avant le check 409 (cf. #94). Sans ça, un user
+    // qui revient après expiration pourrait être bloqué par un vieux
+    // checkin 'active' jusqu'à ce qu'un autre process le nettoie.
+    await expireOverdueCheckins(db, now);
 
     // 4. Précondition : ≥1 contact dans le cercle
     // On compte plutôt que de `findFirst` pour ne pas charger l'objet.
@@ -97,7 +104,6 @@ export async function POST(request: NextRequest) {
     // 6. Créer le checkin
     // `expiresAt` = now + durationMinutes. Le `@default(now())` du
     // schema ne s'applique pas quand on passe `triggeredAt` explicitement.
-    const now = new Date();
     const expiresAt = new Date(now.getTime() + durationMinutes * 60 * 1000);
 
     const checkin = await db.safetyCheckin.create({

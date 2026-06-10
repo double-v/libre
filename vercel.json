@@ -7,10 +7,6 @@
     {
       "path": "/api/square/reset",
       "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/circle/expire",
-      "schedule": "*/5 * * * *"
     }
   ]
 }
