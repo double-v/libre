@@ -57,3 +57,16 @@ next-env.d.ts
 
 # local debug/notes
 /todo.txt
+
+# third-party agent skills (impeccable etc.) — not project code
+/.github/skills/
+
+# marketing drafts / brainstorm / AI prompts (not code)
+/pitch-tiktok.html
+/pitch-tiktok-vertical.html
+/pitch-tiktok-vertical*.html
+/tiktok-avatar.html
+/record_tiktok.py
+/record_tiktok_v2.py
+/gptprompt-tiktokcreatif.txt
+/chatgpt-legalbbrainstorm/
