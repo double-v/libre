@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import OnlineIndicator from '@/components/OnlineIndicator';
 import VerificationBadge from '@/components/VerificationBadge';
+import { PublicTrustBadge } from '@/components/PublicTrustBadge';
 import { isOnline, formatLastSeen } from '@/lib/time';
 import Image from 'next/image';
 import { photoUrl } from '@/lib/photos';
@@ -21,12 +22,19 @@ interface PublicProfile {
   photos?: string[];
   relationshipType?: string | null;
   publicKey?: string | null;
+  /** Band du user, si dispo côté API (cf. #59 — TODO enrichir /api/users/[id] ). */
+  trustBand?: 'newcomer' | 'member' | 'trusted' | 'anchor' | null;
 }
 
 interface ProfileModalProps {
   userId: string;
   open: boolean;
   onClose: () => void;
+  /**
+   * Band de l'utilisateur qui regarde (viewer). Requis pour PublicTrustBadge
+   * (logique anti-stalk). Si null, on considère l'user comme newcomer.
+   */
+  viewerBand?: 'newcomer' | 'member' | 'trusted' | 'anchor' | null;
 }
 
 function calculateAge(birthDate: string): number {
@@ -48,7 +56,7 @@ function Spinner() {
   );
 }
 
-export default function ProfileModal({ userId, open, onClose }: ProfileModalProps) {
+export default function ProfileModal({ userId, open, onClose, viewerBand = null }: ProfileModalProps) {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -219,6 +227,11 @@ export default function ProfileModal({ userId, open, onClose }: ProfileModalProp
                   <span className="text-gray-600 dark:text-gray-400">{age}</span>
                 )}
                 <VerificationBadge isVerified={profile.isVerified} />
+                <PublicTrustBadge
+                  viewerBand={viewerBand}
+                  targetBand={profile.trustBand ?? null}
+                  size="sm"
+                />
               </div>
 
               {profile.relationshipType && (
