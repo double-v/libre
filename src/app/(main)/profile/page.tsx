@@ -209,7 +209,7 @@ export default function ProfilePage() {
         <div className="space-y-4">
 
           {/* Identité */}
-          <ProfileSection title="Identité" onEdit={() => startEdit('identity')} editing={editingSection === 'identity'}>
+          <ProfileSection title="Identité" onEdit={() => startEdit('identity')} editing={editingSection === 'identity'} complete={!!profile.birthDate && !!profile.genderIdentity}>
             <PrivacyTip tip="Utilisez un pseudo, pas votre vrai nom. Seul votre âge sera visible, pas votre date de naissance." />
             {editingSection === 'identity' ? (
               <div className="mt-3 space-y-3">
@@ -236,7 +236,7 @@ export default function ProfilePage() {
           </ProfileSection>
 
           {/* Bio */}
-          <ProfileSection title="Bio" surface="blush" onEdit={() => startEdit('bio')} editing={editingSection === 'bio'}>
+          <ProfileSection title="Bio" surface="blush" onEdit={() => startEdit('bio')} editing={editingSection === 'bio'} complete={profile.bio.length > 0}>
             {editingSection === 'bio' ? (
               <div className="mt-3 space-y-3">
                 <textarea rows={3} maxLength={500} value={editBio} onChange={(e) => setEditBio(e.target.value)} placeholder="Parlez un peu de vous..." className={INPUT_CLASS} />
@@ -249,7 +249,7 @@ export default function ProfilePage() {
           </ProfileSection>
 
           {/* Orientation & Relations */}
-          <ProfileSection title="Orientation & Relations" onEdit={() => startEdit('orientation')} editing={editingSection === 'orientation'}>
+          <ProfileSection title="Orientation & Relations" onEdit={() => startEdit('orientation')} editing={editingSection === 'orientation'} complete={profile.orientation.length > 0 || profile.relationshipType.length > 0}>
             {editingSection === 'orientation' ? (
               <div className="mt-3 space-y-4">
                 <div>
@@ -285,7 +285,7 @@ export default function ProfilePage() {
           </ProfileSection>
 
           {/* Centres d'intérêt */}
-          <ProfileSection title="Centres d'intérêt" onEdit={() => startEdit('interests')} editing={editingSection === 'interests'}>
+          <ProfileSection title="Centres d'intérêt" onEdit={() => startEdit('interests')} editing={editingSection === 'interests'} complete={profile.interests.length > 0}>
             <PrivacyTip tip="Ces centres d&apos;intérêt aident à trouver des personnes qui partagent vos passions." />
             {editingSection === 'interests' ? (
               <div className="mt-3 space-y-3">
@@ -298,7 +298,7 @@ export default function ProfilePage() {
           </ProfileSection>
 
           {/* Pratiques & Préférences */}
-          <ProfileSection title="Pratiques & Préférences" surface="sand" onEdit={() => startEdit('practices')} editing={editingSection === 'practices'}>
+          <ProfileSection title="Pratiques & Préférences" surface="sand" onEdit={() => startEdit('practices')} editing={editingSection === 'practices'} complete={profile.practices.length > 0}>
             <p className="mt-1 text-xs text-gray-700 dark:text-gray-300">
               Certaines personnes aiment explorer des pratiques sensuelles ou spécifiques. C&apos;est totalement optionnel.
             </p>
@@ -314,7 +314,7 @@ export default function ProfilePage() {
           </ProfileSection>
 
           {/* Photos */}
-          <ProfileSection title="Photos" onEdit={() => startEdit('photos')} editing={editingSection === 'photos'}>
+          <ProfileSection title="Photos" onEdit={() => startEdit('photos')} editing={editingSection === 'photos'} complete={profile.photos.length > 0}>
             <PrivacyTip tip="Évitez les photos avec des détails identifiables (lieux, plaques, etc.)." />
             {editingSection === 'photos' ? (
               <div className="mt-3 space-y-3">
@@ -409,7 +409,7 @@ export default function ProfilePage() {
           </ProfileSection>
 
           {/* Préférences de recherche */}
-          <ProfileSection title="Préférences de recherche" surface="blush" onEdit={() => startEdit('search')} editing={editingSection === 'search'}>
+          <ProfileSection title="Préférences de recherche" surface="blush" onEdit={() => startEdit('search')} editing={editingSection === 'search'} complete>
             {editingSection === 'search' ? (
               <div className="mt-3 space-y-4">
                 <div>
@@ -435,7 +435,7 @@ export default function ProfilePage() {
           </ProfileSection>
 
           {/* Liens sociaux */}
-          <ProfileSection title="Liens sociaux" onEdit={() => startEdit('social')} editing={editingSection === 'social'}>
+          <ProfileSection title="Liens sociaux" onEdit={() => startEdit('social')} editing={editingSection === 'social'} complete={Object.keys(profile.socialLinks || {}).length > 0}>
             <PrivacyTip tip="Ne les partagez qu&apos;avec des personnes de confiance." />
             {editingSection === 'social' ? (
               <div className="mt-3 space-y-3">
