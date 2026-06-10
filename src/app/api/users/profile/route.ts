@@ -13,14 +13,17 @@ export async function GET() {
 
     const user = await getDb().user.findUnique({
       where: { id: session.user.id },
-      select: { isVerified: true, profile: true },
+      select: { displayName: true, isVerified: true, profile: true },
     });
 
     if (!user) {
-      return NextResponse.json({ profile: null, isVerified: false }, { status: 200 });
+      return NextResponse.json({ profile: null, displayName: '', isVerified: false }, { status: 200 });
     }
 
-    return NextResponse.json({ profile: user.profile, isVerified: user.isVerified }, { status: 200 });
+    return NextResponse.json(
+      { profile: user.profile, displayName: user.displayName, isVerified: user.isVerified },
+      { status: 200 }
+    );
   } catch (error) {
     console.error('Profile fetch error:', error);
     return NextResponse.json(

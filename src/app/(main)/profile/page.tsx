@@ -17,6 +17,8 @@ import { INTEREST_CATEGORIES, PRACTICE_CATEGORIES, GENDER_OPTIONS } from '@/lib/
 
 interface ProfileData {
   userId: string;
+  displayName: string;
+  isVerified: boolean;
   bio: string;
   birthDate: string;
   genderIdentity: string;
@@ -65,6 +67,8 @@ function EditActions({ onSave, onCancel, saving }: { onSave: () => void; onCance
 export default function ProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [displayName, setDisplayName] = useState('');
+  const [isVerified, setIsVerified] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -97,6 +101,8 @@ export default function ProfilePage() {
       }
       const data = await res.json();
       setProfile(data.profile);
+      setDisplayName(data.displayName ?? '');
+      setIsVerified(Boolean(data.isVerified));
     } catch {
       setError('Impossible de charger le profil');
     } finally {
@@ -191,12 +197,12 @@ export default function ProfilePage() {
 
       {profile && (
         <PublicProfilePreview
-          displayName="Vous"
+          displayName={displayName || 'Vous'}
           age={age ?? undefined}
           bio={profile.bio}
           photos={profile.photos}
           interests={profile.interests}
-          isVerified={false}
+          isVerified={isVerified}
         />
       )}
 
