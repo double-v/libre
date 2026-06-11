@@ -476,7 +476,9 @@ export default async function Home() {
             <span aria-hidden="true">🔥</span> Créer mon profil
           </Link>
           <p className="mt-6 text-sm text-white/80">
-            Déjà {totalUsers > 0 ? totalUsers.toLocaleString('fr-FR') : '1 200+'} célibataires ont rejoint Libre.
+            {totalUsers > 0 && (
+              <>Déjà {totalUsers.toLocaleString('fr-FR')} célibataire{totalUsers > 1 ? 's' : ''} ont rejoint Libre.</>
+            )}
           </p>
         </div>
       </section>
