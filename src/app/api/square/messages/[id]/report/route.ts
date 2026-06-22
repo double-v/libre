@@ -18,7 +18,7 @@ export async function POST(
   const { id: messageId } = await params;
 
   // Rate limit: 3 reports per hour
-  const rl = rateLimit(`square:report:${userId}`, limits.squareReport.limit, limits.squareReport.windowMs);
+  const rl = await rateLimit(`square:report:${userId}`, limits.squareReport.limit, limits.squareReport.windowMs);
   if (!rl.success) {
     return NextResponse.json(
       { error: 'Trop de signalements. Réessayez plus tard.' },

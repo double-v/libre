@@ -37,7 +37,7 @@ export async function POST(
   const { id: messageId } = await params;
 
   // Rate limit : 5 réactions par minute
-  const rl = rateLimit(`square:react:${userId}`, limits.squareReaction.limit, limits.squareReaction.windowMs);
+  const rl = await rateLimit(`square:react:${userId}`, limits.squareReaction.limit, limits.squareReaction.windowMs);
   if (!rl.success) {
     return NextResponse.json(
       { error: 'Trop de réactions. Réessayez dans un moment.' },

@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   // Rate limit by IP: 5 attempts per minute. Protects against flood
   // of password-reset emails (each one costs us a Resend API call).
   const ip = getClientIp(request);
-  const rl = rateLimit(`auth:forgot:${ip}`, limits.auth.limit, limits.auth.windowMs);
+  const rl = await rateLimit(`auth:forgot:${ip}`, limits.auth.limit, limits.auth.windowMs);
   if (!rl.success) {
     return NextResponse.json(
       { message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.' },

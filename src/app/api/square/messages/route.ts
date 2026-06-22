@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   const userId = session.user.id;
 
   // Rate limiting
-  const rl = rateLimit(`square:${userId}`, limits.squareMessage.limit, limits.squareMessage.windowMs);
+  const rl = await rateLimit(`square:${userId}`, limits.squareMessage.limit, limits.squareMessage.windowMs);
   if (!rl.success) {
     return NextResponse.json(
       { error: 'Trop de messages. Réessayez dans un moment.' },

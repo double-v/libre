@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const rl = rateLimit(`pusher:${session.user.id}`, limits.api.limit, limits.api.windowMs);
+    const rl = await rateLimit(`pusher:${session.user.id}`, limits.api.limit, limits.api.windowMs);
     if (!rl.success) {
       return new NextResponse('Too Many Requests', { status: 429 });
     }

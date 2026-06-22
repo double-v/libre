@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   // Rate limit by IP: 5 attempts per minute. Protects against spam of
   // verification emails to arbitrary recipients.
   const ip = getClientIp(request);
-  const rl = rateLimit(`auth:verify:${ip}`, limits.auth.limit, limits.auth.windowMs);
+  const rl = await rateLimit(`auth:verify:${ip}`, limits.auth.limit, limits.auth.windowMs);
   if (!rl.success) {
     return NextResponse.json(
       { message: 'Si un compte existe avec cet email, un lien de vérification a été envoyé.' },

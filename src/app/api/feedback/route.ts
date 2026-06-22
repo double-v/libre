@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
     const ip = getClientIp(request);
     const rlKey = session?.user?.id ? `feedback:user:${session.user.id}` : `feedback:ip:${ip}`;
-    const rl = rateLimit(rlKey, FEEDBACK_LIMIT, FEEDBACK_WINDOW_MS);
+    const rl = await rateLimit(rlKey, FEEDBACK_LIMIT, FEEDBACK_WINDOW_MS);
     if (!rl.success) {
       return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
     }

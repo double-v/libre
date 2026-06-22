@@ -118,7 +118,7 @@ export const authOptions: NextAuthOptions = {
         // against targeted brute-force on a specific account.
         const normalizedForRateLimit = normalizeEmail(credentials.email as string);
         const { rateLimit, limits } = await import('@/lib/rate-limit');
-        const rl = rateLimit(`auth:signin:${normalizedForRateLimit}`, limits.auth.limit, limits.auth.windowMs);
+        const rl = await rateLimit(`auth:signin:${normalizedForRateLimit}`, limits.auth.limit, limits.auth.windowMs);
         if (!rl.success) {
           throw new Error('TOO_MANY_ATTEMPTS');
         }
