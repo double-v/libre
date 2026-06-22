@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { fileTypeFromBuffer } from 'file-type';
 
@@ -74,4 +74,26 @@ export async function getPhotoSignedUrl(key: string): Promise<string> {
 
 export function isR2Configured(): boolean {
   return !!(process.env.R2_ACCOUNT_ID && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY && process.env.R2_BUCKET_NAME);
+}
+
+/**
+ * Supprime un objet R2 par sa clé.
+ * Appelée quand un utilisateur supprime une photo de son profil
+ * (cf. issue #142) — sans cela, l'objet reste accessible via
+ * GET /api/photos/[key] tant que la clé est connue, et s'accumule
+ * comme stockage orphelin.
+ *
+ * Erreurs R2 (réseau, permissions) sont levées — l'appelant décide
+ * s'il bloque la suppression DB ou s'il log et continue.
+ */
+export async function deletePhoto(key: string): Promise<void> {
+  const client = getR2Client();
+  if (!client) {
+    throw new Error('Stockage non configuré.');
+  }
+
+  await client.send(new DeleteObjectCommand({
+    Bucket: process.env.R2_BUCKET_NAME!,
+    Key: key,
+  }));
 }
