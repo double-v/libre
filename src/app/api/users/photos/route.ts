@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getDb } from '@/lib/db';
-import { uploadPhoto, isR2Configured } from '@/lib/r2';
+import { uploadPhoto, deletePhoto, isR2Configured } from '@/lib/r2';
 import { rateLimit, limits } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
@@ -76,6 +76,19 @@ export async function DELETE(request: Request) {
       where: { userId: session.user.id },
       data: { photos: profile.photos.filter((p) => p !== photoKey) },
     });
+
+    // Supprime aussi l'objet R2 (cf. issue #142). Sans cela, l'objet reste
+    // accessible via GET /api/photos/[key] tant que la clé est connue, et
+    // s'accumule comme stockage orphelin. Erreurs R2 (réseau, permissions)
+    // sont loggées mais ne bloquent pas la suppression DB — l'objet orphelin
+    // sera nettoyé par le cron mensuel de nettoyage (à venir).
+    if (profile.photos.includes(photoKey)) {
+      try {
+        await deletePhoto(photoKey);
+      } catch (err) {
+        console.error('[photos] R2 delete failed for key:', photoKey, err instanceof Error ? err.message : 'unknown error');
+      }
+    }
 
     return NextResponse.json({ photos: updated.photos }, { status: 200 });
   } catch (error) {
