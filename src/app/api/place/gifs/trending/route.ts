@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   // Same rate-limit as search
   const userId = session.user.id;
-  const rl = rateLimit(
+  const rl = await rateLimit(
     `gifs:trending:${userId}`,
     limits.discover.limit,
     limits.discover.windowMs,

@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const rl = rateLimit(`discover:${session.user.id}`, limits.discover.limit, limits.discover.windowMs);
+    const rl = await rateLimit(`discover:${session.user.id}`, limits.discover.limit, limits.discover.windowMs);
     if (!rl.success) {
       return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
     }

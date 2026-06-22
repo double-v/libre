@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   // Rate-limit per user: 30 searches/min is plenty for a UX picker
   const userId = session.user.id;
-  const rl = rateLimit(
+  const rl = await rateLimit(
     `gifs:search:${userId}`,
     limits.discover.limit,
     limits.discover.windowMs,

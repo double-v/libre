@@ -41,7 +41,7 @@ vi.mock('@/lib/db', () => ({
 
 vi.mock('@/lib/rate-limit', () => ({
   __esModule: true,
-  rateLimit: vi.fn().mockReturnValue({ success: true, remaining: 59, resetAt: Date.now() + 60_000 }),
+  rateLimit: vi.fn().mockResolvedValue({ success: true, remaining: 59, resetAt: Date.now() + 60_000 }),
   limits: { api: { limit: 60, windowMs: 60_000 } },
 }));
 

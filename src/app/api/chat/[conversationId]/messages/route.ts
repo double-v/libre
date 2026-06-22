@@ -85,7 +85,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const rl = rateLimit(`message:${session.user.id}`, limits.message.limit, limits.message.windowMs);
+    const rl = await rateLimit(`message:${session.user.id}`, limits.message.limit, limits.message.windowMs);
     if (!rl.success) {
       return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
     }

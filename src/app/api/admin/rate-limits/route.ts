@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid "since" timestamp' }, { status: 400 });
   }
 
-  const hits = getRecentRateLimitHits().filter((h) => h.at >= since);
+  const hits = (await getRecentRateLimitHits()).filter((h) => h.at >= since);
 
   // Group by key to make spikes obvious. The key format is "<scope>:<id>"
   // (e.g. "geoloc:<userId>", "export:<userId>"), so a key can be mapped
