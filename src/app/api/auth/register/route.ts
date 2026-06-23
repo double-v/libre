@@ -9,6 +9,23 @@ import { sendVerificationEmail } from '@/lib/email-send';
 import { rateLimit, limits } from '@/lib/rate-limit';
 import { getClientIp } from '@/lib/client-ip';
 
+// Startup validation: TURNSTILE_SECRET_KEY and TURNSTILE_SITE_KEY must be
+// configured together. The site key is needed on the client widget, the
+// secret key on the server. If only one is present, log a warning so the
+// misconfiguration is visible in logs — but don't crash, so a partial
+// deployment doesn't take the whole API down.
+if (process.env.TURNSTILE_SECRET_KEY && !process.env.TURNSTILE_SITE_KEY) {
+  console.warn(
+    '[Turnstile] TURNSTILE_SECRET_KEY is set but TURNSTILE_SITE_KEY is missing. ' +
+      'The captcha widget will not render on the client. Both must be configured together.',
+  );
+} else if (process.env.TURNSTILE_SITE_KEY && !process.env.TURNSTILE_SECRET_KEY) {
+  console.warn(
+    '[Turnstile] TURNSTILE_SITE_KEY is set but TURNSTILE_SECRET_KEY is missing. ' +
+      'Server-side verification cannot run. Both must be configured together.',
+  );
+}
+
 export async function POST(request: Request) {
   // Rate limit by IP: 5 attempts per minute (see #27). Protects against
   // bot-driven account creation spam.
@@ -45,14 +62,22 @@ export async function POST(request: Request) {
     }
 
     // Verify Turnstile captcha.
-    // In production, ALWAYS require Turnstile — even if the env var is
-    // missing (verifyTurnstile will throw). In dev AND in Vercel preview
-    // deploys (which set NODE_ENV=production but lack a real Turnstile
-    // key), allow bypass when the env var is not set, so CI E2E tests
-    // can run.
-    const isProd = process.env.NODE_ENV === 'production';
-    const isVercelPreview = process.env.VERCEL_ENV === 'preview';
-    const requireTurnstile = (isProd && !isVercelPreview) || process.env.TURNSTILE_SECRET_KEY;
+    //
+    // Turnstile is required whenever TURNSTILE_SECRET_KEY is configured.
+    // This naturally covers production AND Vercel preview deploys (which
+    // set NODE_ENV=production and expose publicly-accessible URLs that
+    // bots can spam). In local dev (no secret configured), the captcha
+    // is skipped so CI E2E tests can run without a Turnstile key.
+    //
+    // Previously, previews were explicitly excluded via
+    // `VERCEL_ENV === 'preview'`, which created a bypass on publicly
+    // accessible preview URLs (issue #144).
+    //
+    // Both TURNSTILE_SECRET_KEY and TURNSTILE_SITE_KEY must be set
+    // together — the site key is needed on the client widget and the
+    // secret key on the server. If only one is configured, log a
+    // warning at module load (see below) but don't crash.
+    const requireTurnstile = !!process.env.TURNSTILE_SECRET_KEY;
     if (requireTurnstile) {
       if (!turnstileToken) {
         return NextResponse.json(
@@ -69,7 +94,14 @@ export async function POST(request: Request) {
       }
     }
 
-    // Check device limit
+    // Check device limit.
+    //
+    // NOTE: This is a soft deterrent against multi-account creation, NOT
+    // a real protection. A determined attacker can simply generate a
+    // new random deviceId per request to bypass this limit entirely.
+    // The primary anti-bot defence is Turnstile (above) combined with
+    // the per-IP rate limiter. The deviceId check only raises the bar
+    // for naive scripts that reuse the same identifier.
     if (deviceId) {
       const deviceCount = await getDb().user.count({
         where: { deviceId },
@@ -96,7 +128,7 @@ export async function POST(request: Request) {
 
     const user = await getDb().user.create({
       data: {
-        email: email.toLowerCase().trim(),
+        email: normalizedEmail,
         normalizedEmail,
         displayName: displayName.trim(),
         passwordHash,
@@ -146,9 +178,9 @@ export async function POST(request: Request) {
     });
 
     // Send verification email
-    const verifyToken = await createVerificationToken(user.id, email.toLowerCase().trim());
+    const verifyToken = await createVerificationToken(user.id, normalizedEmail);
     const verifyUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${verifyToken}`;
-    await sendVerificationEmail(email.toLowerCase().trim(), verifyUrl);
+    await sendVerificationEmail(normalizedEmail, verifyUrl);
 
     return NextResponse.json({ user }, { status: 201 });
   } catch (error) {
