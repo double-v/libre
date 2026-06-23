@@ -30,6 +30,23 @@ export async function GET(request: NextRequest) {
     const ageMaxFilter = parseInt(searchParams.get('ageMax') || '99', 10);
     const interestsFilter = searchParams.get('interests')?.split(',').filter(Boolean) || [];
 
+    // Push filters into the Prisma where clause (issue #147 — previously these
+    // were applied client-side after fetch, which broke pagination: the DB
+    // returned PAGE_SIZE+1 rows, the JS filter eliminated most, and the user
+    // got a sparse feed instead of a full page).
+    const now = Date.now();
+    const ageMaxBirthDate = new Date(now - ageMaxFilter * 365.25 * 24 * 60 * 60 * 1000);
+    const ageMinBirthDate = new Date(now - ageMinFilter * 365.25 * 24 * 60 * 60 * 1000);
+
+    const filterWhere = {
+      ...(genderFilter.length > 0 ? { genderIdentity: { in: genderFilter } } : {}),
+      ...(orientationFilter.length > 0 ? { orientation: { hasSome: orientationFilter } } : {}),
+      ...(interestsFilter.length > 0 ? { interests: { hasSome: interestsFilter } } : {}),
+      ...(ageMinFilter > 18 || ageMaxFilter < 99
+        ? { birthDate: { gte: ageMaxBirthDate, lte: ageMinBirthDate } }
+        : {}),
+    };
+
     // Get current user's profile for nearby tab
     const myProfile = await getDb().profile.findUnique({ where: { userId } });
 
@@ -53,6 +70,8 @@ export async function GET(request: NextRequest) {
     const excludeIds = [...blockedIds, ...likedIds];
 
     // Build base where clause: exclude self, banned, invisible, blocked, already-liked
+    // + push DB-side filters (issue #147: gender, orientation, age, interests
+    // are now in the Prisma where clause, not filtered client-side).
     const baseWhere = {
       user: {
         id: { not: userId },
@@ -60,6 +79,7 @@ export async function GET(request: NextRequest) {
       },
       invisibleMode: false,
       userId: { notIn: excludeIds },
+      ...filterWhere,
     };
 
     let profiles: Array<{
@@ -185,20 +205,10 @@ export async function GET(request: NextRequest) {
       }));
     }
 
-    // Apply client-side filters (gender, orientation, age, interests)
-    const filtered = profiles.filter((p) => {
-      if (genderFilter.length > 0 && !genderFilter.includes(p.genderIdentity)) return false;
-      if (orientationFilter.length > 0 && !p.orientation.some((o) => orientationFilter.includes(o))) return false;
-      if (p.age !== null) {
-        if (p.age < ageMinFilter || p.age > ageMaxFilter) return false;
-      }
-      if (interestsFilter.length > 0 && !p.interests.some((i) => interestsFilter.includes(i))) return false;
-      return true;
-    });
-
     // Pagination: we fetched PAGE_SIZE+1, if we have more than PAGE_SIZE there's a next page
-    const hasMore = filtered.length > PAGE_SIZE;
-    const users = filtered.slice(0, PAGE_SIZE);
+    // (issue #147: filters are now in the DB query, so profiles is already filtered)
+    const hasMore = profiles.length > PAGE_SIZE;
+    const users = profiles.slice(0, PAGE_SIZE);
     const nextCursor = hasMore && users.length > 0 ? users[users.length - 1].userId : null;
 
     return NextResponse.json({ users, nextCursor });
