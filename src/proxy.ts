@@ -118,7 +118,7 @@ export async function proxy(request: NextRequest) {
   try {
     const user = await getDb().user.findUnique({
       where: { id: token.id as string },
-      select: { id: true, isBanned: true },
+      select: { id: true, isBanned: true, role: true },
     });
 
     if (!user) {
@@ -141,6 +141,16 @@ export async function proxy(request: NextRequest) {
       response.cookies.delete('next-auth.session-token');
       response.cookies.delete('__Secure-next-auth.session-token');
       return response;
+    }
+
+    // Defense-in-depth for admin pages: /admin/* pages are rendered server-
+    // side and rely on admin API calls for data, but a non-admin who guesses
+    // the URL could still load the page shell (and any client-side state).
+    // Redirect non-admins to / so the admin surface is never exposed, even
+    // transiently. The DB role is authoritative — the JWT may be stale after
+    // a role change (#155).
+    if (pathname.startsWith('/admin') && user.role?.toUpperCase() !== 'ADMIN') {
+      return NextResponse.redirect(new URL('/', request.url));
     }
   } catch (err) {
     // On DB error, let the request through. The downstream page will surface

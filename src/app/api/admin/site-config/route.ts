@@ -1,18 +1,21 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
-import { authOptions } from '@/lib/auth';
 import { isValidSiteTheme } from '@/lib/site-themes';
 
 const SINGLETON_ID = 'singleton';
 
 export async function GET() {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+  // Use the shared requireAdmin() helper so the DB role is re-checked on
+  // every call (JWT may be stale after a role change). Returns 404 to hide
+  // the route's existence from non-admins, consistent with all other
+  // /api/admin/* routes. Previously this used an inline JWT-only check
+  // (session.user.role !== 'ADMIN') which trusts the cached JWT and
+  // returns 403 — weaker than the rest of the admin surface (#155).
+  const adminResult = await requireAdmin();
+  if (!isAdminSession(adminResult)) return adminResult;
 
+  try {
     const config = await getDb().siteConfig.findUnique({
       where: { id: SINGLETON_ID },
     });
@@ -32,13 +35,11 @@ export async function GET() {
   }
 }
 
-export async function PUT(request: Request) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+export async function PUT(request: NextRequest) {
+  const adminResult = await requireAdmin();
+  if (!isAdminSession(adminResult)) return adminResult;
 
+  try {
     const body = await request.json();
     const themeId = body?.currentTheme;
 
@@ -53,12 +54,12 @@ export async function PUT(request: Request) {
       where: { id: SINGLETON_ID },
       update: {
         currentTheme: themeId,
-        updatedBy: session.user.id,
+        updatedBy: adminResult.userId,
       },
       create: {
         id: SINGLETON_ID,
         currentTheme: themeId,
-        updatedBy: session.user.id,
+        updatedBy: adminResult.userId,
       },
     });
 
