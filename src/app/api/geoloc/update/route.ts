@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { geolocUpdateSchema } from '@/lib/validators';
-import { fuzzLocation, haversineDistance, roundDistance, isWithinRadius } from '@/lib/geoloc';
+import { haversineDistance, roundDistance, isWithinRadius } from '@/lib/geoloc';
 import { rateLimit, limits } from '@/lib/rate-limit';
 
 const CROSSING_RADIUS_M = 500;
@@ -34,16 +34,35 @@ export async function POST(request: Request) {
     const { latitude, longitude } = parsed.data;
     const userId = session.user.id;
 
-    // Store fuzzed coordinates — never persist raw GPS
-    const fuzzed = fuzzLocation(latitude, longitude);
+    // Round coordinates to 2 decimal places (~1km precision) before storing.
+    // This prevents exact-location doxxing while keeping enough precision
+    // for a dating app's nearby feature. (issue #153)
+    const safeLat = Math.round(latitude * 100) / 100;
+    const safeLng = Math.round(longitude * 100) / 100;
+
+    // Check invisible mode — don't store geoloc if user is invisible (#153)
+    const existingProfile = await getDb().profile.findUnique({ where: { userId } });
+    if (existingProfile?.invisibleMode) {
+      return NextResponse.json({ throttled: true, invisible: true });
+    }
+
+    // Throttle: don't update geoloc more than once per 10 minutes (#153)
+    const lastGeolocAt = existingProfile?.lastGeolocAt ?? existingProfile?.updatedAt;
+    if (lastGeolocAt) {
+      const sinceLastUpdate = Date.now() - new Date(lastGeolocAt).getTime();
+      if (sinceLastUpdate < 10 * 60 * 1000) {
+        return NextResponse.json({ throttled: true });
+      }
+    }
 
     await getDb().profile.upsert({
       where: { userId },
-      update: { lastKnownLat: fuzzed.lat, lastKnownLng: fuzzed.lng },
+      update: { lastKnownLat: safeLat, lastKnownLng: safeLng, lastGeolocAt: new Date() },
       create: {
         userId,
-        lastKnownLat: fuzzed.lat,
-        lastKnownLng: fuzzed.lng,
+        lastKnownLat: safeLat,
+        lastKnownLng: safeLng,
+        lastGeolocAt: new Date(),
       },
     });
 
@@ -126,14 +145,13 @@ export async function POST(request: Request) {
       }
 
       // Step 3: one createMany for the new encounters — replaces N create calls
-      const fuzzed = fuzzLocation(latitude, longitude);
       const newEncounters = candidates
         .filter((c) => !alreadyEncountered.has(c.otherUserId))
         .map((c) => ({
           userA: userId,
           userB: c.otherUserId,
-          latitude: fuzzed.lat,
-          longitude: fuzzed.lng,
+          latitude: safeLat,
+          longitude: safeLng,
           distanceM: roundDistance(c.distanceM),
         }));
 

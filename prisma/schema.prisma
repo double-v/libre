@@ -78,6 +78,7 @@ model Profile {
   invisibleMode    Boolean   @default(false)
   lastKnownLat     Float     @default(0) @map("last_known_lat")
   lastKnownLng     Float     @default(0) @map("last_known_lng")
+  lastGeolocAt     DateTime? @map("last_geoloc_at")
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
