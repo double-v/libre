@@ -12,7 +12,7 @@ function isAtLeast18(birthDateStr: string): boolean {
   return birthDate <= minDate;
 }
 
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/;
 
 const VALID_GENDER_VALUES = GENDER_OPTIONS.map(g => g.value);
 
@@ -28,7 +28,7 @@ export const registerSchema = z.object({
   email: z.string({ message: 'Veuillez entrer un email valide' }).email('Veuillez entrer un email valide'),
   password: z.string({ message: 'Veuillez entrer un mot de passe' }).regex(
     passwordRegex,
-    '8 caractères min, avec majuscule, minuscule et chiffre',
+    '8 caractères min, avec majuscule, minuscule, chiffre et caractère spécial',
   ),
   displayName: z.string({ message: 'Veuillez entrer un pseudo' }).min(1, 'Le pseudo est requis').max(50, 'Le pseudo ne peut pas dépasser 50 caractères').transform((s) => s.trim()),
   turnstileToken: z.string().nullable().optional(),
