@@ -96,7 +96,7 @@ export async function POST(request: Request) {
 
     const user = await getDb().user.create({
       data: {
-        email: email.toLowerCase().trim(),
+        email: normalizedEmail,
         normalizedEmail,
         displayName: displayName.trim(),
         passwordHash,
@@ -146,9 +146,9 @@ export async function POST(request: Request) {
     });
 
     // Send verification email
-    const verifyToken = await createVerificationToken(user.id, email.toLowerCase().trim());
+    const verifyToken = await createVerificationToken(user.id, normalizedEmail);
     const verifyUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${verifyToken}`;
-    await sendVerificationEmail(email.toLowerCase().trim(), verifyUrl);
+    await sendVerificationEmail(normalizedEmail, verifyUrl);
 
     return NextResponse.json({ user }, { status: 201 });
   } catch (error) {
