@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
       }));
     } else if (tab === 'nearby') {
       if (!myProfile || (myProfile.lastKnownLat === 0 && myProfile.lastKnownLng === 0)) {
-        return NextResponse.json({ users: [], nextCursor: null });
+        return NextResponse.json({ users: [], nextCursor: null, reason: 'geoloc_required' });
       }
       const maxDist = myProfile.maxDistanceKm || 50;
       const allProfiles = await getDb().profile.findMany({
@@ -210,6 +210,12 @@ export async function GET(request: NextRequest) {
     const hasMore = profiles.length > PAGE_SIZE;
     const users = profiles.slice(0, PAGE_SIZE);
     const nextCursor = hasMore && users.length > 0 ? users[users.length - 1].userId : null;
+
+    // issue #137: distinguish "geoloc active but nobody nearby" from other empty tabs,
+    // so the frontend doesn't show a generic empty state when geoloc is the real blocker.
+    if (tab === 'nearby' && users.length === 0) {
+      return NextResponse.json({ users, nextCursor, reason: 'empty_feed' });
+    }
 
     return NextResponse.json({ users, nextCursor });
   } catch (error) {
