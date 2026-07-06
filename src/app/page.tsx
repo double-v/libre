@@ -160,19 +160,54 @@ export default async function Home() {
               aria-hidden="true"
             />
             <Image
-              src="/images/hero-lifestyle.jpg"
-              alt=""
+              src="/images/hero-couple.jpg"
+              alt="Un couple enlacé dans la lumière chaude du soir"
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
               priority
               quality={80}
               className="relative object-cover"
             />
-            {/* Light overlay so the photo stays warm and integrates with the gradient fallback */}
+            {/* Voile coral discret en bas pour ancrer la photo dans la marque */}
             <div
-              className="absolute inset-0 bg-gradient-to-tr from-blush/20 via-transparent to-transparent"
+              className="absolute inset-0 bg-gradient-to-t from-coral-dark/25 via-transparent to-transparent"
               aria-hidden="true"
             />
+          </div>
+        </div>
+      </section>
+
+      {/* ====== MOMENTS (vraies rencontres) ====== */}
+      <section className="px-6 pb-4 pt-2 sm:pb-8">
+        <div className="mx-auto max-w-3xl">
+          <h2 className="mb-2 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+            Des humains, pas des profils.
+          </h2>
+          <p className="mx-auto mb-8 max-w-xl text-center text-base text-gray-600 dark:text-gray-400">
+            De vraies personnes, à leur rythme. Pas de swipe compulsif, pas de score de
+            désirabilité — juste des rencontres, et la liberté de choisir comment aller plus loin.
+          </p>
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            {[
+              { src: '/images/moment-1.jpg', alt: 'Un couple qui s’enlace en riant' },
+              { src: '/images/moment-2.jpg', alt: 'Deux personnes complices, un fou rire' },
+              { src: '/images/moment-3.jpg', alt: 'Un couple joue contre joue, tendrement' },
+            ].map((m, i) => (
+              <div
+                key={m.src}
+                className={`relative aspect-[3/4] overflow-hidden rounded-2xl shadow-sm ${i === 1 ? 'sm:-translate-y-4' : ''}`}
+              >
+                <Image
+                  src={m.src}
+                  alt={m.alt}
+                  fill
+                  sizes="(max-width: 640px) 33vw, 220px"
+                  quality={75}
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-coral-dark/20 to-transparent" aria-hidden="true" />
+              </div>
+            ))}
           </div>
         </div>
       </section>
