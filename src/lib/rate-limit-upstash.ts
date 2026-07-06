@@ -47,7 +47,11 @@ function recordHitMemory(key: string, limit: number, windowMs: number): void {
 
 // --- Upstash clients (lazy singletons) ---
 
-let ratelimiter: Ratelimit | null = null;
+// Un limiter par couple (limit, windowMs). BUG corrigé : l'ancien code créait
+// un unique limiter câblé en dur sur slidingWindow(1, '60 s'), qui ignorait
+// les presets → TOUS les endpoints étaient limités à 1 req/60 s en prod
+// (Découvrir, géoloc, messages…). On construit désormais un limiter par preset.
+const ratelimiters = new Map<string, Ratelimit>();
 let redisClient: Redis | null = null;
 
 function isUpstashConfigured(): boolean {
@@ -62,18 +66,21 @@ function getRedisClient(): Redis | null {
   return redisClient;
 }
 
-function getRatelimiter(): Ratelimit | null {
+function getRatelimiter(limit: number, windowMs: number): Ratelimit | null {
   if (!isUpstashConfigured()) return null;
-  if (!ratelimiter) {
-    const redis = getRedisClient()!;
-    ratelimiter = new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(1, '60 s'),
+  const cacheKey = `${limit}:${windowMs}`;
+  let limiter = ratelimiters.get(cacheKey);
+  if (!limiter) {
+    const windowSeconds = Math.max(1, Math.round(windowMs / 1000));
+    limiter = new Ratelimit({
+      redis: getRedisClient()!,
+      limiter: Ratelimit.slidingWindow(limit, `${windowSeconds} s`),
       prefix: 'libre:rl',
       analytics: false,
     });
+    ratelimiters.set(cacheKey, limiter);
   }
-  return ratelimiter;
+  return limiter;
 }
 
 // --- API publique ---
@@ -89,7 +96,7 @@ export async function rateLimit(
   limit: number,
   windowMs: number,
 ): Promise<RateLimitResult> {
-  const limiter = getRatelimiter();
+  const limiter = getRatelimiter(limit, windowMs);
   if (limiter) {
     try {
       const result = await limiter.limit(key);

@@ -85,7 +85,7 @@ export default function DiscoverPage() {
   const [users, setUsers] = useState<DiscoveredUser[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [errorKind, setErrorKind] = useState<'none' | 'rate' | 'generic'>('none');
   const [passedIds, setPassedIds] = useState<Set<string>>(new Set());
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [nearbyReason, setNearbyReason] = useState<NearbyReason | null>(null);
@@ -104,11 +104,11 @@ export default function DiscoverPage() {
     async (reset: boolean) => {
       const fetchId = ++fetchIdRef.current;
       setLoading(true);
-      setError(false);
+      setErrorKind('none');
       try {
         const url = buildUrl(feedTab, reset ? undefined : cursor ?? undefined, filters);
         const res = await fetch(url);
-        if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error(res.status === 429 ? 'rate' : 'generic');
         if (fetchId !== fetchIdRef.current) return; // stale
         const data = await res.json();
         if (reset) {
@@ -118,8 +118,10 @@ export default function DiscoverPage() {
         }
         setCursor(data.nextCursor);
         setNearbyReason(data.reason ?? null);
-      } catch {
-        if (fetchId === fetchIdRef.current) setError(true);
+      } catch (e) {
+        if (fetchId === fetchIdRef.current) {
+          setErrorKind(e instanceof Error && e.message === 'rate' ? 'rate' : 'generic');
+        }
       } finally {
         if (fetchId === fetchIdRef.current) setLoading(false);
       }
@@ -137,19 +139,21 @@ export default function DiscoverPage() {
     setGeoError('');
     const fetchId = ++fetchIdRef.current;
     setLoading(true);
-    setError(false);
+    setErrorKind('none');
     (async () => {
       try {
         const url = buildUrl(feedTab, undefined, filters);
         const res = await fetch(url);
-        if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error(res.status === 429 ? 'rate' : 'generic');
         if (fetchId !== fetchIdRef.current) return;
         const data = await res.json();
         setUsers(data.users);
         setCursor(data.nextCursor);
         setNearbyReason(data.reason ?? null);
-      } catch {
-        if (fetchId === fetchIdRef.current) setError(true);
+      } catch (e) {
+        if (fetchId === fetchIdRef.current) {
+          setErrorKind(e instanceof Error && e.message === 'rate' ? 'rate' : 'generic');
+        }
       } finally {
         if (fetchId === fetchIdRef.current) setLoading(false);
       }
@@ -357,8 +361,19 @@ export default function DiscoverPage() {
         <div className="flex justify-center py-12">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-coral border-t-transparent" />
         </div>
-      ) : error ? (
-        <p className="py-8 text-center text-sm text-red-500">Une erreur est survenue, veuillez réessayer</p>
+      ) : errorKind !== 'none' && visibleUsers.length === 0 ? (
+        <div className="animate-fade-in rounded-xl border border-coral/20 bg-blush p-6 text-center dark:border-coral/20 dark:bg-coral/5">
+          <p className="text-gray-700 dark:text-gray-300">
+            {errorKind === 'rate'
+              ? 'Doucement 🙂 tu vas un peu vite. Réessaie dans quelques secondes.'
+              : 'Impossible de charger les profils pour le moment.'}
+          </p>
+          <div className="mt-4">
+            <Button type="button" variant="secondary" onClick={() => fetchPage(true)} loading={loading}>
+              Réessayer
+            </Button>
+          </div>
+        </div>
       ) : segment === 'nearby' && nearbyReason === 'geoloc_required' ? (
         <div className="animate-fade-in rounded-xl border border-dashed border-coral/40 bg-blush p-6 text-center dark:border-coral/30 dark:bg-coral/5">
           <p className="mb-4 text-gray-700 dark:text-gray-300">
