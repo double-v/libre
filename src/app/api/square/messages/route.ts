@@ -6,6 +6,7 @@ import { getTodayThemeConfig, getPseudonymFromConfig } from '@/lib/square/themes
 import { checkContent } from '@/lib/square/moderation';
 import { rateLimit, limits } from '@/lib/rate-limit';
 import { getMessages, addMessage, getReactionsForMessages } from '@/lib/square/store';
+import { isSquareEnabled } from '@/lib/square/config';
 import { squareMessageSchema } from '@/lib/square/validators';
 import type { SquareMessage } from '@/lib/square/store';
 
@@ -31,6 +32,11 @@ export async function POST(request: NextRequest) {
   }
 
   const userId = session.user.id;
+
+  // La Place coupée globalement par l'admin : plus d'écriture possible.
+  if (!(await isSquareEnabled())) {
+    return NextResponse.json({ error: 'La Place est en pause pour le moment.' }, { status: 403 });
+  }
 
   // Rate limiting
   const rl = await rateLimit(`square:${userId}`, limits.squareMessage.limit, limits.squareMessage.windowMs);

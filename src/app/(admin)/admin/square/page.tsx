@@ -4,6 +4,7 @@ import { useState } from 'react';
 import AdminSquareBannedWords from '@/components/AdminSquareBannedWords';
 import AdminSquareThemes from '@/components/AdminSquareThemes';
 import AdminSquareReports from '@/components/AdminSquareReports';
+import AdminSquareAvailability from '@/components/AdminSquareAvailability';
 
 const TABS = [
   { id: 'themes' as const, label: 'Themes & Calendrier', icon: '🎭' },
@@ -19,6 +20,8 @@ export default function AdminSquarePage() {
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">La Place</h1>
+
+      <AdminSquareAvailability />
 
       <div className="mb-6 flex gap-2 overflow-x-auto">
         {TABS.map((tab) => (

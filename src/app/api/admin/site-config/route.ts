@@ -22,10 +22,13 @@ export async function GET() {
 
     if (!config) {
       // Should never happen — the migration seeds the singleton row
-      return NextResponse.json({ currentTheme: 'default' }, { status: 200 });
+      return NextResponse.json({ currentTheme: 'default', squareEnabled: true }, { status: 200 });
     }
 
-    return NextResponse.json({ currentTheme: config.currentTheme }, { status: 200 });
+    return NextResponse.json(
+      { currentTheme: config.currentTheme, squareEnabled: config.squareEnabled },
+      { status: 200 }
+    );
   } catch (error) {
     console.error('SiteConfig GET error:', error);
     return NextResponse.json(
@@ -41,11 +44,29 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const themeId = body?.currentTheme;
 
-    if (!isValidSiteTheme(themeId)) {
+    // Mise à jour partielle : on accepte le thème et/ou l'interrupteur de La
+    // Place indépendamment. Au moins un des deux doit être fourni.
+    const hasTheme = body?.currentTheme !== undefined;
+    const hasSquare = body?.squareEnabled !== undefined;
+
+    if (!hasTheme && !hasSquare) {
+      return NextResponse.json(
+        { error: 'Aucun champ à mettre à jour' },
+        { status: 400 }
+      );
+    }
+
+    if (hasTheme && !isValidSiteTheme(body.currentTheme)) {
       return NextResponse.json(
         { error: 'Invalid theme id', details: { currentTheme: ['Must be one of: default, c-warm'] } },
+        { status: 400 }
+      );
+    }
+
+    if (hasSquare && typeof body.squareEnabled !== 'boolean') {
+      return NextResponse.json(
+        { error: 'Invalid squareEnabled', details: { squareEnabled: ['Must be a boolean'] } },
         { status: 400 }
       );
     }
@@ -53,17 +74,22 @@ export async function PUT(request: NextRequest) {
     const config = await getDb().siteConfig.upsert({
       where: { id: SINGLETON_ID },
       update: {
-        currentTheme: themeId,
+        ...(hasTheme ? { currentTheme: body.currentTheme } : {}),
+        ...(hasSquare ? { squareEnabled: body.squareEnabled } : {}),
         updatedBy: adminResult.userId,
       },
       create: {
         id: SINGLETON_ID,
-        currentTheme: themeId,
+        ...(hasTheme ? { currentTheme: body.currentTheme } : {}),
+        ...(hasSquare ? { squareEnabled: body.squareEnabled } : {}),
         updatedBy: adminResult.userId,
       },
     });
 
-    return NextResponse.json({ currentTheme: config.currentTheme }, { status: 200 });
+    return NextResponse.json(
+      { currentTheme: config.currentTheme, squareEnabled: config.squareEnabled },
+      { status: 200 }
+    );
   } catch (error) {
     console.error('SiteConfig PUT error:', error);
     return NextResponse.json(
