@@ -5,15 +5,20 @@ import ProfileCard from '@/components/ProfileCard';
 import ProfileModal from '@/components/ProfileModal';
 import DiscoverFilters from '@/components/DiscoverFilters';
 import EmptyStateCards from '@/components/EmptyStateCards';
+import CrossingsView from '@/components/CrossingsView';
 import Button from '@/components/ui/Button';
 
-type Tab = 'online' | 'nearby' | 'all';
+// Onglet unique de découverte : un seul écran, trois façons de rencontrer.
+// « Pour toi » = feed algorithmique, « À proximité » = rayon géoloc,
+// « Croisements » = personnes croisées en chemin.
+type Segment = 'pourtoi' | 'nearby' | 'crossings';
+type FeedTab = 'all' | 'nearby';
 type NearbyReason = 'geoloc_required' | 'empty_feed';
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: 'online', label: 'En ligne' },
+const SEGMENTS: { key: Segment; label: string }[] = [
+  { key: 'pourtoi', label: 'Pour toi' },
   { key: 'nearby', label: 'À proximité' },
-  { key: 'all', label: 'Tous' },
+  { key: 'crossings', label: 'Croisements' },
 ];
 
 const RADIUS_STEPS = [10, 25, 50, 100] as const;
@@ -54,7 +59,7 @@ interface FilterState {
   interests: string[];
 }
 
-function buildUrl(tab: Tab, cursor?: string, filters?: FilterState): string {
+function buildUrl(tab: FeedTab, cursor?: string, filters?: FilterState): string {
   const params = new URLSearchParams({ tab });
   if (cursor) params.set('cursor', cursor);
   if (filters) {
@@ -68,7 +73,7 @@ function buildUrl(tab: Tab, cursor?: string, filters?: FilterState): string {
 }
 
 export default function DiscoverPage() {
-  const [tab, setTab] = useState<Tab>('all');
+  const [segment, setSegment] = useState<Segment>('pourtoi');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     gender: [],
@@ -91,13 +96,17 @@ export default function DiscoverPage() {
   const [geoError, setGeoError] = useState('');
   const fetchIdRef = useRef(0);
 
+  // Le segment « Croisements » a sa propre vue et ne consomme pas le feed.
+  const isFeed = segment !== 'crossings';
+  const feedTab: FeedTab = segment === 'nearby' ? 'nearby' : 'all';
+
   const fetchPage = useCallback(
     async (reset: boolean) => {
       const fetchId = ++fetchIdRef.current;
       setLoading(true);
       setError(false);
       try {
-        const url = buildUrl(tab, reset ? undefined : cursor ?? undefined, filters);
+        const url = buildUrl(feedTab, reset ? undefined : cursor ?? undefined, filters);
         const res = await fetch(url);
         if (!res.ok) throw new Error();
         if (fetchId !== fetchIdRef.current) return; // stale
@@ -115,11 +124,12 @@ export default function DiscoverPage() {
         if (fetchId === fetchIdRef.current) setLoading(false);
       }
     },
-    [tab, cursor, filters],
+    [feedTab, cursor, filters],
   );
 
-  // Fetch on tab or filter change (reset)
+  // Fetch on segment or filter change (reset). Skipped for « Croisements ».
   useEffect(() => {
+    if (!isFeed) return;
     setCursor(null);
     setUsers([]);
     setPassedIds(new Set());
@@ -130,7 +140,7 @@ export default function DiscoverPage() {
     setError(false);
     (async () => {
       try {
-        const url = buildUrl(tab, undefined, filters);
+        const url = buildUrl(feedTab, undefined, filters);
         const res = await fetch(url);
         if (!res.ok) throw new Error();
         if (fetchId !== fetchIdRef.current) return;
@@ -144,11 +154,11 @@ export default function DiscoverPage() {
         if (fetchId === fetchIdRef.current) setLoading(false);
       }
     })();
-  }, [tab, filters]);
+  }, [isFeed, feedTab, filters]);
 
-  // Load the saved search radius once, when the nearby tab is first opened
+  // Load the saved search radius once, when the nearby segment is first opened
   useEffect(() => {
-    if (tab !== 'nearby' || radiusReady) return;
+    if (segment !== 'nearby' || radiusReady) return;
     (async () => {
       try {
         const res = await fetch('/api/users/profile');
@@ -162,7 +172,7 @@ export default function DiscoverPage() {
         setRadiusReady(true);
       }
     })();
-  }, [tab, radiusReady]);
+  }, [segment, radiusReady]);
 
   async function handleRadiusChange(newRadius: number) {
     if (radiusSaving || newRadius === radiusKm) return;
@@ -220,8 +230,6 @@ export default function DiscoverPage() {
     );
   }
 
-  const handleTabChange = (newTab: Tab) => setTab(newTab);
-
   const handleFilterChange = (newFilters: FilterState) => setFilters(newFilters);
 
   const handleLike = async (userId: string) => {
@@ -235,11 +243,8 @@ export default function DiscoverPage() {
       if (res.ok) {
         const data = await res.json();
         if (data.match) {
-          // The MatchDialog in the layout will handle Pusher notification,
-          // but the liker gets instant feedback here
           const matchedUser = users.find((u) => u.userId === userId);
           if (matchedUser && typeof window !== 'undefined') {
-            // Dispatch custom event for MatchDialog or direct notification
             window.dispatchEvent(new CustomEvent('libre:instant-match', {
               detail: {
                 matchId: data.matchId,
@@ -269,28 +274,30 @@ export default function DiscoverPage() {
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Découvrir</h1>
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          onClick={() => setShowFilters(!showFilters)}
-          aria-expanded={showFilters}
-          aria-label="Filtres"
-        >
-          {showFilters ? 'Fermer' : 'Filtres'}
-        </Button>
+        {isFeed && (
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+            aria-expanded={showFilters}
+            aria-label="Filtres"
+          >
+            {showFilters ? 'Fermer' : 'Filtres'}
+          </Button>
+        )}
       </div>
 
-      {/* Tabs */}
+      {/* Sélecteur segmenté — le cœur de la navigation de découverte */}
       <div className="mb-4 flex rounded-xl bg-gray-100 p-1 dark:bg-gray-800" role="tablist">
-        {TABS.map(({ key, label }) => (
+        {SEGMENTS.map(({ key, label }) => (
           <button
             key={key}
             role="tab"
-            aria-selected={tab === key}
-            onClick={() => handleTabChange(key)}
+            aria-selected={segment === key}
+            onClick={() => setSegment(key)}
             className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
-              tab === key
+              segment === key
                 ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
                 : 'text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
             }`}
@@ -300,8 +307,8 @@ export default function DiscoverPage() {
         ))}
       </div>
 
-      {/* Filters (collapsible) */}
-      {showFilters && (
+      {/* Filters (collapsible) — feed segments only */}
+      {isFeed && showFilters && (
         <div className="mb-4">
           <DiscoverFilters
             gender={filters.gender}
@@ -314,8 +321,8 @@ export default function DiscoverPage() {
         </div>
       )}
 
-      {/* Rayon de recherche (onglet à proximité) */}
-      {tab === 'nearby' && (
+      {/* Rayon de recherche (segment à proximité) */}
+      {segment === 'nearby' && (
         <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
           <label
             htmlFor="nearby-radius"
@@ -344,13 +351,15 @@ export default function DiscoverPage() {
       )}
 
       {/* Content */}
-      {loading && visibleUsers.length === 0 ? (
+      {segment === 'crossings' ? (
+        <CrossingsView />
+      ) : loading && visibleUsers.length === 0 ? (
         <div className="flex justify-center py-12">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-coral border-t-transparent" />
         </div>
       ) : error ? (
         <p className="py-8 text-center text-sm text-red-500">Une erreur est survenue, veuillez réessayer</p>
-      ) : tab === 'nearby' && nearbyReason === 'geoloc_required' ? (
+      ) : segment === 'nearby' && nearbyReason === 'geoloc_required' ? (
         <div className="animate-fade-in rounded-xl border border-dashed border-coral/40 bg-blush p-6 text-center dark:border-coral/30 dark:bg-coral/5">
           <p className="mb-4 text-gray-700 dark:text-gray-300">
             Active ta géoloc pour voir les célibataires près de toi
@@ -364,14 +373,14 @@ export default function DiscoverPage() {
             </p>
           )}
         </div>
-      ) : tab === 'nearby' && nearbyReason === 'empty_feed' ? (
+      ) : segment === 'nearby' && nearbyReason === 'empty_feed' ? (
         <div className="animate-fade-in rounded-xl border border-gray-200 bg-white p-6 text-center dark:border-gray-700 dark:bg-gray-900">
           <p className="text-gray-600 dark:text-gray-400">
             Personne dans un rayon de {radiusKm} km. Élargis ta recherche ou reviens plus tard.
           </p>
         </div>
       ) : visibleUsers.length === 0 ? (
-        <EmptyStateCards context={tab === 'online' ? 'en ligne' : tab === 'nearby' ? 'à proximité' : 'à découvrir'} />
+        <EmptyStateCards context={segment === 'nearby' ? 'à proximité' : 'à découvrir'} />
       ) : (
         <div className="space-y-4">
           {visibleUsers.map((user) => (

@@ -30,6 +30,7 @@ const PROTECTED_PREFIXES = [
   '/crossings',
   '/nearby',
   '/matches',
+  '/messages',
   '/square',
   '/chat',
   '/profile',

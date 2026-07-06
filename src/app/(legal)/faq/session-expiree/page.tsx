@@ -110,7 +110,7 @@ export default function SessionExpireeFAQ() {
       </p>
 
       <p>
-        <Link href="/matches">← Retour à mes matches</Link>
+        <Link href="/messages">← Retour à mes messages</Link>
       </p>
     </article>
   );
