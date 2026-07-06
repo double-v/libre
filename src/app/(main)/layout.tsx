@@ -14,9 +14,7 @@ const BETA_DISMISSED_KEY = 'libre_beta_dismissed';
 
 const navItems = [
   { href: '/discover', label: 'Découvrir' },
-  { href: '/crossings', label: 'Croisements' },
-  { href: '/nearby', label: 'À proximité' },
-  { href: '/matches', label: 'Matches' },
+  { href: '/messages', label: 'Messages' },
   { href: '/square', label: 'La Place' },
   { href: '/profile', label: 'Profil' },
 ];
@@ -129,13 +127,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
                   )
                 )}
-                {item.href === '/crossings' && (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isActive ? 'currentColor' : 'currentColor'} strokeWidth="1.5" strokeLinecap="round"><path d="M4 17 L12 7 M12 17 L20 7"/></svg>
-                )}
-                {item.href === '/nearby' && (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                )}
-                {item.href === '/matches' && (
+                {item.href === '/messages' && (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                 )}
                 {item.href === '/square' && (

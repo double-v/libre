@@ -1,4 +1,4 @@
-const CACHE_NAME = 'libre-v1';
+const CACHE_NAME = 'libre-v2';
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',
@@ -24,15 +24,39 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// Only cache-first these immutable static assets. Everything else (HTML
+// navigations, and especially /api/ responses) must hit the network so the
+// PWA never serves a stale profile list. See the "ghost user" bug: API GET
+// responses are same-origin (type 'basic') and were being cached forever.
+function isCacheableAsset(url) {
+  return (
+    url.pathname.startsWith('/_next/static/') ||
+    url.pathname.startsWith('/icon-') ||
+    url.pathname === '/manifest.json' ||
+    /\.(?:png|jpg|jpeg|webp|avif|svg|gif|ico|woff2?|ttf|otf)$/.test(url.pathname)
+  );
+}
+
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  // Network-first for navigation, cache-first for assets
+  const url = new URL(event.request.url);
+
+  // Never serve /api/ (or any non-asset) from cache — always go to network.
+  if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) {
+    return; // let the browser handle it (network)
+  }
+
+  // Network-first for navigations, with cache fallback for offline.
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request))
     );
-  } else {
+    return;
+  }
+
+  // Cache-first only for immutable static assets.
+  if (isCacheableAsset(url)) {
     event.respondWith(
       caches.match(event.request).then((cached) => {
         if (cached) return cached;
@@ -46,4 +70,5 @@ self.addEventListener('fetch', (event) => {
       })
     );
   }
+  // Anything else: default network handling (no respondWith).
 });
