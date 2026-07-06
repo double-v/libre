@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import TagButton from '@/components/TagButton';
@@ -510,6 +511,14 @@ export default function ProfilePage() {
               </div>
             )}
           </section>
+
+          {/* Footer légal — déplacé ici depuis la nav (chrome allégé) */}
+          <footer className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 pt-2 text-xs text-gray-500 dark:text-gray-400">
+            <Link href="/manifesto" className="hover:text-coral dark:hover:text-coral-light">Manifesto</Link>
+            <Link href="/cgu" className="hover:text-coral dark:hover:text-coral-light">CGU</Link>
+            <Link href="/confidentialite" className="hover:text-coral dark:hover:text-coral-light">Confidentialité</Link>
+            <Link href="/mentions-legales" className="hover:text-coral dark:hover:text-coral-light">Mentions légales</Link>
+          </footer>
         </div>
       )}
     </div>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
+import Logo from '@/components/Logo';
 
 const MatchDialog = dynamic(() => import('@/components/MatchDialog'), { ssr: false });
 const FeedbackButton = dynamic(() => import('@/components/FeedbackButton'), { ssr: false });
@@ -90,20 +91,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md shadow-sm dark:bg-gray-950/80">
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-2">
-          <Link href="/discover" aria-label="Accueil Libre" className="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className="h-8 w-8" aria-hidden="true">
-              <rect width="512" height="512" rx="96" fill="#E8634A"/>
-              <g fill="#fff">
-                <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(-60 256 188)"/>
-                <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(-30 256 188)"/>
-                <rect x="236" y="42" width="40" height="120" rx="20"/>
-                <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(30 256 188)"/>
-                <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(60 256 188)"/>
-                <path d="M256,195 C256,170 218,130 180,130 C130,130 105,175 105,215 C105,300 256,375 256,390 C256,375 407,300 407,215 C407,175 382,130 332,130 C294,130 256,170 256,195 Z"/>
-              </g>
-            </svg>
-            <span className="text-lg font-bold text-coral dark:text-coral-light">Libre</span>
-          </Link>
+          <Logo href="/discover" label="Libre — Accueil" className="dark:text-coral-light" />
           <div className="flex items-center gap-1">
             {session?.user?.role?.toUpperCase() === 'ADMIN' && (
               <Link href="/admin" aria-label="Administration" className="rounded-full p-2 text-gray-500 transition-colors hover:bg-purple-50 hover:text-purple-600 dark:text-gray-400 dark:hover:bg-purple-900/30 dark:hover:text-purple-400" title="Administration">
@@ -173,14 +161,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       <FeedbackButton />
       <ThemeToggle />
-
-      {/* Legal footer — RGPD compliance */}
-      <div className="fixed bottom-16 left-0 right-0 flex items-center justify-center gap-3 bg-white/60 py-1 text-[10px] text-gray-400 backdrop-blur-sm dark:bg-gray-950/60 dark:text-gray-500">
-        <Link href="/manifesto" className="hover:text-gray-600 dark:hover:text-gray-300">Manifesto</Link>
-        <Link href="/cgu" className="hover:text-gray-600 dark:hover:text-gray-300">CGU</Link>
-        <Link href="/confidentialite" className="hover:text-gray-600 dark:hover:text-gray-300">Confidentialité</Link>
-        <Link href="/mentions-legales" className="hover:text-gray-600 dark:hover:text-gray-300">Mentions légales</Link>
-      </div>
     </div>
   );
 }

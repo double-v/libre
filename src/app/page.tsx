@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import VersionWatcher from '@/components/VersionWatcher';
 import PublicHeader from '@/components/PublicHeader';
+import { LogoMark } from '@/components/Logo';
 
 // Kill Vercel/Next HTML caching on the home. The page is essentially static
 // (FAQ + user count) but Google Search Console flagged the cached 5-min
@@ -486,14 +487,7 @@ export default async function Home() {
       {/* ====== FOOTER ====== */}
       <footer className="px-6 py-8 text-center">
         <div className="mb-3 flex items-center justify-center gap-1.5">
-          <svg viewBox="76 36 360 360" className="h-4 w-4 opacity-50" fill="currentColor" aria-hidden="true">
-            <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(-60 256 188)" />
-            <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(-30 256 188)" />
-            <rect x="236" y="42" width="40" height="120" rx="20" />
-            <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(30 256 188)" />
-            <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(60 256 188)" />
-            <path d="M256,195 C256,170 218,130 180,130 C130,130 105,175 105,215 C105,300 256,375 256,390 C256,375 407,300 407,215 C407,175 382,130 332,130 C294,130 256,170 256,195 Z" />
-          </svg>
+          <span className="text-coral opacity-50"><LogoMark className="h-4 w-4" /></span>
           <span className="text-sm font-bold text-coral opacity-50">Libre</span>
         </div>
         {/* Liens légaux */}
