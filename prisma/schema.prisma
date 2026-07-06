@@ -90,6 +90,10 @@ model Profile {
 model SiteConfig {
   id           String   @id @default("singleton")
   currentTheme String   @default("default") @map("current_theme")
+  // Colonne volontairement sans @map : la colonne physique est « squareEnabled »
+  // (camelCase), cohérente avec la convention réelle des colonnes existantes de
+  // cette table. Permet à La Place d'être coupée globalement depuis l'admin.
+  squareEnabled Boolean @default(true)
   updatedAt    DateTime @updatedAt @map("updated_at")
   updatedBy    String?  @db.Uuid @map("updated_by")
   updatedByUser User?   @relation("SiteConfigUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)

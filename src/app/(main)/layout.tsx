@@ -64,6 +64,26 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
   const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'eu';
 
+  // La Place n'apparaît dans la barre que si elle est activée par l'admin ET
+  // qu'au moins 2 personnes sont en ligne. Défaut masqué pour éviter un flash.
+  const [squareVisible, setSquareVisible] = useState(false);
+  useEffect(() => {
+    let active = true;
+    fetch('/api/square/availability')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (active && d) setSquareVisible(Boolean(d.visible));
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [pathname]);
+
+  const visibleNavItems = navItems.filter(
+    (item) => item.href !== '/square' || squareVisible,
+  );
+
   return (
     <div className="flex min-h-screen flex-col">
       <BetaBanner onFeedback={() => window.dispatchEvent(new Event('open-feedback'))} />
@@ -106,7 +126,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       <nav role="navigation" aria-label="Navigation principale" className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-[0_-1px_6px_rgba(0,0,0,0.04)] dark:bg-gray-950">
         <div className="mx-auto flex max-w-lg items-center justify-around">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const isActive =
               pathname === item.href || pathname.startsWith(item.href + '/');
             return (
