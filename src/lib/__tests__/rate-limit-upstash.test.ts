@@ -17,11 +17,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const mockRatelimitLimit = vi.fn();
 const mockRedisLpush = vi.fn();
 const mockRedisLrange = vi.fn();
+const mockSlidingWindow = vi.fn().mockReturnValue('mock-limiter');
 
 vi.mock('@upstash/ratelimit', () => {
   class MockRatelimit {
     limit = mockRatelimitLimit;
-    static slidingWindow = vi.fn().mockReturnValue('mock-limiter');
+    static slidingWindow = mockSlidingWindow;
   }
   return {
     __esModule: true,
@@ -98,6 +99,20 @@ describe('rateLimit (mode Upstash)', () => {
     expect(mockRatelimitLimit).toHaveBeenCalledWith('upstash-key');
     expect(result.success).toBe(true);
     expect(result.remaining).toBe(19);
+  });
+
+  it('respecte le preset (limit, window) au lieu de 1/60s en dur — régression #ratelimit', async () => {
+    process.env.UPSTASH_REDIS_REST_URL = 'https://test.upstash.io';
+    process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
+
+    mockRatelimitLimit.mockResolvedValue({ success: true, remaining: 29, reset: Date.now() + 60_000 });
+
+    const { rateLimit } = await import('../rate-limit-upstash');
+    // Preset « discover » : 30 requêtes / 60 s
+    await rateLimit('discover:user-1', 30, 60_000);
+
+    // Le limiter doit être construit avec le vrai plafond, pas slidingWindow(1, '60 s')
+    expect(mockSlidingWindow).toHaveBeenCalledWith(30, '60 s');
   });
 
   it('enregistre les 429 dans Redis pour l\'observabilité admin', async () => {
