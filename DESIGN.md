@@ -6,6 +6,8 @@ description: A warm, inclusive dating app built on coral and cream — deliberat
 
 # DESIGN.md — Libre
 
+> Ce fichier documente les valeurs et l'intention. La source de vérité exécutable pour les tokens Tailwind (couleurs, ombres, motion) est le bloc `@theme` de `src/app/globals.css` — tout token référencé par un composant doit y être déclaré (`--color-<nom>`, `--shadow-<nom>`, `--ease-<nom>`, `--motion-<nom>`) avec la valeur ci-dessous.
+
 ## Colors
 
 ### Brand & Accent
