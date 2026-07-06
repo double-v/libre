@@ -89,9 +89,14 @@ model Profile {
 
 model SiteConfig {
   id           String   @id @default("singleton")
-  currentTheme String   @default("default") @map("current_theme")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-  updatedBy    String?  @db.Uuid @map("updated_by")
+  // ⚠️ Pas de @map ici : les colonnes physiques sont en camelCase
+  // (currentTheme, updatedAt, updatedBy), telles que créées par la migration
+  // add_site_config. Les @map("current_theme")… précédents faisaient
+  // interroger des colonnes inexistantes → feature « thème de site » cassée
+  // en prod, masquée par les fallbacks try/catch. Colonne = nom du champ.
+  currentTheme String   @default("default")
+  updatedAt    DateTime @updatedAt
+  updatedBy    String?  @db.Uuid
   updatedByUser User?   @relation("SiteConfigUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
 
   @@map("site_config")
