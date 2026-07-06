@@ -172,8 +172,8 @@ Base unit: 4px.
 ### Navigation
 
 - **Auth nav**: Centered Logo component (heart-sun icon + "Libre" text), links to `/`
-- **Bottom tab bar**: 5 tabs (Discover, Croisements, Messages, Nearby, Profile), `bg-white border-t`, icons + labels, coral active state
-- **Top header**: Page title `text-2xl font-bold`, optional action button right
+- **Bottom tab bar**: **4 onglets** — Découvrir · Messages · La Place · Profil — `bg-white border-t`, icônes + labels, état actif coral. « Découvrir » regroupe l'ancien Discover + Nearby + Croisements via un sélecteur segmenté interne (`Pour toi · À proximité · Croisements`). « Messages » fusionne Matches + Chat. « La Place » n'apparaît que si activée par l'admin ET ≥ 2 personnes en ligne (voir `/api/square/availability`).
+- **Top header**: logo (composant `<Logo>`) à gauche, actions (réglages/admin) à droite. Chrome allégé : pas de footer légal flottant — les liens légaux (Manifesto, CGU, Confidentialité, Mentions légales) vivent en bas de l'onglet **Profil**.
 
 ### Buttons
 
@@ -190,7 +190,7 @@ Base unit: 4px.
 
 | Component | Background | Radius | Padding | Use |
 |---|---|---|---|---|
-| profile-card | white + border | xl | 16px | Browse/discover list items |
+| profile-card | white + border | 2xl | 0 (photo pleine largeur) | **Photo-forward** : photo plein cadre (ratio 5/6), nom + âge + tags en surimpression sur scrim, chips présence/distance en haut, actions Passer / J'aime sous la photo. Placeholder = dégradé chaud (tokens coral/terracotta) + initiale. « Place aux visages ». |
 | crossing-card | white + border | xl | 16px | Croisements list |
 | match-card | white + border | xl | 16px | Matches list |
 | modal | white | lg | 24px | Profile modal, match dialog |
@@ -233,7 +233,9 @@ The logo is a heart shape with sun rays emanating from the top. Concept: love (h
 
 **Inline component** (`<Logo />`): Heart-sun SVG icon (no background, `fill="currentColor"`) + "Libre" text in `text-2xl font-bold text-coral`. Links to `/`.
 
-**SVG construction**: 5 rounded-rect rays rotated ±60°/±30°/0° around top center of heart, then heart path drawn on top (covering lower ray portions).
+**SVG construction**: 5 rayons capsules **fins** (width 18, rx 9 en espace 512) tournés ±60°/±30°/0° autour du haut du cœur, puis le cœur dessiné par-dessus. Rayons affinés vs la version d'origine (width 40) pour un rendu plus élégant.
+
+**Composant canonique** : `src/components/Logo.tsx` exporte `<Logo>` (marque + mot « Libre », cliquable, props `href`/`showText`/`markClassName`) et `<LogoMark>` (glyphe seul, `fill="currentColor"`). **Aucun SVG de logo inline ailleurs** — header app, header public, auth, manifesto, footer : tout passe par ce composant.
 
 ## Copy & Tone
 
