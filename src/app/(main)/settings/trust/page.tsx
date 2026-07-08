@@ -444,6 +444,14 @@ function NiveauTab({ trust }: { trust: TrustLevelResponse | null }) {
           {hint}
         </div>
       )}
+
+      {/* Lien vers l'explication détaillée */}
+      <a
+        href="/trust/how-it-works"
+        className="block text-center text-sm font-medium text-coral-dark underline decoration-coral/40 underline-offset-2 hover:decoration-coral"
+      >
+        Comment marche la confiance ?
+      </a>
     </section>
   );
 }
