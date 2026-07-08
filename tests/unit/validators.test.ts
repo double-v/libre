@@ -129,7 +129,7 @@ describe('Validation schemas', () => {
   });
 
   describe('messageSchema', () => {
-    it('validates a message under 1000 chars', () => {
+    it('validates a normal message', () => {
       const result = messageSchema.safeParse({ content: 'Hello!' });
       expect(result.success).toBe(true);
     });
@@ -139,8 +139,15 @@ describe('Validation schemas', () => {
       expect(result.success).toBe(false);
     });
 
-    it('rejects message over 1000 chars', () => {
-      const result = messageSchema.safeParse({ content: 'a'.repeat(1001) });
+    // Le champ porte du CHIFFRÉ (E2E). Un clair de 1000 chars gonfle à ~1.37×
+    // en base64 : le cap doit l'accepter, sinon 400 sur les messages longs.
+    it('accepts ciphertext longer than the 1000-char plaintext cap', () => {
+      const result = messageSchema.safeParse({ content: 'a'.repeat(1372) });
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects absurdly large payloads (over the ciphertext cap)', () => {
+      const result = messageSchema.safeParse({ content: 'a'.repeat(6001) });
       expect(result.success).toBe(false);
     });
   });
