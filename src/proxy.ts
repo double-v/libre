@@ -44,6 +44,56 @@ function isProtectedPath(pathname: string): boolean {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Cache court du contrôle user (issue #146).
+//
+// Le proxy faisait un `user.findUnique` à CHAQUE navigation protégée (~50-100ms
+// de round-trip DB par page view sur Vercel serverless). On mémoïse le résultat
+// par userId pendant un TTL court. Runtime Node par instance chaude → Map par
+// instance, éphémère (un cold start repart de zéro : c'est correct, pas un cache
+// partagé). Un ban / une suppression / un changement de rôle se propage donc en
+// <= TTL — délai borné explicitement accepté par le ticket (< 30 s).
+//
+// Fail-safe : on ne met en cache QUE les résultats DB aboutis (y compris `null`
+// = user confirmé absent). Les erreurs DB ne sont pas mises en cache et sont
+// gérées comme avant (on laisse passer, cf. bloc catch).
+const USER_CHECK_TTL_MS = 30_000;
+// Borne mémoire : ce cache tourne dans un middleware sur CHAQUE navigation. On
+// plafonne le nombre d'entrées (éviction FIFO de la plus ancienne) pour qu'une
+// instance chaude vue par beaucoup d'utilisateurs distincts ne fuie pas la
+// mémoire. Même motif que le cache LRU de src/lib/giphy.ts.
+const USER_CHECK_MAX_ENTRIES = 10_000;
+
+type UserCheck = { id: string; isBanned: boolean; role: string } | null;
+
+const userCheckCache = new Map<string, { value: UserCheck; expiresAt: number }>();
+
+function getCachedUserCheck(userId: string): UserCheck | undefined {
+  const entry = userCheckCache.get(userId);
+  if (!entry) return undefined; // miss
+  if (Date.now() >= entry.expiresAt) {
+    userCheckCache.delete(userId);
+    return undefined; // expiré → miss
+  }
+  return entry.value; // hit (peut être null = user confirmé absent)
+}
+
+function setCachedUserCheck(userId: string, value: UserCheck): void {
+  // Rafraîchit la position (Map préserve l'ordre d'insertion) : on supprime
+  // avant de ré-insérer pour que l'entrée redevienne la plus récente.
+  userCheckCache.delete(userId);
+  if (userCheckCache.size >= USER_CHECK_MAX_ENTRIES) {
+    const oldest = userCheckCache.keys().next().value;
+    if (oldest !== undefined) userCheckCache.delete(oldest);
+  }
+  userCheckCache.set(userId, { value, expiresAt: Date.now() + USER_CHECK_TTL_MS });
+}
+
+/** Exposé pour les tests — vide le cache mémoire. */
+export function _resetProxyUserCache(): void {
+  userCheckCache.clear();
+}
+
 /**
  * Strip the ?preview=... query param from the URL the user sees on the
  * NEXT request, by redirecting to the same URL without the query. The
@@ -116,11 +166,20 @@ export async function proxy(request: NextRequest) {
 
   // Verify the user still exists. This is the actual fix: a JWT can be valid
   // cryptographically while pointing at a deleted/rotated user.
+  //
+  // #146: on passe d'abord par un cache court (TTL 30 s) pour éviter un
+  // findUnique par navigation. Sur cache miss (ou entrée expirée) on interroge
+  // la DB et on mémorise le résultat.
   try {
-    const user = await getDb().user.findUnique({
-      where: { id: token.id as string },
-      select: { id: true, isBanned: true, role: true },
-    });
+    const userId = token.id as string;
+    let user = getCachedUserCheck(userId);
+    if (user === undefined) {
+      user = await getDb().user.findUnique({
+        where: { id: userId },
+        select: { id: true, isBanned: true, role: true },
+      });
+      setCachedUserCheck(userId, user);
+    }
 
     if (!user) {
       const loginUrl = new URL('/login', request.url);
