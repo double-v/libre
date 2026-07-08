@@ -51,7 +51,8 @@ export default function MentionsLegalesPage() {
       <h2>Propriété intellectuelle</h2>
       <p>
         Le site getlibre.fr, son logo, ses textes et ses éléments graphiques sont la propriété
-        du projet Libre. Le code source est publié sous licence open source.
+        du projet Libre. Le code source est publié sous licence PolyForm Noncommercial 1.5.0
+        (code source ouvert, usage non commercial).
       </p>
       <p>
         Toute reproduction, même partielle, des éléments du site sans autorisation est

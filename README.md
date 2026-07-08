@@ -2,7 +2,7 @@
 
 > *Parce que rencontrer ne devrait rien coûter.*
 
-Application de rencontre gratuite, open source, sans abonnement ni revente de données. Financée uniquement par dons pour l'hébergement.
+Application de rencontre gratuite, à code source ouvert, sans abonnement ni revente de données. Financée uniquement par dons pour l'hébergement.
 
 ## Philosophie
 
