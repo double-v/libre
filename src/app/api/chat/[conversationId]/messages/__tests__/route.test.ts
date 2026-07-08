@@ -214,6 +214,22 @@ describe('GET /api/chat/[conversationId]/messages', () => {
     });
   });
 
+  it('masque le contenu d’un message supprimé mais conserve deletedAt (#201)', async () => {
+    const deletedAt = new Date('2026-07-08T10:05:00Z');
+    fakeDb.message.findMany.mockResolvedValue([
+      { id: 'm1', senderId: ME_ID, content: 'ciphertext-secret', createdAt: new Date('2026-07-08T10:00:00Z'), deletedAt },
+    ]);
+    fakeDb.message.updateMany.mockResolvedValue({ count: 0 });
+
+    const res = await GET(new NextRequest('http://localhost/x'), makeParams());
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    // Le ciphertext n'est jamais renvoyé pour un message supprimé…
+    expect(json.messages[0].content).toBe('');
+    // …mais deletedAt reste présent pour que le client affiche le tombstone.
+    expect(json.messages[0].deletedAt).toBeTruthy();
+  });
+
   it('renvoie 401 si pas de session', async () => {
     mockGetServerSession.mockResolvedValue(null);
     const res = await GET(new NextRequest('http://localhost/x'), makeParams());
