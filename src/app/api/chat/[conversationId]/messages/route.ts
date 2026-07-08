@@ -5,21 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { messageSchema } from '@/lib/validators';
 import { pusher, getPusherChannel } from '@/lib/pusher';
 import { rateLimit, limits } from '@/lib/rate-limit';
-
-// ---------------------------------------------------------------------------
-// Helper: verify the authenticated user is a participant in the conversation
-// ---------------------------------------------------------------------------
-async function verifyParticipant(conversationId: string, userId: string) {
-  const conversation = await getDb().conversation.findUnique({
-    where: { id: conversationId },
-    select: { userA: true, userB: true },
-  });
-  if (!conversation) return { error: 'Not found' as const, status: 404 };
-  if (conversation.userA !== userId && conversation.userB !== userId) {
-    return { error: 'Forbidden' as const, status: 403 };
-  }
-  return { conversation };
-}
+import { verifyParticipant } from '@/lib/chat-access';
 
 // ---------------------------------------------------------------------------
 // GET /api/chat/[conversationId]/messages
@@ -59,8 +45,13 @@ export async function GET(
       data: { readAt: new Date() },
     });
 
-    // Return in chronological order (oldest first)
-    const sorted = [...messages].reverse();
+    // Return in chronological order (oldest first). Deleted messages keep their
+    // slot in the thread (tombstone côté client via `deletedAt`) mais leur
+    // contenu (ciphertext) est masqué : on ne le renvoie jamais aux clients une
+    // fois le message supprimé par son auteur (cf. #201, soft-delete).
+    const sorted = [...messages]
+      .reverse()
+      .map((m) => (m.deletedAt ? { ...m, content: '' } : m));
 
     return NextResponse.json({ messages: sorted }, { status: 200 });
   } catch (error) {
