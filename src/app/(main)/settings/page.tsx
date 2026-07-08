@@ -269,6 +269,35 @@ export default function SettingsPage() {
             </a>
           </div>
         </section>
+
+        {/* Informations légales — regroupées ici (remplace l'ancien footer
+            flottant global au-dessus de la tab bar, cf. refonte chrome mobile). */}
+        <section className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:p-5">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Informations légales</h2>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            Notre manifeste et les documents qui encadrent Libre.
+          </p>
+          <ul className="mt-3 divide-y divide-gray-200 dark:divide-gray-700">
+            {[
+              { href: '/manifesto', label: 'Manifeste' },
+              { href: '/cgu', label: "Conditions d'utilisation" },
+              { href: '/confidentialite', label: 'Politique de confidentialité' },
+              { href: '/mentions-legales', label: 'Mentions légales' },
+            ].map((link) => (
+              <li key={link.href}>
+                <a
+                  href={link.href}
+                  className="flex min-h-11 items-center justify-between gap-2 py-3 text-sm font-medium text-gray-700 transition-colors hover:text-coral dark:text-gray-300 dark:hover:text-coral-light"
+                >
+                  {link.label}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="text-gray-400 dark:text-gray-500">
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     </div>
   );

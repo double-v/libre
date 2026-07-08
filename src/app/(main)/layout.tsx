@@ -71,10 +71,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="flex min-h-screen flex-col">
-      <BetaBanner onFeedback={() => window.dispatchEvent(new Event('open-feedback'))} />
+      {/* Chrome du haut : bannière + header en une seule pile sticky qui porte
+          la safe-area (.pt-safe) — évite le double-inset et garde le contenu
+          sous l'encoche/status bar en mode standalone. */}
+      <div className="sticky top-0 z-40 bg-white/80 pt-safe shadow-sm backdrop-blur-md dark:bg-gray-950/80">
+        <BetaBanner onFeedback={() => window.dispatchEvent(new Event('open-feedback'))} />
 
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md shadow-sm dark:bg-gray-950/80">
-        <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-2">
+        <header>
+          <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-2">
           <Link href="/discover" aria-label="Accueil Libre" className="flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className="h-8 w-8" aria-hidden="true">
               <rect width="512" height="512" rx="96" fill="#E8634A"/>
@@ -105,12 +109,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             </Link>
           </div>
         </div>
-      </header>
+        </header>
+      </div>
 
-      <main id="main-content" role="main" className="flex-1 pb-16">{children}</main>
+      <main id="main-content" role="main" className="flex-1 pb-nav">{children}</main>
 
-      <nav role="navigation" aria-label="Navigation principale" className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-[0_-1px_6px_rgba(0,0,0,0.04)] dark:bg-gray-950">
-        <div className="mx-auto flex max-w-lg items-center justify-around">
+      <nav role="navigation" aria-label="Navigation principale" className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white pb-safe dark:border-gray-800 dark:bg-gray-950">
+        <div className="mx-auto flex min-h-14 max-w-lg items-center justify-around">
           {navItems.map((item) => {
             const isActive =
               pathname === item.href || pathname.startsWith(item.href + '/');
@@ -159,14 +164,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <FeedbackButton />
       <ThemeToggle />
       <ToastHost />
-
-      {/* Legal footer — RGPD compliance */}
-      <div className="fixed bottom-16 left-0 right-0 flex items-center justify-center gap-3 bg-white/60 py-1 text-[10px] text-gray-400 backdrop-blur-sm dark:bg-gray-950/60 dark:text-gray-500">
-        <Link href="/manifesto" className="hover:text-gray-600 dark:hover:text-gray-300">Manifesto</Link>
-        <Link href="/cgu" className="hover:text-gray-600 dark:hover:text-gray-300">CGU</Link>
-        <Link href="/confidentialite" className="hover:text-gray-600 dark:hover:text-gray-300">Confidentialité</Link>
-        <Link href="/mentions-legales" className="hover:text-gray-600 dark:hover:text-gray-300">Mentions légales</Link>
-      </div>
     </div>
   );
 }
