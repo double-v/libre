@@ -7,6 +7,31 @@ on:
     branches: [main]
 
 jobs:
+  # Lint job — jusqu'à #194 la CI ne lançait QUE vitest, donc les erreurs ESLint
+  # (set-state-in-effect, rules-of-hooks, no-explicit-any…) étaient invisibles en
+  # CI et pouvaient vivre sur main (cf. #193). Ce job échoue sur toute ERREUR
+  # ESLint. Les warnings ne cassent pas le build (pas de --max-warnings) : ils
+  # restent visibles dans les logs sans bloquer, à résorber progressivement.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      # Le client Prisma généré (src/generated/) est git-ignoré : on le régénère
+      # pour que les imports `@/generated/client/*` résolvent pendant le lint.
+      - run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - run: npx eslint .
+
   test:
     runs-on: ubuntu-latest
 
