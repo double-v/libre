@@ -225,6 +225,17 @@ Base unit: 4px.
 | last-seen | `text-gray-600 text-sm`, French relative time | "Vu il y a 3 min" |
 | loading | `text-gray-600`, "Chargement..." | Data fetching |
 
+### Messages système du chat
+
+Certains messages ne sont pas du texte utilisateur mais un **événement** dans le
+fil (proposition d'échange de réseaux, plus tard : check-in partagé…). Ils ne
+prennent pas la forme d'une bulle gauche/droite mais d'un **badge centré**,
+discret et chaleureux — univers coral, jamais de gris brut.
+
+| Component | Style | Use |
+|---|---|---|
+| `ShareContactNotice` (`src/components/`) | pill centrée `bg-blush text-coral-dark` (dark : `bg-coral/10 text-coral-light`), icône lien, copie FR selon émetteur/destinataire | Proposition d'échange de réseaux dans le chat (remplace l'ancien affichage JSON brut) |
+
 ## Logo
 
 ### Heart-Sun (Cœur-soleil)
