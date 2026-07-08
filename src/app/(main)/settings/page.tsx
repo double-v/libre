@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
+import { toast } from '@/lib/toast';
 
 interface Profile {
   userId: string;
@@ -62,6 +63,11 @@ export default function SettingsPage() {
 
       const result = await res.json();
       setProfile(result.profile);
+      toast(
+        result.profile.invisibleMode
+          ? 'Tu es maintenant invisible.'
+          : 'Ton profil est à nouveau visible.',
+      );
     } catch {
       setError('Erreur lors de la mise à jour du mode invisible');
     } finally {

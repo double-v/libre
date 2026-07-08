@@ -12,6 +12,7 @@ import ProfileSection from '@/components/ProfileSection';
 import PublicProfilePreview from '@/components/PublicProfilePreview';
 import ProfileField from '@/components/ProfileField';
 import ChipList from '@/components/ChipList';
+import { toast } from '@/lib/toast';
 import Image from 'next/image';
 import { INTEREST_CATEGORIES, PRACTICE_CATEGORIES, GENDER_OPTIONS } from '@/lib/taxonomy';
 
@@ -150,6 +151,7 @@ export default function ProfilePage() {
       const result = await res.json();
       setProfile(result.profile);
       setEditingSection(null);
+      toast('Profil enregistré.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde');
     } finally {
@@ -398,6 +400,7 @@ export default function ProfilePage() {
                           if (!res.ok) throw new Error(data.error || 'Erreur');
                           setEditPhotos(data.photos);
                           if (profile) setProfile({ ...profile, photos: data.photos });
+                          toast('Photo ajoutée.');
                         } catch (err) {
                           setPhotoError(err instanceof Error ? err.message : 'Erreur lors de l\'envoi');
                         } finally {
