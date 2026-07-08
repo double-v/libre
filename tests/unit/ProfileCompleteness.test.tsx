@@ -22,10 +22,26 @@ describe('ProfileCompleteness — engaging copy', () => {
         onSuggestionClick={vi.fn()}
       />
     );
-    // Engaging opener instead of the dry "Ajoutez une bio"
-    expect(screen.getByText(/timide|vide|racontez/i)).toBeInTheDocument();
-    // The "Ajoutez X" + "ici" hint stays as a helper, just framed warmly
-    expect(screen.getByText(/Ajoutez/)).toBeInTheDocument();
+    // Engaging opener instead of the dry "Ajoute une bio"
+    expect(screen.getByText(/timide|vide|raconte/i)).toBeInTheDocument();
+    // The "Ajoute X" + "ici" hint stays as a helper, just framed warmly
+    expect(screen.getByText(/Ajoute /)).toBeInTheDocument();
+    // Le « pourquoi » relie la complétion à la qualité de rencontre
+    expect(screen.getByText(/rencontres sont justes/i)).toBeInTheDocument();
+  });
+
+  it('parle à la deuxième personne du singulier (« tu »), jamais « vous »', () => {
+    const { container } = render(
+      <ProfileCompleteness profile={makeProfile({ bio: 'salut' })} onSuggestionClick={vi.fn()} />
+    );
+    expect(container.textContent).not.toMatch(/\bvous\b|\bvotre\b/i);
+  });
+
+  it('n\'utilise pas de fond gris brut (tokens coral/blush uniquement)', () => {
+    const { container } = render(
+      <ProfileCompleteness profile={makeProfile({ bio: 'salut' })} onSuggestionClick={vi.fn()} />
+    );
+    expect(container.innerHTML).not.toMatch(/bg-gray-\d/);
   });
 
   it('shows a mid-progress message when profile is half-filled (3-5/6)', () => {
