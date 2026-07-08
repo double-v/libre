@@ -8,6 +8,29 @@ import { rateLimit, limits } from '@/lib/rate-limit';
 const PAGE_SIZE = 20;
 const ONLINE_THRESHOLD_MS = 15 * 60 * 1000;
 
+// Curseur de pagination pour l'onglet `nearby` (issue #180). Contrairement aux
+// tabs `online`/`all` qui paginent via un curseur Prisma sur `userId`, `nearby`
+// trie par distance calculée en mémoire (haversine). Le curseur encode donc la
+// position dans la liste triée : (distance km, userId) — le userId départage les
+// ex æquo pour un ordre stable. Base64url pour rester opaque côté client.
+function encodeNearbyCursor(distanceKm: number, userId: string): string {
+  return Buffer.from(`${distanceKm}|${userId}`).toString('base64url');
+}
+
+function decodeNearbyCursor(cursor: string): { distanceKm: number; userId: string } | null {
+  try {
+    const decoded = Buffer.from(cursor, 'base64url').toString('utf8');
+    const sep = decoded.indexOf('|');
+    if (sep === -1) return null;
+    const distanceKm = Number(decoded.slice(0, sep));
+    const userId = decoded.slice(sep + 1);
+    if (!Number.isFinite(distanceKm) || !userId) return null;
+    return { distanceKm, userId };
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -99,6 +122,10 @@ export async function GET(request: NextRequest) {
       age: number | null;
     }> = [];
 
+    // Pagination propre à `nearby` (tri en mémoire par distance) : quand elle est
+    // renseignée (non-null), elle prime sur la pagination générique par curseur userId.
+    let nearbyPagination: { nextCursor: string | null } | null = null;
+
     if (tab === 'online') {
       const onlineThreshold = new Date(Date.now() - ONLINE_THRESHOLD_MS);
       const dbProfiles = await getDb().profile.findMany({
@@ -154,9 +181,35 @@ export async function GET(request: NextRequest) {
           return { profile: p, distanceKm: distM / 1000 };
         })
         .filter(({ distanceKm }) => distanceKm <= maxDist)
-        .sort((a, b) => a.distanceKm - b.distanceKm);
+        // Tri stable : distance croissante puis userId, pour que le curseur
+        // (distance, userId) découpe la liste sans doublon ni trou (issue #180).
+        .sort((a, b) =>
+          a.distanceKm - b.distanceKm ||
+          (a.profile.userId < b.profile.userId ? -1 : a.profile.userId > b.profile.userId ? 1 : 0),
+        );
 
-      profiles = withDistance.map(({ profile: p, distanceKm }) => ({
+      // Applique le curseur : ne garde que les profils strictement APRÈS la
+      // position encodée. Curseur absent/illisible → page 1 (dégradation douce).
+      const decoded = cursor ? decodeNearbyCursor(cursor) : null;
+      const afterCursor = decoded
+        ? withDistance.filter(({ profile: p, distanceKm }) =>
+            distanceKm > decoded.distanceKm ||
+            (distanceKm === decoded.distanceKm && p.userId > decoded.userId),
+          )
+        : withDistance;
+
+      // On lit PAGE_SIZE+1 pour savoir s'il reste une page suivante.
+      const pagePlus = afterCursor.slice(0, PAGE_SIZE + 1);
+      const hasMoreNearby = pagePlus.length > PAGE_SIZE;
+      const pageItems = pagePlus.slice(0, PAGE_SIZE);
+      const last = pageItems[pageItems.length - 1];
+      nearbyPagination = {
+        nextCursor: hasMoreNearby && last
+          ? encodeNearbyCursor(last.distanceKm, last.profile.userId)
+          : null,
+      };
+
+      profiles = pageItems.map(({ profile: p, distanceKm }) => ({
         userId: p.userId,
         displayName: p.user.displayName,
         bio: p.bio,
@@ -206,10 +259,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Pagination: we fetched PAGE_SIZE+1, if we have more than PAGE_SIZE there's a next page
-    // (issue #147: filters are now in the DB query, so profiles is already filtered)
-    const hasMore = profiles.length > PAGE_SIZE;
+    // (issue #147: filters are now in the DB query, so profiles is already filtered).
+    // Pour `nearby` (issue #180) le découpage est déjà fait dans la branche : on
+    // utilise son curseur composite (distance, userId) au lieu du curseur userId.
     const users = profiles.slice(0, PAGE_SIZE);
-    const nextCursor = hasMore && users.length > 0 ? users[users.length - 1].userId : null;
+    const nextCursor = nearbyPagination
+      ? nearbyPagination.nextCursor
+      : profiles.length > PAGE_SIZE && users.length > 0
+        ? users[users.length - 1].userId
+        : null;
 
     // issue #137: distinguish "geoloc active but nobody nearby" from other empty tabs,
     // so the frontend doesn't show a generic empty state when geoloc is the real blocker.
