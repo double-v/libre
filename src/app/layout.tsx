@@ -10,6 +10,9 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  // Laisse le contenu s'étendre sous l'encoche et la barre d'accueil : condition
+  // nécessaire pour que env(safe-area-inset-*) soit non nul (cf. .pt-safe/.pb-safe).
+  viewportFit: 'cover',
 };
 
 export const metadata: Metadata = {

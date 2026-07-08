@@ -66,7 +66,7 @@ export default function FeedbackButton() {
   }
 
   return (
-    <div className="fixed bottom-20 right-4 z-40" ref={panelRef}>
+    <div className="fixed bottom-chrome right-4 z-40" ref={panelRef}>
       {open && (
         <div className="mb-2 w-72 rounded-xl border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-800 dark:bg-gray-950">
           {submitted ? (

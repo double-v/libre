@@ -5,6 +5,10 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Hauteur de contenu de la bottom tab bar. Réutilisée pour réserver l'espace
+     du contenu (.pb-nav) et positionner le chrome flottant (.bottom-chrome),
+     afin que tout reste synchronisé si la barre change de hauteur. */
+  --nav-h: 3.5rem;
 }
 
 :root.dark {
@@ -119,6 +123,24 @@ input::placeholder, textarea::placeholder {
 
 .animate-toast-in {
   animation: toast-in var(--motion-base) var(--ease-out-soft) both;
+}
+
+/* Safe-area : encoche & barre d'accueil iOS/Android (PWA/TWA standalone).
+   N'a d'effet que si viewport-fit=cover est actif (viewport export racine).
+   Sur un appareil sans encoche, env(safe-area-inset-*) vaut 0 → aucun impact. */
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+/* Réserve sous le contenu défilant = tab bar + safe-area du bas. */
+.pb-nav {
+  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom));
+}
+/* Ancre le chrome flottant (feedback, thème, toast) juste au-dessus de la nav. */
+.bottom-chrome {
+  bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 0.75rem);
 }
 
 /* Mobile: slightly smaller base for comfort */

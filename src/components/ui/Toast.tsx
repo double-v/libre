@@ -77,7 +77,7 @@ export default function ToastHost() {
   // d'écran annoncent de façon fiable les toasts qui y sont injectés ensuite.
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-24 z-[90] flex flex-col items-center gap-2 px-4 empty:hidden"
+      className="pointer-events-none fixed inset-x-0 bottom-chrome z-[90] flex flex-col items-center gap-2 px-4 empty:hidden"
       role="status"
       aria-live="polite"
       aria-atomic="false"
