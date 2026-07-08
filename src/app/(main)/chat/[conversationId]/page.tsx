@@ -8,6 +8,8 @@ import Image from 'next/image';
 import { photoUrl } from '@/lib/photos';
 import { useEncryptedChat } from '@/hooks/useEncryptedChat';
 import ShareContactButton from '@/components/ShareContactButton';
+import ShareContactNotice from '@/components/ShareContactNotice';
+import { isShareContactMessage } from '@/lib/shareContact';
 import ProfileModal from '@/components/ProfileModal';
 import { CheckinButton } from '@/components/CheckinButton';
 
@@ -349,6 +351,16 @@ export default function ChatConversationPage() {
         )}
         {messages.map((msg) => {
           const isSent = msg.senderId !== otherUser?.id;
+          // Partage de réseaux : badge système, jamais le JSON brut (issue #207).
+          if (isShareContactMessage(msg.content)) {
+            return (
+              <ShareContactNotice
+                key={msg.id}
+                isSent={isSent}
+                otherName={otherUser?.displayName ?? 'Cette personne'}
+              />
+            );
+          }
           return (
             <div key={msg.id} className={`flex ${isSent ? 'justify-end' : 'justify-start'}`}>
               <div

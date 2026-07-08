@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { buildShareContactMessage } from '@/lib/shareContact';
 
 interface ShareContactButtonProps {
   conversationId: string;
@@ -15,7 +16,7 @@ export default function ShareContactButton({ conversationId, onSend }: ShareCont
     if (shared || sending) return;
     setSending(true);
     try {
-      await onSend(JSON.stringify({ type: 'share-contact', data: 'Contact info shared' }));
+      await onSend(buildShareContactMessage());
       setShared(true);
     } catch {
       // Silently fail - the user can retry
