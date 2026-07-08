@@ -147,3 +147,87 @@ describe('GET /api/discover?tab=nearby (issue #137)', () => {
     expect(body.nextCursor).toBeNull();
   });
 });
+
+/**
+ * Tests — pagination cursor de l'onglet nearby (issue #180)
+ *
+ * Avant #180 la branche nearby ignorait le paramètre `cursor` : « charger plus »
+ * renvoyait toujours la page 1. On vérifie ici une vraie pagination stable sur
+ * la liste triée par distance (curseur composite distance+userId).
+ */
+describe('GET /api/discover?tab=nearby — pagination cursor (issue #180)', () => {
+  // Profils à distance croissante de ME (48.85, 2.35) : longitude croissante,
+  // tous largement dans le rayon de 50 km. userId croissant zero-paddé pour un
+  // ordre déterministe indépendant de l'insertion.
+  function makeNearbyProfiles(n: number) {
+    return Array.from({ length: n }, (_, i) => {
+      const userId = `00000000-0000-4000-8000-${String(i).padStart(12, '0')}`;
+      return {
+        userId,
+        bio: '',
+        birthDate: null,
+        genderIdentity: '',
+        orientation: [],
+        interests: [],
+        practices: [],
+        photos: [],
+        lastKnownLat: 48.85,
+        lastKnownLng: 2.35 + (i + 1) * 0.005, // ~0.37 km de pas, monotone croissant
+        user: { id: userId, displayName: `U${i}`, isVerified: false, lastActive: new Date() },
+      };
+    });
+  }
+
+  beforeEach(() => {
+    fakeDb.profile.findUnique.mockResolvedValue({
+      userId: ME_ID,
+      lastKnownLat: 48.85,
+      lastKnownLng: 2.35,
+      maxDistanceKm: 50,
+    });
+  });
+
+  it('page 1 : renvoie 20 profils + nextCursor non-null quand > 20 dans le rayon', async () => {
+    fakeDb.profile.findMany.mockResolvedValue(makeNearbyProfiles(25));
+
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.users).toHaveLength(20);
+    expect(body.nextCursor).toBeTruthy();
+    // triés par distance croissante
+    for (let i = 1; i < body.users.length; i++) {
+      expect(body.users[i].distanceKm).toBeGreaterThanOrEqual(body.users[i - 1].distanceKm);
+    }
+  });
+
+  it('page 2 (avec cursor) : renvoie la SUITE, sans chevauchement avec la page 1', async () => {
+    fakeDb.profile.findMany.mockResolvedValue(makeNearbyProfiles(25));
+
+    const res1 = await GET(makeRequest());
+    const body1 = await res1.json();
+    const page1Ids: string[] = body1.users.map((u: { userId: string }) => u.userId);
+    expect(page1Ids).toHaveLength(20);
+
+    const res2 = await GET(makeRequest(`&cursor=${encodeURIComponent(body1.nextCursor)}`));
+    const body2 = await res2.json();
+    const page2Ids: string[] = body2.users.map((u: { userId: string }) => u.userId);
+
+    // 25 profils - 20 = 5 restants, dernière page
+    expect(page2Ids).toHaveLength(5);
+    expect(body2.nextCursor).toBeNull();
+    // aucun doublon entre page 1 et page 2
+    expect(page1Ids.some((id) => page2Ids.includes(id))).toBe(false);
+    // ensemble = les 25 profils, sans trou
+    expect(new Set([...page1Ids, ...page2Ids]).size).toBe(25);
+  });
+
+  it('cursor invalide : dégrade proprement en page 1 plutôt que de crasher', async () => {
+    fakeDb.profile.findMany.mockResolvedValue(makeNearbyProfiles(25));
+
+    const res = await GET(makeRequest('&cursor=nimportequoi'));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.users).toHaveLength(20);
+  });
+});
