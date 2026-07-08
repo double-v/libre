@@ -25,6 +25,10 @@ function BetaBanner({ onFeedback }: { onFeedback: () => void }) {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && !localStorage.getItem(BETA_DISMISSED_KEY)) {
+      // Lecture localStorage post-hydratation : SSR rend « masqué » (défaut),
+      // on ne révèle qu'après le montage client → un seul flip, pattern SSR-safe
+      // intentionnel (pas de mismatch d'hydratation). Cf #193.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDismissed(false);
     }
   }, []);

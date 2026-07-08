@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
@@ -17,13 +17,8 @@ function ResetForm() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
-  const [tokenError, setTokenError] = useState('');
-
-  useEffect(() => {
-    if (!token) {
-      setTokenError('Lien de réinitialisation manquant ou invalide.');
-    }
-  }, [token]);
+  // État dérivé du token (dans l'URL) → calculé au rendu, pas dans un effet.
+  const tokenError = token ? '' : 'Lien de réinitialisation manquant ou invalide.';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

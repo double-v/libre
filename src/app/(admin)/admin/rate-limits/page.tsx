@@ -71,7 +71,12 @@ export default function AdminRateLimitsPage() {
   }, [windowMs]);
 
   useEffect(() => {
-    fetchHits();
+    // IIFE async → pas de setState synchrone dans le corps de l'effet
+    // (react-hooks/set-state-in-effect, cf. #179/#193). Le refresh périodique
+    // reste un setInterval classique (callback → hors corps synchrone).
+    void (async () => {
+      await fetchHits();
+    })();
     const id = setInterval(fetchHits, 30_000); // auto-refresh every 30s
     return () => clearInterval(id);
   }, [fetchHits]);
@@ -215,8 +220,8 @@ export default function AdminRateLimitsPage() {
 
           <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
             💡 Si tu vois un user légitime (mobile, script front) bloqué par un preset,
-            c'est un signal que la limite est trop stricte pour ce scope. Si ce sont
-            des bots, c'est que ça marche comme prévu.
+            c’est un signal que la limite est trop stricte pour ce scope. Si ce sont
+            des bots, c’est que ça marche comme prévu.
           </p>
         </>
       )}

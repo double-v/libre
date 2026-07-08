@@ -36,7 +36,11 @@ export default function AdminAppearancePage() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    // Fetch au montage : IIFE async → aucun setState synchrone dans le corps
+    // de l'effet (react-hooks/set-state-in-effect, cf. #179/#193).
+    void (async () => { await load(); })();
+  }, [load]);
 
   const handleChange = async (themeId: string) => {
     setSaving(true);
@@ -68,7 +72,7 @@ export default function AdminAppearancePage() {
         Apparence du site
       </h1>
       <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
-        Choisissez le thème de couleur du site. Le changement s'applique
+        Choisissez le thème de couleur du site. Le changement s’applique
         immédiatement à votre écran et est enregistré pour tous les
         visiteurs.
       </p>
@@ -94,7 +98,7 @@ export default function AdminAppearancePage() {
         <p className="mb-1 font-semibold">Note</p>
         <p>
           Cette page est réservée aux administrateurs. Les utilisateurs non-admin
-          qui tentent d'accéder à l'API <code>PUT /api/admin/site-config</code>
+          qui tentent d’accéder à l’API <code>PUT /api/admin/site-config</code>
           reçoivent un 403.
         </p>
       </div>

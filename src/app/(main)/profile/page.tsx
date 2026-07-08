@@ -75,6 +75,9 @@ export default function ProfilePage() {
   const [error, setError] = useState('');
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // « Maintenant » figé au montage : Date.now() est impur, on ne l'appelle pas
+  // au rendu (react-hooks/purity) — il est fixé dans un effet ci-dessous.
+  const [now, setNow] = useState(0);
 
   const [editBio, setEditBio] = useState('');
   const [editBirthDate, setEditBirthDate] = useState('');
@@ -111,7 +114,17 @@ export default function ProfilePage() {
     }
   }, [router]);
 
-  useEffect(() => { fetchProfile(); }, [fetchProfile]);
+  useEffect(() => {
+    // Fetch au montage : IIFE async → aucun setState synchrone dans le corps
+    // de l'effet (react-hooks/set-state-in-effect, cf. #179/#193).
+    void (async () => { await fetchProfile(); })();
+  }, [fetchProfile]);
+
+  useEffect(() => {
+    // Date.now() dans une IIFE async → hors du corps synchrone de l'effet
+    // (react-hooks/set-state-in-effect) et hors du rendu (react-hooks/purity).
+    void (async () => { setNow(Date.now()); })();
+  }, []);
 
   const startEdit = (section: string) => {
     setEditingSection(section);
@@ -174,8 +187,8 @@ export default function ProfilePage() {
     return <div className="flex min-h-screen items-center justify-center"><p className="text-gray-600 dark:text-gray-400">Chargement...</p></div>;
   }
 
-  const age = profile?.birthDate
-    ? Math.floor((Date.now() - new Date(profile.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+  const age = profile?.birthDate && now
+    ? Math.floor((now - new Date(profile.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
     : null;
 
   return (

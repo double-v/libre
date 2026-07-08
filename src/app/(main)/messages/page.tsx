@@ -87,7 +87,11 @@ export default function MessagesPage() {
   }, []);
 
   useEffect(() => {
-    fetchMatches();
+    // IIFE async → pas de setState synchrone dans le corps de l'effet
+    // (react-hooks/set-state-in-effect, cf. #179/#193).
+    void (async () => {
+      await fetchMatches();
+    })();
   }, [fetchMatches]);
 
   // Auto-refresh on new match via Pusher

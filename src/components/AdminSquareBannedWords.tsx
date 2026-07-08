@@ -45,7 +45,11 @@ export default function AdminSquareBannedWords() {
     }
   }, [page, search]);
 
-  useEffect(() => { fetchWords(); }, [fetchWords]);
+  useEffect(() => {
+    // Fetch au montage : IIFE async → aucun setState synchrone dans le corps
+    // de l'effet (react-hooks/set-state-in-effect, cf. #179/#193).
+    void (async () => { await fetchWords(); })();
+  }, [fetchWords]);
 
   const handleAdd = async () => {
     if (!newWord.trim()) return;

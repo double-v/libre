@@ -70,6 +70,10 @@ export default function ProfileSection({
   useEffect(() => {
     if (!sectionId) return;
     const persisted = readPersisted(sectionId);
+    // Lecture localStorage post-hydratation : SSR seed = defaultOpen, on aligne
+    // sur la valeur persistée après montage → un seul flip, SSR-safe (cf. commentaire
+    // ci-dessus + #193).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (persisted !== null) setOpen(persisted);
   }, [sectionId]);
 

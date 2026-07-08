@@ -28,10 +28,13 @@ export default function VersionWatcher({
   initialSha: string;
 }) {
   const router = useRouter();
-  const mountedAt = useRef(Date.now());
+  // Date.now() est impur : on ne l'appelle pas au rendu (react-hooks/purity).
+  // Le timestamp de montage est fixé dans l'effet ci-dessous.
+  const mountedAt = useRef(0);
   const lastSeenSha = useRef(initialSha);
 
   useEffect(() => {
+    mountedAt.current = Date.now();
     // Skip the very first poll — we already know initialSha.
     let isFirstPoll = true;
 

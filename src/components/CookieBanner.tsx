@@ -12,6 +12,9 @@ export default function CookieBanner() {
     // Check if user already consented
     const stored = localStorage.getItem(COOKIE_CONSENT_KEY);
     if (!stored) {
+      // Lecture localStorage post-hydratation : SSR rend « masqué » (défaut),
+      // révélé après montage client → un seul flip, SSR-safe intentionnel. Cf #193.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setVisible(true);
     }
   }, []);

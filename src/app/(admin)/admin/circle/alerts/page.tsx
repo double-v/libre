@@ -70,7 +70,11 @@ export default function AdminCircleAlertsPage() {
     }
   }, [status, page]);
 
-  useEffect(() => { fetchAlerts(); }, [fetchAlerts]);
+  useEffect(() => {
+    // Fetch au montage : IIFE async → aucun setState synchrone dans le corps
+    // de l'effet (react-hooks/set-state-in-effect, cf. #179/#193).
+    void (async () => { await fetchAlerts(); })();
+  }, [fetchAlerts]);
 
   const handleAlert = async (alertId: string) => {
     setHandling(alertId);

@@ -1,9 +1,11 @@
 import NextAuth, { type NextAuthOptions } from 'next-auth';
+import type { Adapter, AdapterUser, AdapterSession, AdapterAccount } from 'next-auth/adapters';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GitHubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 import bcrypt from 'bcryptjs';
 import { getDb } from '@/lib/db';
+import type { Prisma } from '@/generated/client/client';
 import { normalizeEmail } from '@/lib/email';
 
 // ---------------------------------------------------------------------------
@@ -12,21 +14,25 @@ import { normalizeEmail } from '@/lib/email';
 // session methods are present but rarely called.
 // ---------------------------------------------------------------------------
 
+// Le modèle Prisma (pas de `emailVerified`/`image` au format NextAuth) ne matche
+// pas exactement les types Adapter* de NextAuth. On borne donc les entrées/sorties
+// via `as unknown as <Type>` (cast purement compile-time, validé par tsc, aucun
+// impact runtime) plutôt que via `any` — les frontières restent typées.
 const adapter = {
   createUser: async (data: Record<string, unknown>) => {
-    return getDb().user.create({
+    return (await getDb().user.create({
       data: {
         email: data.email as string,
         displayName: (data.name as string) || 'New User',
         passwordHash: null,
       },
-    }) as any;
+    })) as unknown as AdapterUser;
   },
   getUser: async (id: string) => {
-    return getDb().user.findUnique({ where: { id } }) as any;
+    return (await getDb().user.findUnique({ where: { id } })) as unknown as AdapterUser | null;
   },
   getUserByEmail: async (email: string) => {
-    return getDb().user.findUnique({ where: { email } }) as any;
+    return (await getDb().user.findUnique({ where: { email } })) as unknown as AdapterUser | null;
   },
   getUserByAccount: async (params: { provider: string; providerAccountId: string }) => {
     const account = await getDb().account.findUnique({
@@ -38,36 +44,40 @@ const adapter = {
       },
       include: { user: true },
     });
-    return (account?.user ?? null) as any;
+    return (account?.user ?? null) as unknown as AdapterUser | null;
   },
   updateUser: async (data: Record<string, unknown> & { id: string }) => {
     const { id, ...rest } = data;
     const allowed: Record<string, unknown> = {};
     if ('email' in rest) allowed.email = rest.email;
     if ('name' in rest) allowed.displayName = rest.name;
-    return getDb().user.update({
+    return (await getDb().user.update({
       where: { id },
       data: allowed,
-    }) as any;
+    })) as unknown as AdapterUser;
   },
   deleteUser: async (id: string) => {
-    return getDb().user.delete({ where: { id } }) as any;
+    return (await getDb().user.delete({ where: { id } })) as unknown as AdapterUser;
   },
   linkAccount: async (data: Record<string, unknown>) => {
-    return getDb().account.create({ data: data as any }) as any;
+    return (await getDb().account.create({
+      data: data as unknown as Prisma.AccountUncheckedCreateInput,
+    })) as unknown as AdapterAccount;
   },
   unlinkAccount: async (params: { provider: string; providerAccountId: string }) => {
-    return getDb().account.delete({
+    return (await getDb().account.delete({
       where: {
         provider_providerAccountId: {
           provider: params.provider,
           providerAccountId: params.providerAccountId,
         },
       },
-    }) as any;
+    })) as unknown as AdapterAccount;
   },
   createSession: async (data: Record<string, unknown>) => {
-    return getDb().session.create({ data: data as any }) as any;
+    return (await getDb().session.create({
+      data: data as unknown as Prisma.SessionUncheckedCreateInput,
+    })) as unknown as AdapterSession;
   },
   getSessionAndUser: async (sessionToken: string) => {
     const userAndSession = await getDb().session.findUnique({
@@ -76,21 +86,21 @@ const adapter = {
     });
     if (!userAndSession) return null;
     const { user, ...session } = userAndSession;
-    return { user, session } as any;
+    return { user, session } as unknown as { user: AdapterUser; session: AdapterSession };
   },
   updateSession: async (data: Record<string, unknown> & { sessionToken: string }) => {
-    return getDb().session.update({
+    return (await getDb().session.update({
       where: { sessionToken: data.sessionToken },
-      data: data as any,
-    }) as any;
+      data: data as unknown as Prisma.SessionUncheckedUpdateInput,
+    })) as unknown as AdapterSession;
   },
   deleteSession: async (sessionToken: string) => {
-    return getDb().session.delete({ where: { sessionToken } }) as any;
+    return (await getDb().session.delete({ where: { sessionToken } })) as unknown as AdapterSession;
   },
 };
 
 export const authOptions: NextAuthOptions = {
-  adapter: adapter as any,
+  adapter: adapter as unknown as Adapter,
 
   session: {
     strategy: 'jwt',
@@ -211,7 +221,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         // Normalize role to uppercase to handle DB inconsistencies
-        token.role = String((user as any).role).toUpperCase();
+        token.role = String((user as { role?: unknown }).role).toUpperCase();
         if (process.env.NODE_ENV !== 'production') {
           console.log('[auth/jwt] sign-in: id=%s role=%s', user.id, token.role);
         }
