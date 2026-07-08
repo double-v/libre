@@ -18,6 +18,7 @@ interface Message {
   senderId: string;
   content: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 
 interface ConversationData {
@@ -75,6 +76,7 @@ export default function ChatConversationPage() {
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
 
   const { privateKey, publicKey, ready } = useEncryptedChat();
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -178,22 +180,25 @@ export default function ChatConversationPage() {
     const channelName = `private-chat-${conversationId}`;
     const channel = pusher.subscribe(channelName);
 
-    channel.bind(
-      'new-message',
-      (_data: { id: string; senderId: string; createdAt: string }) => {
-        fetch(`/api/chat/${conversationId}/messages`)
-          .then((res) => res.json())
-          .then(async (msgData) => {
-            if (msgData.messages) {
-              const base: Message[] = msgData.messages;
-              // Preserve pending own messages (not yet in DB) by keeping them in cache
-              const decrypted = await applyDecryption(base);
-              setMessages(decrypted);
-            }
-          })
-          .catch(() => {});
-      },
-    );
+    // Re-fetch + déchiffrement, partagé par new-message et message-deleted.
+    const refetch = () => {
+      fetch(`/api/chat/${conversationId}/messages`)
+        .then((res) => res.json())
+        .then(async (msgData) => {
+          if (msgData.messages) {
+            const base: Message[] = msgData.messages;
+            // Preserve pending own messages (not yet in DB) by keeping them in cache
+            const decrypted = await applyDecryption(base);
+            setMessages(decrypted);
+          }
+        })
+        .catch(() => {});
+    };
+
+    channel.bind('new-message', refetch);
+    // Suppression d'un message par son auteur (#201) : l'autre côté re-fetch et
+    // voit le tombstone en temps réel.
+    channel.bind('message-deleted', refetch);
 
     return () => {
       pusher.unsubscribe(channelName);
@@ -275,6 +280,44 @@ export default function ChatConversationPage() {
     }
   };
 
+  // ─── Delete own message ──────────────────────────────────────────
+
+  const handleDelete = async (id: string) => {
+    setMenuOpenId(null);
+    try {
+      const res = await fetch(`/api/chat/${conversationId}/messages/${id}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('delete failed');
+      // Optimistic : marquer supprimé localement (tombstone immédiat).
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === id ? { ...m, content: '', deletedAt: new Date().toISOString() } : m,
+        ),
+      );
+      // Purge le clair du cache local : ne jamais ré-afficher un message supprimé.
+      cacheRef.current.delete(id);
+      savePlaintextCache(conversationId, cacheRef.current);
+    } catch {
+      setError('Impossible de supprimer le message');
+    }
+  };
+
+  // Ferme le menu « … » au clavier (Échap) ou au clic en dehors.
+  useEffect(() => {
+    if (!menuOpenId) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpenId(null);
+    };
+    const onClick = () => setMenuOpenId(null);
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('click', onClick);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('click', onClick);
+    };
+  }, [menuOpenId]);
+
   // ─── UI helpers ──────────────────────────────────────────────────
 
   const formatTime = (dateStr: string) => {
@@ -355,6 +398,24 @@ export default function ChatConversationPage() {
         )}
         {messages.map((msg) => {
           const isSent = msg.senderId !== otherUser?.id;
+
+          // Message supprimé par son auteur → tombstone (prioritaire sur le
+          // badge partage-réseaux). Les deux côtés voient « Message supprimé ».
+          if (msg.deletedAt) {
+            return (
+              <div key={msg.id} className={`flex ${isSent ? 'justify-end' : 'justify-start'}`}>
+                <div className="max-w-[80%] rounded-2xl bg-gray-100 px-4 py-2 dark:bg-gray-800">
+                  <p className="break-words text-sm italic text-gray-500 dark:text-gray-400">
+                    Message supprimé
+                  </p>
+                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                    {formatTime(msg.createdAt)}
+                  </p>
+                </div>
+              </div>
+            );
+          }
+
           // Partage de réseaux : badge système, jamais le JSON brut (issue #207).
           if (isShareContactMessage(msg.content)) {
             return (
@@ -366,7 +427,45 @@ export default function ChatConversationPage() {
             );
           }
           return (
-            <div key={msg.id} className={`flex ${isSent ? 'justify-end' : 'justify-start'}`}>
+            <div
+              key={msg.id}
+              className={`group flex items-end gap-1 ${isSent ? 'justify-end' : 'justify-start'}`}
+            >
+              {/* Menu « … » — uniquement sur ses propres messages, atteignable au
+                  clavier (bouton focusable), pas seulement à l'appui long. */}
+              {isSent && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    aria-haspopup="menu"
+                    aria-expanded={menuOpenId === msg.id}
+                    aria-label="Options du message"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpenId((prev) => (prev === msg.id ? null : msg.id));
+                    }}
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-gray-400 opacity-0 transition-opacity duration-[var(--motion-fast)] hover:bg-gray-100 hover:text-gray-600 focus-visible:opacity-100 focus-visible:outline-none focus-visible:shadow-focus group-hover:opacity-100 motion-reduce:transition-none dark:hover:bg-gray-800 dark:hover:text-gray-300"
+                  >
+                    <span aria-hidden="true">⋯</span>
+                  </button>
+                  {menuOpenId === msg.id && (
+                    <div
+                      role="menu"
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute bottom-9 right-0 z-10 min-w-[8rem] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-pop dark:border-gray-700 dark:bg-gray-900"
+                    >
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => handleDelete(msg.id)}
+                        className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none dark:text-red-400 dark:hover:bg-red-900/30 dark:focus-visible:bg-red-900/30"
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-2 ${
                   isSent
