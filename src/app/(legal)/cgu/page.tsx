@@ -116,7 +116,8 @@ export default function CGUPage() {
       {/* ─── 7. Propriété intellectuelle ─── */}
       <h2>7. Propriété intellectuelle</h2>
       <p>
-        Le code source de Libre est publié sous licence open source. Vous conservez l&apos;entière
+        Le code source de Libre est publié sous licence PolyForm Noncommercial 1.5.0
+        (code source ouvert, usage non commercial). Vous conservez l&apos;entière
         propriété des contenus que vous publiez (photos, bio, messages).
       </p>
       <p>
