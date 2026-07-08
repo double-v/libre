@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic';
 const MatchDialog = dynamic(() => import('@/components/MatchDialog'), { ssr: false });
 const FeedbackButton = dynamic(() => import('@/components/FeedbackButton'), { ssr: false });
 const ThemeToggle = dynamic(() => import('@/components/ThemeToggle'), { ssr: false });
+const ToastHost = dynamic(() => import('@/components/ui/Toast'), { ssr: false });
 
 const BETA_DISMISSED_KEY = 'libre_beta_dismissed';
 
@@ -153,6 +154,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       <FeedbackButton />
       <ThemeToggle />
+      <ToastHost />
 
       {/* Legal footer — RGPD compliance */}
       <div className="fixed bottom-16 left-0 right-0 flex items-center justify-center gap-3 bg-white/60 py-1 text-[10px] text-gray-400 backdrop-blur-sm dark:bg-gray-950/60 dark:text-gray-500">

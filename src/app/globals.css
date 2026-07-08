@@ -110,6 +110,17 @@ input::placeholder, textarea::placeholder {
   animation: fade-in 0.4s ease-out both;
 }
 
+/* Toast : apparition douce depuis le bas (fugace, jamais agressive).
+   Le bloc prefers-reduced-motion plus bas ramène la durée à 80ms. */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-toast-in {
+  animation: toast-in var(--motion-base) var(--ease-out-soft) both;
+}
+
 /* Mobile: slightly smaller base for comfort */
 @media (max-width: 640px) {
   html { font-size: 16px; }
