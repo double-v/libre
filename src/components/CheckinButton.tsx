@@ -14,6 +14,7 @@
  *   countdown, restore focus sur l'élément qui a ouvert la modal.
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { toast } from '@/lib/toast';
 
 const DURATIONS = [
   { value: 30, label: '30 min' },
@@ -126,6 +127,7 @@ export function CheckinButton() {
       });
       if (!res.ok) throw new Error('Erreur de validation');
       setActive(null);
+      toast('Tu es de retour. Ton Cercle n\'a pas été alerté.', { icon: '🛡' });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur');
     } finally {

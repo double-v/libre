@@ -333,6 +333,7 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 | `Avatar` | default, with-online-dot, with-badge, placeholder | sm, md, lg, xl | Tous les avatars inline |
 | `Modal` | open, closed | centered, bottom-sheet | Dialog, confirm, profile-modal |
 | `EmptyState` | — | error, no-data, no-results, no-crossings | Tous les états vides "Nothing here" |
+| `Toast` | enter, visible, exit (auto-dismiss) | success, info, error | Confirmations fugaces d'action (signalement, check-in validé, sauvegarde) |
 
 ### Règles
 
@@ -341,6 +342,29 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 - Tous ont un équivalent dark mode.
 - Tous ont des props ARIA cohérentes (cf. section Accessibility de `PRODUCT.md`).
 - Aucun n'utilise `bg-gray-*` Tailwind brut : on passe par les tokens coral/blush/sand/abricot/miel/rose-poudré.
+
+### Toast (`src/components/ui/Toast.tsx` + `src/lib/toast.ts`)
+
+Confirmation **fugace** d'une action réussie — jamais une mécanique
+d'engagement (cf. PRODUCT.md, principe 4). Pas de compteur, pas de son, pas
+d'appât. On l'utilise pour rassurer sur les succès silencieux (signalement pris
+en compte, check-in validé, sauvegarde), pas pour récompenser l'usage répété
+(pas de toast à chaque like).
+
+- **Déclenchement** : `toast(message, { tone?, icon?, duration? })` (event-bus
+  `libre:toast`, comme `libre:instant-match`). `<ToastHost />` est monté une
+  seule fois dans `(main)/layout.tsx`.
+- **Position** : `fixed`, empilé en bas, centré, **au-dessus de la tab bar**
+  (`bottom-24`) — mobile-first. Pleine largeur mobile, `max-w-sm` au-delà.
+- **Tones** : `success`/`error` = `bg-blush text-coral-dark` (univers coral,
+  jamais de rouge toxique — l'erreur se distingue par l'icône, pas par une
+  couleur agressive) ; `info` = `bg-white text-label border-sand`. Dark mode
+  dédié (`dark:bg-coral/10 dark:text-coral-light`).
+- **Motion** : `animate-toast-in` (translateY 12px + fade, `motion-base`,
+  `ease-out-soft`) ; ramené à 80ms sous `prefers-reduced-motion` (bloc global).
+- **A11y** : conteneur `role="status" aria-live="polite"` (annonce non
+  intrusive) ; bouton Fermer 44px avec `aria-label` ; auto-dismiss (3,5s défaut,
+  max 3 visibles).
 
 ## Responsive
 

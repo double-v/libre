@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { toast } from '@/lib/toast';
 
 const REASONS = [
   { value: 'inappropriate', label: 'Contenu inapproprié' },
@@ -54,6 +55,7 @@ export default function SquareReportModal({
         return;
       }
 
+      toast('Merci, c\'est signalé. On regarde ça.');
       onReported();
     } catch {
       setError('Erreur de connexion');
