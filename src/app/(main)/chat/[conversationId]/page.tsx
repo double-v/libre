@@ -154,7 +154,11 @@ export default function ChatConversationPage() {
   }, [conversationId, applyDecryption]);
 
   useEffect(() => {
-    loadConversation();
+    // IIFE async → pas de setState synchrone dans le corps de l'effet
+    // (react-hooks/set-state-in-effect, cf. #179/#193).
+    void (async () => {
+      await loadConversation();
+    })();
   }, [loadConversation]);
 
   // ─── Pusher realtime ─────────────────────────────────────────────

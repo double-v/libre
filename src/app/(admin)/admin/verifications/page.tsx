@@ -32,7 +32,11 @@ export default function AdminVerificationsPage() {
     }
   }, [status]);
 
-  useEffect(() => { fetchVerifications(); }, [fetchVerifications]);
+  useEffect(() => {
+    // Fetch au montage : IIFE async → aucun setState synchrone dans le corps
+    // de l'effet (react-hooks/set-state-in-effect, cf. #179/#193).
+    void (async () => { await fetchVerifications(); })();
+  }, [fetchVerifications]);
 
   const handleAction = async (verificationId: string, action: 'APPROVE_VERIFICATION' | 'REJECT_VERIFICATION', reason?: string) => {
     try {

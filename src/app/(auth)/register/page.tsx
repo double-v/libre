@@ -22,18 +22,20 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileBlocked, setTurnstileBlocked] = useState(false);
-  const [deviceId, setDeviceId] = useState('');
-  const [consentGiven, setConsentGiven] = useState(false);
-  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-
-  useEffect(() => {
+  // Device id créé/lu au premier rendu client via l'initialiseur paresseux de
+  // useState (pas d'effet → pas de setState-in-effect). Non rendu dans le JSX,
+  // donc aucun risque d'écart d'hydratation ('' côté serveur).
+  const [deviceId] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
     let id = localStorage.getItem('libre_device_id');
     if (!id) {
       id = crypto.randomUUID();
       localStorage.setItem('libre_device_id', id);
     }
-    setDeviceId(id);
-  }, []);
+    return id;
+  });
+  const [consentGiven, setConsentGiven] = useState(false);
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   useEffect(() => {
     if (!siteKey) return;

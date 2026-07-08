@@ -37,15 +37,25 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
 
   useEffect(() => {
     if (!userId) return;
-    setLoading(true);
-    fetch(`/api/admin/users/${userId}`)
-      .then((r) => {
+    let cancelled = false;
+    // IIFE async → pas de setState synchrone dans le corps de l'effet
+    // (react-hooks/set-state-in-effect, cf. #179/#193).
+    void (async () => {
+      setLoading(true);
+      try {
+        const r = await fetch(`/api/admin/users/${userId}`);
         if (!r.ok) throw new Error();
-        return r.json();
-      })
-      .then((data) => setUser(data.user))
-      .catch(() => setError('Impossible de charger l\'utilisateur'))
-      .finally(() => setLoading(false));
+        const data = await r.json();
+        if (!cancelled) setUser(data.user);
+      } catch {
+        if (!cancelled) setError('Impossible de charger l\'utilisateur');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
   const handleBanToggle = async () => {

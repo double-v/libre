@@ -24,7 +24,11 @@ export default function ThemeToggle() {
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
+    // Thème lu côté client (localStorage/matchMedia) post-hydratation : SSR rend
+    // le défaut (clair), on aligne après montage → un seul flip, SSR-safe
+    // intentionnel. L'effet applique aussi le thème au DOM (sync externe). Cf #193.
     const isDark = getInitialDark();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDark(isDark);
     applyTheme(isDark);
   }, []);

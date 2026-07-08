@@ -47,7 +47,11 @@ export default function CrossingsView() {
   }, []);
 
   useEffect(() => {
-    fetchCrossings();
+    // IIFE async → pas de setState synchrone dans le corps de l'effet
+    // (react-hooks/set-state-in-effect, cf. #179/#193).
+    void (async () => {
+      await fetchCrossings();
+    })();
   }, [fetchCrossings]);
 
   async function handleLike(userId: string) {

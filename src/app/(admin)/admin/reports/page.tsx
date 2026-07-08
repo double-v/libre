@@ -36,7 +36,11 @@ export default function AdminReportsPage() {
     }
   }, [status, page]);
 
-  useEffect(() => { fetchReports(); }, [fetchReports]);
+  useEffect(() => {
+    // Fetch au montage : IIFE async → aucun setState synchrone dans le corps
+    // de l'effet (react-hooks/set-state-in-effect, cf. #179/#193).
+    void (async () => { await fetchReports(); })();
+  }, [fetchReports]);
 
   const handleAction = async (reportId: string, action: 'DISMISS_REPORT' | 'BAN' | 'WARNING', reason?: string) => {
     try {

@@ -16,12 +16,16 @@ export function useGeolocation() {
   });
 
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setState({ latitude: null, longitude: null, error: 'Geolocation not supported', loading: false });
-      return;
-    }
+    // IIFE async → le setState de garde (« géoloc non supportée ») n'est pas
+    // synchrone dans le corps de l'effet (react-hooks/set-state-in-effect,
+    // cf. #179/#193). getCurrentPosition passe déjà par des callbacks.
+    void (async () => {
+      if (!navigator.geolocation) {
+        setState({ latitude: null, longitude: null, error: 'Geolocation not supported', loading: false });
+        return;
+      }
 
-    navigator.geolocation.getCurrentPosition(
+      navigator.geolocation.getCurrentPosition(
       (position) => {
         setState({
           latitude: position.coords.latitude,
@@ -33,8 +37,9 @@ export function useGeolocation() {
       (error) => {
         setState({ latitude: null, longitude: null, error: error.message, loading: false });
       },
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
-    );
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
+      );
+    })();
   }, []);
 
   return state;

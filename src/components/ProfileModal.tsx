@@ -63,37 +63,37 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null 
   const [selectedPhoto, setSelectedPhoto] = useState(0);
 
   useEffect(() => {
-    if (!open) {
-      setProfile(null);
-      setError(null);
-      setSelectedPhoto(0);
-      return;
-    }
-
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    fetch(`/api/users/${userId}`)
-      .then((res) => {
+    // Tout le corps (reset à la fermeture + fetch à l'ouverture) vit dans une
+    // IIFE async : aucun setState synchrone dans le corps de l'effet
+    // (react-hooks/set-state-in-effect, cf. #179/#193).
+    void (async () => {
+      if (!open) {
+        setProfile(null);
+        setError(null);
+        setSelectedPhoto(0);
+        return;
+      }
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/users/${userId}`);
         if (!res.ok) {
           if (res.status === 404) throw new Error('Utilisateur introuvable');
           throw new Error('Une erreur est survenue');
         }
-        return res.json();
-      })
-      .then((data) => {
+        const data = await res.json();
         if (!cancelled) {
           setProfile(data);
           setLoading(false);
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!cancelled) {
-          setError(err.message);
+          setError(err instanceof Error ? err.message : 'Une erreur est survenue');
           setLoading(false);
         }
-      });
+      }
+    })();
 
     return () => {
       cancelled = true;

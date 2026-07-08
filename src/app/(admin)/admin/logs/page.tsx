@@ -43,7 +43,11 @@ export default function AdminLogsPage() {
     }
   }, [page]);
 
-  useEffect(() => { fetchLogs(); }, [fetchLogs]);
+  useEffect(() => {
+    // Fetch au montage : IIFE async → aucun setState synchrone dans le corps
+    // de l'effet (react-hooks/set-state-in-effect, cf. #179/#193).
+    void (async () => { await fetchLogs(); })();
+  }, [fetchLogs]);
 
   const totalPages = Math.ceil(total / 20);
 

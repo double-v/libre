@@ -41,7 +41,11 @@ export default function SettingsPage() {
   }, [router]);
 
   useEffect(() => {
-    fetchProfile();
+    // IIFE async → pas de setState synchrone dans le corps de l'effet
+    // (react-hooks/set-state-in-effect, cf. #179/#193).
+    void (async () => {
+      await fetchProfile();
+    })();
   }, [fetchProfile]);
 
   async function handleToggleInvisible() {

@@ -60,15 +60,19 @@ export default function GifPicker({
   const [notConfigured, setNotConfigured] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Si l'input est vide en mode search, on retombe sur trending — ajusté pendant
+  // le rendu (pattern React officiel « adjust state during render »), pas dans un
+  // effet (react-hooks/set-state-in-effect). Converge : setMode → mode='trending'
+  // → condition fausse au rendu suivant.
+  if (mode === 'search' && query.trim().length === 0) {
+    setMode('trending');
+  }
+
   // Debounce 300ms sur la query de recherche
   useEffect(() => {
     if (mode !== 'search') return;
     const trimmed = query.trim();
-    if (trimmed.length === 0) {
-      // Si l'input est vide en mode search, on retombe sur trending
-      setMode('trending');
-      return;
-    }
+    if (trimmed.length === 0) return;
     const timer = setTimeout(() => setDebouncedQuery(trimmed), 300);
     return () => clearTimeout(timer);
   }, [query, mode]);
@@ -76,35 +80,34 @@ export default function GifPicker({
   // Fetch à chaque changement de mode/debouncedQuery
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setNotConfigured(false);
-
     const endpoint =
       mode === 'trending'
         ? `/api/place/gifs/trending?limit=24`
         : `/api/place/gifs/search?q=${encodeURIComponent(debouncedQuery)}&limit=24`;
 
-    fetch(endpoint)
-      .then(async (res) => {
+    // IIFE async → pas de setState synchrone dans le corps de l'effet
+    // (react-hooks/set-state-in-effect, cf. #179/#193).
+    void (async () => {
+      setLoading(true);
+      setError(null);
+      setNotConfigured(false);
+      try {
+        const res = await fetch(endpoint);
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }
-        return (await res.json()) as GiphyResponse;
-      })
-      .then((data) => {
+        const data = (await res.json()) as GiphyResponse;
         if (cancelled) return;
         setNotConfigured(data.notConfigured);
         setGifs(data.gifs ?? []);
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : 'Erreur inconnue');
         setGifs([]);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    })();
 
     return () => {
       cancelled = true;

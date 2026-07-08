@@ -77,7 +77,11 @@ export default function AdminSquareThemes() {
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    // Fetch au montage : IIFE async → aucun setState synchrone dans le corps
+    // de l'effet (react-hooks/set-state-in-effect, cf. #179/#193).
+    void (async () => { await fetchData(); })();
+  }, [fetchData]);
 
   const startEdit = (theme: ThemeConfig) => {
     setEditingId(theme.id);
