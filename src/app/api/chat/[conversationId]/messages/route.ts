@@ -98,7 +98,12 @@ export async function POST(
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    }
     const parsed = messageSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
@@ -119,12 +124,23 @@ export async function POST(
 
     // Pusher real-time notification — only metadata, NOT the content.
     // Clients fetch the encrypted content separately.
-    const channel = getPusherChannel(conversationId);
-    await pusher.trigger(channel, 'new-message', {
-      id: message.id,
-      senderId: message.senderId,
-      createdAt: message.createdAt,
-    });
+    //
+    // BEST-EFFORT : le message est DÉJÀ persisté ci-dessus. Une panne Pusher
+    // (creds invalides, quota du plan atteint, réseau) ne doit jamais faire
+    // échouer un envoi réussi — sinon l'utilisateur voit une erreur 500 pour
+    // un message pourtant bien enregistré (bug prod observé). Même philosophie
+    // que le rate limiter et que la notif « new-match » dans /api/likes : on
+    // log et on dégrade, on ne bloque pas l'utilisateur sur une panne d'infra.
+    try {
+      const channel = getPusherChannel(conversationId);
+      await pusher.trigger(channel, 'new-message', {
+        id: message.id,
+        senderId: message.senderId,
+        createdAt: message.createdAt,
+      });
+    } catch (pusherError) {
+      console.error('Pusher new-message notification error:', pusherError);
+    }
 
     return NextResponse.json({ message }, { status: 201 });
   } catch (error) {

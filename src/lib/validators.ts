@@ -70,8 +70,14 @@ export const reportSchema = z.object({
   description: z.string().max(1000).default(''),
 });
 
+// `content` est du CHIFFRÉ (E2E côté client), pas du texte brut. Le champ de
+// saisie plafonne le clair à 1000 caractères, mais AES-GCM + base64 gonfle la
+// taille (~1.37× en ASCII, davantage en UTF-8 multi-octets / emoji). Un cap à
+// 1000 ici rejetait donc en 400 tout message clair un peu long alors qu'il
+// respectait la limite UI. On dimensionne pour le pire cas (1000 chars → jusqu'à
+// ~4 ko chiffrés) avec une marge.
 export const messageSchema = z.object({
-  content: z.string().min(1).max(1000),
+  content: z.string().min(1).max(6000),
 });
 
 export const geolocUpdateSchema = z.object({
