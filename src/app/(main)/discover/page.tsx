@@ -94,11 +94,32 @@ export default function DiscoverPage() {
   const [radiusSaving, setRadiusSaving] = useState(false);
   const [geoRequesting, setGeoRequesting] = useState(false);
   const [geoError, setGeoError] = useState('');
+  const [activeFeedKey, setActiveFeedKey] = useState('');
   const fetchIdRef = useRef(0);
 
   // Le segment « Croisements » a sa propre vue et ne consomme pas le feed.
   const isFeed = segment !== 'crossings';
   const feedTab: FeedTab = segment === 'nearby' ? 'nearby' : 'all';
+  // Identité du feed courant : change quand on switche d'onglet ou de filtres.
+  const feedKey = isFeed ? `${feedTab}|${JSON.stringify(filters)}` : 'crossings';
+
+  // Reset du feed quand son identité change — fait pendant le rendu (pattern
+  // React officiel « ajuster l'état pendant le rendu »), pas dans un effet :
+  // évite les setState synchrones en effet (react-hooks/set-state-in-effect,
+  // cf. #179) et les renders en cascade.
+  // https://react.dev/learn/you-might-not-need-an-effect
+  if (feedKey !== activeFeedKey) {
+    setActiveFeedKey(feedKey);
+    if (isFeed) {
+      setUsers([]);
+      setCursor(null);
+      setPassedIds(new Set());
+      setNearbyReason(null);
+      setErrorKind('none');
+      setGeoError('');
+      setLoading(true);
+    }
+  }
 
   const fetchPage = useCallback(
     async (reset: boolean) => {
@@ -130,16 +151,12 @@ export default function DiscoverPage() {
   );
 
   // Fetch on segment or filter change (reset). Skipped for « Croisements ».
+  // Le reset d'état (users/cursor/…) est fait pendant le rendu ci-dessus ; cet
+  // effet ne fait que l'appel réseau, sans aucun setState synchrone dans son
+  // corps (les setState vivent dans la closure async, après le premier await).
   useEffect(() => {
     if (!isFeed) return;
-    setCursor(null);
-    setUsers([]);
-    setPassedIds(new Set());
-    setNearbyReason(null);
-    setGeoError('');
     const fetchId = ++fetchIdRef.current;
-    setLoading(true);
-    setErrorKind('none');
     (async () => {
       try {
         const url = buildUrl(feedTab, undefined, filters);
