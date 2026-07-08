@@ -22,7 +22,10 @@ const giphyUrl = z
 
 export const squareMessageSchema = z
   .object({
-    content: z.string().min(1).max(500),
+    // `content` peut être vide : un message GIF n'a que son URL (bug #104 —
+    // le client envoie content='' pour un GIF). La non-vacuité est exigée
+    // ci-dessous pour les types non-GIF uniquement.
+    content: z.string().max(500),
     type: z.enum(['text', 'emoji', 'reaction', 'gif', 'polite', 'riddle']).default('text'),
     gifUrl: giphyUrl.optional(),
   })
@@ -34,6 +37,11 @@ export const squareMessageSchema = z
       return !data.gifUrl;
     },
     { message: 'gifUrl required when type=gif, forbidden otherwise', path: ['gifUrl'] },
+  )
+  .refine(
+    // Hors GIF, le contenu reste obligatoire (équivalent de l'ancien min(1)).
+    (data) => data.type === 'gif' || data.content.length >= 1,
+    { message: 'content required unless type=gif', path: ['content'] },
   );
 
 export const bannedWordCreateSchema = z.object({
