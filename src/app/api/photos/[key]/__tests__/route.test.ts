@@ -3,9 +3,10 @@
  *
  * Vérifie le contrôle d'accès (issue #143) :
  * - 401 sans session
- * - 403 si user A tente d'accéder à la photo de user B sans match
+ * - avatar (photos[0]) public : 307 même sans match
+ * - 403 sur une photo NON-avatar de user B sans match
  * - 200 + redirect si user A accède à sa propre photo
- * - 200 + redirect si user A accède à la photo de user B (ils sont match)
+ * - 200 + redirect si user A accède à une photo non-avatar de user B (match)
  * - 404 si la clé n'existe pas dans le profil
  * - Rate limit : 429 si trop de requêtes
  * - Headers de sécurité présents sur la redirect response
@@ -61,7 +62,8 @@ const { GET } = await import('../route');
 const ALICE_ID = randomUUID();
 const BOB_ID = randomUUID();
 const ALICE_PHOTO = `${ALICE_ID}/${randomUUID()}.jpg`;
-const BOB_PHOTO = `${BOB_ID}/${randomUUID()}.jpg`;
+const BOB_AVATAR = `${BOB_ID}/${randomUUID()}.jpg`; // photos[0] = avatar public
+const BOB_PHOTO = `${BOB_ID}/${randomUUID()}.jpg`; // photo secondaire = match-gated
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -95,11 +97,21 @@ describe('GET /api/photos/[key] — contrôle d\'accès (issue #143)', () => {
     expect(res.status).toBe(401);
   });
 
-  it('renvoie 403 si user A tente d\'accéder à la photo de user B sans match', async () => {
+  it('avatar public : 307 quand user A accède à l\'avatar (photos[0]) de user B sans match', async () => {
     fakeDb.match.findFirst.mockResolvedValue(null); // pas de match
-    fakeDb.profile.findUnique.mockResolvedValue({ photos: [BOB_PHOTO] });
+    fakeDb.profile.findUnique.mockResolvedValue({ photos: [BOB_AVATAR, BOB_PHOTO] });
 
-    const [req, ctx] = makeNextRequest(BOB_PHOTO);
+    const [req, ctx] = makeNextRequest(BOB_AVATAR);
+    const res = await GET(req as NextRequest, ctx);
+    expect(res.status).toBe(307);
+    expect(res.headers.get('Location')).toBe('https://r2.example.com/signed-url');
+  });
+
+  it('renvoie 403 si user A accède à une photo NON-avatar de user B sans match', async () => {
+    fakeDb.match.findFirst.mockResolvedValue(null); // pas de match
+    fakeDb.profile.findUnique.mockResolvedValue({ photos: [BOB_AVATAR, BOB_PHOTO] });
+
+    const [req, ctx] = makeNextRequest(BOB_PHOTO); // index 1 = non-avatar
     const res = await GET(req as NextRequest, ctx);
     expect(res.status).toBe(403);
   });
@@ -113,9 +125,9 @@ describe('GET /api/photos/[key] — contrôle d\'accès (issue #143)', () => {
     expect(res.headers.get('Location')).toBe('https://r2.example.com/signed-url');
   });
 
-  it('renvoie 200 (redirect) si user A accède à la photo de user B (ils sont match)', async () => {
+  it('renvoie 200 (redirect) si user A accède à une photo non-avatar de user B (ils sont match)', async () => {
     fakeDb.match.findFirst.mockResolvedValue({ userA: ALICE_ID, userB: BOB_ID });
-    fakeDb.profile.findUnique.mockResolvedValue({ photos: [BOB_PHOTO] });
+    fakeDb.profile.findUnique.mockResolvedValue({ photos: [BOB_AVATAR, BOB_PHOTO] });
 
     const [req, ctx] = makeNextRequest(BOB_PHOTO);
     const res = await GET(req as NextRequest, ctx);
