@@ -34,8 +34,31 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Clé invalide' }, { status: 400 });
     }
 
-    // Permission check: owner can always see, others must be matches
-    if (ownerId !== session.user.id) {
+    // La clé doit réellement appartenir au profil du propriétaire — sans ça,
+    // n'importe quel utilisateur authentifié pourrait obtenir une URL signée
+    // pour une clé arbitraire jamais uploadée. On récupère aussi l'index pour
+    // distinguer l'avatar (photo principale) du reste.
+    const ownerProfile = await getDb().profile.findUnique({
+      where: { userId: ownerId },
+      select: { photos: true },
+    });
+    const ownerPhotos = (ownerProfile?.photos as string[] | null) ?? [];
+    const photoIndex = ownerPhotos.indexOf(decodedKey);
+    if (photoIndex === -1) {
+      return NextResponse.json({ error: 'Photo introuvable' }, { status: 404 });
+    }
+
+    // Modèle d'accès :
+    //  - le propriétaire voit toutes ses photos ;
+    //  - l'AVATAR (photo principale = photos[0]) est PUBLIC : visible par tout
+    //    utilisateur authentifié, matché ou non — indispensable à Discover /
+    //    croisements, où l'on voit des profils non-matchés (rate-limit ci-dessus
+    //    = garde-fou anti-scraping) ;
+    //  - les AUTRES photos restent réservées aux matches (issue #143).
+    // TODO(#suite) : visibilité paramétrable par photo (public / matches).
+    const isOwner = ownerId === session.user.id;
+    const isAvatar = photoIndex === 0;
+    if (!isOwner && !isAvatar) {
       const isMatch = await getDb().match.findFirst({
         where: {
           OR: [
@@ -48,18 +71,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       if (!isMatch) {
         return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
       }
-    }
-
-    // Verify the key actually belongs to the owner's profile. Without this check,
-    // any authenticated user who is a match (or the owner themselves) could obtain
-    // a signed URL for an arbitrary key, even one that was never uploaded.
-    const ownerProfile = await getDb().profile.findUnique({
-      where: { userId: ownerId },
-      select: { photos: true },
-    });
-    const ownerPhotos = (ownerProfile?.photos as string[] | null) ?? [];
-    if (!ownerPhotos.includes(decodedKey)) {
-      return NextResponse.json({ error: 'Photo introuvable' }, { status: 404 });
     }
 
     const signedUrl = await getPhotoSignedUrl(decodedKey);
