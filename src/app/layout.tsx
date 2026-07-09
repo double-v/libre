@@ -79,7 +79,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="fr" data-theme={theme.id} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('libre-theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')}catch{}})()` }} />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var d=document.documentElement;var t=localStorage.getItem('libre-theme');if(t==='dark'||((t==='auto'||!t)&&matchMedia('(prefers-color-scheme:dark)').matches))d.classList.add('dark');var s=localStorage.getItem('libre-skin');if(s)d.setAttribute('data-theme',s)}catch{}})()` }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }} />
       </head>
