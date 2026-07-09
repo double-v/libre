@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { getSiteTheme } from '@/lib/site-themes';
+import { getSiteTheme, DEFAULT_SITE_THEME_ID } from '@/lib/site-themes';
 
 const SINGLETON_ID = 'singleton';
 
@@ -12,13 +12,10 @@ export async function GET() {
     const config = await getDb().siteConfig.findUnique({
       where: { id: SINGLETON_ID },
     });
-    const themeId = config?.currentTheme ?? 'default';
+    const themeId = config?.currentTheme ?? DEFAULT_SITE_THEME_ID;
     // Validate the stored value is still a known theme (defensive)
-    const theme = getSiteTheme(themeId) ?? getSiteTheme('default')!;
-    return NextResponse.json(
-      { id: theme.id, tokenOverrides: theme.tokenOverrides },
-      { status: 200 }
-    );
+    const theme = getSiteTheme(themeId) ?? getSiteTheme(DEFAULT_SITE_THEME_ID)!;
+    return NextResponse.json({ id: theme.id }, { status: 200 });
   } catch (error) {
     console.error('Public site-theme GET error:', error);
     return NextResponse.json(

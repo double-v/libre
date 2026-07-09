@@ -1,47 +1,50 @@
+/**
+ * Registre des skins (identités graphiques). Cf. DESIGN.md § Theming — Mode × Skin.
+ *
+ * Les *valeurs* de chaque skin vivent en CSS (blocs `html[data-theme="…"]`
+ * clair + `html[data-theme="…"].dark` sombre, dans `globals.css`) — pas ici.
+ * Ce module ne porte que l'identité (id, label, description) : ce qui est
+ * nécessaire pour lister, valider et sélectionner un skin.
+ *
+ * Le skin par défaut « libre » vit dans `:root` / `:root.dark`.
+ */
 export interface SiteTheme {
   id: string;
   label: string;
   description: string;
-  tokenOverrides: Record<string, string>;
 }
+
+export const DEFAULT_SITE_THEME_ID = 'libre';
 
 export const SITE_THEMES: SiteTheme[] = [
   {
-    id: 'default',
-    label: 'Default (coral actuel)',
-    description: 'Identité visuelle existante — palette coral/terracotta/blush.',
-    tokenOverrides: {
-      '--color-coral': '#E8634A',
-      '--color-coral-light': '#F09A88',
-      '--color-terracotta': '#C4503A',
-      '--color-blush': '#FDF0ED',
-      '--color-sand': '#F5E6D8',
-      '--color-coral-dark': '#9E3A28',
-      '--background': '#ffffff',
-      '--foreground': '#171717',
-    },
+    id: 'libre',
+    label: 'Libre (coral)',
+    description: "L'identité coral/cream, chaude et lumineuse. Le thème par défaut.",
   },
   {
-    id: 'c-warm',
-    label: 'C-Warm (variante chaude)',
-    description: 'Palette plus chaude, plus de terracotta, fond crème. Pour tester une direction "accueillante".',
-    tokenOverrides: {
-      '--color-coral': '#D9542E',
-      '--color-coral-light': '#E68B6E',
-      '--color-terracotta': '#A33A20',
-      '--color-blush': '#FBE8DD',
-      '--color-sand': '#EFD8C2',
-      '--color-coral-dark': '#7A2A18',
-      '--background': '#FFFBF7',
-      '--foreground': '#1F1410',
-    },
+    id: 'libre-warm',
+    label: 'Warm (terracotta)',
+    description:
+      'Variante plus chaude : davantage de terracotta, un crème plus profond. Décliné en clair et sombre.',
   },
 ];
 
+/**
+ * Anciennes valeurs persistées (`site_config.currentTheme`, cookies de preview)
+ * → nouveaux ids. Évite de casser les configs existantes après le renommage
+ * `default` → `libre`, `c-warm` → `libre-warm`.
+ */
+const THEME_ALIASES: Record<string, string> = {
+  default: 'libre',
+  'c-warm': 'libre-warm',
+};
+
 export function getSiteTheme(id: string): SiteTheme | undefined {
-  return SITE_THEMES.find((t) => t.id === id);
+  const canonical = THEME_ALIASES[id] ?? id;
+  return SITE_THEMES.find((t) => t.id === canonical);
 }
 
 export function isValidSiteTheme(value: unknown): value is string {
-  return typeof value === 'string' && SITE_THEMES.some((t) => t.id === value);
+  return typeof value === 'string' && getSiteTheme(value) !== undefined;
 }

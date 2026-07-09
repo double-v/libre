@@ -76,13 +76,8 @@ const webSiteJsonLd = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const theme = await getCurrentSiteTheme();
-  // Build inline style with --color-* + --background / --foreground overrides
-  const themeStyle: React.CSSProperties = {};
-  for (const [key, value] of Object.entries(theme.tokenOverrides)) {
-    (themeStyle as Record<string, string>)[key] = value;
-  }
   return (
-    <html lang="fr" data-theme={theme.id} style={themeStyle} suppressHydrationWarning>
+    <html lang="fr" data-theme={theme.id} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('libre-theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')}catch{}})()` }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />

@@ -1,12 +1,11 @@
 import { getDb } from '@/lib/db';
-import { getSiteTheme } from '@/lib/site-themes';
+import { getSiteTheme, DEFAULT_SITE_THEME_ID } from '@/lib/site-themes';
 import { readPreviewThemeFromCookies } from '@/lib/site-theme-preview';
 
 const SINGLETON_ID = 'singleton';
 
 export interface SiteThemeInfo {
   id: string;
-  tokenOverrides: Record<string, string>;
 }
 
 /**
@@ -22,22 +21,22 @@ export interface SiteThemeInfo {
  */
 export async function getCurrentSiteTheme(): Promise<SiteThemeInfo> {
   const fallback = (): SiteThemeInfo => {
-    const t = getSiteTheme('default')!;
-    return { id: t.id, tokenOverrides: t.tokenOverrides };
+    const t = getSiteTheme(DEFAULT_SITE_THEME_ID)!;
+    return { id: t.id };
   };
 
   try {
     const preview = await readPreviewThemeFromCookies();
     if (preview) {
-      return { id: preview.id, tokenOverrides: preview.tokenOverrides };
+      return { id: preview.id };
     }
 
     const config = await getDb().siteConfig.findUnique({
       where: { id: SINGLETON_ID },
     });
-    const themeId = config?.currentTheme ?? 'default';
-    const theme = getSiteTheme(themeId) ?? getSiteTheme('default')!;
-    return { id: theme.id, tokenOverrides: theme.tokenOverrides };
+    const themeId = config?.currentTheme ?? DEFAULT_SITE_THEME_ID;
+    const theme = getSiteTheme(themeId) ?? getSiteTheme(DEFAULT_SITE_THEME_ID)!;
+    return { id: theme.id };
   } catch (error) {
     console.error('getCurrentSiteTheme error:', error);
     return fallback();
