@@ -484,7 +484,7 @@ export default async function Home() {
               <div className="flex items-start gap-3">
                 <span className="text-coral text-lg mt-0.5">{'>'}</span>
                 <p className="text-sm text-gray-700 dark:text-gray-300">
-                  <strong>La transparence n&apos;est pas une option.</strong> Pas de prix cachés, pas de faux profils, pas d&apos;algorithme qui vous manipule. Le code est open, les intentions sont claires.
+                  <strong>La transparence n&apos;est pas une option.</strong> Pas de prix cachés, pas de faux profils, pas d&apos;algorithme qui vous manipule. Le code source est ouvert et réutilisable à but non commercial, les intentions sont claires.
                 </p>
               </div>
             </div>
@@ -561,9 +561,9 @@ export default async function Home() {
             </svg>
           </a>
         </div>
-        {/* Open source */}
+        {/* Code source ouvert */}
         <p className="mb-3 text-xs text-gray-300 dark:text-gray-600">
-          Code source ouvert :{' '}
+          Code source ouvert, usage non commercial :{' '}
           <a
             href="https://github.com/double-v/libre"
             target="_blank"
