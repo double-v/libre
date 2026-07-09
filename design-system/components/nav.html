@@ -1,0 +1,89 @@
+<!-- @dsCard group="Navigation" name="Bottom tab bar" subtitle="4 onglets · Découvrir / Messages / La Place / Profil · actif coral" -->
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Navigation — Libre DS</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Inter,sans-serif;background:#f6f6f7;color:#171717;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 24px 40px}
+  .title{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:0 0 2px}
+  .sub{font-size:13px;color:#6b7280;margin:0 0 22px}
+  .stage{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:720px){.stage{grid-template-columns:1fr}}
+  .panel{border-radius:16px;padding:20px;border:1px solid rgba(0,0,0,.06)}
+  .panel.light{background:#FDF0ED}
+  .panel.dark{background:#0a0a0a;border-color:#1f2937}
+  .plabel{font:600 11px/1 system-ui;letter-spacing:.08em;text-transform:uppercase;color:#9ca3af;margin:0 0 16px}
+
+  /* Bottom tab bar — miroir de src/app/(main)/layout.tsx */
+  .navbar{max-width:420px;margin:0 auto;background:#fff;border-radius:14px;box-shadow:0 -1px 6px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.05);overflow:hidden}
+  .dark .navbar{background:#030712;box-shadow:0 -1px 6px rgba(0,0,0,.5)}
+  .navrow{display:flex;align-items:center;justify-content:space-around}
+  .navitem{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 12px;font-size:12px;font-weight:500;color:#4b5563;text-decoration:none}
+  .navitem.active{color:#E8634A;font-weight:600}
+  .dark .navitem{color:#9ca3af}
+  .dark .navitem.active{color:#F09A88}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="title">Bottom tab bar</h1>
+  <p class="sub">Refonte 4 onglets (mobile-first) · <code>Découvrir · Messages · La Place · Profil</code> · état actif coral + icône Découvrir pleine</p>
+  <div class="stage">
+
+    <section class="panel light">
+      <div class="plabel">Light</div>
+      <nav class="navbar" role="navigation" aria-label="Navigation principale">
+        <div class="navrow">
+          <a class="navitem active" aria-current="page">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            Découvrir
+          </a>
+          <a class="navitem">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            Messages
+          </a>
+          <a class="navitem">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            La Place
+          </a>
+          <a class="navitem">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Profil
+          </a>
+        </div>
+      </nav>
+    </section>
+
+    <section class="panel dark">
+      <div class="plabel">Dark</div>
+      <nav class="navbar" role="navigation" aria-label="Navigation principale">
+        <div class="navrow">
+          <a class="navitem active" aria-current="page">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            Découvrir
+          </a>
+          <a class="navitem">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            Messages
+          </a>
+          <a class="navitem">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            La Place
+          </a>
+          <a class="navitem">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Profil
+          </a>
+        </div>
+      </nav>
+    </section>
+
+  </div>
+</div>
+</body>
+</html>

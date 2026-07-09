@@ -1,0 +1,150 @@
+<!-- @dsCard group="Composants" name="Card" subtitle="profile / filter / modal / empty · interactive · shadow-soft & shadow-pop teintés coral" -->
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card — Libre DS</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Inter,sans-serif;background:#f6f6f7;color:#171717;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 24px 40px}
+  .title{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:0 0 2px}
+  .sub{font-size:13px;color:#6b7280;margin:0 0 22px}
+  .stage{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:720px){.stage{grid-template-columns:1fr}}
+  .panel{border-radius:16px;padding:20px;border:1px solid rgba(0,0,0,.06)}
+  .panel.light{background:#FDF0ED}
+  .panel.dark{background:#0a0a0a;border-color:#1f2937}
+  .plabel{font:600 11px/1 system-ui;letter-spacing:.08em;text-transform:uppercase;color:#9ca3af;margin:0 0 16px}
+  .grp{font:500 11px/1.4 system-ui;letter-spacing:.05em;text-transform:uppercase;color:#4b5563;margin:18px 0 9px}
+  .dark .grp{color:#9ca3af}
+  .grp:first-of-type{margin-top:0}
+
+  /* Card — miroir de src/components/ui/Card.tsx */
+  .card{border-radius:16px;padding:16px;background:#fff;border:1px solid #e5e7eb}
+  .card.profile{box-shadow:0 2px 8px -2px rgb(232 99 74 / .08)}
+  .card.modal{border:none;border-radius:12px;padding:24px;box-shadow:0 8px 24px -4px rgb(232 99 74 / .16)}
+  .card.empty{padding:32px;text-align:center}
+  .card.interactive{cursor:pointer;transition:box-shadow 160ms cubic-bezier(.22,1,.36,1)}
+  .card.interactive.is-hover,.card.interactive:hover{box-shadow:0 8px 24px -4px rgb(232 99 74 / .16)}
+  .dark .card{background:#171717;border-color:#374151;color:#ededed}
+  .dark .card.modal{border:none}
+
+  .prof{display:flex;gap:12px;align-items:center}
+  .ava-wrap{position:relative;flex:0 0 auto}
+  .ava{width:48px;height:48px;border-radius:9999px;background:#F5E6D8;color:#9E3A28;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px}
+  .dot{position:absolute;right:1px;bottom:1px;width:10px;height:10px;border-radius:9999px;background:#16a34a;border:2px solid #fff}
+  .dark .dot{border-color:#171717}
+  .name{font-size:16px;font-weight:600;color:#171717;margin:0}
+  .dark .name{color:#ededed}
+  .meta{font-size:14px;color:#4b5563;margin:2px 0 0}
+  .dark .meta{color:#9ca3af}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .chip{display:inline-flex;align-items:center;border-radius:9999px;font-weight:500;font-size:12px;padding:2px 10px;background:#f3f4f6;color:#374151}
+  .dark .chip{background:#1f2937;color:#d1d5db}
+  .chip.coral{background:#E8634A;color:#fff}
+  .stack{display:grid;gap:12px}
+  .mtitle{font-size:20px;font-weight:600;margin:0 0 6px;color:#171717}
+  .dark .mtitle{color:#ededed}
+  .mbody{font-size:14px;color:#374151;margin:0 0 16px;line-height:1.55}
+  .dark .mbody{color:#d1d5db}
+  .brow{display:flex;gap:10px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;border-radius:6px;font-weight:500;font-size:14px;height:44px;padding:0 16px;border:1px solid transparent;cursor:pointer;font-family:inherit}
+  .btn-primary{background:#E8634A;color:#fff}
+  .btn-secondary{background:#fff;color:#1f2937;border-color:#d1d5db}
+  .dark .btn-secondary{background:#171717;color:#ededed;border-color:#374151}
+  .empty-ico{width:44px;height:44px;border-radius:9999px;background:#FDF0ED;color:#E8634A;display:inline-flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px}
+  .dark .empty-ico{background:rgb(232 99 74 / .12)}
+  .empty-t{font-size:16px;font-weight:600;margin:0 0 4px;color:#171717}
+  .dark .empty-t{color:#ededed}
+  .empty-b{font-size:14px;color:#4b5563;margin:0}
+  .dark .empty-b{color:#9ca3af}
+  @media(prefers-reduced-motion:reduce){.card.interactive{transition-duration:80ms}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="title">Card</h1>
+  <p class="sub">Conteneur partagé · variantes <code>profile / filter / modal / empty</code> · profondeur par la couleur, ombres rares & teintées coral</p>
+  <div class="stage">
+
+    <section class="panel light">
+      <div class="plabel">Light</div>
+
+      <div class="grp">profile · interactive (hover)</div>
+      <div class="card profile interactive is-hover">
+        <div class="prof">
+          <div class="ava-wrap"><div class="ava">CL</div><span class="dot"></span></div>
+          <div>
+            <p class="name">Camille</p>
+            <p class="meta">Vu il y a 3 min · à 2 km</p>
+          </div>
+        </div>
+        <div class="chips">
+          <span class="chip">Randonnée</span><span class="chip">Cinéma</span><span class="chip coral">Non-fumeur·se</span>
+        </div>
+      </div>
+
+      <div class="grp">filter</div>
+      <div class="card filter">
+        <div class="chips"><span class="chip coral">Femmes</span><span class="chip">18–35 ans</span><span class="chip">&lt; 10 km</span></div>
+      </div>
+
+      <div class="grp">modal</div>
+      <div class="card modal">
+        <p class="mtitle">Échanger vos réseaux ?</p>
+        <p class="mbody">À vous de choisir comment aller plus loin.</p>
+        <div class="brow"><button class="btn btn-primary">Proposer</button><button class="btn btn-secondary">Annuler</button></div>
+      </div>
+
+      <div class="grp">empty</div>
+      <div class="card empty">
+        <div class="empty-ico">✶</div>
+        <p class="empty-t">Vos chemins se croiseront bientôt</p>
+        <p class="empty-b">On vous prévient dès qu'un croisement a lieu.</p>
+      </div>
+    </section>
+
+    <section class="panel dark">
+      <div class="plabel">Dark</div>
+
+      <div class="grp">profile · interactive (hover)</div>
+      <div class="card profile interactive is-hover">
+        <div class="prof">
+          <div class="ava-wrap"><div class="ava">CL</div><span class="dot"></span></div>
+          <div>
+            <p class="name">Camille</p>
+            <p class="meta">Vu il y a 3 min · à 2 km</p>
+          </div>
+        </div>
+        <div class="chips">
+          <span class="chip">Randonnée</span><span class="chip">Cinéma</span><span class="chip coral">Non-fumeur·se</span>
+        </div>
+      </div>
+
+      <div class="grp">filter</div>
+      <div class="card filter">
+        <div class="chips"><span class="chip coral">Femmes</span><span class="chip">18–35 ans</span><span class="chip">&lt; 10 km</span></div>
+      </div>
+
+      <div class="grp">modal</div>
+      <div class="card modal">
+        <p class="mtitle">Échanger vos réseaux ?</p>
+        <p class="mbody">À vous de choisir comment aller plus loin.</p>
+        <div class="brow"><button class="btn btn-primary">Proposer</button><button class="btn btn-secondary">Annuler</button></div>
+      </div>
+
+      <div class="grp">empty</div>
+      <div class="card empty">
+        <div class="empty-ico">✶</div>
+        <p class="empty-t">Vos chemins se croiseront bientôt</p>
+        <p class="empty-b">On vous prévient dès qu'un croisement a lieu.</p>
+      </div>
+    </section>
+
+  </div>
+</div>
+</body>
+</html>

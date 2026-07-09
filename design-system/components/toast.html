@@ -1,0 +1,62 @@
+<!-- @dsCard group="Composants" name="Toast" subtitle="success / info / error · fugace, univers coral, jamais de rouge toxique" -->
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toast — Libre DS</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Inter,sans-serif;background:#f6f6f7;color:#171717;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 24px 40px}
+  .title{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:0 0 2px}
+  .sub{font-size:13px;color:#6b7280;margin:0 0 22px}
+  .stage{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:720px){.stage{grid-template-columns:1fr}}
+  .panel{border-radius:16px;padding:20px;border:1px solid rgba(0,0,0,.06)}
+  .panel.light{background:#FDF0ED}
+  .panel.dark{background:#0a0a0a;border-color:#1f2937}
+  .plabel{font:600 11px/1 system-ui;letter-spacing:.08em;text-transform:uppercase;color:#9ca3af;margin:0 0 16px}
+  .col{display:flex;flex-direction:column;gap:10px}
+
+  /* Toast — miroir de src/components/ui/Toast.tsx */
+  .toast{display:flex;align-items:center;gap:12px;width:100%;max-width:360px;border-radius:16px;border:1px solid;
+    padding:12px 16px;box-shadow:0 2px 8px -2px rgb(232 99 74 / .08);font-size:14px;font-weight:500}
+  .toast .ico{font-size:18px;line-height:1}
+  .toast .msg{flex:1}
+  .toast .x{width:28px;height:28px;border:none;background:transparent;color:inherit;opacity:.7;font-size:18px;line-height:1;cursor:pointer;border-radius:9999px}
+  .toast-success,.toast-error{background:#FDF0ED;color:#9E3A28;border-color:rgb(232 99 74 / .25)}
+  .toast-info{background:#fff;color:#1f2937;border-color:#F5E6D8}
+  .dark .toast-success,.dark .toast-error{background:rgb(232 99 74 / .1);color:#F09A88;border-color:rgb(232 99 74 / .28)}
+  .dark .toast-info{background:#1f2937;color:#f3f4f6;border-color:#374151}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="title">Toast</h1>
+  <p class="sub">Confirmation <strong>fugace</strong> d'une action réussie (jamais un appât) · <code>success / info / error</code> · l'erreur se distingue par l'icône, pas par une couleur agressive · au-dessus de la tab bar</p>
+  <div class="stage">
+
+    <section class="panel light">
+      <div class="plabel">Light</div>
+      <div class="col">
+        <div class="toast toast-success"><span class="ico" aria-hidden="true">✓</span><span class="msg">Signalement pris en compte</span><button class="x" aria-label="Fermer">×</button></div>
+        <div class="toast toast-info"><span class="ico" aria-hidden="true">ⓘ</span><span class="msg">Brouillon sauvegardé</span><button class="x" aria-label="Fermer">×</button></div>
+        <div class="toast toast-error"><span class="ico" aria-hidden="true">⚠</span><span class="msg">Réessaie dans un instant</span><button class="x" aria-label="Fermer">×</button></div>
+      </div>
+    </section>
+
+    <section class="panel dark">
+      <div class="plabel">Dark</div>
+      <div class="col">
+        <div class="toast toast-success"><span class="ico" aria-hidden="true">✓</span><span class="msg">Signalement pris en compte</span><button class="x" aria-label="Fermer">×</button></div>
+        <div class="toast toast-info"><span class="ico" aria-hidden="true">ⓘ</span><span class="msg">Brouillon sauvegardé</span><button class="x" aria-label="Fermer">×</button></div>
+        <div class="toast toast-error"><span class="ico" aria-hidden="true">⚠</span><span class="msg">Réessaie dans un instant</span><button class="x" aria-label="Fermer">×</button></div>
+      </div>
+    </section>
+
+  </div>
+</div>
+</body>
+</html>
