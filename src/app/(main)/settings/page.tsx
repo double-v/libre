@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { toast } from '@/lib/toast';
+import AppearanceSettings from '@/components/AppearanceSettings';
 
 interface Profile {
   userId: string;
@@ -120,6 +121,8 @@ export default function SettingsPage() {
       )}
 
       <div className="space-y-6">
+        <AppearanceSettings />
+
         {/* Invisible mode */}
         <section className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:p-5">
           <div className="flex items-center justify-between">
