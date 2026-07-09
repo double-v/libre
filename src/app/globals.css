@@ -9,11 +9,30 @@
      du contenu (.pb-nav) et positionner le chrome flottant (.bottom-chrome),
      afin que tout reste synchronisé si la barre change de hauteur. */
   --nav-h: 3.5rem;
+
+  /* Semantic tokens (light) — cf. DESIGN.md § Theming — Mode × Skin.
+     Les composants consomment ces tokens (bg-surface, text-content…) au lieu
+     de coder le mode en dur (bg-white dark:bg-dark-surface). Mode-aware via
+     :root / :root.dark ; skinnable ensuite (#224). */
+  --surface: #ffffff;
+  --elevated: #ffffff;
+  --sunken: #FDF0ED;
+  --content: #171717;
+  --muted: #4b5563;
+  --hairline: #e5e7eb;
 }
 
 :root.dark {
   --background: #0a0a0a;
   --foreground: #ededed;
+
+  /* Semantic tokens (dark) */
+  --surface: #171717;
+  --elevated: #1f2937;
+  --sunken: rgb(232 99 74 / 0.10);
+  --content: #ededed;
+  --muted: #9ca3af;
+  --hairline: #374151;
 }
 
 @theme inline {
@@ -41,6 +60,20 @@
   --color-dark-surface: #171717;
   --color-dark-elevated: #1f2937;
   --color-dark-border: #374151;
+
+  /* Semantic surface/text/border tokens (mode-aware via :root / :root.dark).
+     Génèrent bg-surface, bg-elevated, bg-sunken, text-content, text-muted,
+     border-hairline. Cf. DESIGN.md § Theming — Mode × Skin. */
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-sunken: var(--sunken);
+  --color-content: var(--content);
+  --color-muted: var(--muted);
+  --color-hairline: var(--hairline);
+
+  /* Radius tokens (varieront par skin — cf. #224) → rounded-card, rounded-control */
+  --radius-card: 16px;
+  --radius-control: 6px;
 
   /* Elevation (DESIGN.md > Elevation > Shadow Tokens) — always coral-tinted */
   --shadow-soft: 0 2px 8px -2px rgb(232 99 74 / 0.08);

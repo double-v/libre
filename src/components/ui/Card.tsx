@@ -16,15 +16,18 @@ export interface CardProps extends HTMLAttributes<HTMLElement> {
   children: ReactNode;
 }
 
+// Tokens sémantiques (bg-surface / border-hairline / rounded-card) — cf.
+// DESIGN.md § Theming — Mode × Skin. Remplace le binaire bg-white dark:… ;
+// valeurs identiques (aucune régression visuelle), mais désormais skinnables.
 const variantClasses: Record<CardVariant, string> = {
   profile:
-    'bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-xl p-4 shadow-soft',
+    'bg-surface border border-hairline rounded-card p-4 shadow-soft',
   modal:
-    'bg-white dark:bg-dark-surface rounded-lg p-6 shadow-pop',
+    'bg-surface rounded-lg p-6 shadow-pop',
   filter:
-    'bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-xl p-4',
+    'bg-surface border border-hairline rounded-card p-4',
   empty:
-    'bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-xl p-8 text-center',
+    'bg-surface border border-hairline rounded-card p-8 text-center',
 };
 
 /**
