@@ -80,6 +80,79 @@ Blush is Libre's answer to the "warm canvas" — tinted, never pure clinical whi
 | dark-elevated | `#1f2937` | Elevated surfaces |
 | dark-border | `#374151` | Borders on dark surfaces |
 
+## Theming — Mode × Skin
+
+Le theming a **deux axes orthogonaux**. Ne jamais les confondre : le **mode** est perceptuel (confort / accessibilité, suit l'OS) ; le **skin** est une identité graphique (goût). Le choix de skin est aussi un **signal doux** de préférence utilisateur — jamais affiché comme une récompense, jamais gamifié (cf. PRODUCT.md, principe 4).
+
+### Axe 1 — Mode (`light` / `dark` / `auto`)
+
+- Porté par la classe `.dark` sur `<html>` (déjà en place : script no-flash dans `layout.tsx` + `ThemeToggle`).
+- `auto` (défaut) suit `prefers-color-scheme`. Persisté : `localStorage['libre-theme']` = `light | dark | auto`.
+- **Tout skin doit exister en light ET en dark.** Le mode ne dépend jamais du skin.
+- « blanc » n'est pas un thème à part : le light par défaut EST blanc/blush. Light/dark = mode, pas skin.
+
+### Axe 2 — Skin (identité graphique)
+
+- Porté par `data-theme="<id>"` sur `<html>` (déjà en place via `site-themes.ts` + `useSiteThemeApply`).
+- Devient **sélectionnable par l'utilisateur**, rangé dans les Paramètres à côté du mode.
+- Défaut : `libre` (coral/cream actuel).
+
+**Précédence du skin** (à implémenter) :
+1. Choix explicite user — `localStorage['libre-skin']` (+ `User.skin` pour les comptes, synchronisé).
+2. Défaut du site — `SiteConfig.currentTheme` (piloté admin).
+3. `libre`.
+
+> **Décisions arrêtées :**
+> - **Admin = défaut, user = souverain.** `SiteConfig.currentTheme` fixe le skin *par défaut* ; le choix explicite de l'utilisateur le remplace toujours. Pas de skin forcé par l'admin.
+> - **« La Place » reste hors de cet axe.** Les thèmes événementiels de section (`square_theme_configs`, planifiés / admin) demeurent un système séparé — mais **ancrés sur les mêmes tokens sémantiques** du layout global (ils surchargent des accents de section, jamais un système parallèle qui les combat).
+> - **Séquencement** : d'abord **solidifier le socle** (#223 tokens sémantiques + #224 sélecteur, en rationalisant `libre` / `libre-warm`), **ensuite** les skins « waouh » (Cartoon, Pixel — chacun light **et** dark).
+
+### Contrat de tokens sémantiques (le cœur de la rationalisation)
+
+Aujourd'hui les composants codent le mode **en dur** (`bg-white dark:bg-dark-surface`, `text-gray-900 dark:text-gray-100`). Conséquence : un skin ne peut retheme que les accents, pas les surfaces. On introduit une couche **sémantique** que chaque `skin × mode` redéfinit et que les composants consomment :
+
+| Token | Rôle | Remplace le binaire |
+|---|---|---|
+| `--bg` | plancher de page | `bg-white dark:bg-gray-950` |
+| `--surface` | carte / panel | `bg-white dark:bg-dark-surface` |
+| `--surface-elevated` | surface surélevée | `dark:bg-dark-elevated` |
+| `--surface-sunken` | fond de section chaud | `bg-blush dark:bg-coral/10` |
+| `--text` | texte principal | `text-gray-900 dark:text-gray-100` |
+| `--text-dim` | texte secondaire | `text-gray-600 dark:text-gray-400` |
+| `--border` | filet | `border-gray-200 dark:border-dark-border` |
+| `--accent`, `--accent-strong`, `--accent-ink` | coral & dérivés | `text-coral`, `bg-coral`, `bg-terracotta` |
+| `--radius-card`, `--radius-control` | arrondis (**varient par skin**) | `rounded-xl`, `rounded-md` |
+| `--font-head` | police des titres (**varie par skin**) | Geist |
+
+Règle : **un skin = un delta.** Il ne redéfinit que ce qui diffère de la base ; le reste hérite. « light + dark par skin » ≈ deux petits blocs de variables, pas deux designs complets. Les composants **n'utilisent plus jamais** `bg-white dark:…` en dur : ils lisent ces tokens (utilitaires Tailwind mappés dessus). C'est la même trajectoire que la « Component Library » ci-dessous.
+
+**Données** : `SiteTheme.tokenOverrides: Record<string,string>` (plat) devient `{ light: Record<string,string>; dark: Record<string,string> }` (mode-aware). Le hook et le SSR appliquent le bloc correspondant au mode courant. Le script no-flash de `layout.tsx` doit poser **avant paint** la classe `.dark` (mode) **et** `data-theme` + les vars du skin lues en `localStorage` (sinon flash de skin).
+
+### Catalogue
+
+**Au lancement** (rationalisation de l'existant, refait mode-aware + sémantique) :
+
+| Skin | Ex- | Note |
+|---|---|---|
+| `libre` | `default` | Base coral/cream. Light + dark chaud. |
+| `libre-warm` | `c-warm` | Variante plus chaude / terracotta. |
+
+**Vagues suivantes** (issues GH), chacun **light + dark** :
+
+| Skin | Direction | Contraintes spécifiques |
+|---|---|---|
+| `cartoon` | Baloo 2, grands radius, plum-black chaud en dark | garder la chaleur, pas de froid bleuté |
+| `pixel` | Rétro : titres nets, scanlines discrètes | **Press Start 2P en titres/accents SEULEMENT**, jamais le corps ; scanlines coupées sous `prefers-reduced-motion` |
+
+### Garde-fous (obligatoires, tout skin × mode)
+
+- **Contraste WCAG AA** vérifié sur light ET dark (4.5:1 texte, 3:1 grands titres).
+- `color-scheme: light|dark` déclaré par mode (contrôles natifs, scrollbars, autofill).
+- **Polices display** (pixel, etc.) : titres / accents uniquement — jamais le corps de texte.
+- Toute animation de skin a son équivalent `prefers-reduced-motion`.
+- Le skin change l'**habillage**, jamais la **sémantique** : un CTA reste « accent » via `--accent`, une erreur reste `--error`.
+- Zéro valeur inline dans les composants — tout via tokens.
+
 ## Typography
 
 ### Font Stack
