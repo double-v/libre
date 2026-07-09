@@ -39,6 +39,50 @@
   --fill-subtle: #1f2937;
 }
 
+/* ── Skins (cf. DESIGN.md § Theming — Mode × Skin) ──────────────────────────
+   Chaque skin redéfinit les tokens en blocs CSS *mode-aware* :
+   html[data-theme="x"] = clair, html[data-theme="x"].dark = sombre.
+   Sélectivité html[data-theme] (0,1,1) > :root, .dark idem > :root.dark.
+   Le skin par défaut « libre » vit dans :root / :root.dark ci-dessus. */
+
+html[data-theme='libre-warm'] {
+  --color-coral: #d9542e;
+  --color-coral-light: #e68b6e;
+  --color-terracotta: #a33a20;
+  --color-coral-dark: #7a2a18;
+  --color-blush: #fbe8dd;
+  --color-sand: #efd8c2;
+  --background: #fffbf7;
+  --foreground: #1f1410;
+  --surface: #fffbf7;
+  --elevated: #ffffff;
+  --sunken: #fbe8dd;
+  --content: #1f1410;
+  --muted: #6b5a4e;
+  --hairline: #eadfd3;
+  --hairline-strong: #dbcbbb;
+  --fill-subtle: #f4eadf;
+}
+
+html[data-theme='libre-warm'].dark {
+  --color-coral: #e8663b;
+  --color-coral-light: #f0a184;
+  --color-terracotta: #c4503a;
+  --color-coral-dark: #f0a184;
+  --color-blush: #2a1a12;
+  --color-sand: #2e211a;
+  --background: #17110d;
+  --foreground: #f3ece6;
+  --surface: #241a14;
+  --elevated: #2e211a;
+  --sunken: rgb(232 102 59 / 0.12);
+  --content: #f3ece6;
+  --muted: #b4a498;
+  --hairline: #3a2e26;
+  --hairline-strong: #3a2e26;
+  --fill-subtle: #2e211a;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

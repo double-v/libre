@@ -4,31 +4,23 @@ import { useEffect } from 'react';
 import type { SiteTheme } from '@/lib/site-themes';
 
 /**
- * Apply a SiteTheme to the document root.
+ * Applique un skin au document en posant `<html data-theme="…">`.
  *
- * On mount and whenever `theme` changes, sets:
- *   - <html data-theme="...">
- *   - inline CSS custom properties from theme.tokenOverrides
+ * Les valeurs du skin vivent en CSS (blocs `html[data-theme="…"]` clair /
+ * `html[data-theme="…"].dark` sombre, dans globals.css) : il suffit de poser
+ * l'attribut, et le mode clair/sombre (classe `.dark`) sélectionne le bon
+ * bloc. Plus aucun style inline — l'ancienne approche écrasait le dark mode.
  *
- * On unmount, removes both the data-theme attribute and the inline style,
- * so the page falls back to whatever the next render / navigation provides.
- *
- * SSR-safe: if `document` is unavailable, the effect short-circuits.
+ * Au démontage, retire l'attribut pour revenir au skin fourni par le rendu
+ * suivant / la navigation. SSR-safe : court-circuite si `document` absent.
  */
 export function useSiteThemeApply(theme: SiteTheme): void {
   useEffect(() => {
     if (typeof document === 'undefined') return;
     const root = document.documentElement;
     root.setAttribute('data-theme', theme.id);
-    for (const [key, value] of Object.entries(theme.tokenOverrides)) {
-      root.style.setProperty(key, value);
-    }
     return () => {
       root.removeAttribute('data-theme');
-      // Remove only the keys we set, in case other code touches the style.
-      for (const key of Object.keys(theme.tokenOverrides)) {
-        root.style.removeProperty(key);
-      }
     };
   }, [theme]);
 }
