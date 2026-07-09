@@ -21,6 +21,7 @@ model User {
   isBanned          Boolean   @default(false)
   squareBannedUntil DateTime? @map("square_banned_until")
   lastActive        DateTime  @updatedAt
+  skin              String?   // Skin choisi par l'utilisateur (cf. #224). null = défaut du site / localStorage.
 
   profile              Profile?
   userKey              UserKey?
