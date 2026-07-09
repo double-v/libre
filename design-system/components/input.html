@@ -1,0 +1,117 @@
+<!-- @dsCard group="Composants" name="Input" subtitle="text / email / password / textarea · hint · error · focus · disabled" -->
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Input — Libre DS</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Inter,sans-serif;background:#f6f6f7;color:#171717;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 24px 40px}
+  .title{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:0 0 2px}
+  .sub{font-size:13px;color:#6b7280;margin:0 0 22px}
+  .stage{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:720px){.stage{grid-template-columns:1fr}}
+  .panel{border-radius:16px;padding:20px;border:1px solid rgba(0,0,0,.06)}
+  .panel.light{background:#FDF0ED}
+  .panel.dark{background:#0a0a0a;border-color:#1f2937}
+  .plabel{font:600 11px/1 system-ui;letter-spacing:.08em;text-transform:uppercase;color:#9ca3af;margin:0 0 16px}
+
+  /* Input — miroir de src/components/ui/Input.tsx */
+  .field-wrap{margin-bottom:14px}
+  .lbl{display:block;margin-bottom:4px;font-size:14px;font-weight:500;color:#1f2937}
+  .req{color:#dc2626;margin-left:2px}
+  .field{display:block;width:100%;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#171717;height:44px;padding:0 12px;
+    font-size:14px;font-family:inherit;box-shadow:0 1px 2px rgb(0 0 0 / .05);
+    transition:border-color 160ms cubic-bezier(.22,1,.36,1),box-shadow 160ms cubic-bezier(.22,1,.36,1)}
+  .field::placeholder{color:#9ca3af;font-style:italic}
+  .field:focus,.field.is-focus{outline:none;border-color:#E8634A;box-shadow:0 0 0 3px rgb(232 99 74 / .4)}
+  textarea.field{height:auto;padding:10px 12px;resize:vertical;line-height:1.5}
+  .field.err{border-color:#dc2626}
+  .field.err.is-focus{border-color:#dc2626;box-shadow:0 0 0 3px rgb(220 38 38 / .25)}
+  .field:disabled{opacity:.5;cursor:not-allowed}
+  .hint{margin:4px 0 0;font-size:12px;color:#4b5563}
+  .errmsg{margin:4px 0 0;font-size:12px;color:#dc2626}
+
+  /* Dark overrides — miroir des classes dark: du composant (dark:text-foreground = #ededed) */
+  .dark .lbl{color:#ededed}
+  .dark .field{background:#171717;color:#ededed;border-color:#374151}
+  .dark .field::placeholder{color:#6b7280}
+  .dark .field:focus,.dark .field.is-focus{border-color:#F09A88;box-shadow:0 0 0 3px rgb(232 99 74 / .4)}
+  @media(prefers-reduced-motion:reduce){.field{transition-duration:80ms}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="title">Input</h1>
+  <p class="sub">Toujours un <code>&lt;label&gt;</code> visible · hiérarchie label &gt; valeur &gt; hint &gt; error · focus coral · 44px</p>
+  <div class="stage">
+
+    <section class="panel light">
+      <div class="plabel">Light</div>
+
+      <div class="field-wrap">
+        <label class="lbl">Pseudo<span class="req">*</span></label>
+        <input class="field" placeholder="ex. camille_libre">
+      </div>
+      <div class="field-wrap">
+        <label class="lbl">Email</label>
+        <input class="field" value="camille@exemple.fr">
+        <p class="hint">On ne le montre jamais publiquement.</p>
+      </div>
+      <div class="field-wrap">
+        <label class="lbl">Pseudo <span style="font-weight:400;color:#4b5563">(focus)</span></label>
+        <input class="field is-focus" value="Camille">
+      </div>
+      <div class="field-wrap">
+        <label class="lbl">Mot de passe</label>
+        <input class="field err" type="password" value="1234">
+        <p class="errmsg">8 caractères minimum.</p>
+      </div>
+      <div class="field-wrap">
+        <label class="lbl">Pseudo <span style="font-weight:400;color:#4b5563">(désactivé)</span></label>
+        <input class="field" value="camille_libre" disabled>
+      </div>
+      <div class="field-wrap">
+        <label class="lbl">Bio</label>
+        <textarea class="field" rows="3" placeholder="Quelques mots, à ton rythme."></textarea>
+      </div>
+    </section>
+
+    <section class="panel dark">
+      <div class="plabel">Dark</div>
+
+      <div class="field-wrap">
+        <label class="lbl">Pseudo<span class="req">*</span></label>
+        <input class="field" placeholder="ex. camille_libre">
+      </div>
+      <div class="field-wrap">
+        <label class="lbl">Email</label>
+        <input class="field" value="camille@exemple.fr">
+        <p class="hint">On ne le montre jamais publiquement.</p>
+      </div>
+      <div class="field-wrap">
+        <label class="lbl">Pseudo <span style="font-weight:400;color:#9ca3af">(focus)</span></label>
+        <input class="field is-focus" value="Camille">
+      </div>
+      <div class="field-wrap">
+        <label class="lbl">Mot de passe</label>
+        <input class="field err" type="password" value="1234">
+        <p class="errmsg">8 caractères minimum.</p>
+      </div>
+      <div class="field-wrap">
+        <label class="lbl">Pseudo <span style="font-weight:400;color:#9ca3af">(désactivé)</span></label>
+        <input class="field" value="camille_libre" disabled>
+      </div>
+      <div class="field-wrap">
+        <label class="lbl">Bio</label>
+        <textarea class="field" rows="3" placeholder="Quelques mots, à ton rythme."></textarea>
+      </div>
+    </section>
+
+  </div>
+</div>
+</body>
+</html>

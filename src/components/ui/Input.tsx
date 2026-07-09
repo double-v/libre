@@ -34,7 +34,7 @@ const baseFieldClasses =
   'transition-colors duration-[var(--motion-fast)] ease-[var(--ease-out-soft)] ' +
   'focus:outline-none ' +
   'disabled:opacity-50 disabled:cursor-not-allowed ' +
-  'dark:bg-dark-surface dark:text-ink';
+  'dark:bg-dark-surface dark:text-foreground';
 
 /**
  * Input — composant UI partagé du Design System Libre.
@@ -109,7 +109,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     <div className="block w-full">
       <label
         htmlFor={inputId}
-        className="mb-1 block text-sm font-medium text-label dark:text-ink"
+        className="mb-1 block text-sm font-medium text-label dark:text-foreground"
       >
         {label}
         {required && (

@@ -1,0 +1,102 @@
+<!-- @dsCard group="Composants" name="Alert" subtitle="success / warning / error / info · icône + titre + corps · dismiss optionnel" -->
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alert — Libre DS</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Inter,sans-serif;background:#f6f6f7;color:#171717;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 24px 40px}
+  .title{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:0 0 2px}
+  .sub{font-size:13px;color:#6b7280;margin:0 0 22px}
+  .stage{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:720px){.stage{grid-template-columns:1fr}}
+  .panel{border-radius:16px;padding:20px;border:1px solid rgba(0,0,0,.06)}
+  .panel.light{background:#FDF0ED}
+  .panel.dark{background:#0a0a0a;border-color:#1f2937}
+  .plabel{font:600 11px/1 system-ui;letter-spacing:.08em;text-transform:uppercase;color:#9ca3af;margin:0 0 16px}
+  .col{display:flex;flex-direction:column;gap:10px}
+
+  /* Alert — miroir de src/components/ui/Alert.tsx */
+  .alert{display:flex;align-items:flex-start;gap:12px;border-radius:6px;padding:12px;font-size:14px;line-height:1.5}
+  .alert .aico{flex:0 0 auto;margin-top:1px;display:flex}
+  .alert .atitle{font-weight:500;margin:0}
+  .alert .abody{margin:2px 0 0}
+  .alert .ax{margin-left:auto;flex:0 0 auto;background:transparent;border:none;color:inherit;opacity:.7;cursor:pointer;padding:0 2px;display:flex}
+  .alert-success{background:#f0fdf4;color:#15803d}
+  .alert-warning{background:#fffbeb;color:#92400e}
+  .alert-error{background:#fef2f2;color:#b91c1c}
+  .alert-info{background:#eff6ff;color:#1d4ed8}
+  .alert-success .aico{color:#16a34a}
+  .alert-warning .aico{color:#d97706}
+  .alert-error .aico{color:#dc2626}
+  .alert-info .aico{color:#2563eb}
+  .dark .alert-success{background:rgb(20 83 45 / .3);color:#86efac}
+  .dark .alert-warning{background:rgb(120 53 15 / .3);color:#fcd34d}
+  .dark .alert-error{background:rgb(127 29 29 / .3);color:#fca5a5}
+  .dark .alert-info{background:rgb(30 58 138 / .3);color:#93c5fd}
+  .dark .alert-success .aico{color:#4ade80}
+  .dark .alert-warning .aico{color:#fbbf24}
+  .dark .alert-error .aico{color:#f87171}
+  .dark .alert-info .aico{color:#60a5fa}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="title">Alert</h1>
+  <p class="sub">Bandeau contextuel · <code>success / warning / error / info</code> · icône auto par variante · <code>role="alert"</code> · titre optionnel + dismiss optionnel</p>
+  <div class="stage">
+
+    <section class="panel light">
+      <div class="plabel">Light</div>
+      <div class="col">
+        <div class="alert alert-success" role="alert">
+          <span class="aico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+          <div><p class="atitle">Profil enregistré</p><p class="abody">Tes modifications sont visibles.</p></div>
+        </div>
+        <div class="alert alert-warning" role="alert">
+          <span class="aico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+          <div><p class="abody">Vérifie ta connexion avant de continuer.</p></div>
+        </div>
+        <div class="alert alert-error" role="alert">
+          <span class="aico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span>
+          <div><p class="abody">Une erreur est survenue, réessaie.</p></div>
+          <button class="ax" aria-label="Fermer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="alert alert-info" role="alert">
+          <span class="aico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
+          <div><p class="atitle">Astuce</p><p class="abody">Tu peux compléter ta bio à ton rythme.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel dark">
+      <div class="plabel">Dark</div>
+      <div class="col">
+        <div class="alert alert-success" role="alert">
+          <span class="aico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+          <div><p class="atitle">Profil enregistré</p><p class="abody">Tes modifications sont visibles.</p></div>
+        </div>
+        <div class="alert alert-warning" role="alert">
+          <span class="aico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+          <div><p class="abody">Vérifie ta connexion avant de continuer.</p></div>
+        </div>
+        <div class="alert alert-error" role="alert">
+          <span class="aico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span>
+          <div><p class="abody">Une erreur est survenue, réessaie.</p></div>
+          <button class="ax" aria-label="Fermer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="alert alert-info" role="alert">
+          <span class="aico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
+          <div><p class="atitle">Astuce</p><p class="abody">Tu peux compléter ta bio à ton rythme.</p></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+</body>
+</html>

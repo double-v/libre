@@ -1,0 +1,95 @@
+<!-- @dsCard group="Composants" name="Tag" subtitle="default / selected / accent / verified / online / beta · sm & md · pill" -->
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tag — Libre DS</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Inter,sans-serif;background:#f6f6f7;color:#171717;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 24px 40px}
+  .title{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:0 0 2px}
+  .sub{font-size:13px;color:#6b7280;margin:0 0 22px}
+  .stage{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:720px){.stage{grid-template-columns:1fr}}
+  .panel{border-radius:16px;padding:20px;border:1px solid rgba(0,0,0,.06)}
+  .panel.light{background:#FDF0ED}
+  .panel.dark{background:#0a0a0a;border-color:#1f2937}
+  .plabel{font:600 11px/1 system-ui;letter-spacing:.08em;text-transform:uppercase;color:#9ca3af;margin:0 0 16px}
+  .grp{font:500 11px/1.4 system-ui;letter-spacing:.05em;text-transform:uppercase;color:#4b5563;margin:16px 0 9px}
+  .dark .grp{color:#9ca3af}
+  .grp:first-of-type{margin-top:0}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+  /* Tag — miroir de src/components/ui/Tag.tsx */
+  .tag{display:inline-flex;align-items:center;border-radius:9999px;font-weight:500;white-space:nowrap}
+  .tag-sm{padding:2px 8px;font-size:12px}
+  .tag-md{padding:4px 12px;font-size:14px}
+  .tag-default{background:#f3f4f6;color:#374151}
+  .tag-selected{background:#E8634A;color:#fff}
+  .tag-accent{background:#F5E6D8;color:#9E3A28}
+  .tag-verified{background:#dbeafe;color:#1e40af}
+  .tag-online{background:#16a34a;color:#fff}
+  .tag-beta{background:#d4a017;color:#171717}
+  /* Dark overrides — miroir des classes dark: du composant */
+  .dark .tag-default{background:#1f2937;color:#d1d5db}
+  .dark .tag-accent{background:rgb(232 99 74 / .2);color:#F09A88}
+  .dark .tag-verified{background:rgb(30 58 138 / .3);color:#93c5fd}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="title">Tag</h1>
+  <p class="sub">Pill non-interactive · <code>default / selected / accent / verified / online / beta</code> · pour un filtre cliquable, wrap dans un <code>&lt;button&gt;</code></p>
+  <div class="stage">
+
+    <section class="panel light">
+      <div class="plabel">Light</div>
+      <div class="grp">Taille md</div>
+      <div class="row">
+        <span class="tag tag-md tag-default">Randonnée</span>
+        <span class="tag tag-md tag-selected">Femmes</span>
+        <span class="tag tag-md tag-accent">Non-fumeur·se</span>
+        <span class="tag tag-md tag-verified">Vérifié·e</span>
+        <span class="tag tag-md tag-online">En ligne</span>
+        <span class="tag tag-md tag-beta">Bêta</span>
+      </div>
+      <div class="grp">Taille sm</div>
+      <div class="row">
+        <span class="tag tag-sm tag-default">Randonnée</span>
+        <span class="tag tag-sm tag-selected">Femmes</span>
+        <span class="tag tag-sm tag-accent">Non-fumeur·se</span>
+        <span class="tag tag-sm tag-verified">Vérifié·e</span>
+        <span class="tag tag-sm tag-online">En ligne</span>
+        <span class="tag tag-sm tag-beta">Bêta</span>
+      </div>
+    </section>
+
+    <section class="panel dark">
+      <div class="plabel">Dark</div>
+      <div class="grp">Taille md</div>
+      <div class="row">
+        <span class="tag tag-md tag-default">Randonnée</span>
+        <span class="tag tag-md tag-selected">Femmes</span>
+        <span class="tag tag-md tag-accent">Non-fumeur·se</span>
+        <span class="tag tag-md tag-verified">Vérifié·e</span>
+        <span class="tag tag-md tag-online">En ligne</span>
+        <span class="tag tag-md tag-beta">Bêta</span>
+      </div>
+      <div class="grp">Taille sm</div>
+      <div class="row">
+        <span class="tag tag-sm tag-default">Randonnée</span>
+        <span class="tag tag-sm tag-selected">Femmes</span>
+        <span class="tag tag-sm tag-accent">Non-fumeur·se</span>
+        <span class="tag tag-sm tag-verified">Vérifié·e</span>
+        <span class="tag tag-sm tag-online">En ligne</span>
+        <span class="tag tag-sm tag-beta">Bêta</span>
+      </div>
+    </section>
+
+  </div>
+</div>
+</body>
+</html>

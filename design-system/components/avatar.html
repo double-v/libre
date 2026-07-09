@@ -1,0 +1,87 @@
+<!-- @dsCard group="Composants" name="Avatar" subtitle="sm / md / lg / xl · placeholder · online-dot · vérifié · photo" -->
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avatar — Libre DS</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Inter,sans-serif;background:#f6f6f7;color:#171717;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 24px 40px}
+  .title{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:0 0 2px}
+  .sub{font-size:13px;color:#6b7280;margin:0 0 22px}
+  .stage{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:720px){.stage{grid-template-columns:1fr}}
+  .panel{border-radius:16px;padding:20px;border:1px solid rgba(0,0,0,.06)}
+  .panel.light{background:#FDF0ED}
+  .panel.dark{background:#0a0a0a;border-color:#1f2937}
+  .plabel{font:600 11px/1 system-ui;letter-spacing:.08em;text-transform:uppercase;color:#9ca3af;margin:0 0 16px}
+  .grp{font:500 11px/1.4 system-ui;letter-spacing:.05em;text-transform:uppercase;color:#4b5563;margin:16px 0 10px}
+  .dark .grp{color:#9ca3af}
+  .grp:first-of-type{margin-top:0}
+  .row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end}
+
+  /* Avatar — pattern DESIGN.md (placeholder sand/coral-dark, on-brand vs bg-gray brut) */
+  .ava{position:relative;border-radius:9999px;background:#F5E6D8;color:#9E3A28;display:inline-flex;align-items:center;justify-content:center;font-weight:600;flex:0 0 auto}
+  .dark .ava{background:rgb(232 99 74 / .18);color:#F09A88}
+  .ava.sm{width:32px;height:32px;font-size:12px}
+  .ava.md{width:48px;height:48px;font-size:16px}
+  .ava.lg{width:64px;height:64px;font-size:20px}
+  .ava.xl{width:96px;height:96px;font-size:28px}
+  .ava.photo{background:linear-gradient(135deg,#F09A88,#E8634A);color:#fff}
+  .dot{position:absolute;bottom:1px;right:1px;width:12px;height:12px;border-radius:9999px;background:#16a34a;border:2px solid #fff}
+  .dark .dot{border-color:#0a0a0a}
+  .ava.xl .dot{width:16px;height:16px;bottom:4px;right:4px}
+  .vbadge{position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-radius:9999px;background:#2563eb;color:#fff;
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+  .dark .vbadge{border-color:#0a0a0a}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="title">Avatar</h1>
+  <p class="sub">Placeholder à initiales (sand / coral-dark, jamais de gris brut) · point « en ligne » vert · badge vérifié · photo · pill</p>
+  <div class="stage">
+
+    <section class="panel light">
+      <div class="plabel">Light</div>
+      <div class="grp">Tailles · placeholder</div>
+      <div class="row">
+        <span class="ava sm">CL</span>
+        <span class="ava md">CL</span>
+        <span class="ava lg">CL</span>
+        <span class="ava xl">CL</span>
+      </div>
+      <div class="grp">États</div>
+      <div class="row">
+        <span class="ava md">CL<span class="dot"></span></span>
+        <span class="ava md">CL<span class="vbadge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></span>
+        <span class="ava md photo">&nbsp;<span class="dot"></span></span>
+        <span class="ava lg photo">&nbsp;</span>
+      </div>
+    </section>
+
+    <section class="panel dark">
+      <div class="plabel">Dark</div>
+      <div class="grp">Tailles · placeholder</div>
+      <div class="row">
+        <span class="ava sm">CL</span>
+        <span class="ava md">CL</span>
+        <span class="ava lg">CL</span>
+        <span class="ava xl">CL</span>
+      </div>
+      <div class="grp">États</div>
+      <div class="row">
+        <span class="ava md">CL<span class="dot"></span></span>
+        <span class="ava md">CL<span class="vbadge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></span>
+        <span class="ava md photo">&nbsp;<span class="dot"></span></span>
+        <span class="ava lg photo">&nbsp;</span>
+      </div>
+    </section>
+
+  </div>
+</div>
+</body>
+</html>
