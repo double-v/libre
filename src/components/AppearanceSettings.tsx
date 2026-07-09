@@ -64,6 +64,13 @@ export default function AppearanceSettings() {
     setSkin(s);
     localStorage.setItem(SKIN_KEY, s);
     applySkin(s);
+    // Best-effort : synchronise le compte pour les autres appareils. Un échec
+    // (hors-ligne, session expirée…) ne doit jamais casser le choix local.
+    void fetch('/api/users/skin', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ skin: s }),
+    }).catch(() => {});
   }
 
   return (

@@ -69,6 +69,27 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
   const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'eu';
 
+  // Sync cross-appareils du skin (cf. #224) : si aucun choix local n'existe
+  // encore sur cet appareil, on adopte celui enregistré sur le compte. Une
+  // seule fois (dès qu'un skin local est posé, on ne refetch plus). Best-effort.
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    if (typeof window === 'undefined') return;
+    if (localStorage.getItem('libre-skin')) return;
+    let cancelled = false;
+    fetch('/api/users/skin')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled || !d?.skin) return;
+        localStorage.setItem('libre-skin', d.skin);
+        document.documentElement.setAttribute('data-theme', d.skin);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id]);
+
   return (
     <div className="flex min-h-screen flex-col">
       {/* Chrome du haut : bannière + header en une seule pile sticky qui porte
