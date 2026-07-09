@@ -28,7 +28,7 @@ const sizeClasses: Record<TagSize, string> = {
 
 const variantClasses: Record<TagVariant, string> = {
   default:
-    'bg-gray-100 text-gray-700 dark:bg-dark-elevated dark:text-gray-300',
+    'bg-fill-subtle text-gray-700 dark:text-gray-300',
   selected:
     'bg-coral text-white dark:bg-coral dark:text-white',
   accent:

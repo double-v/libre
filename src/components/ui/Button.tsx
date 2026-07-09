@@ -29,8 +29,8 @@ const variantClasses: Record<ButtonVariant, string> = {
     'bg-coral text-white hover:bg-terracotta active:bg-coral-dark ' +
     'dark:bg-coral dark:hover:bg-terracotta',
   secondary:
-    'bg-white text-label border border-gray-300 hover:bg-blush/40 hover:border-coral-light active:bg-blush ' +
-    'dark:bg-dark-surface dark:text-foreground dark:border-dark-border dark:hover:bg-dark-elevated',
+    'bg-surface text-label border border-hairline-strong hover:bg-blush/40 hover:border-coral-light active:bg-blush ' +
+    'dark:text-foreground dark:hover:bg-dark-elevated',
   ghost:
     'text-coral hover:bg-blush/50 active:bg-blush ' +
     'dark:text-coral-light dark:hover:bg-coral/10',

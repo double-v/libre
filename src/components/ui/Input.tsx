@@ -29,12 +29,11 @@ const sizeClasses: Record<InputSize, string> = {
 };
 
 const baseFieldClasses =
-  'block w-full rounded-md border bg-white text-ink shadow-sm ' +
+  'block w-full rounded-control border bg-surface text-content shadow-sm ' +
   'placeholder:text-placeholder placeholder:italic ' +
   'transition-colors duration-[var(--motion-fast)] ease-[var(--ease-out-soft)] ' +
   'focus:outline-none ' +
-  'disabled:opacity-50 disabled:cursor-not-allowed ' +
-  'dark:bg-dark-surface dark:text-foreground';
+  'disabled:opacity-50 disabled:cursor-not-allowed';
 
 /**
  * Input — composant UI partagé du Design System Libre.
@@ -77,7 +76,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
 
   const stateClasses = hasError
     ? 'border-error focus:border-error focus:shadow-[0_0_0_3px_rgb(220_38_38_/_0.25)]'
-    : 'border-gray-300 focus:border-coral focus:shadow-focus dark:border-dark-border dark:focus:border-coral-light';
+    : 'border-hairline-strong focus:border-coral focus:shadow-focus dark:focus:border-coral-light';
 
   const paddingClasses = leadingIcon
     ? 'pl-10'
