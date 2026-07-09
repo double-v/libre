@@ -17,7 +17,7 @@ const MAX_VISIBLE = 3;
 const TONE_CLASSES: Record<ToastTone, string> = {
   success:
     'bg-blush text-coral-dark border-coral/20 dark:bg-coral/10 dark:text-coral-light dark:border-coral/25',
-  info: 'bg-white text-label border-sand dark:bg-dark-elevated dark:text-gray-100 dark:border-dark-border',
+  info: 'bg-elevated text-label border-sand dark:text-gray-100 dark:border-dark-border',
   error:
     'bg-blush text-coral-dark border-coral/30 dark:bg-coral/10 dark:text-coral-light dark:border-coral/30',
 };

@@ -20,6 +20,8 @@
   --content: #171717;
   --muted: #4b5563;
   --hairline: #e5e7eb;
+  --hairline-strong: #d1d5db; /* bordure des contrôles (inputs, secondary) */
+  --fill-subtle: #f3f4f6;     /* fond des chips/tags neutres */
 }
 
 :root.dark {
@@ -33,6 +35,8 @@
   --content: #ededed;
   --muted: #9ca3af;
   --hairline: #374151;
+  --hairline-strong: #374151;
+  --fill-subtle: #1f2937;
 }
 
 @theme inline {
@@ -70,6 +74,8 @@
   --color-content: var(--content);
   --color-muted: var(--muted);
   --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-fill-subtle: var(--fill-subtle);
 
   /* Radius tokens (varieront par skin — cf. #224) → rounded-card, rounded-control */
   --radius-card: 16px;
