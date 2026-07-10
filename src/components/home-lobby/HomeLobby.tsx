@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { lobbyFontVars } from '@/lib/fonts';
 import LobbyThemeScript from './LobbyThemeScript';
-import LobbyThemeSwitcher from './LobbyThemeSwitcher';
+import LobbyNav from './LobbyNav';
 import {
   DEFAULT_LOBBY_THEME,
   readStoredLobbyTheme,
@@ -12,24 +12,22 @@ import {
 } from './lobby-theme';
 
 interface HomeLobbyProps {
-  /** Compteur d'utilisateurs (SSR). Non exploité par le shell #244 ; branché au HERO (#246). */
+  /** Compteur d'utilisateurs (SSR). Non exploité par le shell ; branché au HERO (#246). */
   userCount?: number;
 }
 
 /**
  * Racine de la landing « lobby » (épic #243).
  *
- * **PR #244 (foundation)** : shell minimal validant les fondations (polices
- * `next/font`, tokens des 3 thèmes, switcher, no-flash, reduced-motion). Les
- * sections réelles (NAV, HERO, bandeau ambiant, contenu persisté…) arrivent dans
- * les PRs suivantes ; le shell ci-dessous est provisoire et sera remplacé.
+ * En construction, ticket par ticket : NAV (#245) posée, HERO (#246) et suivants
+ * remplaceront le shell provisoire ci-dessous. Cutover sur `/` au #250.
  *
- * No-flash / hydratation : `data-lobby` est rendu avec le défaut SSR
- * (`cartoon`) + `suppressHydrationWarning`. `LobbyThemeScript` (premier enfant)
- * réécrit l'attribut avant paint depuis le storage. On ne relie **jamais**
- * `data-lobby` à l'état React (valeur littérale constante) : React ne le
- * réécrit donc pas, et la valeur posée impérativement par le switcher/script
- * survit aux re-rendus. L'état `theme` ne sert qu'à l'affichage actif du switcher.
+ * No-flash / hydratation : `data-lobby` est rendu avec le défaut SSR (`cartoon`)
+ * + `suppressHydrationWarning` ; `LobbyThemeScript` (premier enfant) réécrit
+ * l'attribut avant paint depuis le storage. `data-lobby` n'est **jamais** relié à
+ * l'état React (valeur littérale constante) : React ne le réécrit pas, donc la
+ * valeur posée par le script/switcher survit aux re-rendus. L'état `theme` ne
+ * sert qu'à l'affichage actif du switcher.
  */
 export default function HomeLobby({ userCount }: HomeLobbyProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -46,7 +44,7 @@ export default function HomeLobby({ userCount }: HomeLobbyProps) {
     );
   }, []);
 
-  const handleChange = (id: LobbyThemeId) => {
+  const handleThemeChange = (id: LobbyThemeId) => {
     storeLobbyTheme(id);
     if (rootRef.current) rootRef.current.dataset.lobby = id;
     setTheme(id);
@@ -58,35 +56,16 @@ export default function HomeLobby({ userCount }: HomeLobbyProps) {
       data-lobby={DEFAULT_LOBBY_THEME}
       suppressHydrationWarning
       className={lobbyFontVars}
-      style={{ minHeight: '100vh', position: 'relative', overflowX: 'hidden' }}
+      // overflow-x: clip (et non hidden) → clippe les débordements sans créer de
+      // scroll-container, pour que la nav `position: sticky` colle au viewport.
+      style={{ minHeight: '100vh', position: 'relative', overflowX: 'clip' }}
     >
       <LobbyThemeScript />
 
-      {/* --- Shell provisoire #244 : preview des fondations (remplacé par les vraies sections) --- */}
-      <div style={{ maxWidth: 720, margin: '0 auto', padding: '32px 24px 80px' }}>
-        <header
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-            flexWrap: 'wrap',
-            marginBottom: 40,
-          }}
-        >
-          <span
-            style={{
-              fontFamily: 'var(--lobby-font-head)',
-              fontWeight: 700,
-              fontSize: 22,
-              color: 'var(--lobby-text)',
-            }}
-          >
-            Libre · fondations lobby
-          </span>
-          <LobbyThemeSwitcher value={theme} onChange={handleChange} />
-        </header>
+      <LobbyNav themeValue={theme} onThemeChange={handleThemeChange} />
 
+      {/* --- Shell provisoire : remplacé par le HERO réel (#246) puis les sections suivantes --- */}
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '48px 24px 80px' }}>
         <p
           style={{
             fontFamily: 'var(--lobby-font-eyebrow)',
@@ -109,13 +88,12 @@ export default function HomeLobby({ userCount }: HomeLobbyProps) {
             color: 'var(--lobby-text)',
           }}
         >
-          Matcher devrait <span style={{ color: 'var(--lobby-accent)' }}>pas</span>{' '}
+          Rencontrer devrait <span style={{ color: 'var(--lobby-accent)' }}>pas</span>{' '}
           coûter les yeux de la tête. 🫶
         </h1>
         <p style={{ color: 'var(--lobby-text-dim)', fontSize: 16, lineHeight: 1.6, margin: '0 0 28px' }}>
-          Ce shell provisoire sert à valider les fondations #244 (polices, tokens
-          des 3 thèmes, switcher, no-flash, reduced-motion). Les sections réelles
-          arrivent aux tickets suivants.
+          Shell provisoire : la nav ci-dessus est posée (#245). Le HERO réel et les
+          sections suivantes arrivent aux tickets suivants de l&apos;épic #243.
         </p>
 
         {/* Démo : carte-panneau (panel-bg + card-border + shadow + radius) */}
@@ -126,29 +104,9 @@ export default function HomeLobby({ userCount }: HomeLobbyProps) {
             borderRadius: 'var(--lobby-radius-lg)',
             boxShadow: 'var(--lobby-shadow)',
             padding: 24,
-            marginBottom: 24,
           }}
         >
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
-            {/* CTA (accent + btn-clip + cta-shadow) */}
-            <button
-              type="button"
-              style={{
-                background: 'var(--lobby-accent)',
-                color: '#fff',
-                border: 'none',
-                fontWeight: 700,
-                fontSize: 15,
-                padding: '14px 22px',
-                borderRadius: 'var(--lobby-radius-sm)',
-                clipPath: 'var(--lobby-btn-clip)',
-                boxShadow: 'var(--lobby-cta-shadow)',
-                cursor: 'pointer',
-              }}
-            >
-              Rejoindre la bande
-            </button>
-            {/* Chip (bg-elev + chip-border) */}
             <span
               style={{
                 display: 'inline-flex',
