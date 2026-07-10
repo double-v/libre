@@ -378,6 +378,105 @@ input::placeholder, textarea::placeholder {
   box-shadow: 0 0 0 3px rgb(232 99 74 / 0.6); /* ring coral accessible */
 }
 
+/* Nav sticky (#245). Le conteneur racine du lobby porte overflow-x: clip
+   (sticky-safe, ne crée pas de scroll-container) pour que ce sticky colle bien
+   au viewport. */
+.lobby-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 24px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  overflow-x: auto; /* mobile : rien ne casse, la barre défile si besoin */
+}
+.lobby-nav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+.lobby-nav__logo {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--lobby-radius-sm);
+  background: var(--lobby-accent);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.lobby-nav__wordmark {
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  color: var(--lobby-text);
+}
+.lobby-nav__links,
+.lobby-nav__actions {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.lobby-nav__links {
+  gap: 16px;
+}
+.lobby-nav__actions {
+  gap: 14px;
+}
+.lobby-nav__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--lobby-text-dim);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 0 4px;
+  transition: color var(--motion-fast) var(--ease-out-soft);
+}
+.lobby-nav__link:hover {
+  color: var(--lobby-text);
+}
+.lobby-nav__link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(232 99 74 / 0.6);
+}
+.lobby-nav__cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: #fff;
+  background: var(--lobby-accent);
+  border-radius: var(--lobby-radius-sm);
+  clip-path: var(--lobby-btn-clip);
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: transform var(--motion-fast) var(--ease-out-soft);
+}
+.lobby-nav__cta:hover {
+  transform: translateY(-1px);
+}
+.lobby-nav__cta:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(232 99 74 / 0.6);
+}
+
 /* Safe-area : encoche & barre d'accueil iOS/Android (PWA/TWA standalone).
    N'a d'effet que si viewport-fit=cover est actif (viewport export racine).
    Sur un appareil sans encoche, env(safe-area-inset-*) vaut 0 → aucun impact. */
