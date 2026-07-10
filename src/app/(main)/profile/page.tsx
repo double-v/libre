@@ -12,6 +12,7 @@ import ProfileSection from '@/components/ProfileSection';
 import PublicProfilePreview from '@/components/PublicProfilePreview';
 import ProfileField from '@/components/ProfileField';
 import ChipList from '@/components/ChipList';
+import SearchFilters, { type SearchFiltersValue } from '@/components/SearchFilters';
 import { toast } from '@/lib/toast';
 import Image from 'next/image';
 import { INTEREST_CATEGORIES, PRACTICE_CATEGORIES, GENDER_OPTIONS } from '@/lib/taxonomy';
@@ -32,6 +33,9 @@ interface ProfileData {
   maxDistanceKm: number;
   ageMin: number;
   ageMax: number;
+  searchGenders: string[];
+  searchOrientations: string[];
+  searchInterests: string[];
   invisibleMode: boolean;
 }
 
@@ -89,8 +93,9 @@ export default function ProfilePage() {
   const [editPhotos, setEditPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [photoError, setPhotoError] = useState('');
-  const [editAgeMin, setEditAgeMin] = useState(18);
-  const [editAgeMax, setEditAgeMax] = useState(99);
+  const [editSearchFilters, setEditSearchFilters] = useState<SearchFiltersValue>({
+    genders: [], orientations: [], ageMin: 18, ageMax: 99, interests: [],
+  });
   const [editMaxDistanceKm, setEditMaxDistanceKm] = useState(50);
   const [editSocialLinks, setEditSocialLinks] = useState<Record<string, string>>({});
   const [editSocialPlatform, setEditSocialPlatform] = useState('Instagram');
@@ -141,8 +146,13 @@ export default function ProfilePage() {
     if (section === 'practices') setEditPractices(profile?.practices ?? []);
     if (section === 'photos') setEditPhotos(profile?.photos ?? []);
     if (section === 'search') {
-      setEditAgeMin(profile?.ageMin ?? 18);
-      setEditAgeMax(profile?.ageMax ?? 99);
+      setEditSearchFilters({
+        genders: profile?.searchGenders ?? [],
+        orientations: profile?.searchOrientations ?? [],
+        ageMin: profile?.ageMin ?? 18,
+        ageMax: profile?.ageMax ?? 99,
+        interests: profile?.searchInterests ?? [],
+      });
       setEditMaxDistanceKm(profile?.maxDistanceKm ?? 50);
     }
     if (section === 'social') setEditSocialLinks(profile?.socialLinks ?? {});
@@ -442,28 +452,55 @@ export default function ProfilePage() {
             )}
           </ProfileSection>
 
-          {/* Préférences de recherche */}
+          {/* Préférences de recherche — même composant que /discover (#235) */}
           <ProfileSection sectionId="search" title="Préférences de recherche" surface="blush" onEdit={() => startEdit('search')} editing={editingSection === 'search'} complete>
+            <p className="mt-1 text-xs text-gray-700 dark:text-gray-300">
+              Qui souhaitez-vous rencontrer ? Ces préférences filtrent aussi votre page Découvrir.
+            </p>
             {editingSection === 'search' ? (
               <div className="mt-3 space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">Âge minimum : {editAgeMin} ans</label>
-                  <input type="range" min={18} max={99} value={editAgeMin} onChange={(e) => setEditAgeMin(Number(e.target.value))} className="block w-full accent-coral" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">Âge maximum : {editAgeMax} ans</label>
-                  <input type="range" min={18} max={99} value={editAgeMax} onChange={(e) => setEditAgeMax(Number(e.target.value))} className="block w-full accent-coral" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">Distance maximale : {editMaxDistanceKm} km</label>
-                  <input type="range" min={1} max={500} value={editMaxDistanceKm} onChange={(e) => setEditMaxDistanceKm(Number(e.target.value))} className="block w-full accent-coral" />
-                </div>
-                <EditActions saving={saving} onSave={() => saveSection({ ageMin: editAgeMin, ageMax: editAgeMax, maxDistanceKm: editMaxDistanceKm })} onCancel={() => setEditingSection(null)} />
+                <SearchFilters
+                  value={editSearchFilters}
+                  onChange={setEditSearchFilters}
+                  distanceKm={editMaxDistanceKm}
+                  onDistanceChange={setEditMaxDistanceKm}
+                  framed={false}
+                />
+                <EditActions
+                  saving={saving}
+                  onSave={() => saveSection({
+                    ageMin: editSearchFilters.ageMin,
+                    ageMax: editSearchFilters.ageMax,
+                    maxDistanceKm: editMaxDistanceKm,
+                    searchGenders: editSearchFilters.genders,
+                    searchOrientations: editSearchFilters.orientations,
+                    searchInterests: editSearchFilters.interests,
+                  })}
+                  onCancel={() => setEditingSection(null)}
+                />
               </div>
             ) : (
-              <div className="mt-2 space-y-1">
+              <div className="mt-2 space-y-2">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-gray-600 dark:text-gray-400">Genre recherché</p>
+                  {profile.searchGenders.length > 0
+                    ? <ChipList items={profile.searchGenders.map((g) => GENDER_OPTIONS.find((o) => o.value === g)?.label || g)} />
+                    : <span className="text-xs italic text-gray-600 dark:text-gray-400">Tous</span>}
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-gray-600 dark:text-gray-400">Orientation recherchée</p>
+                  {profile.searchOrientations.length > 0
+                    ? <ChipList items={profile.searchOrientations} />
+                    : <span className="text-xs italic text-gray-600 dark:text-gray-400">Toutes</span>}
+                </div>
                 <ProfileField label="Tranche d'âge">{profile.ageMin} – {profile.ageMax} ans</ProfileField>
                 <ProfileField label="Distance max">{profile.maxDistanceKm} km</ProfileField>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-gray-600 dark:text-gray-400">Centres d&apos;intérêt recherchés</p>
+                  {profile.searchInterests.length > 0
+                    ? <ChipList items={profile.searchInterests} />
+                    : <span className="text-xs italic text-gray-600 dark:text-gray-400">Peu importe</span>}
+                </div>
               </div>
             )}
           </ProfileSection>

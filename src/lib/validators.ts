@@ -50,6 +50,10 @@ export const profileUpdateSchema = z.object({
   maxDistanceKm: z.number().int().min(1).max(500).optional(),
   ageMin: z.number().int().min(18).max(99).optional(),
   ageMax: z.number().int().min(18).max(99).optional(),
+  // Préférences de recherche (qui je veux voir) — même taxonomie que discover.
+  searchGenders: z.array(z.string().max(30)).max(11).optional(),
+  searchOrientations: z.array(z.string().max(30)).max(10).optional(),
+  searchInterests: z.array(z.string().max(30)).max(20).optional(),
 }).refine((data) => {
   if (data.ageMin !== undefined && data.ageMax !== undefined) {
     return data.ageMin <= data.ageMax;

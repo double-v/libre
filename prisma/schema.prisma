@@ -76,6 +76,12 @@ model Profile {
   maxDistanceKm    Int       @default(50)
   ageMin           Int       @default(18)
   ageMax           Int       @default(99)
+  // Préférences de recherche (qui je veux voir), distinctes de l'identité
+  // ci-dessus (qui je suis). Partagées entre /discover et /profil comme
+  // source unique (#235). Vide = aucune restriction sur ce critère.
+  searchGenders      String[] @default([])
+  searchOrientations String[] @default([])
+  searchInterests    String[] @default([])
   invisibleMode    Boolean   @default(false)
   lastKnownLat     Float     @default(0) @map("last_known_lat")
   lastKnownLng     Float     @default(0) @map("last_known_lng")
