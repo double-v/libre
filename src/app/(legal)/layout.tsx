@@ -22,7 +22,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
         <Link href="/cgu" className="text-coral hover:underline">CGU</Link>
         <Link href="/confidentialite" className="text-coral hover:underline">Politique de confidentialité</Link>
         <Link href="/mentions-legales" className="text-coral hover:underline">Mentions légales</Link>
-        <Link href="/faq/session-expiree" className="text-coral hover:underline">FAQ</Link>
+        <Link href="/faq" className="text-coral hover:underline">FAQ</Link>
       </div>
     </div>
   );
