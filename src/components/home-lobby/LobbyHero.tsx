@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import RotatingWord from '@/components/RotatingWord';
+import LobbySteps from './LobbySteps';
 
 // Accroche : le mot défile sur des achats « loisir » devenus normaux qu'on paie
 // sans broncher — plusieurs registres pour parler à plein de monde : gaming (un
@@ -32,10 +33,7 @@ const TRUST_CHIPS = [
 interface LobbyHeroProps {
   /** Compteur d'utilisateurs (SSR) — repris de l'ancienne home (preuve sociale). */
   userCount?: number;
-  /**
-   * Contenu du panneau latéral droit (« Comment ça marche », ticket #247). Réservé
-   * ici : tant qu'il est absent, on affiche un placeholder discret.
-   */
+  /** Panneau latéral droit. Défaut : « Comment ça marche » (#247). Override possible. */
   sidePanel?: React.ReactNode;
 }
 
@@ -99,13 +97,7 @@ export default function LobbyHero({ userCount, sidePanel }: LobbyHeroProps) {
           </div>
         </div>
 
-        <div className="lobby-hero__aside">
-          {sidePanel ?? (
-            <div className="lobby-hero__slot" aria-hidden="true">
-              Panneau « Comment ça marche » — #247
-            </div>
-          )}
-        </div>
+        <div className="lobby-hero__aside">{sidePanel ?? <LobbySteps />}</div>
       </div>
     </section>
   );
