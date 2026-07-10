@@ -153,6 +153,56 @@ Règle : **un skin = un delta.** Il ne redéfinit que ce qui diffère de la base
 - Le skin change l'**habillage**, jamais la **sémantique** : un CTA reste « accent » via `--accent`, une erreur reste `--error`.
 - Zéro valeur inline dans les composants — tout via tokens.
 
+### Axe 3 — Thèmes « lobby » (landing publique uniquement)
+
+La home publique (`src/app/page.tsx`, épic #243) adopte une ambiance **« lobby »
+pop-culture** : sombre mais chaude, personnages qui marchent, skyline parallax,
+ciel jour/nuit. Elle porte **son propre axe de thème**, **distinct des skins app** :
+
+- **Portée** : la landing marketing seulement. **N'a aucun lien** avec l'axe Mode
+  (`.dark`) ni l'axe Skin (`data-theme` = `libre`/`libre-warm`) : un thème lobby ne
+  touche ni `localStorage['libre-theme']` ni `localStorage['libre-skin']`.
+- **Porteur** : attribut `data-lobby="<id>"` **sur le conteneur racine du lobby**
+  (pas sur `<html>`). Persistance : `localStorage['libre-lobby-theme']`. Défaut :
+  `cartoon`. **No-flash** : script inline (même patron que `layout.tsx`) posant
+  `data-lobby` avant paint.
+- **Toujours sombre** : ces thèmes n'ont pas de variante claire (au contraire des
+  skins app). Le fond reste sombre-chaud, jamais froid bleuté (cf. PRODUCT.md, anti-réf).
+
+**3 thèmes** (commutables via un switcher landing, cf. `LobbyThemeSwitcher`) :
+
+| `data-lobby` | Direction | Police titres | Radius | Silhouette bouton |
+|---|---|---|---|---|
+| `cartoon` (défaut) | Plum-black chaud, rondeurs généreuses | Baloo 2 | 30/20px | pleine (no clip) |
+| `arcade` | Bleu-noir néon, glow coral | Space Grotesk | 20/12px | coin biseauté |
+| `retro` | 8-bit, ombres dures, scanlines | Space Grotesk + Press Start 2P | 4/2px | pixel-clip |
+
+**Tokens `--lobby-*`** (déclarés en blocs `[data-lobby="…"]` dans `globals.css`, à
+côté des skins — **jamais d'hex inline dans le TSX**) :
+
+| Token | Rôle |
+|---|---|
+| `--lobby-bg`, `--lobby-bg-elev` | plancher / surface surélevée |
+| `--lobby-text`, `--lobby-text-dim` | texte principal / secondaire |
+| `--lobby-accent`, `--lobby-accent-strong`, `--lobby-gold` | coral, coral clair, or |
+| `--lobby-radius-lg`, `--lobby-radius-sm` | arrondis (varient par thème) |
+| `--lobby-font-head`, `--lobby-font-eyebrow` | police titres / eyebrow (varient par thème) |
+| `--lobby-btn-clip` | `clip-path` du bouton (biseau arcade / pixel retro / none cartoon) |
+| `--lobby-card-border`, `--lobby-chip-border` | filets cartes / chips |
+| `--lobby-shadow`, `--lobby-cta-shadow` | ombre panneau / CTA (glow doux, ou ombre dure 8-bit en retro) |
+| `--lobby-panel-bg`, `--lobby-bg-texture` | dégradé de panneau / texture de fond (scanlines retro) |
+
+**Polices** (via `next/font/google`, self-host — **jamais** de `<link>` Google/CDN,
+cf. CSP + perf) : `Space Grotesk` (500/700), `Baloo 2` (600/700), `Press Start 2P`
+(400). Garde-fou : **Press Start 2P en titres/accents du thème `retro` uniquement**,
+jamais le corps de texte (lisibilité) — le prototype l'utilisait pour l'eyebrow de
+tous les thèmes, on le **restreint** au retro (`--lobby-font-eyebrow` par thème).
+
+**Garde-fous** (comme tout thème) : **reduced-motion** obligatoire sur chaque
+animation (pulse des blobs, mot rotatif, personnages/bulles, parallax skyline,
+oiseaux, étoiles, scanlines) — settle statique ; **WCAG AA** sur les 3 thèmes ;
+focus ring coral ; cibles ≥ 44px ; zéro hex inline.
+
 ## Typography
 
 ### Font Stack

@@ -83,6 +83,83 @@ html[data-theme='libre-warm'].dark {
   --fill-subtle: #2e211a;
 }
 
+/* ── Thèmes « lobby » (landing publique — épic #243) ────────────────────────
+   Axe de thème DISTINCT des skins app (data-theme) et du mode (.dark) : porté
+   par data-lobby sur le SEUL conteneur racine du lobby, jamais sur <html>.
+   Toujours sombre-chaud. Les composants home-lobby consomment les tokens
+   --lobby-* (aucun hex inline dans le TSX). Défaut : cartoon.
+   Cf. DESIGN.md § Theming — Axe 3. C'est ici (définition des tokens) que vivent
+   les valeurs hex, comme pour les skins ci-dessus. */
+[data-lobby] {
+  background: var(--lobby-bg);
+  background-image: var(--lobby-bg-texture, none);
+  color: var(--lobby-text);
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+
+[data-lobby='cartoon'] {
+  --lobby-bg: #1c1016;
+  --lobby-bg-elev: #241419;
+  --lobby-text: #fdf3ee;
+  --lobby-text-dim: rgba(253, 243, 238, 0.66);
+  --lobby-accent: #e8634a;
+  --lobby-accent-strong: #ff9478;
+  --lobby-gold: #ffd27a;
+  --lobby-radius-lg: 30px;
+  --lobby-radius-sm: 20px;
+  --lobby-font-head: var(--font-baloo), system-ui, sans-serif;
+  --lobby-font-eyebrow: var(--font-baloo), system-ui, sans-serif;
+  --lobby-btn-clip: none;
+  --lobby-card-border: 1px solid rgba(255, 255, 255, 0.08);
+  --lobby-chip-border: 1px solid rgba(255, 255, 255, 0.1);
+  --lobby-shadow: 0 18px 40px -12px rgba(232, 99, 74, 0.35);
+  --lobby-cta-shadow: 0 10px 24px -8px rgba(232, 99, 74, 0.4);
+  --lobby-panel-bg: linear-gradient(180deg, rgba(255, 210, 122, 0.06), rgba(255, 255, 255, 0.01));
+  --lobby-bg-texture: none;
+}
+
+[data-lobby='arcade'] {
+  --lobby-bg: #0a0a12;
+  --lobby-bg-elev: #12121c;
+  --lobby-text: #f5f4f2;
+  --lobby-text-dim: rgba(245, 244, 242, 0.62);
+  --lobby-accent: #e8634a;
+  --lobby-accent-strong: #ff8a6d;
+  --lobby-gold: #ffc65c;
+  --lobby-radius-lg: 20px;
+  --lobby-radius-sm: 12px;
+  --lobby-font-head: var(--font-space-grotesk), system-ui, sans-serif;
+  --lobby-font-eyebrow: var(--font-space-grotesk), system-ui, sans-serif;
+  --lobby-btn-clip: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  --lobby-card-border: 1px solid rgba(255, 255, 255, 0.1);
+  --lobby-chip-border: 1px solid rgba(255, 255, 255, 0.12);
+  --lobby-shadow: 0 0 32px rgba(232, 99, 74, 0.3);
+  --lobby-cta-shadow: 0 10px 24px -8px rgba(232, 99, 74, 0.4);
+  --lobby-panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+  --lobby-bg-texture: none;
+}
+
+[data-lobby='retro'] {
+  --lobby-bg: #0d0d0d;
+  --lobby-bg-elev: #151515;
+  --lobby-text: #f2f2f2;
+  --lobby-text-dim: rgba(242, 242, 242, 0.6);
+  --lobby-accent: #e8634a;
+  --lobby-accent-strong: #ff8a6d;
+  --lobby-gold: #ffc65c;
+  --lobby-radius-lg: 4px;
+  --lobby-radius-sm: 2px;
+  --lobby-font-head: var(--font-space-grotesk), system-ui, sans-serif;
+  --lobby-font-eyebrow: var(--font-press-start), monospace;
+  --lobby-btn-clip: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+  --lobby-card-border: 1px solid rgba(255, 255, 255, 0.14);
+  --lobby-chip-border: 1px solid rgba(255, 255, 255, 0.16);
+  --lobby-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5);
+  --lobby-cta-shadow: 4px 4px 0 rgba(0, 0, 0, 0.55);
+  --lobby-panel-bg: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0px, rgba(255, 255, 255, 0.025) 2px, transparent 2px, transparent 4px);
+  --lobby-bg-texture: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 1px, transparent 1px, transparent 3px);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -218,6 +295,87 @@ input::placeholder, textarea::placeholder {
 
 .animate-toast-in {
   animation: toast-in var(--motion-base) var(--ease-out-soft) both;
+}
+
+/* Keyframes de l'ambiance « lobby » (landing — épic #243). Préfixe `lobby`
+   pour éviter toute collision. Inertes tant qu'un composant ne les référence pas.
+   Reduced-motion : le bloc global plus bas les fige déjà (iteration-count:1,
+   80ms) ; en complément, le bandeau ambiant lourd (#248) rend une version
+   statique via un flag JS. Cf. DESIGN.md § Theming — Axe 3. */
+@keyframes lobbyPulse { 0%, 100% { opacity: 0.55 } 50% { opacity: 1 } }
+@keyframes lobbyWordCycle { 0% { opacity: 0 } 5% { opacity: 1 } 94% { opacity: 1 } 100% { opacity: 0 } }
+@keyframes lobbyScanline { 0% { background-position: 0 0 } 100% { background-position: 0 40px } }
+@keyframes lobbyCritterWalk {
+  0% { left: var(--lx0, 0%); opacity: 0 }
+  8% { opacity: 1 }
+  42% { left: var(--lx1, 60%) }
+  58% { left: var(--lx1, 60%) }
+  92% { opacity: 1 }
+  100% { left: var(--lx0, 0%); opacity: 0 }
+}
+@keyframes lobbyCritterBounce { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+@keyframes lobbyCritterBubble {
+  0%, 32%, 68%, 100% { opacity: 0; transform: translateX(-50%) translateY(5px) scale(0.7) }
+  44%, 56% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1) }
+}
+@keyframes lobbyDotBlink { 0%, 80%, 100% { opacity: 0.25 } 40% { opacity: 1 } }
+@keyframes lobbyStarTwinkle { 0%, 100% { opacity: 0.15 } 50% { opacity: 1 } }
+@keyframes lobbyBirdDrift { 0% { transform: translate(0, 0) } 50% { transform: translate(var(--bx, 220px), -10px) } 100% { transform: translate(0, 0) } }
+@keyframes lobbyWingFlapL { 0%, 100% { transform: rotate(-22deg) } 50% { transform: rotate(-46deg) } }
+@keyframes lobbyWingFlapR { 0%, 100% { transform: rotate(22deg) } 50% { transform: rotate(46deg) } }
+@keyframes lobbySkylineScroll { 0% { transform: translateX(0) } 100% { transform: translateX(-50%) } }
+
+/* ── Composants landing « lobby » (épic #243) ───────────────────────────────
+   Consomment les tokens --lobby-* (jamais d'hex de marque inline dans le TSX).
+   Les rgba(255,255,255,…) sont des filets/voiles structurels sur fond sombre
+   (primitive d'UI, pas une couleur de marque). Focus ring coral, cibles ≥ 44px. */
+.lobby-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 4px 6px;
+}
+.lobby-switcher__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  padding: 0 4px;
+}
+.lobby-switcher__pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px; /* cible tactile WCAG (PRODUCT.md) */
+  padding: 0 12px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--lobby-text-dim);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color var(--motion-fast) var(--ease-out-soft),
+    background var(--motion-fast) var(--ease-out-soft),
+    border-color var(--motion-fast) var(--ease-out-soft);
+}
+.lobby-switcher__pill:hover {
+  color: var(--lobby-text);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+.lobby-switcher__pill[data-active] {
+  color: #fff;
+  background: var(--lobby-accent);
+  border-color: var(--lobby-accent);
+}
+.lobby-switcher__pill:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(232 99 74 / 0.6); /* ring coral accessible */
 }
 
 /* Safe-area : encoche & barre d'accueil iOS/Android (PWA/TWA standalone).
