@@ -28,6 +28,15 @@ destinées à la galerie **claude.ai/design** (projet « Libre — Design System
 | `avatar.html` | pattern avatar (`DESIGN.md`) | Composants |
 | `nav.html` | `src/app/(main)/layout.tsx` (bottom tab bar) | Navigation |
 
+## Contenu (`templates/`)
+
+| Preview | Miroir de | Groupe |
+|---|---|---|
+| `home-hero.html` | `src/app/page.tsx` (hero) + `src/components/RotatingWord.tsx` | Pages |
+
+> Le prototype `templates/homepage-lobby/*` côté projet Claude Design est **rejeté**
+> (refs gamer, viole les anti-références `PRODUCT.md`) — à retirer/remplacer, cf. issue #238.
+
 ## Conventions
 
 - **Tokens uniquement**, valeurs alignées sur le bloc `@theme` de
