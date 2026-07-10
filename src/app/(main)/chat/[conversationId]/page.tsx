@@ -10,8 +10,13 @@ import { useEncryptedChat } from '@/hooks/useEncryptedChat';
 import ShareContactButton from '@/components/ShareContactButton';
 import ShareContactNotice from '@/components/ShareContactNotice';
 import { isShareContactMessage } from '@/lib/shareContact';
+import { mergeMessages } from '@/lib/chat-messages';
 import ProfileModal from '@/components/ProfileModal';
 import { CheckinButton } from '@/components/CheckinButton';
+
+// Taille de page (miroir du défaut serveur, #200). On ne charge/déchiffre que
+// cette tranche au départ ; le scroll-up charge les plus anciennes.
+const PAGE_SIZE = 50;
 
 interface Message {
   id: string;
@@ -77,9 +82,15 @@ export default function ChatConversationPage() {
   const [sending, setSending] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingOlder, setLoadingOlder] = useState(false);
 
   const { privateKey, publicKey, ready } = useEncryptedChat();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  // Vrai le temps d'un prepend (scroll-up) : évite que l'effet de bas de fil
+  // ne ramène brutalement l'utilisateur en bas après l'insertion des anciens.
+  const prependingRef = useRef(false);
   const cacheRef = useRef<Map<string, string>>(loadPlaintextCache(conversationId));
   const pendingOwnRef = useRef<Set<string>>(new Set());
 
@@ -121,6 +132,12 @@ export default function ChatConversationPage() {
   // ─── Scroll ──────────────────────────────────────────────────────
 
   useEffect(() => {
+    // Après un chargement de messages plus anciens (prepend), on ne scrolle pas
+    // en bas : la position est préservée par loadOlder. On consomme le flag.
+    if (prependingRef.current) {
+      prependingRef.current = false;
+      return;
+    }
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
@@ -139,10 +156,13 @@ export default function ChatConversationPage() {
         setOtherPublicKey(profileData.publicKey ?? null);
       }
 
-      const msgRes = await fetch(`/api/chat/${conversationId}/messages`);
+      // Page initiale : uniquement les ~50 plus récents (#200). On ne déchiffre
+      // que cette tranche ; les plus anciens se chargent au scroll-up.
+      const msgRes = await fetch(`/api/chat/${conversationId}/messages?limit=${PAGE_SIZE}`);
       if (!msgRes.ok) throw new Error('Failed to fetch messages');
       const msgData = await msgRes.json();
       const base: Message[] = msgData.messages || [];
+      setNextCursor(msgData.nextCursor ?? null);
 
       // First render raw (fast), then decrypt in background
       setMessages(base);
@@ -154,6 +174,40 @@ export default function ChatConversationPage() {
       setLoading(false);
     }
   }, [conversationId, applyDecryption]);
+
+  // ─── Charger les messages plus anciens (scroll-up paginé, #200) ──────────
+
+  const loadOlder = useCallback(async () => {
+    if (!nextCursor || loadingOlder) return;
+    setLoadingOlder(true);
+    const container = listRef.current;
+    const prevHeight = container?.scrollHeight ?? 0;
+    const prevTop = container?.scrollTop ?? 0;
+    try {
+      const res = await fetch(
+        `/api/chat/${conversationId}/messages?cursor=${encodeURIComponent(nextCursor)}&limit=${PAGE_SIZE}`,
+      );
+      if (!res.ok) throw new Error('Failed to fetch older messages');
+      const data = await res.json();
+      const older: Message[] = data.messages || [];
+      const decrypted = await applyDecryption(older);
+      // Prepend + dédoublonnage/retri (mergeMessages) : pas de doublon ni de trou.
+      prependingRef.current = true;
+      setMessages((prev) => mergeMessages(decrypted, prev));
+      setNextCursor(data.nextCursor ?? null);
+      // Préserve la position de lecture : le contenu inséré au-dessus décale la
+      // hauteur — on ré-ancre le scroll sur le delta après le rendu.
+      requestAnimationFrame(() => {
+        if (container) {
+          container.scrollTop = prevTop + (container.scrollHeight - prevHeight);
+        }
+      });
+    } catch {
+      setError('Impossible de charger les messages plus anciens');
+    } finally {
+      setLoadingOlder(false);
+    }
+  }, [nextCursor, loadingOlder, conversationId, applyDecryption]);
 
   useEffect(() => {
     // IIFE async → pas de setState synchrone dans le corps de l'effet
@@ -181,15 +235,17 @@ export default function ChatConversationPage() {
     const channel = pusher.subscribe(channelName);
 
     // Re-fetch + déchiffrement, partagé par new-message et message-deleted.
+    // Sous pagination (#200) on ne recharge que la page la plus récente et on la
+    // fusionne dans le fil déjà chargé (mergeMessages) : les tranches anciennes
+    // déjà affichées sont conservées, pas de rechargement complet ni de trou.
     const refetch = () => {
-      fetch(`/api/chat/${conversationId}/messages`)
+      fetch(`/api/chat/${conversationId}/messages?limit=${PAGE_SIZE}`)
         .then((res) => res.json())
         .then(async (msgData) => {
           if (msgData.messages) {
             const base: Message[] = msgData.messages;
-            // Preserve pending own messages (not yet in DB) by keeping them in cache
             const decrypted = await applyDecryption(base);
-            setMessages(decrypted);
+            setMessages((prev) => mergeMessages(prev, decrypted));
           }
         })
         .catch(() => {});
@@ -387,10 +443,29 @@ export default function ChatConversationPage() {
 
       {/* Messages list */}
       <div
+        ref={listRef}
         aria-live="polite"
         aria-label="Messages de la conversation"
         className="flex-1 space-y-2 overflow-y-auto p-4"
       >
+        {/* Charger les plus anciens (pagination par curseur, #200) */}
+        {nextCursor &&
+          (loadingOlder ? (
+            <div className="space-y-2 pb-1" aria-hidden="true">
+              <div className="h-8 w-2/3 animate-pulse rounded-2xl bg-gray-100 motion-reduce:animate-none dark:bg-gray-800" />
+              <div className="ml-auto h-8 w-1/2 animate-pulse rounded-2xl bg-gray-100 motion-reduce:animate-none dark:bg-gray-800" />
+            </div>
+          ) : (
+            <div className="flex justify-center pb-1">
+              <button
+                type="button"
+                onClick={loadOlder}
+                className="rounded-full border border-gray-300 px-4 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 focus-visible:outline-none focus-visible:shadow-focus dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                Charger les messages plus anciens
+              </button>
+            </div>
+          ))}
         {messages.length === 0 && (
           <p className="text-center text-sm text-gray-600 dark:text-gray-400">
             Commencez la conversation !

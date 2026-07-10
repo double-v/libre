@@ -247,4 +247,62 @@ describe('GET /api/chat/[conversationId]/messages', () => {
     const res = await GET(new NextRequest('http://localhost/x'), makeParams());
     expect(res.status).toBe(404);
   });
+
+  // ── Pagination par curseur (#200) ──────────────────────────────────────
+  it('sans curseur : take=51 (défaut 50), pas de skip/cursor, nextCursor null si peu de messages', async () => {
+    fakeDb.message.findMany.mockResolvedValue([
+      { id: 'm2', senderId: OTHER_ID, content: 'b', createdAt: new Date('2026-07-08T10:01:00Z') },
+      { id: 'm1', senderId: ME_ID, content: 'a', createdAt: new Date('2026-07-08T10:00:00Z') },
+    ]);
+    fakeDb.message.updateMany.mockResolvedValue({ count: 0 });
+
+    const res = await GET(new NextRequest('http://localhost/x'), makeParams());
+    const json = await res.json();
+    expect(json.nextCursor).toBeNull();
+    expect(fakeDb.message.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { conversationId: CONVO_ID },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take: 51,
+      }),
+    );
+    // Pas de pagination curseur au premier chargement.
+    const call = fakeDb.message.findMany.mock.calls[0][0];
+    expect(call.cursor).toBeUndefined();
+    expect(call.skip).toBeUndefined();
+  });
+
+  it('avec ?cursor&limit : passe skip/cursor à Prisma et renvoie nextCursor quand il reste des plus anciens', async () => {
+    // 3 lignes renvoyées pour limit=2 → il en reste → nextCursor = plus ancien de la page.
+    fakeDb.message.findMany.mockResolvedValue([
+      { id: 'm5', senderId: OTHER_ID, content: 'e', createdAt: new Date('2026-07-08T10:05:00Z') },
+      { id: 'm4', senderId: ME_ID, content: 'd', createdAt: new Date('2026-07-08T10:04:00Z') },
+      { id: 'm3', senderId: OTHER_ID, content: 'c', createdAt: new Date('2026-07-08T10:03:00Z') },
+    ]);
+    fakeDb.message.updateMany.mockResolvedValue({ count: 0 });
+
+    const res = await GET(new NextRequest('http://localhost/x?cursor=m6&limit=2'), makeParams());
+    const json = await res.json();
+    // Page = 2 plus récents (desc [m5,m4]) renvoyés en ordre chrono → [m4,m5].
+    expect(json.messages.map((m: { id: string }) => m.id)).toEqual(['m4', 'm5']);
+    // nextCursor = plus ancien de la page (m4) pour continuer le scroll-up.
+    expect(json.nextCursor).toBe('m4');
+    expect(fakeDb.message.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ take: 3, skip: 1, cursor: { id: 'm6' } }),
+    );
+  });
+
+  it('plafonne limit à 100 et le plancher à 1', async () => {
+    fakeDb.message.findMany.mockResolvedValue([]);
+    fakeDb.message.updateMany.mockResolvedValue({ count: 0 });
+
+    await GET(new NextRequest('http://localhost/x?limit=9999'), makeParams());
+    expect(fakeDb.message.findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({ take: 101 }),
+    );
+    await GET(new NextRequest('http://localhost/x?limit=0'), makeParams());
+    expect(fakeDb.message.findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({ take: 2 }),
+    );
+  });
 });
