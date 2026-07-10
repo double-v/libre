@@ -197,6 +197,18 @@ input::placeholder, textarea::placeholder {
   animation: fade-in 0.4s ease-out both;
 }
 
+/* Mot rotatif de l'accroche home : simple crossfade d'opacité (pas de
+   translate, pour ne pas faire sauter la ligne de base du titre). Le bloc
+   prefers-reduced-motion plus bas fige à 80ms ; le composant coupe en plus
+   l'auto-rotation JS sous reduced-motion (WCAG 2.2.2). */
+@keyframes word-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-word-in {
+  animation: word-in var(--motion-base) var(--ease-out-soft) both;
+}
+
 /* Toast : apparition douce depuis le bas (fugace, jamais agressive).
    Le bloc prefers-reduced-motion plus bas ramène la durée à 80ms. */
 @keyframes toast-in {

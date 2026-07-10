@@ -3,6 +3,28 @@ import Link from 'next/link';
 import Image from 'next/image';
 import VersionWatcher from '@/components/VersionWatcher';
 import PublicHeader from '@/components/PublicHeader';
+import RotatingWord from '@/components/RotatingWord';
+
+// Accroche : le mot défile sur des achats « loisir » devenus normaux qu'on paie
+// sans broncher — plusieurs registres pour parler à plein de monde : gaming (un
+// season pass), accès payant (un coupe-file), fitness (un abo à la salle),
+// lifestyle (un brunch le dimanche). Toujours des catégories génériques, JAMAIS
+// une app concurrente ni une marque déposée (on reste safe). On glisse le vrai
+// coût annuel de la concurrence (240 €/an, cf. « Constat »), une vanne (les yeux
+// de la tête), puis le twist chaleureux — le seul truc qui mérite ton argent,
+// c'est le vrai resto du date, pas l'appli — avant la punchline d'origine.
+// Un seul anglicisme assumé (« season pass »), le reste FR — décision #240.
+const HERO_WORDS = [
+  'un abonnement',
+  'un season pass',
+  'un coupe-file',
+  'un abo à la salle',
+  'un brunch le dimanche',
+  '240 € par an',
+  'les yeux de la tête',
+  'le resto de ton premier date',
+  'un rond',
+];
 
 // Kill Vercel/Next HTML caching on the home. The page is essentially static
 // (FAQ + user count) but Google Search Console flagged the cached 5-min
@@ -115,21 +137,24 @@ export default async function Home() {
         <div className="relative mx-auto flex max-w-2xl flex-col items-center gap-10 px-6 py-16 sm:flex-row sm:py-24">
           <div className="flex-1 text-center sm:text-left animate-fade-in">
             <h1 className="mb-4 text-4xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-5xl dark:text-gray-50">
-              Rencontrer devrait pas{' '}
-              <span className="text-coral">coûter un rond</span>. 🫶
+              Rencontrer devrait pas coûter{' '}
+              <RotatingWord words={HERO_WORDS} className="text-coral" />. 🫶
             </h1>
+            <p className="mb-6 max-w-lg text-base text-gray-600 sm:text-lg dark:text-gray-300">
+              Pas de score de désirabilité, pas de likes à acheter, pas de revente de données. Juste de vraies personnes, une modération tenue par des humains, et des messages que même nous ne pouvons pas lire.
+            </p>
             <div className="mb-6 flex flex-wrap justify-center gap-2 sm:justify-start">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-sm font-medium text-gray-700 shadow-sm dark:bg-gray-800/80 dark:text-gray-200">
-                <span aria-hidden="true">🆓</span> Gratuit
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-sm font-medium text-gray-700 shadow-sm dark:bg-gray-800/80 dark:text-gray-200">
-                <span aria-hidden="true">🚫</span> Sans pub
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-sm font-medium text-gray-700 shadow-sm dark:bg-gray-800/80 dark:text-gray-200">
-                <span aria-hidden="true">🔒</span> Sans revente data
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-sm font-medium text-gray-700 shadow-sm dark:bg-gray-800/80 dark:text-gray-200">
                 <span aria-hidden="true">🛡️</span> Modération humaine
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-sm font-medium text-gray-700 shadow-sm dark:bg-gray-800/80 dark:text-gray-200">
+                <span aria-hidden="true">🔒</span> Messages chiffrés
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-sm font-medium text-gray-700 shadow-sm dark:bg-gray-800/80 dark:text-gray-200">
+                <span aria-hidden="true">✅</span> Profils vérifiés
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-sm font-medium text-gray-700 shadow-sm dark:bg-gray-800/80 dark:text-gray-200">
+                <span aria-hidden="true">🆓</span> 100 % gratuit
               </span>
             </div>
             {totalUsers > 0 && (
@@ -184,14 +209,14 @@ export default async function Home() {
             Des humains, pas des profils.
           </h2>
           <p className="mx-auto mb-8 max-w-xl text-center text-base text-gray-600 dark:text-gray-400">
-            De vraies personnes, à leur rythme. Pas de swipe compulsif, pas de score de
-            désirabilité — juste des rencontres, et la liberté de choisir comment aller plus loin.
+            De vraies personnes, à leur rythme, en confiance. Pas de swipe compulsif, pas de
+            score de désirabilité — tu choisis qui tu rencontres, et comment aller plus loin.
           </p>
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
             {[
-              { src: '/images/moment-1.jpg', alt: 'Un couple qui s’enlace en riant' },
-              { src: '/images/moment-2.jpg', alt: 'Deux personnes complices, un fou rire' },
-              { src: '/images/moment-3.jpg', alt: 'Un couple joue contre joue, tendrement' },
+              { src: '/images/moment-1.jpg', alt: 'Deux femmes qui s’enlacent tendrement dans leur cuisine' },
+              { src: '/images/moment-2.jpg', alt: 'Deux hommes qui rient, l’un enlaçant l’autre par-derrière' },
+              { src: '/images/moment-3.jpg', alt: 'Un couple complice enlacé au pied d’un arbre' },
             ].map((m, i) => (
               <div
                 key={m.src}
