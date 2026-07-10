@@ -1,4 +1,4 @@
-<!-- @dsCard group="Composants" name="Button" subtitle="primary / secondary / ghost / danger · sm / md / lg · états" -->
+<!-- @dsCard group="Composants" name="Button" subtitle="libre × libre-warm · clair/sombre · primary / secondary / ghost / danger · états" -->
 <!doctype html>
 <html lang="fr">
 <head>
@@ -8,45 +8,46 @@
 <style>
   *{box-sizing:border-box}
   html,body{margin:0}
-  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Inter,sans-serif;background:#f6f6f7;color:#171717;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:980px;margin:0 auto;padding:28px 24px 40px}
-  .title{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:0 0 2px}
-  .sub{font-size:13px;color:#6b7280;margin:0 0 22px}
-  .stage{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media(max-width:720px){.stage{grid-template-columns:1fr}}
-  .panel{border-radius:16px;padding:20px;border:1px solid rgba(0,0,0,.06)}
-  .panel.light{background:#FDF0ED}
-  .panel.dark{background:#0a0a0a;border-color:#1f2937}
-  .plabel{font:600 11px/1 system-ui;letter-spacing:.08em;text-transform:uppercase;color:#9ca3af;margin:0 0 16px}
-  .grp{font:500 11px/1.4 system-ui;letter-spacing:.05em;text-transform:uppercase;color:#4b5563;margin:16px 0 9px}
-  .dark .grp{color:#9ca3af}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Inter,sans-serif;background:#f4f4f5;color:#171717;-webkit-font-smoothing:antialiased}
+  @media(prefers-color-scheme:dark){body{background:#121214;color:#ededed}}
+  .wrap{max-width:1060px;margin:0 auto;padding:26px 22px 40px}
+  .title{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:0 0 3px}
+  .sub{font-size:13px;line-height:1.5;color:#6b7280;margin:0 0 20px}
+  @media(prefers-color-scheme:dark){.sub{color:#9ca3af}}
+  .stage{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:760px){.stage{grid-template-columns:1fr}}
+  .panel{border-radius:16px;padding:16px 18px 20px;border:1px solid var(--panel-border);background:var(--bg);color:var(--content)}
+  .strip{margin-top:14px}
+  .plabel{display:flex;align-items:baseline;gap:8px;margin:0 0 14px}
+  .plabel b{font:700 12px/1 system-ui;letter-spacing:.01em;color:var(--coral)}
+  .plabel span{font:600 10px/1 system-ui;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+  .grp{font:600 10px/1.4 system-ui;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:15px 0 8px}
   .grp:first-of-type{margin-top:0}
-  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .row{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
 
-  /* Button — miroir de src/components/ui/Button.tsx */
+  /* ── Skin × Mode — valeurs = bloc @theme / :root de src/app/globals.css ── */
+  .panel{--bg:#FDF0ED;--panel-border:rgba(0,0,0,.06);--surface:#fff;--elevated:#fff;--sunken:#FDF0ED;--content:#171717;--label:#1f2937;--muted:#4b5563;--hairline:#e5e7eb;--control-border:#d1d5db;--fill-subtle:#f3f4f6;--coral:#E8634A;--coral-light:#F09A88;--terracotta:#C4503A;--coral-dark:#9E3A28;--ghost:#E8634A;--blush:#FDF0ED;--sand:#F5E6D8;--chip-bg:#f3f4f6;--chip-text:#374151;--success:#16a34a;--warning:#d4a017;--error:#dc2626;--focus:0 0 0 3px rgb(232 99 74 / .4);--shadow-soft:0 2px 8px -2px rgb(232 99 74 / .08);--shadow-pop:0 8px 24px -4px rgb(232 99 74 / .16)}
+  .panel.dark{--bg:#0a0a0a;--panel-border:#1f2937;--surface:#171717;--elevated:#1f2937;--sunken:rgb(232 99 74 / .10);--content:#ededed;--label:#ededed;--muted:#9ca3af;--hairline:#374151;--control-border:#374151;--fill-subtle:#1f2937;--ghost:#F09A88;--chip-bg:#1f2937;--chip-text:#d1d5db}
+  .panel.warm{--bg:#fbe8dd;--panel-border:rgba(122,42,24,.12);--surface:#fffbf7;--elevated:#fff;--sunken:#fbe8dd;--content:#1f1410;--label:#1f1410;--muted:#6b5a4e;--hairline:#eadfd3;--control-border:#dbcbbb;--fill-subtle:#f4eadf;--coral:#d9542e;--coral-light:#e68b6e;--terracotta:#a33a20;--coral-dark:#7a2a18;--ghost:#d9542e;--blush:#fbe8dd;--sand:#efd8c2;--chip-bg:#f4eadf;--chip-text:#6b4a3a}
+  .panel.warm.dark{--bg:#17110d;--panel-border:#3a2e26;--surface:#241a14;--elevated:#2e211a;--sunken:rgb(232 102 59 / .12);--content:#f3ece6;--label:#f3ece6;--muted:#b4a498;--hairline:#3a2e26;--control-border:#3a2e26;--fill-subtle:#2e211a;--coral:#e8663b;--coral-light:#f0a184;--terracotta:#c4503a;--coral-dark:#f0a184;--ghost:#f0a184;--blush:#2a1a12;--sand:#2e211a;--chip-bg:#2e211a;--chip-text:#b4a498}
+
+  /* Button — miroir de src/components/ui/Button.tsx (tokens sémantiques #223) */
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:6px;font-weight:500;font-size:14px;
-    min-height:44px;padding:0 16px;border:1px solid transparent;cursor:pointer;font-family:inherit;
+    min-height:44px;height:44px;padding:0 16px;border:1px solid transparent;cursor:pointer;font-family:inherit;
     transition:background-color 160ms cubic-bezier(.22,1,.36,1),border-color 160ms cubic-bezier(.22,1,.36,1)}
   .btn-sm{height:36px;min-height:36px;padding:0 12px}
-  .btn-md{height:44px}
   .btn-lg{height:48px;padding:0 20px;font-size:16px}
-  .btn-primary{background:#E8634A;color:#fff}
-  .btn-primary:hover,.btn-primary.is-hover{background:#C4503A}
-  .btn-primary:active,.btn-primary.is-active{background:#9E3A28}
-  .btn-secondary{background:#fff;color:#1f2937;border-color:#d1d5db}
-  .btn-secondary:hover,.btn-secondary.is-hover{background:rgba(253,240,237,.4);border-color:#F09A88}
-  .btn-ghost{background:transparent;color:#E8634A}
-  .btn-ghost:hover,.btn-ghost.is-hover{background:rgba(253,240,237,.5)}
-  .btn-danger{background:#dc2626;color:#fff}
+  .btn-primary{background:var(--coral);color:#fff}
+  .btn-primary:hover,.btn-primary.is-hover{background:var(--terracotta)}
+  .btn-primary:active,.btn-primary.is-active{background:var(--coral-dark)}
+  .btn-secondary{background:var(--surface);color:var(--label);border-color:var(--control-border)}
+  .btn-secondary:hover,.btn-secondary.is-hover{background:color-mix(in srgb,var(--blush) 45%,transparent);border-color:var(--coral-light)}
+  .btn-ghost{background:transparent;color:var(--ghost)}
+  .btn-ghost:hover,.btn-ghost.is-hover{background:color-mix(in srgb,var(--blush) 50%,transparent)}
+  .btn-danger{background:var(--error);color:#fff}
   .btn-danger:hover,.btn-danger.is-hover{background:#b91c1c}
   .btn:disabled,.btn.is-disabled{opacity:.5;cursor:not-allowed}
-  .btn.is-focus{outline:none;box-shadow:0 0 0 3px rgb(232 99 74 / .4)}
-
-  /* Dark overrides — miroir des classes dark: du composant (dark:text-foreground = #ededed) */
-  .dark .btn-secondary{background:#171717;color:#ededed;border-color:#374151}
-  .dark .btn-secondary:hover,.dark .btn-secondary.is-hover{background:#1f2937}
-  .dark .btn-ghost{color:#F09A88}
-  .dark .btn-ghost:hover,.dark .btn-ghost.is-hover{background:rgb(232 99 74 / .1)}
+  .btn.is-focus{outline:none;box-shadow:var(--focus)}
 
   .spin{display:inline-block;width:16px;height:16px;border-radius:9999px;border:2px solid currentColor;border-top-color:transparent;animation:spin .7s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
@@ -56,64 +57,91 @@
 <body>
 <div class="wrap">
   <h1 class="title">Button</h1>
-  <p class="sub">Composant partagé · <code>variant</code> × <code>size</code> × états · cible tactile ≥ 44px · focus teinté coral (jamais d'outline gris)</p>
+  <p class="sub">Composant partagé · <code>variant</code> × <code>size</code> × états. La matrice montre les 2 skins (<b>libre</b>, <b>libre-warm</b>) × 2 modes — l'accent coral et les surfaces varient par skin, la sémantique (danger, focus) ne bouge jamais. Cible tactile ≥ 44px, focus teinté coral.</p>
   <div class="stage">
 
-    <section class="panel light">
-      <div class="plabel">Light</div>
-
+    <section class="panel">
+      <div class="plabel"><b>libre</b><span>Clair</span></div>
       <div class="grp">Variantes</div>
       <div class="row">
-        <button class="btn btn-primary btn-md">Créer mon compte</button>
-        <button class="btn btn-secondary btn-md">Voir le profil</button>
-        <button class="btn btn-ghost btn-md">Se connecter</button>
-        <button class="btn btn-danger btn-md">Supprimer</button>
+        <button class="btn btn-primary">Créer mon compte</button>
+        <button class="btn btn-secondary">Voir le profil</button>
+        <button class="btn btn-ghost">Se connecter</button>
+        <button class="btn btn-danger">Supprimer</button>
       </div>
-
-      <div class="grp">Tailles</div>
+      <div class="grp">États · primary</div>
       <div class="row">
-        <button class="btn btn-primary btn-sm">Petit</button>
-        <button class="btn btn-primary btn-md">Moyen</button>
-        <button class="btn btn-primary btn-lg">Grand</button>
-      </div>
-
-      <div class="grp">États</div>
-      <div class="row">
-        <button class="btn btn-primary btn-md is-hover">Hover</button>
-        <button class="btn btn-primary btn-md is-focus">Focus</button>
-        <button class="btn btn-primary btn-md is-disabled" disabled>Désactivé</button>
-        <button class="btn btn-primary btn-md" aria-busy="true"><span class="spin"></span>Connexion…</button>
+        <button class="btn btn-primary is-hover">Hover</button>
+        <button class="btn btn-primary is-focus">Focus</button>
+        <button class="btn btn-primary is-disabled" disabled>Désactivé</button>
+        <button class="btn btn-primary" aria-busy="true"><span class="spin"></span>Connexion…</button>
       </div>
     </section>
 
     <section class="panel dark">
-      <div class="plabel">Dark</div>
-
+      <div class="plabel"><b>libre</b><span>Sombre</span></div>
       <div class="grp">Variantes</div>
-      <div class="row dark">
-        <button class="btn btn-primary btn-md">Créer mon compte</button>
-        <button class="btn btn-secondary btn-md">Voir le profil</button>
-        <button class="btn btn-ghost btn-md">Se connecter</button>
-        <button class="btn btn-danger btn-md">Supprimer</button>
+      <div class="row">
+        <button class="btn btn-primary">Créer mon compte</button>
+        <button class="btn btn-secondary">Voir le profil</button>
+        <button class="btn btn-ghost">Se connecter</button>
+        <button class="btn btn-danger">Supprimer</button>
       </div>
-
-      <div class="grp">Tailles</div>
-      <div class="row dark">
-        <button class="btn btn-primary btn-sm">Petit</button>
-        <button class="btn btn-primary btn-md">Moyen</button>
-        <button class="btn btn-primary btn-lg">Grand</button>
+      <div class="grp">États · primary</div>
+      <div class="row">
+        <button class="btn btn-primary is-hover">Hover</button>
+        <button class="btn btn-primary is-focus">Focus</button>
+        <button class="btn btn-primary is-disabled" disabled>Désactivé</button>
+        <button class="btn btn-primary" aria-busy="true"><span class="spin"></span>Connexion…</button>
       </div>
+    </section>
 
-      <div class="grp">États</div>
-      <div class="row dark">
-        <button class="btn btn-primary btn-md is-hover">Hover</button>
-        <button class="btn btn-primary btn-md is-focus">Focus</button>
-        <button class="btn btn-primary btn-md is-disabled" disabled>Désactivé</button>
-        <button class="btn btn-primary btn-md" aria-busy="true"><span class="spin"></span>Connexion…</button>
+    <section class="panel warm">
+      <div class="plabel"><b>libre-warm</b><span>Clair</span></div>
+      <div class="grp">Variantes</div>
+      <div class="row">
+        <button class="btn btn-primary">Créer mon compte</button>
+        <button class="btn btn-secondary">Voir le profil</button>
+        <button class="btn btn-ghost">Se connecter</button>
+        <button class="btn btn-danger">Supprimer</button>
+      </div>
+      <div class="grp">États · primary</div>
+      <div class="row">
+        <button class="btn btn-primary is-hover">Hover</button>
+        <button class="btn btn-primary is-focus">Focus</button>
+        <button class="btn btn-primary is-disabled" disabled>Désactivé</button>
+        <button class="btn btn-primary" aria-busy="true"><span class="spin"></span>Connexion…</button>
+      </div>
+    </section>
+
+    <section class="panel warm dark">
+      <div class="plabel"><b>libre-warm</b><span>Sombre</span></div>
+      <div class="grp">Variantes</div>
+      <div class="row">
+        <button class="btn btn-primary">Créer mon compte</button>
+        <button class="btn btn-secondary">Voir le profil</button>
+        <button class="btn btn-ghost">Se connecter</button>
+        <button class="btn btn-danger">Supprimer</button>
+      </div>
+      <div class="grp">États · primary</div>
+      <div class="row">
+        <button class="btn btn-primary is-hover">Hover</button>
+        <button class="btn btn-primary is-focus">Focus</button>
+        <button class="btn btn-primary is-disabled" disabled>Désactivé</button>
+        <button class="btn btn-primary" aria-busy="true"><span class="spin"></span>Connexion…</button>
       </div>
     </section>
 
   </div>
+
+  <section class="panel strip">
+    <div class="grp">Tailles · invariantes par skin (sm 36px · md 44px · lg 48px)</div>
+    <div class="row">
+      <button class="btn btn-primary btn-sm">Petit</button>
+      <button class="btn btn-primary">Moyen</button>
+      <button class="btn btn-primary btn-lg">Grand</button>
+    </div>
+  </section>
 </div>
 </body>
 </html>
