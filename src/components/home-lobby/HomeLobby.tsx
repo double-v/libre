@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { lobbyFontVars } from '@/lib/fonts';
 import LobbyThemeScript from './LobbyThemeScript';
 import LobbyNav from './LobbyNav';
+import LobbyHero from './LobbyHero';
 import {
   DEFAULT_LOBBY_THEME,
   readStoredLobbyTheme,
@@ -64,73 +65,10 @@ export default function HomeLobby({ userCount }: HomeLobbyProps) {
 
       <LobbyNav themeValue={theme} onThemeChange={handleThemeChange} />
 
-      {/* --- Shell provisoire : remplacé par le HERO réel (#246) puis les sections suivantes --- */}
-      <div style={{ maxWidth: 720, margin: '0 auto', padding: '48px 24px 80px' }}>
-        <p
-          style={{
-            fontFamily: 'var(--lobby-font-eyebrow)',
-            fontSize: 10,
-            letterSpacing: '0.02em',
-            color: 'var(--lobby-gold)',
-            marginBottom: 20,
-          }}
-        >
-          ✦ Aperçu des tokens du thème {theme}
-        </p>
+      <LobbyHero userCount={userCount} />
 
-        <h1
-          style={{
-            fontFamily: 'var(--lobby-font-head)',
-            fontSize: 40,
-            fontWeight: 700,
-            lineHeight: 1.1,
-            margin: '0 0 12px',
-            color: 'var(--lobby-text)',
-          }}
-        >
-          Rencontrer devrait <span style={{ color: 'var(--lobby-accent)' }}>pas</span>{' '}
-          coûter les yeux de la tête. 🫶
-        </h1>
-        <p style={{ color: 'var(--lobby-text-dim)', fontSize: 16, lineHeight: 1.6, margin: '0 0 28px' }}>
-          Shell provisoire : la nav ci-dessus est posée (#245). Le HERO réel et les
-          sections suivantes arrivent aux tickets suivants de l&apos;épic #243.
-        </p>
-
-        {/* Démo : carte-panneau (panel-bg + card-border + shadow + radius) */}
-        <div
-          style={{
-            background: 'var(--lobby-panel-bg)',
-            border: 'var(--lobby-card-border)',
-            borderRadius: 'var(--lobby-radius-lg)',
-            boxShadow: 'var(--lobby-shadow)',
-            padding: 24,
-          }}
-        >
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                fontSize: 13,
-                fontWeight: 600,
-                color: 'var(--lobby-text)',
-                background: 'var(--lobby-bg-elev)',
-                border: 'var(--lobby-chip-border)',
-                padding: '8px 13px',
-                borderRadius: 999,
-              }}
-            >
-              💳 Gratuit
-            </span>
-            {userCount ? (
-              <span style={{ color: 'var(--lobby-text-dim)', fontSize: 13 }}>
-                {userCount.toLocaleString('fr-FR')} inscrit·es
-              </span>
-            ) : null}
-          </div>
-        </div>
-      </div>
+      {/* Sections suivantes (bandeau ambiant #248, humains/sécurité/closing #249,
+          contenu actuel persisté) — à venir aux prochains tickets de l'épic #243. */}
     </div>
   );
 }
