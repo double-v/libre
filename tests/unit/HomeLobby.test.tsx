@@ -1,11 +1,28 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, expect, it, beforeEach, vi } from 'vitest';
+import { describe, expect, it, beforeAll, beforeEach, vi } from 'vitest';
 
 // next/font ne peut pas s'exécuter hors compilation Next : on stub la classe de vars.
 vi.mock('@/lib/fonts', () => ({ lobbyFontVars: 'font-vars-mock' }));
 
 import HomeLobby from '@/components/home-lobby/HomeLobby';
 import { LOBBY_STORAGE_KEY } from '@/components/home-lobby/lobby-theme';
+
+// jsdom n'implémente pas matchMedia ; RotatingWord (dans le HERO) l'utilise.
+beforeAll(() => {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+});
 
 describe('HomeLobby (shell #244)', () => {
   beforeEach(() => {

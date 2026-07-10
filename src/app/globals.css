@@ -477,6 +477,174 @@ input::placeholder, textarea::placeholder {
   box-shadow: 0 0 0 3px rgb(232 99 74 / 0.6);
 }
 
+/* HERO (#246). Blobs `lobbyPulse` figés par le bloc global reduced-motion.
+   overflow:hidden clippe les blobs sans toucher la nav sticky (autre ancêtre).
+   Tints via color-mix(token) → restent theme-aware sur les 3 thèmes. */
+.lobby-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 64px 24px 80px;
+}
+.lobby-hero__inner {
+  position: relative;
+  z-index: 2;
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 56px;
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .lobby-hero__inner {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+.lobby-hero__col {
+  min-width: 0;
+}
+.lobby-hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 22px;
+  font-family: var(--lobby-font-eyebrow);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: var(--lobby-gold);
+  background: color-mix(in srgb, var(--lobby-gold) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--lobby-gold) 38%, transparent);
+  padding: 9px 12px;
+  border-radius: var(--lobby-radius-sm);
+}
+.lobby-hero__title {
+  margin: 0;
+  font-family: var(--lobby-font-head);
+  font-size: clamp(32px, 6vw, 50px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--lobby-text);
+}
+.lobby-hero__accent {
+  color: var(--lobby-accent);
+}
+.lobby-hero__subtitle {
+  max-width: 520px;
+  margin: 18px 0 26px;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--lobby-text-dim);
+}
+.lobby-hero__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+.lobby-hero__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lobby-text);
+  background: var(--lobby-bg-elev);
+  border: var(--lobby-chip-border);
+  padding: 8px 13px;
+  border-radius: 999px;
+}
+.lobby-hero__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 24px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--lobby-accent-strong);
+  background: color-mix(in srgb, var(--lobby-accent) 14%, transparent);
+  border-radius: 999px;
+}
+.lobby-hero__ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.lobby-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 26px;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  color: #fff;
+  background: var(--lobby-accent);
+  border: 1px solid transparent;
+  border-radius: var(--lobby-radius-sm);
+  clip-path: var(--lobby-btn-clip);
+  box-shadow: var(--lobby-cta-shadow);
+  transition: transform var(--motion-fast) var(--ease-out-soft);
+}
+.lobby-hero__cta:hover {
+  transform: translateY(-1px);
+}
+.lobby-hero__cta:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(232 99 74 / 0.6);
+}
+.lobby-hero__cta--ghost {
+  color: var(--lobby-text);
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: none;
+}
+.lobby-hero__aside {
+  min-width: 0;
+}
+.lobby-hero__slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+  padding: 24px;
+  text-align: center;
+  color: var(--lobby-text-dim);
+  background: var(--lobby-panel-bg);
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: var(--lobby-radius-lg);
+}
+.lobby-blob {
+  position: absolute;
+  z-index: 0;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  animation: lobbyPulse 6s ease-in-out infinite;
+}
+.lobby-blob--a {
+  top: -140px;
+  left: -100px;
+  background: var(--lobby-accent);
+  opacity: 0.18;
+}
+.lobby-blob--b {
+  bottom: -220px;
+  right: 0;
+  background: var(--lobby-gold);
+  opacity: 0.14;
+  filter: blur(110px);
+  animation-duration: 7s;
+  animation-delay: 1.2s;
+}
+
 /* Safe-area : encoche & barre d'accueil iOS/Android (PWA/TWA standalone).
    N'a d'effet que si viewport-fit=cover est actif (viewport export racine).
    Sur un appareil sans encoche, env(safe-area-inset-*) vaut 0 → aucun impact. */
