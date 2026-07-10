@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import ProfileCard from '@/components/ProfileCard';
 import ProfileModal from '@/components/ProfileModal';
-import DiscoverFilters from '@/components/DiscoverFilters';
+import SearchFilters, { EMPTY_SEARCH_FILTERS, hasActiveFilters, type SearchFiltersValue } from '@/components/SearchFilters';
 import EmptyStateCards from '@/components/EmptyStateCards';
 import CrossingsView from '@/components/CrossingsView';
 import Button from '@/components/ui/Button';
@@ -51,20 +51,12 @@ interface DiscoveredUser {
   distanceKm?: number;
 }
 
-interface FilterState {
-  gender: string[];
-  orientation: string[];
-  ageMin: number;
-  ageMax: number;
-  interests: string[];
-}
-
-function buildUrl(tab: FeedTab, cursor?: string, filters?: FilterState): string {
+function buildUrl(tab: FeedTab, cursor?: string, filters?: SearchFiltersValue): string {
   const params = new URLSearchParams({ tab });
   if (cursor) params.set('cursor', cursor);
   if (filters) {
-    if (filters.gender.length) params.set('gender', filters.gender.join(','));
-    if (filters.orientation.length) params.set('orientation', filters.orientation.join(','));
+    if (filters.genders.length) params.set('gender', filters.genders.join(','));
+    if (filters.orientations.length) params.set('orientation', filters.orientations.join(','));
     if (filters.ageMin > 18) params.set('ageMin', String(filters.ageMin));
     if (filters.ageMax < 99) params.set('ageMax', String(filters.ageMax));
     if (filters.interests.length) params.set('interests', filters.interests.join(','));
@@ -75,13 +67,11 @@ function buildUrl(tab: FeedTab, cursor?: string, filters?: FilterState): string 
 export default function DiscoverPage() {
   const [segment, setSegment] = useState<Segment>('pourtoi');
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState<FilterState>({
-    gender: [],
-    orientation: [],
-    ageMin: 18,
-    ageMax: 99,
-    interests: [],
-  });
+  const [filters, setFilters] = useState<SearchFiltersValue>(EMPTY_SEARCH_FILTERS);
+  // Les filtres persistés (Profile) sont chargés au montage : tant qu'ils ne le
+  // sont pas, on ne lance pas le feed, pour éviter un flash de profils non
+  // filtrés puis un re-fetch (#235).
+  const [filtersReady, setFiltersReady] = useState(false);
   const [users, setUsers] = useState<DiscoveredUser[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -90,12 +80,12 @@ export default function DiscoverPage() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [nearbyReason, setNearbyReason] = useState<NearbyReason | null>(null);
   const [radiusKm, setRadiusKm] = useState<number>(50);
-  const [radiusReady, setRadiusReady] = useState(false);
   const [radiusSaving, setRadiusSaving] = useState(false);
   const [geoRequesting, setGeoRequesting] = useState(false);
   const [geoError, setGeoError] = useState('');
   const [activeFeedKey, setActiveFeedKey] = useState('');
   const fetchIdRef = useRef(0);
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Le segment « Croisements » a sa propre vue et ne consomme pas le feed.
   const isFeed = segment !== 'crossings';
@@ -155,7 +145,7 @@ export default function DiscoverPage() {
   // effet ne fait que l'appel réseau, sans aucun setState synchrone dans son
   // corps (les setState vivent dans la closure async, après le premier await).
   useEffect(() => {
-    if (!isFeed) return;
+    if (!isFeed || !filtersReady) return;
     const fetchId = ++fetchIdRef.current;
     (async () => {
       try {
@@ -175,25 +165,61 @@ export default function DiscoverPage() {
         if (fetchId === fetchIdRef.current) setLoading(false);
       }
     })();
-  }, [isFeed, feedTab, filters]);
+  }, [isFeed, feedTab, filters, filtersReady]);
 
-  // Load the saved search radius once, when the nearby segment is first opened
+  // Charge les préférences de recherche persistées (Profile) au montage :
+  // filtres + rayon, source unique partagée avec /profil (#235). Tant que ce
+  // n'est pas fait, le feed est en attente (filtersReady) pour ne pas afficher
+  // un feed non filtré. Échec réseau → on garde les valeurs par défaut.
   useEffect(() => {
-    if (segment !== 'nearby' || radiusReady) return;
     (async () => {
       try {
         const res = await fetch('/api/users/profile');
         if (res.ok) {
           const data = await res.json();
-          if (data.profile?.maxDistanceKm) setRadiusKm(data.profile.maxDistanceKm);
+          const p = data.profile;
+          if (p) {
+            setFilters({
+              genders: p.searchGenders ?? [],
+              orientations: p.searchOrientations ?? [],
+              ageMin: p.ageMin ?? 18,
+              ageMax: p.ageMax ?? 99,
+              interests: p.searchInterests ?? [],
+            });
+            if (p.maxDistanceKm) setRadiusKm(p.maxDistanceKm);
+          }
         }
       } catch {
-        // garde le rayon par défaut
+        // garde les valeurs par défaut
       } finally {
-        setRadiusReady(true);
+        setFiltersReady(true);
       }
     })();
-  }, [segment, radiusReady]);
+  }, []);
+
+  // Persistance best-effort des filtres (debounce) : le slider d'âge émet
+  // beaucoup d'events, on ne PUT qu'après une pause. Les filtres restent
+  // appliqués en session même si l'écriture échoue (cf. pusher best-effort).
+  const persistFilters = useCallback((f: SearchFiltersValue) => {
+    if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+    persistTimerRef.current = setTimeout(() => {
+      void fetch('/api/users/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          searchGenders: f.genders,
+          searchOrientations: f.orientations,
+          ageMin: f.ageMin,
+          ageMax: f.ageMax,
+          searchInterests: f.interests,
+        }),
+      }).catch(() => { /* best-effort */ });
+    }, 600);
+  }, []);
+  // Pas de clear au démontage : le timer ne fait qu'un fetch fire-and-forget
+  // (aucun setState), donc laisser la dernière écriture partir même si on quitte
+  // /discover rapidement garantit que le dernier changement de filtre est bien
+  // persisté (sinon on perdrait l'édition faite < 600 ms avant la navigation).
 
   async function handleRadiusChange(newRadius: number) {
     if (radiusSaving || newRadius === radiusKm) return;
@@ -251,7 +277,10 @@ export default function DiscoverPage() {
     );
   }
 
-  const handleFilterChange = (newFilters: FilterState) => setFilters(newFilters);
+  const handleFilterChange = (newFilters: SearchFiltersValue) => {
+    setFilters(newFilters);
+    persistFilters(newFilters);
+  };
 
   const handleLike = async (userId: string) => {
     setPassedIds((prev) => new Set(prev).add(userId));
@@ -302,9 +331,14 @@ export default function DiscoverPage() {
             size="sm"
             onClick={() => setShowFilters(!showFilters)}
             aria-expanded={showFilters}
-            aria-label="Filtres"
+            aria-label={hasActiveFilters(filters) ? 'Filtres (actifs)' : 'Filtres'}
           >
-            {showFilters ? 'Fermer' : 'Filtres'}
+            <span className="inline-flex items-center gap-1.5">
+              {showFilters ? 'Fermer' : 'Filtres'}
+              {!showFilters && hasActiveFilters(filters) && (
+                <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-coral" />
+              )}
+            </span>
           </Button>
         )}
       </div>
@@ -331,14 +365,7 @@ export default function DiscoverPage() {
       {/* Filters (collapsible) — feed segments only */}
       {isFeed && showFilters && (
         <div className="mb-4">
-          <DiscoverFilters
-            gender={filters.gender}
-            orientation={filters.orientation}
-            ageMin={filters.ageMin}
-            ageMax={filters.ageMax}
-            interests={filters.interests}
-            onChange={handleFilterChange}
-          />
+          <SearchFilters value={filters} onChange={handleFilterChange} />
         </div>
       )}
 

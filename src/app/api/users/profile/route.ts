@@ -68,6 +68,9 @@ export async function PUT(request: Request) {
     if (data.maxDistanceKm !== undefined) { updateData.maxDistanceKm = data.maxDistanceKm; createData.maxDistanceKm = data.maxDistanceKm; }
     if (data.ageMin !== undefined) { updateData.ageMin = data.ageMin; createData.ageMin = data.ageMin; }
     if (data.ageMax !== undefined) { updateData.ageMax = data.ageMax; createData.ageMax = data.ageMax; }
+    if (data.searchGenders !== undefined) { updateData.searchGenders = data.searchGenders; createData.searchGenders = data.searchGenders; }
+    if (data.searchOrientations !== undefined) { updateData.searchOrientations = data.searchOrientations; createData.searchOrientations = data.searchOrientations; }
+    if (data.searchInterests !== undefined) { updateData.searchInterests = data.searchInterests; createData.searchInterests = data.searchInterests; }
 
     const profile = await getDb().profile.upsert({
       where: { userId: session.user.id },

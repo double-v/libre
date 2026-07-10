@@ -80,6 +80,24 @@ describe('Validation schemas', () => {
       expect(result.success).toBe(false);
     });
 
+    it('accepts persisted search preferences (#235)', () => {
+      const result = profileUpdateSchema.safeParse({
+        searchGenders: ['femme', 'non-binaire'],
+        searchOrientations: ['bi', 'pan'],
+        searchInterests: ['musique', 'rando'],
+        ageMin: 25,
+        ageMax: 45,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects more than 20 search interests', () => {
+      const result = profileUpdateSchema.safeParse({
+        searchInterests: Array.from({ length: 21 }, (_, i) => `tag${i}`),
+      });
+      expect(result.success).toBe(false);
+    });
+
     it('rejects bio over 500 chars', () => {
       const result = profileUpdateSchema.safeParse({
         bio: 'a'.repeat(501),
