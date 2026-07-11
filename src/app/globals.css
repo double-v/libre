@@ -897,6 +897,98 @@ input::placeholder, textarea::placeholder {
   box-shadow: 0 0 0 3px rgb(232 99 74 / 0.6);
 }
 
+/* Footer landing (#250). La landing publique s'adresse à des visiteurs non
+   connectés → les liens légaux vivent ici (pas dans /settings). Thème-aware via
+   tokens `--lobby-*`, centré, discret. */
+.lobby-footer {
+  padding: 40px 24px calc(40px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+.lobby-footer__inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+.lobby-footer__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.7;
+}
+.lobby-footer__logo {
+  color: var(--lobby-accent);
+  display: inline-flex;
+}
+.lobby-footer__wordmark {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--lobby-text);
+}
+.lobby-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 18px;
+}
+.lobby-footer__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lobby-text-dim);
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 0 4px;
+  transition: color var(--motion-fast) var(--ease-out-soft);
+}
+.lobby-footer__link:hover {
+  color: var(--lobby-text);
+}
+.lobby-footer__link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(232 99 74 / 0.6);
+}
+.lobby-footer__social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--lobby-text-dim);
+  transition: color var(--motion-fast) var(--ease-out-soft);
+}
+.lobby-footer__social:hover {
+  color: var(--lobby-accent);
+}
+.lobby-footer__social:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(232 99 74 / 0.6);
+  border-radius: 8px;
+}
+.lobby-footer__meta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--lobby-text-dim);
+}
+.lobby-footer__meta-link {
+  color: var(--lobby-accent);
+  text-decoration: none;
+}
+.lobby-footer__meta-link:hover {
+  text-decoration: underline;
+}
+.lobby-footer__meta-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(232 99 74 / 0.6);
+  border-radius: 4px;
+}
+
 /* Safe-area : encoche & barre d'accueil iOS/Android (PWA/TWA standalone).
    N'a d'effet que si viewport-fit=cover est actif (viewport export racine).
    Sur un appareil sans encoche, env(safe-area-inset-*) vaut 0 → aucun impact. */
