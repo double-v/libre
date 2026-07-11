@@ -722,6 +722,181 @@ input::placeholder, textarea::placeholder {
   animation-delay: 1.2s;
 }
 
+/* Sections bas de la landing (#249) : Humains / Sécurité / Closing.
+   Wrapper partagé `.lobby-section` + variantes. Titres = hiérarchie h2, contraste
+   AA sur les 3 thèmes (texte sur voile sombre pour les légendes photo). Aucune
+   animation propre → rien à figer en reduced-motion. */
+.lobby-section {
+  padding: 72px 24px;
+}
+.lobby-section__inner {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+.lobby-section__title {
+  margin: 0;
+  font-family: var(--lobby-font-head);
+  font-size: clamp(26px, 4.5vw, 38px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--lobby-text);
+}
+.lobby-section__lead {
+  max-width: 560px;
+  margin: 14px 0 0;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--lobby-text-dim);
+}
+
+/* Humains : fond dégradé (bg → bg-elev → bg), 3 cartes récit. */
+.lobby-humans {
+  background: linear-gradient(
+    180deg,
+    var(--lobby-bg),
+    var(--lobby-bg-elev) 50%,
+    var(--lobby-bg)
+  );
+}
+.lobby-humans__inner {
+  text-align: center;
+}
+.lobby-humans__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin: 40px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+@media (max-width: 720px) {
+  .lobby-humans__grid {
+    grid-template-columns: 1fr;
+    max-width: 340px;
+    margin-inline: auto;
+  }
+}
+.lobby-story {
+  position: relative;
+  overflow: hidden;
+  border: var(--lobby-card-border);
+  border-radius: var(--lobby-radius-lg);
+  background: var(--lobby-bg-elev);
+  box-shadow: var(--lobby-shadow);
+}
+.lobby-story__media {
+  position: relative;
+  aspect-ratio: 3 / 4;
+}
+.lobby-story__img {
+  object-fit: cover;
+}
+.lobby-story__caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 26px 14px 12px;
+  /* Voile sombre indépendant de la photo → contraste AA garanti du texte blanc. */
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.78));
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+.lobby-story__detail {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* Sécurité : panneau centré + tag gold + bouclier. */
+.lobby-safety__panel {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 28px;
+  text-align: center;
+  border: var(--lobby-card-border);
+  border-radius: var(--lobby-radius-lg);
+  background: var(--lobby-panel-bg);
+  box-shadow: var(--lobby-shadow);
+}
+.lobby-safety__tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap; /* Press Start (retro) est large : wrap plutôt que déborder en mobile */
+  gap: 6px;
+  max-width: 100%;
+  font-family: var(--lobby-font-eyebrow);
+  font-size: 10px;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: var(--lobby-gold);
+  background: color-mix(in srgb, var(--lobby-gold) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--lobby-gold) 38%, transparent);
+  padding: 9px 12px;
+  border-radius: var(--lobby-radius-sm);
+}
+.lobby-safety__shield {
+  width: 56px;
+  height: 56px;
+  margin: 22px auto 8px;
+  color: var(--lobby-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lobby-safety__shield svg {
+  width: 100%;
+  height: 100%;
+}
+.lobby-safety__copy {
+  max-width: 560px;
+  margin: 14px auto 0;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--lobby-text-dim);
+}
+
+/* Closing : accroche finale centrée + CTA d'inscription. */
+.lobby-closing {
+  text-align: center;
+}
+.lobby-closing__copy {
+  max-width: 520px;
+  margin: 14px auto 28px;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--lobby-text-dim);
+}
+.lobby-closing__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 28px;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  color: #fff;
+  background: var(--lobby-accent);
+  border: 1px solid transparent;
+  border-radius: var(--lobby-radius-sm);
+  clip-path: var(--lobby-btn-clip);
+  box-shadow: var(--lobby-cta-shadow);
+  transition: transform var(--motion-fast) var(--ease-out-soft);
+}
+.lobby-closing__cta:hover {
+  transform: translateY(-1px);
+}
+.lobby-closing__cta:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(232 99 74 / 0.6);
+}
+
 /* Safe-area : encoche & barre d'accueil iOS/Android (PWA/TWA standalone).
    N'a d'effet que si viewport-fit=cover est actif (viewport export racine).
    Sur un appareil sans encoche, env(safe-area-inset-*) vaut 0 → aucun impact. */

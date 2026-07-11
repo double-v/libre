@@ -6,6 +6,9 @@ import LobbyThemeScript from './LobbyThemeScript';
 import LobbyNav from './LobbyNav';
 import LobbyHero from './LobbyHero';
 import AmbientBand from './AmbientBand';
+import LobbyHumans from './LobbyHumans';
+import LobbySafety from './LobbySafety';
+import LobbyClosing from './LobbyClosing';
 import {
   DEFAULT_LOBBY_THEME,
   readStoredLobbyTheme,
@@ -80,8 +83,9 @@ export default function HomeLobby({ userCount }: HomeLobbyProps) {
 
       <AmbientBand reducedMotion={reducedMotion} />
 
-      {/* Sections bas (humains / sécurité / closing + contenu actuel persisté)
-          — à venir au prochain ticket de l'épic #243 (#249). */}
+      <LobbyHumans />
+      <LobbySafety />
+      <LobbyClosing />
     </div>
   );
 }

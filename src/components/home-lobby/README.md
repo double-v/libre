@@ -37,5 +37,27 @@ amont (`HomeLobby`, `matchMedia`) et passé en prop ; le bloc global
 
 ![Bandeau ambiant — rendu reduced-motion, personnages figés et répartis](./preview/ambient-reduced-motion.png)
 
+## Sections bas — Humains · Sécurité · Closing ([#249](https://github.com/double-v/libre/issues/249))
+
+Trois sections statiques sous le bandeau, wrapper partagé `.lobby-section` +
+variantes (`LobbyHumans` / `LobbySafety` / `LobbyClosing`). Titres en `h2`,
+contraste AA sur les 3 thèmes, aucune animation propre (rien à figer en
+reduced-motion). Aperçus en thème cartoon :
+
+**Humains** — titre + chapô + 3 cartes récit (photo + légende en incrustation sur
+voile sombre → contraste garanti). ⚠️ Photos = **placeholders** `/images/moment-*`
+à re-sourcer (droits/consentement, cf. AC #249) ; `next/image` + `alt` honnête.
+
+![Section Humains — 3 cartes récit inclusives](./preview/sections-humans.jpg)
+
+**Sécurité** — panneau centré, tag gold « modération humaine 24/7 » (en Press Start
+2P sur le thème retro), bouclier SVG, titre + copy « zéro revente ».
+
+![Section Sécurité — panneau, tag gold, bouclier](./preview/sections-safety.png)
+
+**Closing** — accroche finale + CTA d'inscription (vrai lien `/register`, ≥ 52px).
+
+![Section Closing — accroche + CTA Créer mon profil](./preview/sections-closing.png)
+
 > Captures régénérables : `/lobby-preview` sur les 3 thèmes, avec et sans
-> `prefers-reduced-motion` (les couleurs du ciel dépendent de l'heure).
+> `prefers-reduced-motion` (les couleurs du ciel du bandeau dépendent de l'heure).
