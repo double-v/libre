@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import TopNav from '@/components/ui/TopNav';
 
 export const metadata: Metadata = {
   title: 'Mentions légales',
@@ -7,6 +8,8 @@ export const metadata: Metadata = {
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   return (
+    <>
+    <TopNav widthClass="max-w-3xl" />
     <div className="mx-auto max-w-3xl px-6 py-12">
       {/* Breadcrumb */}
       <nav className="mb-8 text-sm text-gray-500 dark:text-gray-400" aria-label="Fil d'Ariane">
@@ -25,5 +28,6 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
         <Link href="/faq" className="text-coral hover:underline">FAQ</Link>
       </div>
     </div>
+    </>
   );
 }

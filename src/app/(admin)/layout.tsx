@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { getDb } from '@/lib/db';
 import { debugLog } from '@/lib/logger';
 import Link from 'next/link';
+import ThemeMenu from '@/components/ui/ThemeMenu';
 
 const adminNavItems = [
   { href: '/admin', label: 'Tableau de bord', icon: 'dashboard' },
@@ -126,10 +127,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="flex min-h-screen">
       <aside className="hidden w-56 shrink-0 border-r border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900 md:block">
-        <div className="p-4">
+        <div className="flex items-center justify-between gap-2 p-4">
           <Link href="/admin" className="text-lg font-bold text-coral dark:text-coral-light">
             Libre Admin
           </Link>
+          <ThemeMenu />
         </div>
         <nav className="mt-2 flex flex-col gap-1 px-2">
           {adminNavItems.map((item) => (
@@ -153,13 +155,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       {/* Mobile header */}
       <div className="flex flex-1 flex-col md:hidden">
         <header className="border-b border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-950">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <Link href="/admin" className="text-lg font-bold text-coral dark:text-coral-light">
               Libre Admin
             </Link>
-            <Link href="/discover" className="text-sm text-gray-500">
-              Retour
-            </Link>
+            <div className="flex items-center gap-2">
+              <ThemeMenu />
+              <Link href="/discover" className="text-sm text-gray-500">
+                Retour
+              </Link>
+            </div>
           </div>
           <nav className="mt-2 flex gap-2 overflow-x-auto">
             {adminNavItems.map((item) => (
