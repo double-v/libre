@@ -673,6 +673,29 @@ input::placeholder, textarea::placeholder {
   line-height: 1.5;
   color: var(--lobby-text-dim);
 }
+
+/* Bandeau ambiant (#248). Décoratif (aria-hidden). Reduced-motion géré côté JS
+   (rendu statique) + filet global. Le corps des personnages prend une forme
+   « blob » douce, carrée en retro (identité 8-bit). */
+.lobby-band {
+  position: relative;
+  height: 280px;
+  max-width: 1400px;
+  margin: 0 auto;
+  overflow: hidden;
+  pointer-events: none; /* décoratif intégral (aria-hidden) — ne capte aucun clic */
+}
+@media (max-width: 640px) {
+  .lobby-band {
+    height: 220px;
+  }
+}
+.lobby-critter__body {
+  border-radius: 42% 42% 48% 48%;
+}
+[data-lobby='retro'] .lobby-critter__body {
+  border-radius: 3px;
+}
 .lobby-blob {
   position: absolute;
   z-index: 0;

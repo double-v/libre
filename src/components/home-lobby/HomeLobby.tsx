@@ -5,6 +5,7 @@ import { lobbyFontVars } from '@/lib/fonts';
 import LobbyThemeScript from './LobbyThemeScript';
 import LobbyNav from './LobbyNav';
 import LobbyHero from './LobbyHero';
+import AmbientBand from './AmbientBand';
 import {
   DEFAULT_LOBBY_THEME,
   readStoredLobbyTheme,
@@ -33,6 +34,7 @@ interface HomeLobbyProps {
 export default function HomeLobby({ userCount }: HomeLobbyProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [theme, setTheme] = useState<LobbyThemeId>(DEFAULT_LOBBY_THEME);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   // Après hydratation : aligner l'état du switcher sur ce que le script no-flash
   // a déjà appliqué (ou le storage), sans provoquer de flash.
@@ -43,6 +45,15 @@ export default function HomeLobby({ userCount }: HomeLobbyProps) {
         ? applied
         : readStoredLobbyTheme(),
     );
+  }, []);
+
+  // Détection reduced-motion (+ suivi des changements) pour le bandeau ambiant.
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReducedMotion(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
   }, []);
 
   const handleThemeChange = (id: LobbyThemeId) => {
@@ -67,8 +78,10 @@ export default function HomeLobby({ userCount }: HomeLobbyProps) {
 
       <LobbyHero userCount={userCount} />
 
-      {/* Sections suivantes (bandeau ambiant #248, humains/sécurité/closing #249,
-          contenu actuel persisté) — à venir aux prochains tickets de l'épic #243. */}
+      <AmbientBand reducedMotion={reducedMotion} />
+
+      {/* Sections bas (humains / sécurité / closing + contenu actuel persisté)
+          — à venir au prochain ticket de l'épic #243 (#249). */}
     </div>
   );
 }
