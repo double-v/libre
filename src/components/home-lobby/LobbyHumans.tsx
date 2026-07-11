@@ -7,29 +7,31 @@ import Image from 'next/image';
  * suivent PRODUCT.md ; les visuels sont **inclusifs et divers**. Styles
  * `.lobby-humans*` / `.lobby-story*` (tokens `--lobby-*`, zéro hex inline).
  *
- * ⚠️ needs-design : les photos sont des **placeholders** repris de l'ancienne
- * home (`/images/moment-*.jpg`). À re-sourcer avec droits/consentement (cf. AC
- * #249). Les `alt` décrivent honnêtement le placeholder (composition), sans
- * asserter une identité non vérifiable visuellement ; la légende porte le récit.
+ * ⚠️ needs-design : les photos sont des **placeholders** (images stock) repris de
+ * l'ancienne home (`/images/moment-*.jpg`). À re-sourcer avec droits/consentement
+ * (cf. AC #249). Les `alt` décrivent honnêtement la composition, sans asserter une
+ * identité non vérifiable. Les légendes **assument** qu'il s'agit d'images stock :
+ * on n'invente aucun faux match ni historique de rencontre (cf. PRODUCT.md,
+ * anti-références — pas de fausse preuve sociale façon apps mainstream).
  */
 const STORIES = [
   {
     src: '/images/moment-3.jpg',
     alt: 'Un couple enlacé dans la lumière chaude du soir',
-    lead: 'Duo hétéro',
-    detail: 'rencontré il y a 4 mois',
+    caption:
+      'Oui, c’est une image stock — mais c’est exactement le genre d’histoire qu’on a envie d’aider à commencer ;)',
   },
   {
     src: '/images/moment-1.jpg',
     alt: 'Deux femmes enlacées, complices, dans leur cuisine',
-    lead: 'Duo de femmes',
-    detail: 'en couple',
+    caption:
+      'Photo d’archive, promis. On préfère te le dire plutôt que d’inventer un faux match.',
   },
   {
     src: '/images/moment-2.jpg',
     alt: 'Deux personnes qui rient, l’une enlaçant l’autre',
-    lead: 'Duo non-binaire',
-    detail: 'premier rendez-vous',
+    caption:
+      'Belle image libre de droits. Le reste — les vraies rencontres — c’est à nous de le rendre possible.',
   },
 ];
 
@@ -56,11 +58,7 @@ export default function LobbyHumans() {
                   className="lobby-story__img"
                 />
               </div>
-              <p className="lobby-story__caption">
-                {story.lead}
-                <span aria-hidden="true"> · </span>
-                <span className="lobby-story__detail">{story.detail}</span>
-              </p>
+              <p className="lobby-story__caption">{story.caption}</p>
             </li>
           ))}
         </ul>

@@ -16,10 +16,10 @@ describe('LobbyHumans', () => {
     // chaque photo a un alt non vide (a11y)
     imgs.forEach((img) => expect(img.getAttribute('alt')).toBeTruthy());
 
-    // légendes narratives présentes
-    expect(screen.getByText(/Duo hétéro/)).toBeInTheDocument();
-    expect(screen.getByText(/Duo de femmes/)).toBeInTheDocument();
-    expect(screen.getByText(/Duo non-binaire/)).toBeInTheDocument();
+    // légendes honnêtes (assument l'image stock, aucun faux historique de match)
+    expect(screen.getByText(/image stock/i)).toBeInTheDocument();
+    expect(screen.getByText(/faux match/i)).toBeInTheDocument();
+    expect(screen.getByText(/libre de droits/i)).toBeInTheDocument();
   });
 });
 
