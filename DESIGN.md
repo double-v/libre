@@ -80,135 +80,109 @@ Blush is Libre's answer to the "warm canvas" — tinted, never pure clinical whi
 | dark-elevated | `#1f2937` | Elevated surfaces |
 | dark-border | `#374151` | Borders on dark surfaces |
 
-## Theming — Mode × Skin
+## Theming — Mode × Thème
 
-Le theming a **deux axes orthogonaux**. Ne jamais les confondre : le **mode** est perceptuel (confort / accessibilité, suit l'OS) ; le **skin** est une identité graphique (goût). Le choix de skin est aussi un **signal doux** de préférence utilisateur — jamais affiché comme une récompense, jamais gamifié (cf. PRODUCT.md, principe 4).
+Le theming a **deux axes orthogonaux**. Ne jamais les confondre : le **mode** est perceptuel (confort / accessibilité, suit l'OS) ; le **thème** est une identité graphique (goût). Le choix de thème est un **signal doux** de préférence utilisateur — jamais affiché comme une récompense, jamais gamifié (cf. PRODUCT.md, principe 4).
+
+> **Unification (épic thèmes globaux).** Les anciens axes « skin » (app : `libre` / `libre-warm`) et « lobby » (landing : `cartoon` / `arcade` / `retro`, jadis toujours sombres, portés par `data-lobby`) ne font plus qu'**un**. Les 3 thèmes de la landing sont devenus de **vrais thèmes app**, déclinés clair **et** sombre. Un seul registre, un seul sélecteur (`ThemeMenu`), une seule clé (`libre-skin`) — partout : app connectée, guest, admin, landing.
 
 ### Axe 1 — Mode (`light` / `dark` / `auto`)
 
-- Porté par la classe `.dark` sur `<html>` (déjà en place : script no-flash dans `layout.tsx` + `ThemeToggle`).
+- Porté par la classe `.dark` sur `<html>` (script no-flash dans `layout.tsx`).
 - `auto` (défaut) suit `prefers-color-scheme`. Persisté : `localStorage['libre-theme']` = `light | dark | auto`.
-- **Tout skin doit exister en light ET en dark.** Le mode ne dépend jamais du skin.
-- « blanc » n'est pas un thème à part : le light par défaut EST blanc/blush. Light/dark = mode, pas skin.
+- **Tout thème existe en light ET en dark.** Le mode ne dépend jamais du thème.
+- « blanc » n'est pas un thème à part : le light par défaut EST blanc/blush. Light/dark = mode, pas thème.
 
-### Axe 2 — Skin (identité graphique)
+### Axe 2 — Thème (`data-theme` sur `<html>`)
 
-- Porté par `data-theme="<id>"` sur `<html>` (déjà en place via `site-themes.ts` + `useSiteThemeApply`).
-- Devient **sélectionnable par l'utilisateur**, rangé dans les Paramètres à côté du mode.
-- Défaut : `libre` (coral/cream actuel).
+- Porté par `data-theme="<id>"` sur `<html>` (registre `src/lib/site-themes.ts`).
+- **Sélectionnable par l'utilisateur** via `ThemeMenu` (un seul bouton dans le top nav, partout) + miroir dans les Paramètres.
+- Persisté : `localStorage['libre-skin']` (+ `User.skin` pour les comptes, synchronisé cross-appareils).
 
-**Précédence du skin** (à implémenter) :
-1. Choix explicite user — `localStorage['libre-skin']` (+ `User.skin` pour les comptes, synchronisé).
+**Précédence du thème :**
+1. Choix explicite user — `localStorage['libre-skin']` (+ `User.skin`).
 2. Défaut du site — `SiteConfig.currentTheme` (piloté admin).
 3. `libre`.
 
 > **Décisions arrêtées :**
-> - **Admin = défaut, user = souverain.** `SiteConfig.currentTheme` fixe le skin *par défaut* ; le choix explicite de l'utilisateur le remplace toujours. Pas de skin forcé par l'admin.
+> - **Admin = défaut, user = souverain.** `SiteConfig.currentTheme` fixe le thème *par défaut* ; le choix explicite de l'utilisateur le remplace toujours. Pas de thème forcé par l'admin.
 > - **« La Place » reste hors de cet axe.** Les thèmes événementiels de section (`square_theme_configs`, planifiés / admin) demeurent un système séparé — mais **ancrés sur les mêmes tokens sémantiques** du layout global (ils surchargent des accents de section, jamais un système parallèle qui les combat).
-> - **Séquencement** : d'abord **solidifier le socle** (#223 tokens sémantiques + #224 sélecteur, en rationalisant `libre` / `libre-warm`), **ensuite** les skins « waouh » (Cartoon, Pixel — chacun light **et** dark).
 
 ### Contrat de tokens sémantiques (le cœur de la rationalisation)
 
-Aujourd'hui les composants codent le mode **en dur** (`bg-white dark:bg-dark-surface`, `text-gray-900 dark:text-gray-100`). Conséquence : un skin ne peut retheme que les accents, pas les surfaces. On introduit une couche **sémantique** que chaque `skin × mode` redéfinit et que les composants consomment :
+Les composants **ne codent jamais le mode en dur** (`bg-white dark:bg-dark-surface`, `text-gray-900 dark:text-gray-100`) : ils lisent des **utilitaires Tailwind** mappés sur des **variables runtime** que chaque `thème × mode` redéfinit.
 
-| Token | Rôle | Remplace le binaire |
-|---|---|---|
-| `--bg` | plancher de page | `bg-white dark:bg-gray-950` |
-| `--surface` | carte / panel | `bg-white dark:bg-dark-surface` |
-| `--surface-elevated` | surface surélevée | `dark:bg-dark-elevated` |
-| `--surface-sunken` | fond de section chaud | `bg-blush dark:bg-coral/10` |
-| `--text` | texte principal | `text-gray-900 dark:text-gray-100` |
-| `--text-dim` | texte secondaire | `text-gray-600 dark:text-gray-400` |
-| `--border` | filet | `border-gray-200 dark:border-dark-border` |
-| `--accent`, `--accent-strong`, `--accent-ink` | coral & dérivés | `text-coral`, `bg-coral`, `bg-terracotta` |
-| `--radius-card`, `--radius-control` | arrondis (**varient par skin**) | `rounded-xl`, `rounded-md` |
-| `--font-head` | police des titres (**varie par skin**) | Geist |
+**Mécanique (Tailwind v4)** : `@theme inline { --color-x: var(--x) }` génère `bg-x` / `text-x` qui référencent `var(--x)` ; `--x` est défini dans `:root` / `:root.dark` (thème `libre`) et **surchargé par thème** dans `html[data-theme='y']` (clair) / `html[data-theme='y'].dark` (sombre). ⚠️ **Un token *littéral* dans `@theme inline` n'est PAS surchargeable** (Tailwind l'inline à la compilation) — d'où l'indirection `var()` **obligatoire** pour tout token censé re-skinner (c'est le correctif qui a rendu l'accent coral réellement thémable).
 
-Règle : **un skin = un delta.** Il ne redéfinit que ce qui diffère de la base ; le reste hérite. « light + dark par skin » ≈ deux petits blocs de variables, pas deux designs complets. Les composants **n'utilisent plus jamais** `bg-white dark:…` en dur : ils lisent ces tokens (utilitaires Tailwind mappés dessus). C'est la même trajectoire que la « Component Library » ci-dessous.
+| Var runtime | Utilitaire | Rôle | Remplace le binaire |
+|---|---|---|---|
+| `--background` | `bg-background` | plancher de page | `bg-white dark:bg-gray-950` |
+| `--surface` | `bg-surface` | carte / panel | `bg-white dark:bg-dark-surface` |
+| `--elevated` | `bg-elevated` | surface surélevée | `dark:bg-dark-elevated` |
+| `--sunken` | `bg-sunken` | fond de section chaud | `bg-blush dark:bg-coral/10` |
+| `--content` | `text-content` | texte principal | `text-gray-900 dark:text-gray-100` |
+| `--muted` | `text-muted` | texte secondaire | `text-gray-600 dark:text-gray-400` |
+| `--hairline` / `--hairline-strong` | `border-hairline` / `-strong` | filet / bordure de contrôle | `border-gray-200 dark:border-dark-border` |
+| `--fill-subtle` | `bg-fill-subtle` | fond chip neutre | `bg-gray-100 dark:bg-gray-800` |
+| `--coral` / `--coral-light` / `--terracotta` / `--coral-dark` | `*-coral`, `*-coral-light`… | accent (varie par thème) | `text-coral`, `bg-coral`, `bg-terracotta` |
+| `--blush` / `--sand` / `--gold` | `bg-blush` / `bg-sand` / `text-gold` | fonds chauds / or (accomplissement) | — |
+| `--rad-card` / `--rad-control` | `rounded-card` / `rounded-control` | arrondis (**varient par thème**) | `rounded-xl`, `rounded-md` |
+| `--head-font` | `font-head` | police des titres (**varie par thème**) | Geist |
+| `--btn-clip` | `clip-path` (classe / `style`) | silhouette bouton (biseau arcade, pixel retro) | — |
 
-**Données** : `SiteTheme.tokenOverrides: Record<string,string>` (plat) devient `{ light: Record<string,string>; dark: Record<string,string> }` (mode-aware). Le hook et le SSR appliquent le bloc correspondant au mode courant. Le script no-flash de `layout.tsx` doit poser **avant paint** la classe `.dark` (mode) **et** `data-theme` + les vars du skin lues en `localStorage` (sinon flash de skin).
+Règle : **un thème = un delta.** Il ne redéfinit que ce qui diffère de la base ; le reste hérite. « light + dark par thème » ≈ deux petits blocs de variables, pas deux designs complets.
+
+**Données** : les thèmes du catalogue vivent en **CSS** (`globals.css`). `SiteTheme.tokenOverrides` reste réservé à d'éventuels thèmes DB custom. Le script no-flash de `layout.tsx` pose **avant paint** la classe `.dark` (mode) **et** `data-theme` (thème) lus en `localStorage` (sinon flash).
 
 ### Catalogue
 
-**Au lancement** (rationalisation de l'existant, refait mode-aware + sémantique) :
+Registre unique `src/lib/site-themes.ts` (`SITE_THEMES`). Chaque thème est décliné **light + dark** ; les valeurs vivent en CSS (`globals.css`).
 
-| Skin | Ex- | Note |
-|---|---|---|
-| `libre` | `default` | Base coral/cream. Light + dark chaud. |
-| `libre-warm` | `c-warm` | Variante plus chaude / terracotta. |
+| id | Ex- | Direction | `--head-font` | `--rad-card` / `control` | Silhouette bouton |
+|---|---|---|---|---|---|
+| `libre` (défaut) | `default` | Coral/cream, chaud lumineux | Sans (Geist/Inter) | 16 / 6px | pleine |
+| `libre-warm` | `c-warm` | Terracotta, crème profond | Sans | 16 / 6px | pleine |
+| `cartoon` | ex-lobby | Plum-black chaud, rondeurs généreuses | Baloo 2 | 24 / 14px | pleine |
+| `arcade` | ex-lobby | Bleu-noir néon, glow coral | Space Grotesk | 16 / 10px | coin biseauté |
+| `retro` | ex-lobby | 8-bit, ombres dures, scanlines | Space Grotesk (+ Press Start 2P eyebrow) | 4 / 2px | pixel-clip |
 
-**Vagues suivantes** (issues GH), chacun **light + dark** :
+**Polices** (via `next/font/google`, self-host — **jamais** de `<link>` Google/CDN, cf. CSP + perf) : déclarées au **layout racine** (`--font-space-grotesk`, `--font-baloo`, `--font-press-start`), sélectionnées par thème via `--head-font`. Garde-fou : **Press Start 2P = eyebrow/accents du thème `retro` uniquement**, jamais le corps de texte (lisibilité).
 
-| Skin | Direction | Contraintes spécifiques |
-|---|---|---|
-| `cartoon` | Baloo 2, grands radius, plum-black chaud en dark | garder la chaleur, pas de froid bleuté |
-| `pixel` | Rétro : titres nets, scanlines discrètes | **Press Start 2P en titres/accents SEULEMENT**, jamais le corps ; scanlines coupées sous `prefers-reduced-motion` |
+### Garde-fous (obligatoires, tout thème × mode)
 
-### Garde-fous (obligatoires, tout skin × mode)
-
-- **Contraste WCAG AA** vérifié sur light ET dark (4.5:1 texte, 3:1 grands titres).
+- **Contraste WCAG AA** vérifié sur light ET dark (4.5:1 texte, 3:1 grands titres) — sur les **5 thèmes × 2 modes**.
 - `color-scheme: light|dark` déclaré par mode (contrôles natifs, scrollbars, autofill).
-- **Polices display** (pixel, etc.) : titres / accents uniquement — jamais le corps de texte.
-- Toute animation de skin a son équivalent `prefers-reduced-motion`.
-- Le skin change l'**habillage**, jamais la **sémantique** : un CTA reste « accent » via `--accent`, une erreur reste `--error`.
+- **Polices display** (Baloo, Press Start) : titres / accents uniquement — jamais le corps de texte.
+- Toute animation de thème a son équivalent `prefers-reduced-motion`.
+- Le thème change l'**habillage**, jamais la **sémantique** : un CTA reste « accent » via `--coral`, une erreur reste `--error`.
 - Zéro valeur inline dans les composants — tout via tokens.
+- **Validation** : chaque composant DS est vérifié sur les 10 déclinaisons via `/design` + `/design-sync` (le render-check `variantsIdentical` détecte un thème/mode qui n'a pas re-skinné).
 
-### Axe 3 — Thèmes « lobby » (landing publique uniquement)
+### La landing « lobby »
 
-La home publique (`src/app/page.tsx`, épic #243) adopte une ambiance **« lobby »
-pop-culture** : sombre mais chaude, personnages qui marchent, skyline parallax,
-ciel jour/nuit. Elle porte **son propre axe de thème**, **distinct des skins app** :
+La home publique (`src/app/page.tsx`, épic #243) garde sa **mise en page lobby**
+(hero ambiant, skyline parallax, personnages qui marchent, ciel jour/nuit) et son
+identité **sombre-chaude** comme *présentation* — mais **puise dans les mêmes tokens
+de thème** que le reste de l'app (`--coral`, `--head-font`, `--rad-card`,
+`--btn-clip`, `--gold`…). Changer de thème depuis le `ThemeMenu` reskin la landing
+comme l'app ; c'est **le même composant de sélection** partout (plus de switcher
+lobby séparé, plus d'axe `data-lobby`).
 
-- **Portée** : la landing marketing seulement. **N'a aucun lien** avec l'axe Mode
-  (`.dark`) ni l'axe Skin (`data-theme` = `libre`/`libre-warm`) : un thème lobby ne
-  touche ni `localStorage['libre-theme']` ni `localStorage['libre-skin']`.
-- **Porteur** : attribut `data-lobby="<id>"` **sur le conteneur racine du lobby**
-  (pas sur `<html>`). Persistance : `localStorage['libre-lobby-theme']`. Défaut :
-  `cartoon`. **No-flash** : script inline (même patron que `layout.tsx`) posant
-  `data-lobby` avant paint.
-- **Toujours sombre** : ces thèmes n'ont pas de variante claire (au contraire des
-  skins app). Le fond reste sombre-chaud, jamais froid bleuté (cf. PRODUCT.md, anti-réf).
-
-**3 thèmes** (commutables via un switcher landing, cf. `LobbyThemeSwitcher`) :
-
-| `data-lobby` | Direction | Police titres | Radius | Silhouette bouton |
-|---|---|---|---|---|
-| `cartoon` (défaut) | Plum-black chaud, rondeurs généreuses | Baloo 2 | 30/20px | pleine (no clip) |
-| `arcade` | Bleu-noir néon, glow coral | Space Grotesk | 20/12px | coin biseauté |
-| `retro` | 8-bit, ombres dures, scanlines | Space Grotesk + Press Start 2P | 4/2px | pixel-clip |
-
-**Tokens `--lobby-*`** (déclarés en blocs `[data-lobby="…"]` dans `globals.css`, à
-côté des skins — **jamais d'hex inline dans le TSX**) :
-
-| Token | Rôle |
-|---|---|
-| `--lobby-bg`, `--lobby-bg-elev` | plancher / surface surélevée |
-| `--lobby-text`, `--lobby-text-dim` | texte principal / secondaire |
-| `--lobby-accent`, `--lobby-accent-strong`, `--lobby-gold` | coral, coral clair, or |
-| `--lobby-radius-lg`, `--lobby-radius-sm` | arrondis (varient par thème) |
-| `--lobby-font-head`, `--lobby-font-eyebrow` | police titres / eyebrow (varient par thème) |
-| `--lobby-btn-clip` | `clip-path` du bouton (biseau arcade / pixel retro / none cartoon) |
-| `--lobby-card-border`, `--lobby-chip-border` | filets cartes / chips |
-| `--lobby-shadow`, `--lobby-cta-shadow` | ombre panneau / CTA (glow doux, ou ombre dure 8-bit en retro) |
-| `--lobby-panel-bg`, `--lobby-bg-texture` | dégradé de panneau / texture de fond (scanlines retro) |
-
-**Polices** (via `next/font/google`, self-host — **jamais** de `<link>` Google/CDN,
-cf. CSP + perf) : `Space Grotesk` (500/700), `Baloo 2` (600/700), `Press Start 2P`
-(400). Garde-fou : **Press Start 2P en titres/accents du thème `retro` uniquement**,
-jamais le corps de texte (lisibilité) — le prototype l'utilisait pour l'eyebrow de
-tous les thèmes, on le **restreint** au retro (`--lobby-font-eyebrow` par thème).
-
-**Garde-fous** (comme tout thème) : **reduced-motion** obligatoire sur chaque
-animation (pulse des blobs, mot rotatif, personnages/bulles, parallax skyline,
-oiseaux, étoiles, scanlines) — settle statique ; **WCAG AA** sur les 3 thèmes ;
-focus ring coral ; cibles ≥ 44px ; zéro hex inline.
+- Les classes `.lobby-*` de `globals.css` consomment les **tokens unifiés**
+  (réconciliation menée avec l'arrivée du `ThemeMenu` sur la landing).
+- Le décor ambiant reste **sombre-chaud** par design, jamais froid bleuté
+  (cf. PRODUCT.md, anti-réf) — c'est une présentation, pas un axe de token séparé.
+- **Garde-fous** (comme tout thème) : **reduced-motion** obligatoire sur chaque
+  animation (blobs, mot rotatif, personnages/bulles, parallax skyline, oiseaux,
+  étoiles, scanlines) — settle statique ; WCAG AA ; focus ring coral ; cibles
+  ≥ 44px ; zéro hex inline.
 
 **Footer landing** (`LobbyFooter`, #250) : la landing s'adresse à des visiteurs
 **non connectés**, donc les liens légaux (CGU, confidentialité, mentions légales,
 FAQ) + social + code source ouvert **vivent dans un footer** de la home — c'est
 l'**exception** à la règle app shell « pas de footer légal, tout dans `/settings` »
-(cf. § Layout & Safe-area), qui ne vaut que pour l'app connectée. Stylé `--lobby-*`,
-landmarks `<nav aria-label>` + `<footer>`.
+(cf. § Layout & Safe-area), qui ne vaut que pour l'app connectée. Stylé via les
+tokens de thème, landmarks `<nav aria-label>` + `<footer>`.
 
 ## Typography
 

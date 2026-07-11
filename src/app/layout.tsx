@@ -3,6 +3,7 @@ import Providers from '@/components/Providers';
 import ServiceWorkerRegistrar from '@/components/ServiceWorkerRegistrar';
 import CookieBanner from '@/components/CookieBanner';
 import { getCurrentSiteTheme } from '@/lib/site-theme-server';
+import { themeFontVars } from '@/lib/fonts';
 import './globals.css';
 
 export const viewport: Viewport = {
@@ -83,7 +84,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }} />
       </head>
-      <body className="antialiased">
+      <body className={`antialiased ${themeFontVars}`}>
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-black focus:shadow-md"

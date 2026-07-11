@@ -22,6 +22,22 @@
   --hairline: #e5e7eb;
   --hairline-strong: #d1d5db; /* bordure des contrôles (inputs, secondary) */
   --fill-subtle: #f3f4f6;     /* fond des chips/tags neutres */
+
+  /* Accent & identité de thème (runtime, surchargés par thème). Source de vérité :
+     le bloc de thème Tailwind (inline) les référence en var() → bg-coral/text-coral/
+     rounded-card… re-skinnent réellement (un littéral y serait figé à la compilation,
+     donc non surchargeable). Cf. DESIGN.md § Theming — Contrat de tokens sémantiques. */
+  --coral: #E8634A;
+  --coral-light: #F09A88;
+  --terracotta: #C4503A;
+  --coral-dark: #9E3A28;
+  --blush: #FDF0ED;
+  --sand: #F5E6D8;
+  --gold: #E8A04E;           /* or « accomplissement » (miel) — varie par thème */
+  --rad-card: 16px;          /* → rounded-card (varie par thème) */
+  --rad-control: 6px;        /* → rounded-control (varie par thème) */
+  --head-font: var(--font-sans, "Inter", Arial, sans-serif); /* → font-head */
+  --btn-clip: none;          /* silhouette bouton (biseau arcade, pixel retro) */
 }
 
 :root.dark {
@@ -46,12 +62,12 @@
    Le skin par défaut « libre » vit dans :root / :root.dark ci-dessus. */
 
 html[data-theme='libre-warm'] {
-  --color-coral: #d9542e;
-  --color-coral-light: #e68b6e;
-  --color-terracotta: #a33a20;
-  --color-coral-dark: #7a2a18;
-  --color-blush: #fbe8dd;
-  --color-sand: #efd8c2;
+  --coral: #d9542e;
+  --coral-light: #e68b6e;
+  --terracotta: #a33a20;
+  --coral-dark: #7a2a18;
+  --blush: #fbe8dd;
+  --sand: #efd8c2;
   --background: #fffbf7;
   --foreground: #1f1410;
   --surface: #fffbf7;
@@ -65,12 +81,12 @@ html[data-theme='libre-warm'] {
 }
 
 html[data-theme='libre-warm'].dark {
-  --color-coral: #e8663b;
-  --color-coral-light: #f0a184;
-  --color-terracotta: #c4503a;
-  --color-coral-dark: #f0a184;
-  --color-blush: #2a1a12;
-  --color-sand: #2e211a;
+  --coral: #e8663b;
+  --coral-light: #f0a184;
+  --terracotta: #c4503a;
+  --coral-dark: #f0a184;
+  --blush: #2a1a12;
+  --sand: #2e211a;
   --background: #17110d;
   --foreground: #f3ece6;
   --surface: #241a14;
@@ -81,6 +97,156 @@ html[data-theme='libre-warm'].dark {
   --hairline: #3a2e26;
   --hairline-strong: #3a2e26;
   --fill-subtle: #2e211a;
+}
+
+/* ── Thèmes « waouh » (ex-lobby, désormais thèmes app à part entière) ────────
+   cartoon / arcade / retro, chacun clair + sombre. Le bloc sombre reprend
+   l'identité « lobby » (plum-black, néon, 8-bit) ; le bloc clair est une
+   déclinaison chaude nouvelle. Mêmes tokens sémantiques que libre/libre-warm.
+   Cf. DESIGN.md § Theming — Catalogue. */
+
+/* cartoon — plum-black chaud, rondeurs Baloo */
+html[data-theme='cartoon'] {
+  --coral: #e8634a;
+  --coral-light: #f09a88;
+  --terracotta: #c4503a;
+  --coral-dark: #9e3a28;
+  --blush: #ffe9e0;
+  --sand: #ffd9c9;
+  --gold: #e8a04e;
+  --background: #fff8f4;
+  --foreground: #2a1a20;
+  --surface: #ffffff;
+  --elevated: #fffdfb;
+  --sunken: #ffe9e0;
+  --content: #2a1a20;
+  --muted: #6b5560;
+  --hairline: #f0ddd5;
+  --hairline-strong: #e2c8bd;
+  --fill-subtle: #fbeee7;
+  --rad-card: 24px;
+  --rad-control: 14px;
+  --head-font: var(--font-baloo), system-ui, sans-serif;
+  --btn-clip: none;
+}
+html[data-theme='cartoon'].dark {
+  --coral: #e8634a;
+  --coral-light: #ff9478;
+  --terracotta: #c4503a;
+  --coral-dark: #ff9478;
+  --blush: rgb(232 99 74 / 0.12);
+  --sand: #2e211a;
+  --gold: #ffd27a;
+  --background: #1c1016;
+  --foreground: #fdf3ee;
+  --surface: #241419;
+  --elevated: #2d1a20;
+  --sunken: rgb(232 99 74 / 0.10);
+  --content: #fdf3ee;
+  --muted: #cbb8b0;
+  --hairline: #3a2a30;
+  --hairline-strong: #4a363d;
+  --fill-subtle: #2d1a20;
+  --rad-card: 24px;
+  --rad-control: 14px;
+  --head-font: var(--font-baloo), system-ui, sans-serif;
+  --btn-clip: none;
+}
+
+/* arcade — néon sur bleu-noir, coin biseauté */
+html[data-theme='arcade'] {
+  --coral: #e8634a;
+  --coral-light: #f09a88;
+  --terracotta: #c4503a;
+  --coral-dark: #9e3a28;
+  --blush: #fdeee9;
+  --sand: #f3e4dd;
+  --gold: #e0a52e;
+  --background: #f6f4f1;
+  --foreground: #17131a;
+  --surface: #ffffff;
+  --elevated: #ffffff;
+  --sunken: #fdeee9;
+  --content: #17131a;
+  --muted: #5b5566;
+  --hairline: #e6e2ea;
+  --hairline-strong: #d3cdd9;
+  --fill-subtle: #f0edf2;
+  --rad-card: 16px;
+  --rad-control: 10px;
+  --head-font: var(--font-space-grotesk), system-ui, sans-serif;
+  --btn-clip: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+html[data-theme='arcade'].dark {
+  --coral: #e8634a;
+  --coral-light: #ff8a6d;
+  --terracotta: #c4503a;
+  --coral-dark: #ff8a6d;
+  --blush: rgb(232 99 74 / 0.12);
+  --sand: #1a1a28;
+  --gold: #ffc65c;
+  --background: #0a0a12;
+  --foreground: #f5f4f2;
+  --surface: #12121c;
+  --elevated: #1a1a28;
+  --sunken: rgb(232 99 74 / 0.10);
+  --content: #f5f4f2;
+  --muted: #b9b7c8;
+  --hairline: #26263a;
+  --hairline-strong: #34344e;
+  --fill-subtle: #1a1a28;
+  --rad-card: 16px;
+  --rad-control: 10px;
+  --head-font: var(--font-space-grotesk), system-ui, sans-serif;
+  --btn-clip: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+
+/* retro — 8-bit, ombres dures, arrondis nets, pixel-clip */
+html[data-theme='retro'] {
+  --coral: #e8634a;
+  --coral-light: #f09a88;
+  --terracotta: #c4503a;
+  --coral-dark: #9e3a28;
+  --blush: #ffe7de;
+  --sand: #efe0cd;
+  --gold: #d99a2e;
+  --background: #f4f1ea;
+  --foreground: #1a1a1a;
+  --surface: #fffdf8;
+  --elevated: #ffffff;
+  --sunken: #ffe7de;
+  --content: #1a1a1a;
+  --muted: #55524c;
+  --hairline: #ddd6c8;
+  --hairline-strong: #c7bda8;
+  --fill-subtle: #ece7db;
+  --rad-card: 4px;
+  --rad-control: 2px;
+  --head-font: var(--font-space-grotesk), system-ui, sans-serif;
+  --btn-clip: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+}
+html[data-theme='retro'].dark {
+  --coral: #e8634a;
+  --coral-light: #ff8a6d;
+  --terracotta: #c4503a;
+  --coral-dark: #ff8a6d;
+  --blush: rgb(232 99 74 / 0.12);
+  --sand: #1e1e1e;
+  --gold: #ffc65c;
+  --background: #0d0d0d;
+  --foreground: #f2f2f2;
+  --surface: #151515;
+  --elevated: #1e1e1e;
+  --sunken: rgb(232 99 74 / 0.10);
+  --content: #f2f2f2;
+  --muted: #b0b0b0;
+  --hairline: #2c2c2c;
+  --hairline-strong: #3c3c3c;
+  --fill-subtle: #1e1e1e;
+  --rad-card: 4px;
+  --rad-control: 2px;
+  --head-font: var(--font-space-grotesk), system-ui, sans-serif;
+  --btn-clip: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
 }
 
 /* ── Thèmes « lobby » (landing publique — épic #243) ────────────────────────
@@ -163,12 +329,14 @@ html[data-theme='libre-warm'].dark {
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-coral: #E8634A;
-  --color-coral-light: #F09A88;
-  --color-terracotta: #C4503A;
-  --color-blush: #FDF0ED;
-  --color-sand: #F5E6D8;
-  --color-coral-dark: #9E3A28;
+  /* Marque : indirection var() → surchargeable par thème (cf. :root + blocs thème). */
+  --color-coral: var(--coral);
+  --color-coral-light: var(--coral-light);
+  --color-terracotta: var(--terracotta);
+  --color-blush: var(--blush);
+  --color-sand: var(--sand);
+  --color-coral-dark: var(--coral-dark);
+  --color-gold: var(--gold);
 
   /* Text hierarchy (DESIGN.md > Colors > Text) */
   --color-ink: #171717;
@@ -198,9 +366,9 @@ html[data-theme='libre-warm'].dark {
   --color-hairline-strong: var(--hairline-strong);
   --color-fill-subtle: var(--fill-subtle);
 
-  /* Radius tokens (varieront par skin — cf. #224) → rounded-card, rounded-control */
-  --radius-card: 16px;
-  --radius-control: 6px;
+  /* Radius tokens — indirection var() → varient par thème (rounded-card/-control) */
+  --radius-card: var(--rad-card);
+  --radius-control: var(--rad-control);
 
   /* Elevation (DESIGN.md > Elevation > Shadow Tokens) — always coral-tinted */
   --shadow-soft: 0 2px 8px -2px rgb(232 99 74 / 0.08);
@@ -219,6 +387,9 @@ html[data-theme='libre-warm'].dark {
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* Police des titres — varie par thème via --head-font (Baloo cartoon, Space
+     Grotesk arcade/retro ; défaut = sans). Garde-fou : display en titres only. */
+  --font-head: var(--head-font);
 }
 
 /* Base typography: 18px base, 1.6 line-height, Geist Sans

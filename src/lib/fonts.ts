@@ -1,14 +1,16 @@
 import { Space_Grotesk, Baloo_2, Press_Start_2P } from 'next/font/google';
 
 /**
- * Polices de la landing « lobby » (épic #243), chargées via `next/font/google`
- * donc **self-hostées** au build : aucune requête runtime vers Google Fonts (CSP
- * + perf + vie privée — cf. DESIGN.md § Theming, Axe 3, et AGENTS.md).
+ * Polices de thème (Baloo 2, Space Grotesk, Press Start 2P), chargées via
+ * `next/font/google` donc **self-hostées** au build : aucune requête runtime vers
+ * Google Fonts (CSP + perf + vie privée — cf. DESIGN.md § Theming, et AGENTS.md).
  *
- * Chaque police n'expose que sa **CSS var** (`variable`) — elle ne pose pas de
- * `font-family` globale. Les woff2 ne sont téléchargés par le navigateur que
- * lorsqu'un glyphe utilise réellement la famille : hors landing, rien n'est
- * chargé. Le mapping var → rôle de thème vit dans `globals.css` (`--lobby-font-*`).
+ * Depuis l'unification des thèmes (ex-lobby → thèmes app), ces vars sont posées au
+ * **layout racine** (`<body>`) : `--head-font` de chaque thème y pioche (Baloo pour
+ * cartoon, Space Grotesk pour arcade/retro). Chaque police n'expose que sa **CSS
+ * var** (`variable`) — pas de `font-family` globale ; les woff2 ne sont téléchargés
+ * que si un glyphe utilise réellement la famille (thème actif). Mapping var → rôle
+ * dans `globals.css` (`--head-font`).
  *
  * Garde-fou : Press Start 2P est réservé aux titres/accents du thème `retro`
  * (jamais le corps de texte) — appliqué côté tokens, pas ici.
@@ -37,7 +39,10 @@ const pressStart = Press_Start_2P({
 });
 
 /**
- * Classe à poser sur le **conteneur racine du lobby** (scope landing) : elle
- * déclare les trois `--font-*` sans imposer de police au reste du site.
+ * Classe à poser sur le `<body>` racine : déclare les trois `--font-*` de thème
+ * sans imposer de police au reste du site (chaque thème choisit via `--head-font`).
  */
-export const lobbyFontVars = `${spaceGrotesk.variable} ${baloo.variable} ${pressStart.variable}`;
+export const themeFontVars = `${spaceGrotesk.variable} ${baloo.variable} ${pressStart.variable}`;
+
+/** @deprecated Alias historique (scope landing) — préférer `themeFontVars`. */
+export const lobbyFontVars = themeFontVars;
