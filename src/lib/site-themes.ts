@@ -28,6 +28,24 @@ export const SITE_THEMES: SiteTheme[] = [
     description:
       'Variante plus chaude : davantage de terracotta, un crème plus profond. Décliné en clair et sombre.',
   },
+  {
+    id: 'cartoon',
+    label: 'Cartoon',
+    description:
+      'Rondeurs généreuses, titres Baloo, chaleur plum-black en sombre. Ludique et doux.',
+  },
+  {
+    id: 'arcade',
+    label: 'Arcade',
+    description:
+      'Néon sur bleu-noir, glow coral, boutons biseautés. Énergie rétro-gaming.',
+  },
+  {
+    id: 'retro',
+    label: 'Rétro 8-bit',
+    description:
+      'Pixel-art assumé : arrondis nets, ombres dures, accents Press Start. Nostalgie 8-bit.',
+  },
 ];
 
 /**
