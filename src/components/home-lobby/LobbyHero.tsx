@@ -67,9 +67,9 @@ export default function LobbyHero({ userCount, sidePanel }: LobbyHeroProps) {
           </h1>
 
           <p className="lobby-hero__subtitle">
-            Pas de swipe compulsif, pas de score de désirabilité, pas de carte bleue
-            à chaque niveau. Juste de vraies personnes, et la liberté de choisir
-            comment aller plus loin.
+            Pas de défilement compulsif, pas de score de désirabilité, pas de carte
+            bleue à chaque niveau. Juste de vraies personnes, et la liberté de
+            choisir comment aller plus loin.
           </p>
 
           <ul className="lobby-hero__chips">
