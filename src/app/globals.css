@@ -804,11 +804,8 @@ input::placeholder, textarea::placeholder {
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.78));
   color: #fff;
   font-size: 13px;
-  font-weight: 700;
-}
-.lobby-story__detail {
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 /* Sécurité : panneau centré + tag gold + bouclier. */
