@@ -1,9 +1,11 @@
 # Home « lobby » (épic [#243](https://github.com/double-v/libre/issues/243))
 
 Refonte de la home publique à partir du prototype validé (Claude Design,
-`templates/homepage-lobby`). Montée pour l'instant sur la route de preview
-`/lobby-preview` (non indexée, 404 en prod) — le cutover sur `/` viendra à la
-fin de l'épic.
+`templates/homepage-lobby`). **Depuis le cutover #250, `HomeLobby` EST la home
+publique** (`src/app/page.tsx`, route `/`) : NAV + HERO + bandeau ambiant +
+sections Humains/Sécurité/Closing + footer légal, sous le conteneur thémé du
+foundation. `page.tsx` préserve le SEO sensible (metadata + canonical `www`,
+`force-dynamic`, compteur `/api/stats/public`, jsonLd, `VersionWatcher`).
 
 Trois thèmes de landing (`data-lobby` sur le conteneur racine, switcher no-flash) :
 **cartoon** (défaut, plum-black chaud) · **arcade** · **retro** (8-bit). Ils sont
@@ -59,5 +61,13 @@ voile sombre → contraste garanti). ⚠️ Photos = **placeholders** `/images/m
 
 ![Section Closing — accroche + CTA Créer mon profil](./preview/sections-closing.png)
 
-> Captures régénérables : `/lobby-preview` sur les 3 thèmes, avec et sans
-> `prefers-reduced-motion` (les couleurs du ciel du bandeau dépendent de l'heure).
+**Footer** — `LobbyFooter` (#250) : la landing s'adresse à des visiteurs non
+connectés, donc les liens légaux (CGU, confidentialité, mentions légales, FAQ) +
+social + code source vivent ici (exception documentée à la règle app shell de
+DESIGN.md). Landmarks `<nav aria-label>` + `<footer>`.
+
+![Footer landing — logo, liens légaux, TikTok, code source, presse](./preview/footer.png)
+
+> Captures régénérables depuis `/` sur les 3 thèmes (switcher de la nav), avec et
+> sans `prefers-reduced-motion` (les couleurs du ciel du bandeau dépendent de
+> l'heure). Avant le cutover #250, la preview vivait sur `/lobby-preview`.

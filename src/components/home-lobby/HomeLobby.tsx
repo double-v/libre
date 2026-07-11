@@ -9,6 +9,7 @@ import AmbientBand from './AmbientBand';
 import LobbyHumans from './LobbyHumans';
 import LobbySafety from './LobbySafety';
 import LobbyClosing from './LobbyClosing';
+import LobbyFooter from './LobbyFooter';
 import {
   DEFAULT_LOBBY_THEME,
   readStoredLobbyTheme,
@@ -79,13 +80,17 @@ export default function HomeLobby({ userCount }: HomeLobbyProps) {
 
       <LobbyNav themeValue={theme} onThemeChange={handleThemeChange} />
 
-      <LobbyHero userCount={userCount} />
+      <main id="main-content">
+        <LobbyHero userCount={userCount} />
 
-      <AmbientBand reducedMotion={reducedMotion} />
+        <AmbientBand reducedMotion={reducedMotion} />
 
-      <LobbyHumans />
-      <LobbySafety />
-      <LobbyClosing />
+        <LobbyHumans />
+        <LobbySafety />
+        <LobbyClosing />
+      </main>
+
+      <LobbyFooter />
     </div>
   );
 }

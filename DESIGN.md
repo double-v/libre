@@ -203,6 +203,13 @@ animation (pulse des blobs, mot rotatif, personnages/bulles, parallax skyline,
 oiseaux, étoiles, scanlines) — settle statique ; **WCAG AA** sur les 3 thèmes ;
 focus ring coral ; cibles ≥ 44px ; zéro hex inline.
 
+**Footer landing** (`LobbyFooter`, #250) : la landing s'adresse à des visiteurs
+**non connectés**, donc les liens légaux (CGU, confidentialité, mentions légales,
+FAQ) + social + code source ouvert **vivent dans un footer** de la home — c'est
+l'**exception** à la règle app shell « pas de footer légal, tout dans `/settings` »
+(cf. § Layout & Safe-area), qui ne vaut que pour l'app connectée. Stylé `--lobby-*`,
+landmarks `<nav aria-label>` + `<footer>`.
+
 ## Typography
 
 ### Font Stack
@@ -529,8 +536,10 @@ l'encoche et la barre d'accueil. Le `viewport` racine porte `viewportFit: 'cover
   la matérialise via `min-h-14` et tout le reste s'y réfère → une seule source.
 - La **bottom tab bar** est séparée du contenu par un `border-t` hairline
   (`border-gray-200 / dark:border-gray-800`), jamais une ombre grise neutre.
-- **Pas de footer légal fixe** dans la coquille : les liens légaux vivent dans
-  `/settings` (§ « Informations légales »), standard mobile.
+- **Pas de footer légal fixe** dans la coquille **app connectée** : les liens
+  légaux y vivent dans `/settings` (§ « Informations légales »), standard mobile.
+  _Exception_ : la **landing publique** (visiteurs non connectés) garde un footer
+  légal — cf. § Theming Axe 3 « Footer landing » (`LobbyFooter`).
 
 ## Do's and Don'ts
 

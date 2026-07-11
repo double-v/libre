@@ -52,4 +52,12 @@ describe('HomeLobby (shell #244)', () => {
     expect(firstChild?.tagName).toBe('SCRIPT');
     expect(firstChild?.innerHTML).toContain('data-lobby');
   });
+
+  it('expose les landmarks a11y du cutover : <main id="main-content"> + footer', () => {
+    const { container } = render(<HomeLobby />);
+    const main = container.querySelector('main#main-content');
+    expect(main).not.toBeNull();
+    // le lien d'évitement (rendu par page.tsx) doit pouvoir viser ce main
+    expect(container.querySelector('footer.lobby-footer')).not.toBeNull();
+  });
 });
