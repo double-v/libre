@@ -39,9 +39,9 @@ export default function LobbyHumans() {
       <div className="lobby-section__inner lobby-humans__inner">
         <h2 className="lobby-section__title">Des humains, pas des profils.</h2>
         <p className="lobby-section__lead">
-          De vraies personnes, à leur rythme, en confiance. Pas de swipe compulsif,
-          pas de score de désirabilité — tu choisis qui tu rencontres, et comment
-          aller plus loin.
+          De vraies personnes, à leur rythme, en confiance. Des histoires qui
+          commencent ici, chacune à sa façon — et c’est toi qui choisis qui tu
+          rencontres, et comment.
         </p>
 
         <ul className="lobby-humans__grid">
