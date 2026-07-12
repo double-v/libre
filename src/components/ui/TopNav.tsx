@@ -3,12 +3,13 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import ThemeMenu from './ThemeMenu';
+import ThemeToggle from './ThemeToggle';
 
 /**
  * TopNav — en-tête unifié du Design System, présent partout (app connectée,
  * guest, admin, pages légales). Marque → `/` (guest) ou `/discover` (connecté) ;
- * à droite le `ThemeMenu` **toujours**, puis les actions selon la session.
+ * à droite le `ThemeToggle` (bascule Mode clair/sombre/auto) **toujours** — le
+ * choix du thème vit dans les Paramètres —, puis les actions selon la session.
  *
  * Ne remplace PAS la bottom tab bar (nav principale mobile de l'app connectée) :
  * les deux coexistent. Sticky, `bg-surface/80 backdrop-blur`, porte la safe-area.
@@ -35,7 +36,7 @@ export default function TopNav({
           <Brand href={isAuthed ? '/discover' : '/'} />
 
           <div className="flex items-center gap-1 sm:gap-2">
-            <ThemeMenu />
+            <ThemeToggle />
 
             {isAuthed ? (
               <>

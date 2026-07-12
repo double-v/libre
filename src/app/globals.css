@@ -586,7 +586,17 @@ input::placeholder, textarea::placeholder {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  overflow-x: auto; /* mobile : rien ne casse, la barre défile si besoin */
+  /* Pas d'`overflow` sur desktop : le popover du ThemeMenu (position:absolute,
+     ancré sous la nav) doit déborder librement. `overflow-x:auto` forcerait
+     `overflow-y` à `auto` (spec CSS) → la nav devient un scroll-container qui
+     croppe le popover à la hauteur du bandeau (bug home). Le scroll horizontal
+     est réservé au mobile (bloc ci-dessous), où le ThemeMenu est un bottom-sheet
+     `fixed` non concerné par l'overflow de la nav. */
+}
+@media (max-width: 640px) {
+  .lobby-nav {
+    overflow-x: auto; /* la barre défile si les items ne tiennent pas */
+  }
 }
 .lobby-nav__brand {
   display: inline-flex;
@@ -670,11 +680,14 @@ input::placeholder, textarea::placeholder {
 }
 
 /* HERO (#246). Blobs `lobbyPulse` figés par le bloc global reduced-motion.
-   overflow:hidden clippe les blobs sans toucher la nav sticky (autre ancêtre).
+   Pas d'`overflow` ici : les blobs débordent librement (halo gold de droite non
+   tronqué, conforme au prototype) — le blob accent bave derrière la nav sticky
+   (fond semi-opaque) et le blob gold bave sous le hero, dans le bandeau ambiant.
+   Le débordement horizontal est clippé à la racine (`overflowX: clip`, HomeLobby),
+   ce qui évite un scroll-container et préserve la nav sticky.
    Tints via color-mix(token) → restent theme-aware sur les 3 thèmes. */
 .lobby-hero {
   position: relative;
-  overflow: hidden;
   padding: 64px 24px 80px;
 }
 .lobby-hero__inner {

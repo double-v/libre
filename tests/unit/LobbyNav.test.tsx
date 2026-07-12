@@ -1,26 +1,9 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-// LobbyNav intègre désormais le ThemeMenu global (client, useSession).
-vi.mock('next-auth/react', () => ({
-  useSession: () => ({ data: null, status: 'unauthenticated' }),
-}));
-
+// LobbyNav est un composant serveur pur (marque + liens + CTA) : depuis le
+// retrait du sélecteur de thème sur la landing, plus aucun hook client ni session.
 import LobbyNav from '@/components/home-lobby/LobbyNav';
-
-beforeEach(() => {
-  Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    configurable: true,
-    value: (query: string) => ({
-      matches: false,
-      media: query,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }),
-  });
-  global.fetch = vi.fn(() => Promise.resolve({ ok: true, json: async () => ({}) } as Response));
-});
 
 describe('LobbyNav', () => {
   it('lie la marque à / et les liens aux vraies routes', () => {
@@ -31,9 +14,9 @@ describe('LobbyNav', () => {
     expect(screen.getByRole('link', { name: 'Créer un compte' })).toHaveAttribute('href', '/register');
   });
 
-  it('intègre le ThemeMenu global (le même sélecteur que dans l’app)', () => {
+  it('n’expose aucun sélecteur de thème (les invités voient le thème par défaut du site)', () => {
     render(<LobbyNav />);
-    expect(screen.getByRole('button', { name: /thème et apparence/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /thème et apparence/i })).toBeNull();
   });
 
   it('marque la nav comme repère de navigation', () => {
