@@ -135,23 +135,23 @@ export default function GifPicker({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="flex h-[80vh] w-full max-w-2xl flex-col rounded-lg bg-white shadow-2xl dark:bg-gray-900">
+      <div className="flex h-[80vh] w-full max-w-2xl flex-col rounded-lg bg-surface shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700">
-          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">
+        <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
+          <h2 className="text-base font-semibold text-content">
             Choisir un GIF
           </h2>
           <button
             onClick={onClose}
             aria-label="Fermer"
-            className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800"
+            className="rounded p-1 text-muted hover:bg-fill-subtle hover:text-muted"
           >
             ✕
           </button>
         </div>
 
         {/* Search input */}
-        <div className="border-b border-gray-200 px-4 py-3 dark:border-gray-700">
+        <div className="border-b border-hairline px-4 py-3">
           <input
             ref={inputRef}
             type="text"
@@ -165,10 +165,10 @@ export default function GifPicker({
               }
             }}
             placeholder="Rechercher un GIF…"
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="w-full rounded-md border border-hairline-strong bg-surface px-3 py-2 text-sm text-content placeholder-gray-400 focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
           />
           {mode === 'search' && debouncedQuery && (
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-xs text-muted">
               Résultats pour « {debouncedQuery} »
             </p>
           )}
@@ -184,7 +184,7 @@ export default function GifPicker({
           )}
 
           {loading && (
-            <p className="py-8 text-center text-sm text-gray-400">Chargement…</p>
+            <p className="py-8 text-center text-sm text-muted">Chargement…</p>
           )}
 
           {error && !loading && (
@@ -194,7 +194,7 @@ export default function GifPicker({
           )}
 
           {!loading && !error && gifs.length === 0 && (
-            <p className="py-8 text-center text-sm text-gray-400">
+            <p className="py-8 text-center text-sm text-muted">
               Aucun GIF trouvé.
             </p>
           )}
@@ -207,7 +207,7 @@ export default function GifPicker({
                   onClick={() =>
                     onSelect({ id: gif.id, url: gif.url, title: gif.title })
                   }
-                  className="group relative aspect-square overflow-hidden rounded-md bg-gray-100 focus:outline-none focus:ring-2 focus:ring-coral dark:bg-gray-800"
+                  className="group relative aspect-square overflow-hidden rounded-md bg-fill-subtle focus:outline-none focus:ring-2 focus:ring-coral"
                   aria-label={gif.title || 'GIF'}
                 >
                   {gif.format === 'mp4' ? (

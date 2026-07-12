@@ -30,7 +30,7 @@ export default function ShareContactButton({ conversationId, onSend }: ShareCont
       onClick={handleShare}
       disabled={shared || sending}
       aria-label={shared ? 'Contacts partages' : sending ? 'Envoi en cours' : 'Echanger nos reseaux'}
-      className="text-sm font-medium text-coral underline decoration-coral hover:text-terracotta disabled:text-gray-400 disabled:no-underline dark:text-coral-light dark:decoration-coral-light dark:hover:text-coral dark:disabled:text-gray-500"
+      className="text-sm font-medium text-coral underline decoration-coral hover:text-terracotta disabled:text-muted disabled:no-underline dark:text-coral-light dark:decoration-coral-light dark:hover:text-coral dark:disabled:text-muted"
     >
       {shared ? 'Contacts partages' : sending ? 'Envoi...' : 'On echange nos reseaux ?'}
     </button>

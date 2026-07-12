@@ -51,7 +51,7 @@ function calculateAge(birthDate: string): number {
 function Spinner() {
   return (
     <div className="flex h-48 items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-coral" />
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-hairline-strong border-t-coral" />
     </div>
   );
 }
@@ -143,7 +143,7 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null 
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={handleBackdropClick}
     >
-      <div className="mx-4 w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl bg-white shadow-xl dark:bg-gray-900">
+      <div className="mx-4 w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl bg-surface shadow-xl">
         {/* Close button */}
         <button
           type="button"
@@ -161,7 +161,7 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null 
         {error && (
           <div className="flex flex-col items-center justify-center px-6 py-12">
             <div className="mb-3 text-4xl">😕</div>
-            <p className="text-center text-gray-600 dark:text-gray-400">{error}</p>
+            <p className="text-center text-muted">{error}</p>
             <button
               type="button"
               onClick={onClose}
@@ -208,7 +208,7 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null 
                     className={`relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
                       i === selectedPhoto
                         ? 'border-coral'
-                        : 'border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                        : 'border-transparent hover:border-hairline-strong'
                     }`}
                   >
                     <Image src={photoUrl(photo)} alt={`Photo de ${profile.displayName} - ${i + 1}`} fill className="object-cover" unoptimized />
@@ -220,11 +220,11 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null 
             {/* Name, age, verified */}
             <div className="px-4 pt-3 pb-2">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                <h2 className="text-xl font-bold text-content">
                   {profile.displayName}
                 </h2>
                 {age !== null && (
-                  <span className="text-gray-600 dark:text-gray-400">{age}</span>
+                  <span className="text-muted">{age}</span>
                 )}
                 <VerificationBadge isVerified={profile.isVerified} />
                 <PublicTrustBadge
@@ -235,7 +235,7 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null 
               </div>
 
               {profile.relationshipType && (
-                <p className="mt-0.5 text-sm text-gray-600 dark:text-gray-400">
+                <p className="mt-0.5 text-sm text-muted">
                   {profile.relationshipType}
                 </p>
               )}
@@ -244,7 +244,7 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null 
             {/* Bio */}
             {profile.bio && (
               <div className="px-4 pb-3">
-                <p className="whitespace-pre-line text-sm text-gray-700 dark:text-gray-300">
+                <p className="whitespace-pre-line text-sm text-muted">
                   {profile.bio}
                 </p>
               </div>
@@ -254,7 +254,7 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null 
             <div className="px-4 pb-6">
               {profile.genderIdentity && (
                 <div className="mb-3">
-                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-500">
+                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">
                     Genre
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
@@ -267,7 +267,7 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null 
 
               {profile.orientation && (
                 <div className="mb-3">
-                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-500">
+                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">
                     Orientation
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
@@ -280,14 +280,14 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null 
 
               {profile.interests && profile.interests.length > 0 && (
                 <div className="mb-3">
-                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-500">
+                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">
                     Centres d&apos;intérêt
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
                     {profile.interests.map((interest) => (
                       <span
                         key={interest}
-                        className="inline-block rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                        className="inline-block rounded-full bg-fill-subtle px-3 py-1 text-xs font-medium text-muted"
                       >
                         {interest}
                       </span>
@@ -298,7 +298,7 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null 
 
               {profile.practices && profile.practices.length > 0 && (
                 <div className="mb-3">
-                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-500">
+                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">
                     Pratiques
                   </h3>
                   <div className="flex flex-wrap gap-1.5">

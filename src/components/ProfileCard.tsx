@@ -72,26 +72,26 @@ export default function ProfileCard({
             <OnlineIndicator online={online} />
           </div>
         ) : (
-          <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+          <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-fill-subtle text-lg font-medium text-muted">
             {displayName.charAt(0).toUpperCase()}
             <OnlineIndicator online={online} />
           </div>
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="truncate text-base font-semibold text-gray-900 dark:text-gray-100">
+            <h3 className="truncate text-base font-semibold text-content">
               {displayName}{age != null ? `, ${age}` : ''}
             </h3>
             <VerificationBadge isVerified={isVerified} />
           </div>
           {distance && (
-            <p className="text-sm text-gray-600 dark:text-gray-400">{distance}</p>
+            <p className="text-sm text-muted">{distance}</p>
           )}
         </div>
       </div>
 
       {bio && (
-        <p className="mt-3 line-clamp-2 text-sm text-gray-700 dark:text-gray-300">{bio}</p>
+        <p className="mt-3 line-clamp-2 text-sm text-muted">{bio}</p>
       )}
 
       {((interests && interests.length > 0) || (practices && practices.length > 0)) && (

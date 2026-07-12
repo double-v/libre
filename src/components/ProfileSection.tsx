@@ -19,7 +19,7 @@ interface ProfileSectionProps {
 }
 
 const surfaceClasses: Record<string, string> = {
-  white: 'bg-white dark:bg-gray-800',
+  white: 'bg-surface',
   blush: 'bg-blush dark:bg-coral/10',
   sand: 'bg-sand dark:bg-coral-dark/20',
 };
@@ -91,7 +91,7 @@ export default function ProfileSection({
 
   return (
     <section
-      className={`${surfaceClasses[surface]} rounded-xl border border-gray-200 p-4 sm:p-5 dark:border-gray-700`}
+      className={`${surfaceClasses[surface]} rounded-xl border border-hairline p-4 sm:p-5`}
     >
       <div className="flex items-center justify-between gap-2">
         <button
@@ -102,7 +102,7 @@ export default function ProfileSection({
           className="flex flex-1 items-center gap-2 rounded text-left transition-colors hover:text-coral focus:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-1 disabled:cursor-default"
           disabled={forceOpen}
         >
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <h3 className="text-lg font-semibold text-content">
             {title}
           </h3>
           {complete && (
@@ -132,7 +132,7 @@ export default function ProfileSection({
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
-              className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+              className={`h-4 w-4 text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`}
               aria-hidden="true"
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -144,7 +144,7 @@ export default function ProfileSection({
             type="button"
             onClick={onEdit}
             aria-label={`Modifier ${title}`}
-            className="h-11 w-11 flex items-center justify-center rounded-full transition-colors hover:bg-blush dark:hover:bg-gray-700"
+            className="h-11 w-11 flex items-center justify-center rounded-full transition-colors hover:bg-sunken"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -152,7 +152,7 @@ export default function ProfileSection({
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="h-5 w-5 text-gray-400 hover:text-coral"
+              className="h-5 w-5 text-muted hover:text-coral"
               strokeLinecap="round"
               strokeLinejoin="round"
             >

@@ -65,7 +65,7 @@ export default function SquareInputArea({
                 )
               }
               disabled={sending}
-              className="rounded-full bg-gray-100 px-3 py-1.5 text-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:hover:bg-gray-700"
+              className="rounded-full bg-fill-subtle px-3 py-1.5 text-lg hover:bg-fill-subtle disabled:opacity-50"
             >
               {opt}
             </button>
@@ -127,7 +127,7 @@ export default function SquareInputArea({
           onChange={(e) => setInput(e.target.value.slice(0, theme.maxLength))}
           placeholder={theme.placeholder}
           maxLength={theme.maxLength}
-          className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-coral focus:outline-none focus:ring-coral dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+          className="flex-1 rounded-md border border-hairline-strong bg-surface px-3 py-2 text-sm text-content shadow-sm focus:border-coral focus:outline-none focus:ring-coral"
         />
         <button
           type="submit"
@@ -141,7 +141,7 @@ export default function SquareInputArea({
   };
 
   return (
-    <div className="shrink-0 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-950">
+    <div className="shrink-0 border-t border-hairline bg-surface p-4">
       {error && (
         <p className="mb-2 text-xs text-red-600 dark:text-red-400">{error}</p>
       )}

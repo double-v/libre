@@ -66,12 +66,12 @@ export default function CrossingCard({
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="truncate text-base font-semibold text-gray-900 dark:text-gray-100">
+            <h3 className="truncate text-base font-semibold text-content">
               {displayName}{age != null ? `, ${age}` : ''}
             </h3>
             <VerificationBadge isVerified={isVerified} />
           </div>
-          <div className="mt-0.5 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-0.5 flex items-center gap-2 text-sm text-muted">
             <span>{timeAgo}</span>
             <span aria-hidden="true">&middot;</span>
             <span>{formatDistance(distanceM)}</span>
@@ -80,7 +80,7 @@ export default function CrossingCard({
       </div>
 
       {bio && (
-        <p className="mt-3 line-clamp-2 text-sm text-gray-700 dark:text-gray-300">{bio}</p>
+        <p className="mt-3 line-clamp-2 text-sm text-muted">{bio}</p>
       )}
 
       <div className="mt-4 flex gap-3">
@@ -88,7 +88,7 @@ export default function CrossingCard({
           type="button"
           onClick={onPass}
           aria-label={`Passer ${displayName}`}
-          className="flex-1 rounded-full border border-gray-300 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+          className="flex-1 rounded-full border border-hairline-strong py-2 text-sm font-medium text-muted transition-colors hover:bg-fill-subtle"
         >
           Passer
         </button>

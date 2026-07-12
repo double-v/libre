@@ -74,12 +74,12 @@ export default function SquareReportModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="square-report-modal-title"
-        className="mx-4 w-full max-w-sm rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800"
+        className="mx-4 w-full max-w-sm rounded-lg bg-surface p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <h3
           id="square-report-modal-title"
-          className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100"
+          className="mb-4 text-lg font-semibold text-content"
         >
           Signaler ce message
         </h3>
@@ -92,7 +92,7 @@ export default function SquareReportModal({
               className={`rounded-md border px-3 py-2 text-sm text-left transition-colors ${
                 reason === r.value
                   ? 'border-coral bg-coral/10 text-coral dark:border-coral dark:bg-coral/20 dark:text-coral-light'
-                  : 'border-gray-200 text-gray-700 hover:border-gray-300 dark:border-gray-600 dark:text-gray-300 dark:hover:border-gray-500'
+                  : 'border-hairline text-muted hover:border-hairline-strong'
               }`}
             >
               {r.label}
@@ -107,7 +107,7 @@ export default function SquareReportModal({
         <div className="flex gap-3 justify-end">
           <button
             onClick={onClose}
-            className="rounded-md px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+            className="rounded-md px-4 py-2 text-sm text-muted hover:bg-fill-subtle"
           >
             Annuler
           </button>

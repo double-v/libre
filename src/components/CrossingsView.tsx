@@ -106,8 +106,8 @@ export default function CrossingsView() {
       )}
 
       {!error && crossings.length === 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white p-6 text-center dark:border-gray-700 dark:bg-gray-900">
-          <p className="text-gray-600 dark:text-gray-400">
+        <div className="rounded-xl border border-hairline bg-surface p-6 text-center">
+          <p className="text-muted">
             Aucun croisement pour le moment. Vos chemins se croiseront bientôt.
           </p>
         </div>

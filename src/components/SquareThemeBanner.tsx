@@ -50,8 +50,8 @@ export default function SquareThemeBanner({
 
   if (!theme) {
     return (
-      <div className="shrink-0 border-b border-gray-200 bg-blush px-4 py-2 dark:border-gray-700 dark:bg-coral/5">
-        <p className="text-sm text-gray-500">Chargement du thème…</p>
+      <div className="shrink-0 border-b border-hairline bg-blush px-4 py-2 dark:bg-coral/5">
+        <p className="text-sm text-muted">Chargement du thème…</p>
       </div>
     );
   }
@@ -60,16 +60,16 @@ export default function SquareThemeBanner({
   const showCountdown = hoursRemaining < 23;
 
   return (
-    <div className="shrink-0 border-b border-gray-200 bg-blush px-4 py-2 dark:border-gray-700 dark:bg-coral/5">
+    <div className="shrink-0 border-b border-hairline bg-blush px-4 py-2 dark:bg-coral/5">
       <p className="text-sm font-medium text-coral dark:text-coral-light">
         🎭 {theme.label}
       </p>
-      <p className="text-xs text-gray-500 dark:text-gray-400">{theme.description}</p>
-      <p className="text-xs text-gray-400 dark:text-gray-500">
-        Tu es : <span className="font-medium text-gray-600 dark:text-gray-300">{pseudonym}</span>
+      <p className="text-xs text-muted">{theme.description}</p>
+      <p className="text-xs text-muted">
+        Tu es : <span className="font-medium text-muted">{pseudonym}</span>
       </p>
       {showCountdown && (
-        <p className="text-xs text-gray-400 dark:text-gray-500">
+        <p className="text-xs text-muted">
           🔄 Réinitialisation dans {formatCountdown(countdown)}
         </p>
       )}
