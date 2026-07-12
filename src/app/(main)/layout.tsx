@@ -36,7 +36,7 @@ function BetaBanner({ onFeedback }: { onFeedback: () => void }) {
   if (dismissed) return null;
 
   return (
-    <div className="flex items-center justify-center gap-2 border-b border-coral/20 bg-blush px-4 py-1.5 text-center text-xs text-coral-dark dark:border-coral/30 dark:bg-coral/10 dark:text-coral-light">
+    <div className="flex items-center justify-center gap-2 border-b border-coral/20 bg-sunken px-4 py-1.5 text-center text-xs text-coral-dark dark:border-coral/30 dark:text-coral-light">
       <span className="mr-1 rounded-full bg-coral px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider text-white">
         Bêta
       </span>
@@ -102,7 +102,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       <main id="main-content" role="main" className="flex-1 pb-nav">{children}</main>
 
-      <nav role="navigation" aria-label="Navigation principale" className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white pb-safe dark:border-gray-800 dark:bg-gray-950">
+      <nav role="navigation" aria-label="Navigation principale" className="fixed bottom-0 left-0 right-0 z-50 border-t border-hairline bg-surface pb-safe">
         <div className="mx-auto flex min-h-14 max-w-lg items-center justify-around">
           {navItems.map((item) => {
             const isActive =
@@ -115,7 +115,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 className={`flex flex-col items-center gap-0.5 px-3 py-2 text-xs font-medium transition-colors ${
                   isActive
                     ? 'font-semibold text-coral dark:text-coral-light'
-                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
+                    : 'text-muted hover:text-content'
                 }`}
               >
                 {item.href === '/discover' && (

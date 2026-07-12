@@ -104,14 +104,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (dbRole !== 'ADMIN') {
     debugLog('[admin/layout] ACCESS DENIED → showing forbidden page');
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-950">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-red-600">Accès refusé</h1>
-          <p className="mt-4 text-lg text-gray-700 dark:text-gray-300">
+          <p className="mt-4 text-lg text-content">
             Rôle requis : <strong>ADMIN</strong>
           </p>
-          <p className="mt-2 text-gray-500 dark:text-gray-400">
-            Votre rôle actuel : <code className="rounded bg-gray-200 px-2 py-1 dark:bg-gray-800">{dbRole || 'non défini'}</code>
+          <p className="mt-2 text-muted">
+            Votre rôle actuel : <code className="rounded bg-fill-subtle px-2 py-1">{dbRole || 'non défini'}</code>
           </p>
           <Link
             href="/discover"
@@ -126,7 +126,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex min-h-screen">
-      <aside className="hidden w-56 shrink-0 border-r border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900 md:block">
+      <aside className="hidden w-56 shrink-0 border-r border-hairline bg-fill-subtle md:block">
         <div className="flex items-center justify-between gap-2 p-4">
           <Link href="/admin" className="text-lg font-bold text-coral dark:text-coral-light">
             Libre Admin
@@ -138,15 +138,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted hover:bg-fill-subtle hover:text-content"
             >
               <SidebarIcon icon={item.icon} />
               {item.label}
             </Link>
           ))}
         </nav>
-        <div className="mt-auto border-t border-gray-200 p-4 dark:border-gray-800">
-          <Link href="/discover" className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+        <div className="mt-auto border-t border-hairline p-4">
+          <Link href="/discover" className="text-sm text-muted hover:text-content">
             ← Retour à l&apos;app
           </Link>
         </div>
@@ -154,14 +154,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
       {/* Mobile header */}
       <div className="flex flex-1 flex-col md:hidden">
-        <header className="border-b border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-950">
+        <header className="border-b border-hairline bg-surface p-4">
           <div className="flex items-center justify-between gap-2">
             <Link href="/admin" className="text-lg font-bold text-coral dark:text-coral-light">
               Libre Admin
             </Link>
             <div className="flex items-center gap-2">
               <ThemeMenu />
-              <Link href="/discover" className="text-sm text-gray-500">
+              <Link href="/discover" className="text-sm text-muted">
                 Retour
               </Link>
             </div>
@@ -171,7 +171,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <Link
                 key={item.href}
                 href={item.href}
-                className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium text-muted hover:bg-fill-subtle"
               >
                 {item.label}
               </Link>
