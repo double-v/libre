@@ -105,7 +105,7 @@ export default function AdminSquareBannedWords() {
 
   return (
     <div>
-      <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Mots interdits</h2>
+      <h2 className="mb-4 text-lg font-semibold text-content">Mots interdits</h2>
 
       {error && <div className="mb-3 rounded-md bg-red-50 p-2 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-400">{error}</div>}
       {success && <div className="mb-3 rounded-md bg-green-50 p-2 text-sm text-green-700 dark:bg-green-900/30 dark:text-green-400">{success}</div>}
@@ -118,12 +118,12 @@ export default function AdminSquareBannedWords() {
           onChange={(e) => setNewWord(e.target.value)}
           placeholder="Nouveau mot interdit..."
           onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-          className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          className="flex-1 rounded-lg border border-hairline-strong px-3 py-2 text-sm"
         />
         <select
           value={newSeverity}
           onChange={(e) => setNewSeverity(e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          className="rounded-lg border border-hairline-strong px-3 py-2 text-sm"
         >
           <option value="block">Bloquer</option>
           <option value="censor">Censurer</option>
@@ -143,22 +143,22 @@ export default function AdminSquareBannedWords() {
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           placeholder="Rechercher..."
-          className="w-full max-w-sm rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          className="w-full max-w-sm rounded-lg border border-hairline-strong px-3 py-2 text-sm"
         />
       </div>
 
       {/* Word list */}
       {loading ? (
-        <p className="text-gray-500">Chargement...</p>
+        <p className="text-muted">Chargement...</p>
       ) : words.length === 0 ? (
-        <p className="text-gray-500">Aucun mot interdit.</p>
+        <p className="text-muted">Aucun mot interdit.</p>
       ) : (
         <div className="space-y-2">
           {words.map((w) => (
-            <div key={w.id} className="flex items-center justify-between rounded-xl border border-gray-200 p-3 dark:border-gray-700">
+            <div key={w.id} className="flex items-center justify-between rounded-xl border border-hairline p-3">
               <div className="flex items-center gap-3">
-                <span className="font-medium text-gray-900 dark:text-gray-100">{w.word}</span>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${severityColor[w.severity] ?? 'bg-gray-100 text-gray-700'}`}>
+                <span className="font-medium text-content">{w.word}</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${severityColor[w.severity] ?? 'bg-fill-subtle text-muted'}`}>
                   {severityLabel[w.severity] ?? w.severity}
                 </span>
               </div>
@@ -179,15 +179,15 @@ export default function AdminSquareBannedWords() {
           <button
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page === 1}
-            className="rounded-md border border-gray-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-gray-600"
+            className="rounded-md border border-hairline-strong px-3 py-1 text-sm disabled:opacity-50"
           >
             Précédent
           </button>
-          <span className="px-3 py-1 text-sm text-gray-500">{page} / {totalPages}</span>
+          <span className="px-3 py-1 text-sm text-muted">{page} / {totalPages}</span>
           <button
             onClick={() => setPage(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
-            className="rounded-md border border-gray-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-gray-600"
+            className="rounded-md border border-hairline-strong px-3 py-1 text-sm disabled:opacity-50"
           >
             Suivant
           </button>

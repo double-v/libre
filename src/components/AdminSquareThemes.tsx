@@ -174,7 +174,7 @@ export default function AdminSquareThemes() {
   const textareaToArray = (val: string): string[] =>
     val.split('\n').map((s) => s.trim()).filter(Boolean);
 
-  if (loading) return <p className="text-gray-500">Chargement...</p>;
+  if (loading) return <p className="text-muted">Chargement...</p>;
 
   return (
     <div className="space-y-8">
@@ -183,7 +183,7 @@ export default function AdminSquareThemes() {
 
       {/* Themes list */}
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Thèmes</h2>
+        <h2 className="mb-4 text-lg font-semibold text-content">Thèmes</h2>
         <div className="space-y-3">
           {themes.map((theme) => (
             <Card key={theme.id} variant="profile">
@@ -191,44 +191,44 @@ export default function AdminSquareThemes() {
                 /* Edit form */
                 <div className="space-y-3">
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Label</label>
+                    <label className="mb-1 block text-xs font-medium text-muted">Label</label>
                     <input
                       type="text"
                       value={editForm.label ?? ''}
                       onChange={(e) => setEditForm({ ...editForm, label: e.target.value })}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                      className="w-full rounded-lg border border-hairline-strong px-3 py-2 text-sm"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Description</label>
+                    <label className="mb-1 block text-xs font-medium text-muted">Description</label>
                     <textarea
                       value={editForm.description ?? ''}
                       onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                       rows={2}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                      className="w-full rounded-lg border border-hairline-strong px-3 py-2 text-sm"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Placeholder</label>
+                    <label className="mb-1 block text-xs font-medium text-muted">Placeholder</label>
                     <input
                       type="text"
                       value={editForm.placeholder ?? ''}
                       onChange={(e) => setEditForm({ ...editForm, placeholder: e.target.value })}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                      className="w-full rounded-lg border border-hairline-strong px-3 py-2 text-sm"
                     />
                   </div>
                   <div className="flex gap-4">
                     <div className="flex-1">
-                      <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Longueur max</label>
+                      <label className="mb-1 block text-xs font-medium text-muted">Longueur max</label>
                       <input
                         type="number"
                         value={editForm.maxLength ?? 200}
                         onChange={(e) => setEditForm({ ...editForm, maxLength: Number(e.target.value) })}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                        className="w-full rounded-lg border border-hairline-strong px-3 py-2 text-sm"
                       />
                     </div>
                     <div className="flex items-end gap-2">
-                      <label className="flex items-center gap-1 text-sm dark:text-gray-300">
+                      <label className="flex items-center gap-1 text-sm">
                         <input
                           type="checkbox"
                           checked={editForm.allowFreeText ?? false}
@@ -237,7 +237,7 @@ export default function AdminSquareThemes() {
                         />
                         Texte libre
                       </label>
-                      <label className="flex items-center gap-1 text-sm dark:text-gray-300">
+                      <label className="flex items-center gap-1 text-sm">
                         <input
                           type="checkbox"
                           checked={editForm.active ?? true}
@@ -249,21 +249,21 @@ export default function AdminSquareThemes() {
                     </div>
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Options (une par ligne)</label>
+                    <label className="mb-1 block text-xs font-medium text-muted">Options (une par ligne)</label>
                     <textarea
                       value={arrayToTextarea(editForm.options ?? null)}
                       onChange={(e) => setEditForm({ ...editForm, options: textareaToArray(e.target.value) })}
                       rows={4}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                      className="w-full rounded-lg border border-hairline-strong px-3 py-2 text-sm"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Pseudonymes (un par ligne)</label>
+                    <label className="mb-1 block text-xs font-medium text-muted">Pseudonymes (un par ligne)</label>
                     <textarea
                       value={arrayToTextarea(editForm.pseudonymNames ?? null)}
                       onChange={(e) => setEditForm({ ...editForm, pseudonymNames: textareaToArray(e.target.value) })}
                       rows={4}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                      className="w-full rounded-lg border border-hairline-strong px-3 py-2 text-sm"
                     />
                   </div>
                   <div className="flex gap-2">
@@ -275,7 +275,7 @@ export default function AdminSquareThemes() {
                     </button>
                     <button
                       onClick={cancelEdit}
-                      className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800"
+                      className="rounded-lg border border-hairline-strong px-4 py-2 text-sm font-medium text-muted hover:bg-fill-subtle"
                     >
                       Annuler
                     </button>
@@ -286,26 +286,26 @@ export default function AdminSquareThemes() {
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-900 dark:text-gray-100">{theme.label}</span>
+                      <span className="font-medium text-content">{theme.label}</span>
                       {!theme.active && (
-                        <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-400">Inactif</span>
+                        <span className="rounded-full bg-fill-subtle px-2 py-0.5 text-xs font-medium text-muted">Inactif</span>
                       )}
                       {theme.active && (
                         <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">Actif</span>
                       )}
                       <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">{theme.inputType}</span>
                     </div>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{theme.description}</p>
-                    <div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="mt-1 text-sm text-muted">{theme.description}</p>
+                    <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted">
                       <span>Max {theme.maxLength} chars</span>
-                      {theme.allowFreeText && <span className="rounded bg-gray-100 px-1 dark:bg-gray-700">Texte libre</span>}
+                      {theme.allowFreeText && <span className="rounded bg-fill-subtle px-1">Texte libre</span>}
                       {theme.options && theme.options.length > 0 && <span>{theme.options.length} options</span>}
                       {theme.pseudonymNames && theme.pseudonymNames.length > 0 && <span>{theme.pseudonymNames.length} pseudos</span>}
                     </div>
                   </div>
                   <button
                     onClick={() => startEdit(theme)}
-                    className="shrink-0 rounded-lg border border-gray-300 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800"
+                    className="shrink-0 rounded-lg border border-hairline-strong px-3 py-1 text-sm font-medium text-muted hover:bg-fill-subtle"
                   >
                     Modifier
                   </button>
@@ -318,15 +318,15 @@ export default function AdminSquareThemes() {
 
       {/* Schedule editor */}
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Calendrier</h2>
+        <h2 className="mb-4 text-lg font-semibold text-content">Calendrier</h2>
         <div className="space-y-2">
           {Array.from({ length: 7 }, (_, i) => (
             <div key={i} className="flex items-center gap-3">
-              <span className="w-28 shrink-0 text-sm font-medium text-gray-700 dark:text-gray-300">{DAYS_FR[i]}</span>
+              <span className="w-28 shrink-0 text-sm font-medium text-muted">{DAYS_FR[i]}</span>
               <select
                 value={scheduleDraft[i] ?? ''}
                 onChange={(e) => setScheduleDraft({ ...scheduleDraft, [i]: e.target.value })}
-                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                className="flex-1 rounded-lg border border-hairline-strong px-3 py-2 text-sm"
               >
                 <option value="">— Aucun thème —</option>
                 {themes.map((t) => (

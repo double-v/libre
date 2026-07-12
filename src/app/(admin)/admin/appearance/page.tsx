@@ -68,10 +68,10 @@ export default function AdminAppearancePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <h1 className="mb-2 text-2xl font-bold text-content">
         Apparence du site
       </h1>
-      <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+      <p className="mb-6 text-sm text-muted">
         Choisissez le thème de couleur du site. Le changement s’applique
         immédiatement à votre écran et est enregistré pour tous les
         visiteurs.
@@ -89,12 +89,12 @@ export default function AdminAppearancePage() {
       )}
 
       {loading ? (
-        <p className="text-sm text-gray-600 dark:text-gray-400">Chargement…</p>
+        <p className="text-sm text-muted">Chargement…</p>
       ) : (
         <SiteThemeSelector current={current} onChange={handleChange} disabled={saving} />
       )}
 
-      <div className="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-4 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+      <div className="mt-8 rounded-lg border border-hairline bg-fill-subtle p-4 text-xs text-muted">
         <p className="mb-1 font-semibold">Note</p>
         <p>
           Cette page est réservée aux administrateurs. Les utilisateurs non-admin

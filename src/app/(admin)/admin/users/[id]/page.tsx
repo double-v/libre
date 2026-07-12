@@ -87,7 +87,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
     }
   };
 
-  if (loading) return <div className="text-center text-gray-500">Chargement…</div>;
+  if (loading) return <div className="text-center text-muted">Chargement…</div>;
   if (error) return <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-400">{error}</div>;
   if (!user) return null;
 
@@ -97,22 +97,22 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
         <Link href="/admin/users" className="text-sm text-coral hover:underline">← Utilisateurs</Link>
       </div>
 
-      <h1 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">{user.displayName}</h1>
+      <h1 className="mb-6 text-2xl font-bold text-content">{user.displayName}</h1>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* User info */}
-        <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-          <h2 className="mb-3 font-semibold text-gray-900 dark:text-gray-100">Informations</h2>
+        <div className="rounded-xl border border-hairline p-4">
+          <h2 className="mb-3 font-semibold text-content">Informations</h2>
           <dl className="space-y-2 text-sm">
-            <div className="flex justify-between"><dt className="text-gray-500">Email</dt><dd>{user.email}</dd></div>
-            <div className="flex justify-between"><dt className="text-gray-500">Rôle</dt><dd>{user.role}</dd></div>
-            <div className="flex justify-between"><dt className="text-gray-500">Statut</dt><dd>{user.isBanned ? 'Banni' : user.isVerified ? 'Vérifié' : 'Actif'}</dd></div>
-            <div className="flex justify-between"><dt className="text-gray-500">Inscrit</dt><dd>{new Date(user.createdAt).toLocaleDateString('fr-FR')}</dd></div>
-            <div className="flex justify-between"><dt className="text-gray-500">Dernière activité</dt><dd>{new Date(user.lastActive).toLocaleDateString('fr-FR')}</dd></div>
+            <div className="flex justify-between"><dt className="text-muted">Email</dt><dd>{user.email}</dd></div>
+            <div className="flex justify-between"><dt className="text-muted">Rôle</dt><dd>{user.role}</dd></div>
+            <div className="flex justify-between"><dt className="text-muted">Statut</dt><dd>{user.isBanned ? 'Banni' : user.isVerified ? 'Vérifié' : 'Actif'}</dd></div>
+            <div className="flex justify-between"><dt className="text-muted">Inscrit</dt><dd>{new Date(user.createdAt).toLocaleDateString('fr-FR')}</dd></div>
+            <div className="flex justify-between"><dt className="text-muted">Dernière activité</dt><dd>{new Date(user.lastActive).toLocaleDateString('fr-FR')}</dd></div>
             {user.profile && (
               <>
-                <div className="flex justify-between"><dt className="text-gray-500">Bio</dt><dd className="max-w-[200px] truncate">{user.profile.bio}</dd></div>
-                <div className="flex justify-between"><dt className="text-gray-500">Photos</dt><dd>{user.profile.photos.length}</dd></div>
+                <div className="flex justify-between"><dt className="text-muted">Bio</dt><dd className="max-w-[200px] truncate">{user.profile.bio}</dd></div>
+                <div className="flex justify-between"><dt className="text-muted">Photos</dt><dd>{user.profile.photos.length}</dd></div>
               </>
             )}
           </dl>
@@ -120,8 +120,8 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
 
         {/* Actions */}
         <div className="space-y-4">
-          <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-            <h2 className="mb-3 font-semibold text-gray-900 dark:text-gray-100">
+          <div className="rounded-xl border border-hairline p-4">
+            <h2 className="mb-3 font-semibold text-content">
               {user.isBanned ? 'Débannir' : 'Bannir'}
             </h2>
             <input
@@ -129,7 +129,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
               placeholder="Raison (optionnel)"
               value={banReason}
               onChange={(e) => setBanReason(e.target.value)}
-              className="mb-3 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+              className="mb-3 w-full rounded-md border border-hairline-strong bg-surface px-3 py-2 text-sm"
             />
             <button
               onClick={handleBanToggle}
@@ -150,7 +150,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
                 <p className="text-sm text-red-600">Êtes-vous sûr·e ? Cette action est irréversible.</p>
                 <div className="flex gap-2">
                   <button onClick={handleDelete} className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">Confirmer</button>
-                  <button onClick={() => setShowDeleteConfirm(false)} className="rounded-md border border-gray-300 px-4 py-2 text-sm dark:border-gray-600">Annuler</button>
+                  <button onClick={() => setShowDeleteConfirm(false)} className="rounded-md border border-hairline-strong px-4 py-2 text-sm">Annuler</button>
                 </div>
               </div>
             )}
@@ -160,16 +160,16 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
 
       {/* Reports received */}
       {user.reportsReceived.length > 0 && (
-        <div className="mt-6 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-          <h2 className="mb-3 font-semibold text-gray-900 dark:text-gray-100">Signalements reçus</h2>
+        <div className="mt-6 rounded-xl border border-hairline p-4">
+          <h2 className="mb-3 font-semibold text-content">Signalements reçus</h2>
           <div className="space-y-2">
             {user.reportsReceived.map((r) => (
-              <div key={r.id} className="flex items-center justify-between rounded-lg bg-gray-50 p-2 dark:bg-gray-800">
+              <div key={r.id} className="flex items-center justify-between rounded-lg bg-fill-subtle p-2">
                 <div>
                   <p className="text-sm"><span className="font-medium">{r.reason}</span> — par {r.reporter.displayName}</p>
-                  {r.description && <p className="text-xs text-gray-500">{r.description}</p>}
+                  {r.description && <p className="text-xs text-muted">{r.description}</p>}
                 </div>
-                <span className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleDateString('fr-FR')}</span>
+                <span className="text-xs text-muted">{new Date(r.createdAt).toLocaleDateString('fr-FR')}</span>
               </div>
             ))}
           </div>

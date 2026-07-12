@@ -53,41 +53,41 @@ export default function AdminLogsPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">Logs de modération</h1>
+      <h1 className="mb-6 text-2xl font-bold text-content">Logs de modération</h1>
 
       {loading ? (
-        <p className="text-gray-500">Chargement…</p>
+        <p className="text-muted">Chargement…</p>
       ) : logs.length === 0 ? (
-        <p className="text-gray-500">Aucun log.</p>
+        <p className="text-muted">Aucun log.</p>
       ) : (
         <>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-200 dark:border-gray-700">
+              <thead className="border-b border-hairline">
                 <tr>
-                  <th className="px-3 py-2 font-medium text-gray-500">Date</th>
-                  <th className="px-3 py-2 font-medium text-gray-500">Admin</th>
-                  <th className="px-3 py-2 font-medium text-gray-500">Cible</th>
-                  <th className="px-3 py-2 font-medium text-gray-500">Action</th>
-                  <th className="px-3 py-2 font-medium text-gray-500">Raison</th>
+                  <th className="px-3 py-2 font-medium text-muted">Date</th>
+                  <th className="px-3 py-2 font-medium text-muted">Admin</th>
+                  <th className="px-3 py-2 font-medium text-muted">Cible</th>
+                  <th className="px-3 py-2 font-medium text-muted">Action</th>
+                  <th className="px-3 py-2 font-medium text-muted">Raison</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 {logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <td className="px-3 py-2 text-gray-400">{new Date(log.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                  <tr key={log.id} className="hover:bg-fill-subtle">
+                    <td className="px-3 py-2 text-muted">{new Date(log.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
                     <td className="px-3 py-2">{log.admin.displayName}</td>
                     <td className="px-3 py-2">{log.targetUser.displayName}</td>
                     <td className="px-3 py-2">
                       <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                         log.action === 'BAN' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                         : log.action === 'UNBAN' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                        : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                        : 'bg-fill-subtle text-muted'
                       }`}>
                         {actionLabels[log.action] ?? log.action}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-gray-500">{log.reason ?? '—'}</td>
+                    <td className="px-3 py-2 text-muted">{log.reason ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -95,9 +95,9 @@ export default function AdminLogsPage() {
           </div>
           {totalPages > 1 && (
             <div className="mt-4 flex justify-center gap-2">
-              <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="rounded-md border border-gray-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-gray-600">Précédent</button>
-              <span className="px-3 py-1 text-sm text-gray-500">{page} / {totalPages}</span>
-              <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="rounded-md border border-gray-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-gray-600">Suivant</button>
+              <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="rounded-md border border-hairline-strong px-3 py-1 text-sm disabled:opacity-50">Précédent</button>
+              <span className="px-3 py-1 text-sm text-muted">{page} / {totalPages}</span>
+              <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="rounded-md border border-hairline-strong px-3 py-1 text-sm disabled:opacity-50">Suivant</button>
             </div>
           )}
         </>
