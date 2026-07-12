@@ -265,21 +265,22 @@ html[data-theme='retro'].dark {
   --btn-clip: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
 }
 
-/* ── Thèmes « lobby » (landing publique — épic #243) ────────────────────────
-   Axe de thème DISTINCT des skins app (data-theme) et du mode (.dark) : porté
-   par data-lobby sur le SEUL conteneur racine du lobby, jamais sur <html>.
-   Toujours sombre-chaud. Les composants home-lobby consomment les tokens
-   --lobby-* (aucun hex inline dans le TSX). Défaut : cartoon.
-   Cf. DESIGN.md § Theming — Axe 3. C'est ici (définition des tokens) que vivent
-   les valeurs hex, comme pour les skins ci-dessus. */
+/* ── Ambiance « lobby » (landing publique — épic #243) ──────────────────────
+   La landing garde sa PRÉSENTATION sombre-chaude (hero ambiant), mais son thème
+   n'est plus un axe séparé : il suit le thème GLOBAL (html[data-theme]) piloté
+   par le ThemeMenu, comme le reste de l'app (plus de switcher lobby, plus de clé
+   `libre-lobby-theme`). Le conteneur racine porte `data-lobby` (simple marqueur) ;
+   les tokens --lobby-* cascadent depuis html[data-theme]. Défaut (libre /
+   libre-warm / cartoon) = ambiance cartoon. arcade / retro surchargent.
+   Toujours sombre par design (indépendant du mode .dark). Les 89 classes .lobby-*
+   consomment --lobby-* — inchangées. Cf. DESIGN.md § La landing « lobby ». */
 [data-lobby] {
   background: var(--lobby-bg);
   background-image: var(--lobby-bg-texture, none);
   color: var(--lobby-text);
   font-family: var(--font-space-grotesk), system-ui, sans-serif;
-}
 
-[data-lobby='cartoon'] {
+  /* Défaut = ambiance cartoon (aussi pour les thèmes app sans identité lobby). */
   --lobby-bg: #1c1016;
   --lobby-bg-elev: #241419;
   --lobby-text: #fdf3ee;
@@ -300,7 +301,7 @@ html[data-theme='retro'].dark {
   --lobby-bg-texture: none;
 }
 
-[data-lobby='arcade'] {
+html[data-theme='arcade'] [data-lobby] {
   --lobby-bg: #0a0a12;
   --lobby-bg-elev: #12121c;
   --lobby-text: #f5f4f2;
@@ -321,7 +322,7 @@ html[data-theme='retro'].dark {
   --lobby-bg-texture: none;
 }
 
-[data-lobby='retro'] {
+html[data-theme='retro'] [data-lobby] {
   --lobby-bg: #0d0d0d;
   --lobby-bg-elev: #151515;
   --lobby-text: #f2f2f2;

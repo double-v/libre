@@ -43,6 +43,3 @@ const pressStart = Press_Start_2P({
  * sans imposer de police au reste du site (chaque thème choisit via `--head-font`).
  */
 export const themeFontVars = `${spaceGrotesk.variable} ${baloo.variable} ${pressStart.variable}`;
-
-/** @deprecated Alias historique (scope landing) — préférer `themeFontVars`. */
-export const lobbyFontVars = themeFontVars;
