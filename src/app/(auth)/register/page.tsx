@@ -53,7 +53,7 @@ export default function RegisterPage() {
 
   if (status === 'loading') {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center text-gray-500">
+      <div className="flex min-h-[60vh] items-center justify-center text-muted">
         Chargement…
       </div>
     );
@@ -91,8 +91,8 @@ export default function RegisterPage() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Créer un compte</h1>
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Gratuit. Sans limites.</p>
+        <h1 className="text-2xl font-bold text-content">Créer un compte</h1>
+        <p className="mt-1 text-sm text-muted">Gratuit. Sans limites.</p>
       </div>
 
       {error && (
@@ -161,10 +161,10 @@ export default function RegisterPage() {
             type="checkbox"
             checked={consentGiven}
             onChange={(e) => setConsentGiven(e.target.checked)}
-            className="mt-1 h-4 w-4 rounded border-gray-300 text-coral focus:ring-coral dark:border-gray-600 dark:bg-gray-700"
+            className="mt-1 h-4 w-4 rounded border-hairline-strong text-coral focus:ring-coral"
             required
           />
-          <label htmlFor="consent" className="text-xs leading-snug text-gray-600 dark:text-gray-400">
+          <label htmlFor="consent" className="text-xs leading-snug text-muted">
             J&apos;accepte les{' '}
             <Link href="/cgu" className="text-coral hover:underline">Conditions générales d&apos;utilisation</Link>
             {' '}et la{' '}
@@ -184,7 +184,7 @@ export default function RegisterPage() {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+      <p className="text-center text-sm text-muted">
         Déjà un compte ?{' '}
         <Link href="/login" className="font-medium text-coral hover:text-terracotta">
           Se connecter

@@ -62,7 +62,7 @@ function ResetForm() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Nouveau mot de passe</h1>
+        <h1 className="text-2xl font-bold text-content">Nouveau mot de passe</h1>
       </div>
 
       {tokenError && (
