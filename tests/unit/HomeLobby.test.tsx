@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 
-// LobbyNav intègre le ThemeMenu global (client, useSession).
+// La landing n'expose plus de sélecteur de thème ; le mock next-auth est
+// conservé par sécurité pour d'éventuels sous-composants lisant la session.
 vi.mock('next-auth/react', () => ({
   useSession: () => ({ data: null, status: 'unauthenticated' }),
 }));
@@ -34,9 +35,9 @@ describe('HomeLobby (landing)', () => {
     expect(container.querySelector('[data-lobby]')).not.toBeNull();
   });
 
-  it('intègre le ThemeMenu global (plus de switcher lobby dédié)', () => {
+  it('n’expose pas de sélecteur de thème sur la landing (thème par défaut du site)', () => {
     render(<HomeLobby />);
-    expect(screen.getByRole('button', { name: /thème et apparence/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /thème et apparence/i })).toBeNull();
   });
 
   it('expose les landmarks a11y : <main id="main-content"> + footer', () => {

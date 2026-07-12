@@ -1,15 +1,15 @@
 import Link from 'next/link';
-import ThemeMenu from '@/components/ui/ThemeMenu';
 
 /**
  * Barre de navigation sticky de la landing « lobby » (#245, épic #243).
  *
- * Marque (pastille coral + cœur) → `/`, liens réels (`/manifesto`, `/login`),
- * le **`ThemeMenu` global** (thème + clair/sombre, le même que dans toute l'app —
- * il re-skinne l'ambiance lobby via `html[data-theme]`) et CTA `/register`. Style
- * via classes `.lobby-nav*` de `globals.css` (tokens `--lobby-*`, focus ring coral,
- * cibles ≥ 44px, `overflow-x:auto` en mobile). A11y : marque et liens = vrais
- * `<a>` (Next `Link`).
+ * Marque (pastille coral + cœur) → `/`, liens réels (`/manifesto`, `/login`) et
+ * CTA `/register`. **Pas de sélecteur de thème** ici : la landing s'adresse aux
+ * visiteurs non connectés et présente le **thème par défaut du site** (impression
+ * de marque cohérente) ; la personnalisation vit dans l'app connectée (Paramètres).
+ * Style via classes `.lobby-nav*` de `globals.css` (tokens `--lobby-*`, focus ring
+ * coral, cibles ≥ 44px, `overflow-x:auto` en mobile). A11y : marque et liens =
+ * vrais `<a>` (Next `Link`).
  */
 export default function LobbyNav() {
   return (
@@ -33,7 +33,6 @@ export default function LobbyNav() {
       </div>
 
       <div className="lobby-nav__actions">
-        <ThemeMenu />
         <Link href="/register" className="lobby-nav__cta">
           Créer un compte
         </Link>
