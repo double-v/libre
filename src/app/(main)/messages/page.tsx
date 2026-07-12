@@ -47,7 +47,7 @@ function Avatar({ user, size }: { user: MatchUser; size: number }) {
   }
   return (
     <div
-      className="flex items-center justify-center rounded-full bg-sand font-medium text-coral-dark dark:bg-gray-700 dark:text-coral-light"
+      className="flex items-center justify-center rounded-full bg-sand font-medium text-coral-dark dark:text-coral-light"
       style={{ width: size, height: size }}
     >
       {user.displayName.charAt(0).toUpperCase()}
@@ -124,14 +124,14 @@ export default function MessagesPage() {
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-gray-600 dark:text-gray-400">Chargement...</p>
+        <p className="text-muted">Chargement...</p>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">Messages</h1>
+      <h1 className="mb-6 text-2xl font-bold text-content">Messages</h1>
 
       {error && (
         <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-400">
@@ -157,7 +157,7 @@ export default function MessagesPage() {
       {/* Nouveaux matches — pas encore de conversation */}
       {newMatches.length > 0 && (
         <section className="mb-6">
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
             Nouveaux matches
           </h2>
           <div className="flex gap-4 overflow-x-auto pb-1">
@@ -172,7 +172,7 @@ export default function MessagesPage() {
                   <Avatar user={match.user} size={56} />
                   <OnlineIndicator online={isOnline(new Date(match.user.lastActive))} />
                 </div>
-                <span className="w-full truncate text-center text-xs text-gray-700 dark:text-gray-300">
+                <span className="w-full truncate text-center text-xs text-muted">
                   {match.user.displayName}
                 </span>
               </button>
@@ -184,17 +184,17 @@ export default function MessagesPage() {
       {/* Conversations ouvertes */}
       <section>
         {conversations.length > 0 && (
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
             Conversations
           </h2>
         )}
 
         {!error && matches.length === 0 ? (
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-muted">
             Pas encore de match. Continue à explorer dans Découvrir !
           </p>
         ) : conversations.length === 0 && newMatches.length > 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-muted">
             Aucune conversation encore. Ouvre un match ci-dessus pour lancer la discussion.
           </p>
         ) : (
@@ -203,17 +203,17 @@ export default function MessagesPage() {
               <Link
                 key={match.id}
                 href={`/chat/${match.conversationId}`}
-                className="flex items-center gap-3 rounded-xl p-2.5 transition-colors hover:bg-blush dark:hover:bg-gray-800"
+                className="flex items-center gap-3 rounded-xl p-2.5 transition-colors hover:bg-sunken"
               >
                 <div className="relative shrink-0">
                   <Avatar user={match.user} size={48} />
                   <OnlineIndicator online={isOnline(new Date(match.user.lastActive))} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-gray-900 dark:text-gray-100">
+                  <p className="truncate font-semibold text-content">
                     {match.user.displayName}
                   </p>
-                  <p className="truncate text-sm text-gray-500 dark:text-gray-400">
+                  <p className="truncate text-sm text-muted">
                     {formatLastSeen(new Date(match.user.lastActive))}
                   </p>
                 </div>

@@ -59,10 +59,10 @@ export default function TrustHowItWorksPage() {
   return (
     <div className="mx-auto max-w-lg px-4 py-6">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 className="text-2xl font-bold text-content">
           Comment marche la confiance
         </h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        <p className="mt-2 text-sm text-muted">
           Sur Libre, la confiance n’est pas une note qu’on te colle : c’est un repère qui se
           construit doucement, pour que chacun·e sache à qui il ou elle parle. Aucun classement,
           aucune compétition — juste des signaux qui rassurent.
@@ -71,7 +71,7 @@ export default function TrustHowItWorksPage() {
 
       {/* Les 4 niveaux */}
       <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <h2 className="mb-3 text-lg font-semibold text-content">
           Les quatre niveaux
         </h2>
         <ul className="space-y-3">
@@ -83,9 +83,9 @@ export default function TrustHowItWorksPage() {
               <TrustBadge band={band} size="md" />
               <div className="min-w-0">
                 <p className="font-semibold text-coral-dark dark:text-coral-light">
-                  {label} <span className="font-normal text-gray-500 dark:text-gray-400">· {range}</span>
+                  {label} <span className="font-normal text-muted">· {range}</span>
                 </p>
-                <p className="text-sm text-gray-700 dark:text-gray-300">{blurb}</p>
+                <p className="text-sm text-muted">{blurb}</p>
               </div>
             </li>
           ))}
@@ -94,15 +94,15 @@ export default function TrustHowItWorksPage() {
 
       {/* Comment monter */}
       <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <h2 className="mb-3 text-lg font-semibold text-content">
           Faire grandir ta confiance
         </h2>
-        <ul className="divide-y divide-sand rounded-xl border border-sand dark:divide-gray-800 dark:border-gray-800">
+        <ul className="divide-y divide-sand rounded-xl border border-sand dark:divide-gray-800">
           {POSITIVE_FACTORS.map(({ label, points, how }) => (
             <li key={label} className="flex items-start justify-between gap-3 p-3">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">{how}</p>
+                <p className="text-sm font-medium text-content">{label}</p>
+                <p className="text-xs text-muted">{how}</p>
               </div>
               <span className="shrink-0 font-mono text-sm font-semibold text-coral-dark dark:text-coral-light">
                 {points}
@@ -110,7 +110,7 @@ export default function TrustHowItWorksPage() {
             </li>
           ))}
         </ul>
-        <p className="mt-3 text-xs text-gray-600 dark:text-gray-400">
+        <p className="mt-3 text-xs text-muted">
           Deux situations font baisser le niveau : un{' '}
           <span className="font-medium">signalement actif</span> ({NEGATIVE_FACTORS[0].points}) et un{' '}
           <span className="font-medium">compte banni</span> ({NEGATIVE_FACTORS[1].points}).
@@ -119,10 +119,10 @@ export default function TrustHowItWorksPage() {
 
       {/* Cercle de confiance */}
       <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <h2 className="mb-3 text-lg font-semibold text-content">
           Le Cercle de Confiance
         </h2>
-        <p className="text-sm text-gray-700 dark:text-gray-300">
+        <p className="text-sm text-muted">
           Ton Cercle, ce sont les personnes que tu choisis comme contacts de confiance. Le déclarer
           renforce ton niveau et pose un filet de sécurité : tu n’es jamais seul·e derrière l’écran.
           Tu gardes la main — tu ajoutes et retires qui tu veux, quand tu veux.

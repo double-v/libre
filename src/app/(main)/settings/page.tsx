@@ -105,14 +105,14 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-600 dark:text-gray-400">Chargement...</p>
+        <p className="text-muted">Chargement...</p>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">Paramètres</h1>
+      <h1 className="mb-6 text-2xl font-bold text-content">Paramètres</h1>
 
       {error && (
         <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-400">
@@ -124,11 +124,11 @@ export default function SettingsPage() {
         <AppearanceSettings />
 
         {/* Invisible mode */}
-        <section className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:p-5">
+        <section className="rounded-xl border border-hairline bg-surface p-4 sm:p-5">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Mode invisible</h2>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              <h2 className="text-lg font-semibold text-content">Mode invisible</h2>
+              <p className="mt-1 text-sm text-muted">
                 Vous n&apos;apparaîtrez plus dans les découvertes ni dans les passages proches.
               </p>
             </div>
@@ -139,7 +139,7 @@ export default function SettingsPage() {
               disabled={invisibleToggling || !profile}
               onClick={handleToggleInvisible}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2 disabled:opacity-50 ${
-                profile?.invisibleMode ? 'bg-coral' : 'bg-gray-200 dark:bg-gray-600'
+                profile?.invisibleMode ? 'bg-coral' : 'bg-fill-subtle'
               }`}
             >
               <span
@@ -153,8 +153,8 @@ export default function SettingsPage() {
         </section>
 
         {/* Verification status */}
-        <section className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:p-5">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Vérification</h2>
+        <section className="rounded-xl border border-hairline bg-surface p-4 sm:p-5">
+          <h2 className="text-lg font-semibold text-content">Vérification</h2>
           {isVerified ? (
             <div className="mt-2 flex items-center gap-2">
               <span className="inline-block h-5 w-5 rounded-full bg-green-500" aria-hidden="true" />
@@ -164,7 +164,7 @@ export default function SettingsPage() {
             </div>
           ) : (
             <div className="mt-2 space-y-2">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-muted">
                 Obtenez le badge vérifié pour augmenter la confiance des autres utilisateurs.
               </p>
               <button
@@ -179,15 +179,15 @@ export default function SettingsPage() {
         </section>
 
         {/* Sign out */}
-        <section className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:p-5">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Session</h2>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        <section className="rounded-xl border border-hairline bg-surface p-4 sm:p-5">
+          <h2 className="text-lg font-semibold text-content">Session</h2>
+          <p className="mt-1 text-sm text-muted">
             Déconnectez-vous de votre compte.
           </p>
           <button
             type="button"
             onClick={handleSignOut}
-            className="mt-3 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="mt-3 rounded-md border border-hairline-strong bg-surface px-4 py-2 text-sm font-medium text-muted hover:bg-fill-subtle"
           >
             Se déconnecter
           </button>
@@ -198,14 +198,14 @@ export default function SettingsPage() {
           <h2 className="mb-2 text-lg font-semibold text-red-700 dark:text-red-400">
             Zone dangereuse
           </h2>
-          <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+          <p className="mb-3 text-sm text-muted">
             La suppression de votre compte est définitive. Toutes vos données seront effacées.
           </p>
           {!showDeleteConfirm ? (
             <button
               type="button"
               onClick={() => setShowDeleteConfirm(true)}
-              className="rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-800 dark:bg-gray-900 dark:text-red-400 dark:hover:bg-red-950/30"
+              className="rounded-md border border-red-300 bg-surface px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
             >
               Supprimer mon compte
             </button>
@@ -227,7 +227,7 @@ export default function SettingsPage() {
                   type="button"
                   onClick={() => setShowDeleteConfirm(false)}
                   disabled={deleting}
-                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                  className="rounded-md border border-hairline-strong bg-surface px-4 py-2 text-sm font-medium text-muted hover:bg-fill-subtle"
                 >
                   Annuler
                 </button>
@@ -237,9 +237,9 @@ export default function SettingsPage() {
         </section>
 
         {/* RGPD: Data export & legal links */}
-        <section className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:p-5">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Vos droits RGPD</h2>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        <section className="rounded-xl border border-hairline bg-surface p-4 sm:p-5">
+          <h2 className="text-lg font-semibold text-content">Vos droits RGPD</h2>
+          <p className="mt-1 text-sm text-muted">
             Conformément au RGPD, vous pouvez exporter ou supprimer vos données.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -260,13 +260,13 @@ export default function SettingsPage() {
                   setError("Erreur lors de l'export de vos données");
                 }
               }}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              className="rounded-md border border-hairline-strong bg-surface px-4 py-2 text-sm font-medium text-muted hover:bg-fill-subtle"
             >
               Exporter mes données (JSON)
             </button>
             <a
               href="/confidentialite"
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              className="rounded-md border border-hairline-strong bg-surface px-4 py-2 text-sm font-medium text-muted hover:bg-fill-subtle"
             >
               Politique de confidentialité
             </a>
@@ -275,9 +275,9 @@ export default function SettingsPage() {
 
         {/* Informations légales — regroupées ici (remplace l'ancien footer
             flottant global au-dessus de la tab bar, cf. refonte chrome mobile). */}
-        <section className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:p-5">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Informations légales</h2>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        <section className="rounded-xl border border-hairline bg-surface p-4 sm:p-5">
+          <h2 className="text-lg font-semibold text-content">Informations légales</h2>
+          <p className="mt-1 text-sm text-muted">
             Notre manifeste et les documents qui encadrent Libre.
           </p>
           <ul className="mt-3 divide-y divide-gray-200 dark:divide-gray-700">
@@ -290,10 +290,10 @@ export default function SettingsPage() {
               <li key={link.href}>
                 <a
                   href={link.href}
-                  className="flex min-h-11 items-center justify-between gap-2 py-3 text-sm font-medium text-gray-700 transition-colors hover:text-coral dark:text-gray-300 dark:hover:text-coral-light"
+                  className="flex min-h-11 items-center justify-between gap-2 py-3 text-sm font-medium text-muted transition-colors hover:text-coral dark:hover:text-coral-light"
                 >
                   {link.label}
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="text-gray-400 dark:text-gray-500">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="text-muted">
                     <path d="M9 18l6-6-6-6" />
                   </svg>
                 </a>

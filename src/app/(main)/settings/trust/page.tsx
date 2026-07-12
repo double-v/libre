@@ -120,7 +120,7 @@ export default function TrustSettingsPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-600">Chargement…</p>
+        <p className="text-muted">Chargement…</p>
       </div>
     );
   }
@@ -132,7 +132,7 @@ export default function TrustSettingsPage() {
           type="button"
           onClick={() => router.back()}
           aria-label="Retour"
-          className="rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-coral"
+          className="rounded-full p-2 hover:bg-fill-subtle focus:outline-none focus:ring-2 focus:ring-coral"
         >
           <svg
             width="20"
@@ -146,7 +146,7 @@ export default function TrustSettingsPage() {
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Mon Cercle</h1>
+        <h1 className="text-2xl font-bold text-content">Mon Cercle</h1>
       </div>
 
       {error && (
@@ -162,7 +162,7 @@ export default function TrustSettingsPage() {
       <div
         role="tablist"
         aria-label="Sections des paramètres de confiance"
-        className="mb-4 flex rounded-xl border border-gray-200 bg-white p-1"
+        className="mb-4 flex rounded-xl border border-hairline bg-surface p-1"
       >
         <TabButton
           active={tab === 'cercle'}
@@ -223,7 +223,7 @@ function TabButton({
       className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-coral ${
         active
           ? 'bg-coral text-white'
-          : 'text-gray-700 hover:bg-gray-50'
+          : 'text-muted hover:bg-fill-subtle'
       }`}
     >
       {label}
@@ -246,17 +246,17 @@ function CercleTab({
 }) {
   if (contacts.length === 0) {
     return (
-      <section className="rounded-xl border border-gray-200 bg-white p-6 text-center">
+      <section className="rounded-xl border border-hairline bg-surface p-6 text-center">
         <div
           className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-coral/10"
           aria-hidden="true"
         >
           <span className="text-2xl">🤝</span>
         </div>
-        <h2 className="mb-1 text-lg font-semibold text-gray-900">
+        <h2 className="mb-1 text-lg font-semibold text-content">
           Tu n&apos;as pas encore de Cercle
         </h2>
-        <p className="mb-4 text-sm text-gray-600">
+        <p className="mb-4 text-sm text-muted">
           C&apos;est ton filet de sécurité pour tes futures rencontres.
         </p>
         <button
@@ -272,18 +272,18 @@ function CercleTab({
 
   return (
     <section className="space-y-3">
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-muted">
         {contacts.length} contact{contacts.length > 1 ? 's' : ''} de confiance
       </p>
       <ul className="space-y-2">
         {contacts.map((c) => (
           <li
             key={c.id}
-            className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3"
+            className="flex items-center gap-3 rounded-xl border border-hairline bg-surface p-3"
           >
             <Avatar url={c.contact.avatarUrl} name={c.contact.displayName} />
             <div className="flex-1">
-              <p className="font-medium text-gray-900">
+              <p className="font-medium text-content">
                 {c.contact.displayName}
                 {c.contact.isVerified && (
                   <span
@@ -300,7 +300,7 @@ function CercleTab({
               type="button"
               onClick={() => onRemove(c.id)}
               aria-label={`Retirer ${c.contact.displayName} du Cercle`}
-              className="rounded-md p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-coral"
+              className="rounded-md p-1 text-muted hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-coral"
             >
               <svg
                 width="20"
@@ -362,9 +362,9 @@ function NiveauTab({ trust }: { trust: TrustLevelResponse | null }) {
 
   return (
     <section className="space-y-5">
-      <div className="flex flex-col items-center rounded-xl border border-gray-200 bg-white p-6">
+      <div className="flex flex-col items-center rounded-xl border border-hairline bg-surface p-6">
         <TrustBadge band={band} size="lg" showLabel />
-        <p className="mt-3 text-sm text-gray-600">
+        <p className="mt-3 text-sm text-muted">
           Score actuel : <span className="font-semibold text-coral-dark">{score}</span>
         </p>
       </div>
@@ -388,12 +388,12 @@ function NiveauTab({ trust }: { trust: TrustLevelResponse | null }) {
                     ? i === currentIdx
                       ? 'bg-coral ring-4 ring-coral/20'
                       : 'bg-coral'
-                    : 'bg-gray-200'
+                    : 'bg-fill-subtle'
                 }`}
                 aria-hidden="true"
               />
               <span
-                className={`text-xs ${reached ? 'font-semibold text-coral-dark' : 'text-gray-500'}`}
+                className={`text-xs ${reached ? 'font-semibold text-coral-dark' : 'text-muted'}`}
               >
                 {BAND_LABEL[b]}
               </span>
@@ -403,8 +403,8 @@ function NiveauTab({ trust }: { trust: TrustLevelResponse | null }) {
       </ol>
 
       {/* Facteurs */}
-      <div className="rounded-xl border border-gray-200 bg-white p-4">
-        <h2 className="mb-2 text-sm font-semibold text-gray-900">
+      <div className="rounded-xl border border-hairline bg-surface p-4">
+        <h2 className="mb-2 text-sm font-semibold text-content">
           Comment ton score est calculé
         </h2>
         <ul className="space-y-2">
@@ -413,10 +413,10 @@ function NiveauTab({ trust }: { trust: TrustLevelResponse | null }) {
               key={f.label}
               className="flex items-center justify-between text-sm"
             >
-              <span className="flex items-center gap-2 text-gray-700">
+              <span className="flex items-center gap-2 text-muted">
                 <span
                   aria-hidden="true"
-                  className={f.achieved ? 'text-coral' : 'text-gray-300'}
+                  className={f.achieved ? 'text-coral' : 'text-muted'}
                 >
                   {f.achieved ? '✓' : '○'}
                 </span>
@@ -428,7 +428,7 @@ function NiveauTab({ trust }: { trust: TrustLevelResponse | null }) {
                     ? 'text-coral-dark'
                     : f.delta < 0
                       ? 'text-red-600'
-                      : 'text-gray-400'
+                      : 'text-muted'
                 }`}
               >
                 {f.delta > 0 ? `+${f.delta}` : f.delta}
@@ -545,17 +545,17 @@ function AddContactSheet({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg rounded-t-2xl bg-white p-5 shadow-lg sm:rounded-2xl"
+        className="w-full max-w-lg rounded-t-2xl bg-surface p-5 shadow-lg sm:rounded-2xl"
       >
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-content">
             Ajouter un contact
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Fermer"
-            className="rounded-full p-1 text-gray-400 hover:bg-gray-100"
+            className="rounded-full p-1 text-muted hover:bg-fill-subtle"
           >
             <svg
               width="20"
@@ -571,7 +571,7 @@ function AddContactSheet({
           </button>
         </div>
 
-        <p className="mb-3 text-sm text-gray-600">
+        <p className="mb-3 text-sm text-muted">
           Choisis parmi les utilisateurs avec qui tu as déjà matché.
         </p>
 
@@ -582,7 +582,7 @@ function AddContactSheet({
         )}
 
         {loadingMatches ? (
-          <p className="py-6 text-center text-sm text-gray-500">Chargement…</p>
+          <p className="py-6 text-center text-sm text-muted">Chargement…</p>
         ) : matches && matches.length > 0 ? (
           <ul className="max-h-80 space-y-2 overflow-y-auto">
             {matches.map((m) => {
@@ -590,10 +590,10 @@ function AddContactSheet({
               return (
                 <li
                   key={m.id}
-                  className="flex items-center gap-3 rounded-lg border border-gray-200 p-2"
+                  className="flex items-center gap-3 rounded-lg border border-hairline p-2"
                 >
                   <Avatar url={m.avatarUrl} name={m.displayName} />
-                  <span className="flex-1 font-medium text-gray-900">
+                  <span className="flex-1 font-medium text-content">
                     {m.displayName}
                     {m.isVerified && (
                       <span className="ml-1 text-coral" title="vérifié">
@@ -618,7 +618,7 @@ function AddContactSheet({
             })}
           </ul>
         ) : (
-          <p className="py-6 text-center text-sm text-gray-500">
+          <p className="py-6 text-center text-sm text-muted">
             Pas encore de match — fais tes premières rencontres pour pouvoir
             ajouter des contacts de confiance.
           </p>

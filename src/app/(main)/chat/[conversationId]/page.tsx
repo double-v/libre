@@ -386,7 +386,7 @@ export default function ChatConversationPage() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-gray-600 dark:text-gray-400">Chargement...</p>
+        <p className="text-muted">Chargement...</p>
       </div>
     );
   }
@@ -394,7 +394,7 @@ export default function ChatConversationPage() {
   return (
     <div className="mx-auto flex h-[calc(100vh-4rem)] max-w-lg flex-col">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-gray-200 p-4 dark:border-gray-800">
+      <div className="flex items-center gap-3 border-b border-hairline p-4">
         <div
           className="flex flex-1 min-w-0 cursor-pointer items-center gap-3"
           onClick={() => otherUser && setSelectedUserId(otherUser.id)}
@@ -409,11 +409,11 @@ export default function ChatConversationPage() {
               unoptimized
             />
           ) : (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-300 text-sm font-bold dark:bg-gray-600">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-fill-subtle text-sm font-bold">
               {otherUser?.displayName?.[0] ?? '?'}
             </div>
           )}
-          <h1 className="truncate text-lg font-bold text-gray-900 dark:text-gray-100">
+          <h1 className="truncate text-lg font-bold text-content">
             {otherUser?.displayName ?? 'Utilisateur'}
           </h1>
         </div>
@@ -452,22 +452,22 @@ export default function ChatConversationPage() {
         {nextCursor &&
           (loadingOlder ? (
             <div className="space-y-2 pb-1" aria-hidden="true">
-              <div className="h-8 w-2/3 animate-pulse rounded-2xl bg-gray-100 motion-reduce:animate-none dark:bg-gray-800" />
-              <div className="ml-auto h-8 w-1/2 animate-pulse rounded-2xl bg-gray-100 motion-reduce:animate-none dark:bg-gray-800" />
+              <div className="h-8 w-2/3 animate-pulse rounded-2xl bg-fill-subtle motion-reduce:animate-none" />
+              <div className="ml-auto h-8 w-1/2 animate-pulse rounded-2xl bg-fill-subtle motion-reduce:animate-none" />
             </div>
           ) : (
             <div className="flex justify-center pb-1">
               <button
                 type="button"
                 onClick={loadOlder}
-                className="rounded-full border border-gray-300 px-4 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 focus-visible:outline-none focus-visible:shadow-focus dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                className="rounded-full border border-hairline-strong px-4 py-1.5 text-xs font-medium text-muted hover:bg-fill-subtle focus-visible:outline-none focus-visible:shadow-focus"
               >
                 Charger les messages plus anciens
               </button>
             </div>
           ))}
         {messages.length === 0 && (
-          <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-center text-sm text-muted">
             Commencez la conversation !
           </p>
         )}
@@ -479,11 +479,11 @@ export default function ChatConversationPage() {
           if (msg.deletedAt) {
             return (
               <div key={msg.id} className={`flex ${isSent ? 'justify-end' : 'justify-start'}`}>
-                <div className="max-w-[80%] rounded-2xl bg-gray-100 px-4 py-2 dark:bg-gray-800">
-                  <p className="break-words text-sm italic text-gray-500 dark:text-gray-400">
+                <div className="max-w-[80%] rounded-2xl bg-fill-subtle px-4 py-2">
+                  <p className="break-words text-sm italic text-muted">
                     Message supprimé
                   </p>
-                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                  <p className="mt-1 text-xs text-muted">
                     {formatTime(msg.createdAt)}
                   </p>
                 </div>
@@ -519,7 +519,7 @@ export default function ChatConversationPage() {
                       e.stopPropagation();
                       setMenuOpenId((prev) => (prev === msg.id ? null : msg.id));
                     }}
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-gray-400 opacity-0 transition-opacity duration-[var(--motion-fast)] hover:bg-gray-100 hover:text-gray-600 focus-visible:opacity-100 focus-visible:outline-none focus-visible:shadow-focus group-hover:opacity-100 motion-reduce:transition-none dark:hover:bg-gray-800 dark:hover:text-gray-300"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted opacity-0 transition-opacity duration-[var(--motion-fast)] hover:bg-fill-subtle hover:text-muted focus-visible:opacity-100 focus-visible:outline-none focus-visible:shadow-focus group-hover:opacity-100 motion-reduce:transition-none"
                   >
                     <span aria-hidden="true">⋯</span>
                   </button>
@@ -527,7 +527,7 @@ export default function ChatConversationPage() {
                     <div
                       role="menu"
                       onClick={(e) => e.stopPropagation()}
-                      className="absolute bottom-9 right-0 z-10 min-w-[8rem] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-pop dark:border-gray-700 dark:bg-gray-900"
+                      className="absolute bottom-9 right-0 z-10 min-w-[8rem] overflow-hidden rounded-lg border border-hairline bg-surface shadow-pop"
                     >
                       <button
                         type="button"
@@ -545,15 +545,15 @@ export default function ChatConversationPage() {
                 className={`max-w-[80%] rounded-2xl px-4 py-2 ${
                   isSent
                     ? 'bg-terracotta text-white dark:bg-coral dark:text-white'
-                    : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
+                    : 'bg-fill-subtle text-content'
                 }`}
               >
                 <p className="break-words text-sm">{msg.content}</p>
                 <p
                   className={`mt-1 text-xs ${
                     isSent
-                      ? 'text-white/60 dark:text-gray-500'
-                      : 'text-gray-600 dark:text-gray-400'
+                      ? 'text-white/60'
+                      : 'text-muted'
                   }`}
                 >
                   {formatTime(msg.createdAt)}
@@ -566,7 +566,7 @@ export default function ChatConversationPage() {
       </div>
 
       {/* Input area */}
-      <div className="border-t border-gray-200 p-4 dark:border-gray-800">
+      <div className="border-t border-hairline p-4">
         <form onSubmit={handleSend} aria-label="Envoyer un message" className="flex gap-2">
           <label htmlFor="chat-input" className="sr-only">
             Votre message
@@ -579,7 +579,7 @@ export default function ChatConversationPage() {
             placeholder="Message..."
             maxLength={1000}
             disabled={sending}
-            className="flex-1 rounded-full border border-gray-300 px-4 py-2 text-sm focus:border-coral focus:outline-none focus:ring-coral disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="flex-1 rounded-full border border-hairline-strong px-4 py-2 text-sm focus:border-coral focus:outline-none focus:ring-coral disabled:opacity-50"
           />
           <button
             type="submit"

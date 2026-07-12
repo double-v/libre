@@ -323,7 +323,7 @@ export default function DiscoverPage() {
     <div className="mx-auto max-w-lg px-4 py-6">
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Découvrir</h1>
+        <h1 className="text-2xl font-bold text-content">Découvrir</h1>
         {isFeed && (
           <Button
             type="button"
@@ -344,7 +344,7 @@ export default function DiscoverPage() {
       </div>
 
       {/* Sélecteur segmenté — le cœur de la navigation de découverte */}
-      <div className="mb-4 flex rounded-xl bg-gray-100 p-1 dark:bg-gray-800" role="tablist">
+      <div className="mb-4 flex rounded-xl bg-fill-subtle p-1" role="tablist">
         {SEGMENTS.map(({ key, label }) => (
           <button
             key={key}
@@ -353,8 +353,8 @@ export default function DiscoverPage() {
             onClick={() => setSegment(key)}
             className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
               segment === key
-                ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
-                : 'text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                ? 'bg-surface text-content shadow-sm'
+                : 'text-muted hover:text-muted'
             }`}
           >
             {label}
@@ -371,10 +371,10 @@ export default function DiscoverPage() {
 
       {/* Rayon de recherche (segment à proximité) */}
       {segment === 'nearby' && (
-        <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+        <div className="mb-4 rounded-xl border border-hairline bg-surface p-4">
           <label
             htmlFor="nearby-radius"
-            className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400"
+            className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted"
           >
             Rayon de recherche : {radiusKm} km
           </label>
@@ -388,9 +388,9 @@ export default function DiscoverPage() {
             disabled={radiusSaving}
             onChange={(e) => handleRadiusChange(RADIUS_STEPS[Number(e.target.value)])}
             aria-valuetext={`${radiusKm} kilomètres`}
-            className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-gray-200 accent-coral disabled:opacity-50 dark:bg-gray-700"
+            className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-fill-subtle accent-coral disabled:opacity-50"
           />
-          <div className="mt-1 flex justify-between text-xs text-gray-500 dark:text-gray-400">
+          <div className="mt-1 flex justify-between text-xs text-muted">
             {RADIUS_STEPS.map((step) => (
               <span key={step}>{step} km</span>
             ))}
@@ -407,7 +407,7 @@ export default function DiscoverPage() {
         </div>
       ) : errorKind !== 'none' && visibleUsers.length === 0 ? (
         <div className="animate-fade-in rounded-xl border border-coral/20 bg-blush p-6 text-center dark:border-coral/20 dark:bg-coral/5">
-          <p className="text-gray-700 dark:text-gray-300">
+          <p className="text-muted">
             {errorKind === 'rate'
               ? 'Doucement 🙂 tu vas un peu vite. Réessaie dans quelques secondes.'
               : 'Impossible de charger les profils pour le moment.'}
@@ -420,7 +420,7 @@ export default function DiscoverPage() {
         </div>
       ) : segment === 'nearby' && nearbyReason === 'geoloc_required' ? (
         <div className="animate-fade-in rounded-xl border border-dashed border-coral/40 bg-blush p-6 text-center dark:border-coral/30 dark:bg-coral/5">
-          <p className="mb-4 text-gray-700 dark:text-gray-300">
+          <p className="mb-4 text-muted">
             Active ta géoloc pour voir les célibataires près de toi
           </p>
           <Button type="button" onClick={handleActivateGeoloc} loading={geoRequesting}>
@@ -433,8 +433,8 @@ export default function DiscoverPage() {
           )}
         </div>
       ) : segment === 'nearby' && nearbyReason === 'empty_feed' ? (
-        <div className="animate-fade-in rounded-xl border border-gray-200 bg-white p-6 text-center dark:border-gray-700 dark:bg-gray-900">
-          <p className="text-gray-600 dark:text-gray-400">
+        <div className="animate-fade-in rounded-xl border border-hairline bg-surface p-6 text-center">
+          <p className="text-muted">
             Personne dans un rayon de {radiusKm} km. Élargis ta recherche ou reviens plus tard.
           </p>
         </div>
