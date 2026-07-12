@@ -9,6 +9,10 @@ const MODES: { id: Mode; label: string }[] = [
   { id: 'dark', label: 'Sombre' },
 ];
 
+// Thèmes prévisualisés dans leur mode sombre (identité dominante). Miroir du
+// ThemeMenu (cf. src/components/ui/ThemeMenu.tsx).
+const DARK_IDENTITY = new Set(['cartoon', 'arcade', 'retro']);
+
 /**
  * Réglage d'apparence utilisateur : mode (clair/sombre/auto) × thème.
  *
@@ -78,9 +82,10 @@ export default function AppearanceSettings() {
               <span
                 data-theme={t.id}
                 aria-hidden="true"
-                className="mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full border border-hairline bg-surface"
+                className={`${DARK_IDENTITY.has(t.id) ? 'dark ' : ''}relative mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full border border-hairline bg-background`}
               >
-                <span className="block h-full w-1/2 translate-x-full bg-coral" />
+                <span className="absolute inset-y-0 right-0 w-1/2 bg-coral" />
+                <span className="absolute left-[16%] top-[16%] h-[30%] w-[30%] rounded-full bg-gold" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-medium text-content">

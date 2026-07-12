@@ -512,9 +512,11 @@ theming (mode **et** thème réunis). Remplace les trois sélecteurs historiques
   (mobile, `pb-safe`). Deux sections :
   1. **Mode** — segment 3 choix *Clair / Sombre / Auto* (`aria-pressed`),
      application instantanée.
-  2. **Thème** — grille de cartes (une par `SITE_THEMES`) : **mini-aperçu**
-     (2 swatches = `--surface` + `--coral` du thème, via `data-theme` local sur la
-     vignette), libellé, état sélectionné (anneau coral + coche). Application
+  2. **Thème** — grille de cartes (une par `SITE_THEMES`) : **mini-aperçu des
+     couleurs dominantes** (fond `--background` ambiant + accent `--coral` +
+     pointe `--gold`), via `data-theme` local sur la vignette — cartoon/arcade/
+     retro prévisualisés en **sombre** (leur identité dominante), libre/libre-warm
+     en clair. Libellé, état sélectionné (anneau coral + coche). Application
      **optimiste** (le `<html>` re-skin au clic, avant toute I/O).
 - **Invitation guest** (session absente) : ligne discrète en pied —
   « Crée un compte pour garder ton thème sur tous tes appareils » → `/register`,
