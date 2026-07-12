@@ -96,12 +96,12 @@ const onRefuseDe = [
 
 export default function ManifestoPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100">
+    <div className="flex min-h-screen flex-col bg-background text-content">
       {/* Skip-link : déjà couvert par le layout racine, on garde une
           ancre #main-content pour la navigation clavier cohérente. */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-coral focus:shadow-md dark:focus:bg-gray-900"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-surface focus:px-4 focus:py-2 focus:text-coral focus:shadow-md"
       >
         Aller au contenu principal
       </a>
@@ -164,7 +164,7 @@ export default function ManifestoPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/login"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+            className="text-sm font-medium text-muted hover:text-content"
           >
             Se connecter
           </Link>
@@ -187,7 +187,7 @@ export default function ManifestoPage() {
             <h1 className="mb-4 text-4xl font-extrabold tracking-tight sm:text-5xl">
               Rencontrer ne devrait rien coûter.
             </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-300">
+            <p className="text-lg text-muted">
               Et pourtant, en 2026, l&rsquo;amour se paye en abonnements, en
               boosts et en données personnelles. On a décidé de faire
               autrement. Voici comment, et pourquoi.
@@ -203,11 +203,11 @@ export default function ManifestoPage() {
           <div className="mx-auto max-w-2xl">
             <h2
               id="libres-de"
-              className="mb-2 text-3xl font-bold text-gray-900 dark:text-gray-100"
+              className="mb-2 text-3xl font-bold text-content"
             >
               On est libres de&hellip;
             </h2>
-            <p className="mb-8 text-base text-gray-600 dark:text-gray-400">
+            <p className="mb-8 text-base text-muted">
               Ce que vous pouvez faire sur Libre, sans que personne ne vous
               demande votre carte bleue.
             </p>
@@ -215,10 +215,10 @@ export default function ManifestoPage() {
               {onEstLibresDe.map((item) => (
                 <li
                   key={item.title}
-                  className="rounded-xl bg-white/70 p-5 shadow-sm dark:bg-gray-900/40"
+                  className="rounded-xl bg-surface/70 p-5 shadow-sm"
                 >
                   <p className="font-semibold text-coral">{item.title}</p>
-                  <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+                  <p className="mt-1 text-sm text-muted">
                     {item.detail}
                   </p>
                 </li>
@@ -235,11 +235,11 @@ export default function ManifestoPage() {
           <div className="mx-auto max-w-2xl">
             <h2
               id="refuse-de"
-              className="mb-2 text-3xl font-bold text-gray-900 dark:text-gray-100"
+              className="mb-2 text-3xl font-bold text-content"
             >
               On refuse de&hellip;
             </h2>
-            <p className="mb-8 text-base text-gray-600 dark:text-gray-400">
+            <p className="mb-8 text-base text-muted">
               Les pratiques qu&rsquo;on a vues ailleurs, et qu&rsquo;on ne
               reproduira pas. Même si ça nous coûte des utilisateurs. Même si
               ça nous coûte des investisseurs.
@@ -248,12 +248,12 @@ export default function ManifestoPage() {
               {onRefuseDe.map((item) => (
                 <li
                   key={item.title}
-                  className="rounded-xl border-l-4 border-coral bg-white/60 p-5 shadow-sm dark:bg-gray-900/30"
+                  className="rounded-xl border-l-4 border-coral bg-surface/60 p-5 shadow-sm"
                 >
-                  <p className="font-semibold text-gray-900 dark:text-gray-100">
+                  <p className="font-semibold text-content">
                     {item.title}
                   </p>
-                  <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+                  <p className="mt-1 text-sm text-muted">
                     {item.detail}
                   </p>
                 </li>
@@ -270,22 +270,22 @@ export default function ManifestoPage() {
           <div className="mx-auto max-w-2xl">
             <h2
               id="finance"
-              className="mb-2 text-3xl font-bold text-gray-900 dark:text-gray-100"
+              className="mb-2 text-3xl font-bold text-content"
             >
               Comment on finance la maison
             </h2>
-            <p className="mb-6 text-base text-gray-600 dark:text-gray-400">
+            <p className="mb-6 text-base text-muted">
               Si on ne facture rien aux utilisateurs, qui paie la note ? C&rsquo;est
               la question piège qu&rsquo;on nous pose le plus souvent. Réponse
               honnête&nbsp;: quelques personnes de bonne volonté, et beaucoup
               de dons.
             </p>
             <div className="space-y-4">
-              <div className="rounded-xl bg-white/70 p-5 shadow-sm dark:bg-gray-900/40">
-                <p className="font-semibold text-gray-900 dark:text-gray-100">
+              <div className="rounded-xl bg-surface/70 p-5 shadow-sm">
+                <p className="font-semibold text-content">
                   💛 Des dons, c&rsquo;est tout
                 </p>
-                <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+                <p className="mt-1 text-sm text-muted">
                   Pas de VC, pas de fonds levés, pas de prêteur. Quand on a
                   besoin d&rsquo;un serveur en plus, on lance un appel aux
                   dons. Quand les dons dépassent, on garde le surplus pour le
@@ -293,22 +293,22 @@ export default function ManifestoPage() {
                   marche.
                 </p>
               </div>
-              <div className="rounded-xl bg-white/70 p-5 shadow-sm dark:bg-gray-900/40">
-                <p className="font-semibold text-gray-900 dark:text-gray-100">
+              <div className="rounded-xl bg-surface/70 p-5 shadow-sm">
+                <p className="font-semibold text-content">
                   📖 Budget publié tous les 6 mois
                 </p>
-                <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+                <p className="mt-1 text-sm text-muted">
                   Hébergement, base de données, temps bénévole, frais
                   juridiques&hellip; on met les chiffres en ligne, en brut.
                   Pas de « post-pub », pas de slide corporate. Vous voyez ce
                   qu&rsquo;on voit.
                 </p>
               </div>
-              <div className="rounded-xl bg-white/70 p-5 shadow-sm dark:bg-gray-900/40">
-                <p className="font-semibold text-gray-900 dark:text-gray-100">
+              <div className="rounded-xl bg-surface/70 p-5 shadow-sm">
+                <p className="font-semibold text-content">
                   🙅 Aucun « plan B »
                 </p>
-                <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+                <p className="mt-1 text-sm text-muted">
                   On ne vous vendra pas un abonnement &laquo; en
                   complément &raquo;. On ne lancera pas une version &laquo;
                   Pro &raquo; payante. On ne mettra pas de pub
@@ -340,7 +340,7 @@ export default function ManifestoPage() {
             <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 href="/register"
-                className="rounded-full bg-white px-8 py-3 text-sm font-bold text-terracotta transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-coral"
+                className="rounded-full bg-white px-8 py-3 text-sm font-bold text-terracotta transition-colors hover:bg-blush focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-coral"
               >
                 Créer mon profil gratuitement
               </Link>
@@ -365,27 +365,27 @@ export default function ManifestoPage() {
 
       {/* ====== FOOTER ====== */}
       <footer className="px-6 py-8 text-center">
-        <div className="mb-3 flex items-center justify-center gap-4 text-xs text-gray-400">
+        <div className="mb-3 flex items-center justify-center gap-4 text-xs text-muted">
           <Link
             href="/cgu"
-            className="hover:text-gray-600 dark:hover:text-gray-300"
+            className="hover:text-muted"
           >
             Conditions générales d&rsquo;utilisation
           </Link>
           <Link
             href="/confidentialite"
-            className="hover:text-gray-600 dark:hover:text-gray-300"
+            className="hover:text-muted"
           >
             Politique de confidentialité
           </Link>
           <Link
             href="/mentions-legales"
-            className="hover:text-gray-600 dark:hover:text-gray-300"
+            className="hover:text-muted"
           >
             Mentions légales
           </Link>
         </div>
-        <p className="text-xs text-gray-300 dark:text-gray-600">
+        <p className="text-xs text-muted">
           Presse &amp; médias : contact@getlibre.fr
         </p>
       </footer>

@@ -41,8 +41,8 @@ export default function ForgotPasswordPage() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Mot de passe oublié</h1>
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        <h1 className="text-2xl font-bold text-content">Mot de passe oublié</h1>
+        <p className="mt-1 text-sm text-muted">
           Entrez votre email pour recevoir un lien de réinitialisation.
         </p>
       </div>
@@ -80,7 +80,7 @@ export default function ForgotPasswordPage() {
         </form>
       )}
 
-      <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+      <p className="text-center text-sm text-muted">
         <Link href="/login" className="font-medium text-coral hover:text-terracotta">
           Retour à la connexion
         </Link>

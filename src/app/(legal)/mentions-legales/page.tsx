@@ -9,7 +9,7 @@ export default function MentionsLegalesPage() {
   return (
     <article className="prose prose-gray dark:prose-invert max-w-none">
       <h1>Mentions légales</h1>
-      <p className="text-sm text-gray-500 dark:text-gray-400">
+      <p className="text-sm text-muted">
         Dernière mise à jour : 1er juin 2026
       </p>
 

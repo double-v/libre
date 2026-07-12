@@ -74,7 +74,7 @@ export default function FaqPage() {
   return (
     <article className="prose prose-gray dark:prose-invert max-w-none">
       <h1>Foire aux questions</h1>
-      <p className="text-sm text-gray-500 dark:text-gray-400">Le Cercle de Confiance</p>
+      <p className="text-sm text-muted">Le Cercle de Confiance</p>
 
       {FAQ.map(({ q, a }) => (
         <section key={q}>
@@ -84,7 +84,7 @@ export default function FaqPage() {
       ))}
 
       <hr />
-      <p className="text-sm text-gray-500 dark:text-gray-400">
+      <p className="text-sm text-muted">
         Un souci technique ? Vois aussi{' '}
         <Link href="/faq/session-expiree" className="text-coral hover:underline dark:text-coral-light">
           « Session expirée » — que faire

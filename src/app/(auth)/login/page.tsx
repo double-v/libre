@@ -57,7 +57,7 @@ function LoginForm() {
 
   if (status === 'loading') {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center text-gray-500">
+      <div className="flex min-h-[60vh] items-center justify-center text-muted">
         Chargement…
       </div>
     );
@@ -105,7 +105,7 @@ function LoginForm() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Se connecter</h1>
+        <h1 className="text-2xl font-bold text-content">Se connecter</h1>
       </div>
 
       {error && (
@@ -214,14 +214,14 @@ function LoginForm() {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+      <p className="text-center text-sm text-muted">
         Pas encore de compte ?{' '}
         <Link href="/register" className="font-medium text-coral hover:text-terracotta">
           Créer un compte
         </Link>
       </p>
 
-      <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+      <p className="text-center text-sm text-muted">
         <Link href="/forgot-password" className="font-medium text-coral hover:text-terracotta">
           Mot de passe oublié ?
         </Link>
