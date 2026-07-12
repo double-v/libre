@@ -261,6 +261,79 @@ Base unit: 4px.
 - **Main app**: Single panel with bottom tab nav, `max-w-lg`
 - **Marketing**: Full-width bands alternating surfaces
 
+## Shell unifié (#273)
+
+> **En cours** (épic #273). Objectif : un **seul** shell (nav + colonne centrale +
+> tokens), issu du design validé de la home, consommé par **toutes** les zones — en
+> remplacement des ~5 shells ad hoc actuels (`LobbyNav`, `TopNav`, nav maison de
+> `/manifesto`, largeurs `max-w-*` dispersées). Migration progressive zone par
+> zone ; `TopNav`/`LobbyNav` retirés au cleanup (#283).
+
+### Principes
+
+- **Une structure, deux variantes de session.** Le shell est unique ; seule la
+  **variante** de nav change (guest vs connecté). Jamais deux systèmes de nav.
+- **Theme-aware, jamais froid.** On reprend la *structure* de la home (barre sticky
+  translucide, colonne centrale, respiration), mais on respecte le mode clair/sombre
+  (PRODUCT.md, principe 2 : « pas de neutre froid par défaut »). Le sombre-chaud
+  « always dark » reste une **signature home-only**.
+- **Densité douce** (PRODUCT.md, principe 5) : les pages contenu respirent large,
+  l'app connectée reste compacte et mobile-first.
+
+### `SiteNav` — nav unique (composant DS, #276)
+
+Barre **sticky** translucide thémée (`bg-surface/80 backdrop-blur`, `border-hairline`,
+`pt-safe`), marque cœur-soleil → `/` (guest) ou `/discover` (connecté). Deux variantes :
+
+- **guest** : liens publics (*Manifesto*, *Se connecter*) + CTA **Créer un compte**.
+- **connecté** : `ThemeToggle` (Mode) + *Admin* (si `ADMIN`) + *Paramètres*. La
+  **bottom tab bar** reste la nav de sections de l'app — décision : on **ne fusionne
+  pas** la tab bar dans la barre du haut, les deux coexistent.
+
+Remplace `LobbyNav`, `TopNav` et la nav ad hoc de `/manifesto`. A11y : landmark
+`<nav aria-label>`, focus ring coral, cibles ≥ 44px.
+
+**Contrôle du thème (règle figée, session 2026-07-12)** : le nav ne porte que le
+`ThemeToggle` (axe **Mode**) ; le **choix du thème** vit dans les Paramètres
+(`AppearanceSettings`). La landing publique n'expose **aucun** sélecteur (thème =
+défaut du site). `ThemeMenu` (popover complet) ne subsiste que là où il n'y a pas
+d'accès Paramètres — à réconcilier en #281.
+
+### Échelle de largeurs (centralisée, #277)
+
+Une seule source de vérité (`SiteShell` / utilitaire), en remplacement des `max-w-*`
+dispersés (448 / 512 / 672 / 768 / 1080 aujourd'hui) :
+
+| Largeur | Valeur | Usage |
+|---------|--------|-------|
+| `content` | ~1080px | pages contenu larges (home, sections marketing) |
+| `reading` | ~720px | texte long centré (manifesto, légal) |
+| `app` | `max-w-lg` (512px) | app connectée mobile-first (feed, messages, profil) |
+
+Décision (#273) : les pages *contenu* adoptent `content`/`reading` ; l'app garde
+`app` (mobile-first, UX cartes/swipe) **dans le même shell/nav/tokens**. Remplace la
+grille marketing `max-w-2xl` de la section **Layout** ci-dessus une fois migré.
+
+### Ambiance & décor
+
+- **Décor animé** (blobs, skyline, personnages) = **home-only**. Les sous-pages
+  reprennent la *structure* + les tokens, **pas** le décor (focus, perf).
+- **Home always-dark** : la home reste sombre-chaude même en mode clair global
+  (signature de présentation) ; partout ailleurs, le shell suit le mode.
+
+### Garde-fous (toute zone × mode)
+
+- Rendu vérifié **light ET dark** sur les **5 thèmes** ; contraste WCAG AA.
+- Chaque animation a son équivalent `prefers-reduced-motion`.
+- Cibles ≥ 44px ; focus ring coral ; **tokens only** (zéro hex / `bg-gray-*` inline).
+- Copy FR.
+
+### Questions ouvertes (tranchées au fil des sous-tickets)
+
+- Largeur `content` : valeur unique ~1080px, ou échelle fine reprise de la home
+  (hero 1180 / sections 1080) ? (#277)
+- `/manifesto` & légal : structure seule, ou une touche de décor discrète ? (#278 / #279)
+
 ## Shapes
 
 ### Border Radius
