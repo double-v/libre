@@ -553,6 +553,7 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 | `ThemeToggle` | light, dark, auto | icon-button (cycle Mode) | boutons Mode ad hoc dans les headers |
 | `TopNav` | guest, connecté, admin | — | Header inline `(main)`, `PublicHeader`, header lobby |
 | `SiteShell` | — | content, reading, app | Les `mx-auto max-w-* px-*` ad hoc dispersés (448/512/672/768/1080) |
+| `SiteNav` | guest, connecté | guest, authed (× width) | `LobbyNav`, `TopNav`, nav ad hoc de `/manifesto` |
 
 ### Règles
 
@@ -561,6 +562,28 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 - Tous ont un équivalent dark mode.
 - Tous ont des props ARIA cohérentes (cf. section Accessibility de `PRODUCT.md`).
 - Aucun n'utilise `bg-gray-*` Tailwind brut : on passe par les tokens coral/blush/sand/abricot/miel/rose-poudré.
+
+### SiteNav (`src/components/ui/SiteNav.tsx`)
+
+Nav **unique** du shell unifié (#276, épic #273) — une barre sticky translucide
+thémée (`bg-surface/80 backdrop-blur-md`, `border-hairline`, `pt-safe`),
+theme-aware (respecte le mode clair/sombre ; le sombre-chaud *always dark* reste
+home-only). Colonne interne = `SiteShell` (échelle de largeurs #277). Remplace
+`LobbyNav`, `TopNav` et la nav ad hoc de `/manifesto` (branchée zone par zone en
+#278→#281 ; navs historiques supprimées au cleanup #283).
+
+- **`SiteNavView`** (présentationnel pur) : `variant` (`guest` | `authed`),
+  `isAdmin?`, `width?` (échelle #277, défaut `content`), `banner?`.
+  - **guest** : marque → `/`, liens publics *Manifesto* / *Se connecter*, CTA
+    **Créer un compte**. **Aucun** sélecteur (règle figée : landing = thème par
+    défaut du site).
+  - **authed** : marque → `/discover`, `ThemeToggle` (axe **Mode** seul),
+    *Admin* (si `isAdmin`), *Paramètres*. La **bottom tab bar** reste la nav de
+    sections de l'app — les deux coexistent, on ne les fusionne pas.
+- **`SiteNav`** (défaut) : wrapper client qui résout `variant`/`isAdmin` depuis
+  `useSession` (surchargeable pour les contextes forcés, ex. landing = `guest`).
+- **A11y** : landmark `<nav aria-label="Navigation principale">`, marque
+  labellisée, focus ring coral, cibles ≥ 44px.
 
 ### SiteShell (`src/components/ui/SiteShell.tsx`)
 
