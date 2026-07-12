@@ -8,12 +8,15 @@
  * Comportement :
  * - État inactif : bouton « Activer un check-in de sécurité » + tooltip.
  *   Clic → modal de choix de durée (30min/1h/2h/4h/8h) → POST /api/circle/check-in.
- * - État actif : bandeau countdown (aria-live) + bouton vert « Je suis safe »
+ * - État actif : bandeau countdown + bouton vert « Je suis safe »
  *   (POST .../validate) + lien « Annuler » (DELETE .../cancel).
- * - A11y : focus trap dans la modal, ESC ferme, aria-live="polite" sur le
- *   countdown, restore focus sur l'élément qui a ouvert la modal.
+ * - A11y (chantier 01, tâche 4.3, issue #61) : focus trap dans la modal, ESC
+ *   ferme, restore focus sur l'élément déclencheur. Le compteur mm:ss visuel est
+ *   `aria-hidden` (sinon un lecteur d'écran l'annoncerait chaque seconde) ; une
+ *   région live `sr-only` (`role="status"`, polite) annonce le temps restant à
+ *   la granularité de la minute. Focus ring `shadow-focus`, cibles ≥ 44px.
  */
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from '@/lib/toast';
 
 const DURATIONS = [
@@ -40,6 +43,21 @@ function formatRemaining(seconds: number): string {
     return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')} restantes`;
   }
   return `${m}:${String(s).padStart(2, '0')} restantes`;
+}
+
+/**
+ * Message annoncé aux lecteurs d'écran. Volontairement à la granularité de la
+ * minute (avec `Math.ceil`) : la chaîne ne change qu'au passage d'une minute,
+ * donc la région live n'est ré-annoncée qu'≈ une fois par minute, pas chaque
+ * seconde. Sous une minute, un message d'urgence unique.
+ */
+function announceRemaining(seconds: number): string {
+  if (seconds <= 0) return 'Ton check-in a expiré, ton Cercle va être alerté.';
+  if (seconds <= 60) {
+    return "Il reste moins d'une minute avant l'alerte de ton Cercle. Valide si tu es en sécurité.";
+  }
+  const minutes = Math.ceil(seconds / 60);
+  return `Il reste environ ${minutes} minute${minutes > 1 ? 's' : ''} avant l'alerte de ton Cercle.`;
 }
 
 export function CheckinButton() {
@@ -159,17 +177,22 @@ export function CheckinButton() {
   if (active) {
     return (
       <div
-        role="status"
-        aria-live="polite"
+        role="group"
+        aria-label="Check-in de sécurité en cours"
         className="flex flex-col gap-2 rounded-xl border border-coral/30 bg-coral/5 p-3"
       >
+        {/* Annonce lecteur d'écran : temps restant à la minute (pas de spam par seconde) */}
+        <span role="status" aria-live="polite" className="sr-only">
+          {announceRemaining(active.secondsRemaining)}
+        </span>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-coral-dark">
-            ⏱ Check-in actif
+            <span aria-hidden="true">⏱</span> Check-in actif
           </span>
+          {/* Compteur visuel : aria-hidden pour ne pas être annoncé chaque seconde */}
           <span
+            aria-hidden="true"
             className="font-mono text-sm font-semibold text-coral-dark"
-            aria-atomic="true"
           >
             {formatRemaining(active.secondsRemaining)}
           </span>
@@ -182,15 +205,15 @@ export function CheckinButton() {
             type="button"
             onClick={handleValidate}
             disabled={actionInFlight}
-            className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 disabled:opacity-50"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-green-600 px-3 text-sm font-medium text-white hover:bg-green-700 focus-visible:outline-none focus-visible:shadow-focus disabled:opacity-50"
           >
-            ✓ Je suis safe
+            <span aria-hidden="true">✓</span>&nbsp;Je suis safe
           </button>
           <button
             type="button"
             onClick={handleCancel}
             disabled={actionInFlight}
-            className="rounded-md px-2 py-1.5 text-sm font-medium text-muted hover:bg-fill-subtle focus:outline-none focus:ring-2 focus:ring-coral disabled:opacity-50"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-md px-2 text-sm font-medium text-muted hover:bg-fill-subtle focus-visible:outline-none focus-visible:shadow-focus disabled:opacity-50"
           >
             Annuler
           </button>
@@ -211,9 +234,9 @@ export function CheckinButton() {
         type="button"
         onClick={() => setShowModal(true)}
         title="Tu as un RDV ? Si tu ne reviens pas dans le temps choisi, ton Cercle est alerté."
-        className="rounded-xl border border-coral/30 bg-surface px-3 py-2 text-sm font-medium text-coral-dark hover:bg-coral/5 focus:outline-none focus:ring-2 focus:ring-coral"
+        className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-coral/30 bg-surface px-3 text-sm font-medium text-coral-dark hover:bg-coral/5 focus-visible:outline-none focus-visible:shadow-focus"
       >
-        🛡 Activer un check-in de sécurité
+        <span aria-hidden="true">🛡</span>&nbsp;Activer un check-in de sécurité
       </button>
       {showModal && (
         <DurationModal
@@ -310,7 +333,7 @@ function DurationModal({
               type="button"
               disabled={inFlight}
               onClick={() => onChoose(d.value)}
-              className="rounded-lg border border-coral/30 bg-surface px-3 py-3 text-sm font-medium text-coral-dark hover:bg-coral/5 focus:outline-none focus:ring-2 focus:ring-coral disabled:opacity-50"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-coral/30 bg-surface px-3 text-sm font-medium text-coral-dark hover:bg-coral/5 focus-visible:outline-none focus-visible:shadow-focus disabled:opacity-50"
             >
               {d.label}
             </button>
@@ -321,7 +344,7 @@ function DurationModal({
           type="button"
           onClick={onClose}
           disabled={inFlight}
-          className="mt-4 w-full rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-fill-subtle focus:outline-none focus:ring-2 focus:ring-coral disabled:opacity-50"
+          className="mt-4 inline-flex min-h-[44px] w-full items-center justify-center rounded-md px-3 text-sm font-medium text-muted hover:bg-fill-subtle focus-visible:outline-none focus-visible:shadow-focus disabled:opacity-50"
         >
           Annuler
         </button>

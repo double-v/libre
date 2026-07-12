@@ -15,14 +15,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { CheckinButton } from '../CheckinButton';
 
-function mockFetchOnce(status: number, body: unknown) {
-  return vi.fn().mockResolvedValueOnce({
-    status,
-    ok: status >= 200 && status < 300,
-    json: async () => body,
-  } as Response);
-}
-
 describe('<CheckinButton />', () => {
   let fetchSpy: ReturnType<typeof vi.fn>;
   let confirmSpy: ReturnType<typeof vi.spyOn>;
@@ -178,6 +170,31 @@ describe('<CheckinButton />', () => {
       (c) => (c[1] as RequestInit)?.method === 'DELETE',
     );
     expect(deleteCall).toBeDefined();
+  });
+
+  it('countdown : annonce SR à la granularité minute, pas à la seconde', async () => {
+    fetchSpy.mockResolvedValueOnce({
+      status: 200,
+      ok: true,
+      json: async () => ({
+        id: 'ci-1',
+        triggeredAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 1800 * 1000).toISOString(),
+        secondsRemaining: 1800,
+      }),
+    } as Response);
+    render(<CheckinButton />);
+
+    // Le compteur visuel (mm:ss) ne doit PAS être annoncé en continu :
+    // il est marqué aria-hidden, hors de l'arbre d'accessibilité.
+    const visual = await screen.findByText(/restantes/i);
+    expect(visual.closest('[aria-hidden="true"]')).not.toBeNull();
+
+    // Une région live sr-only annonce le temps restant à la minute (≈ 30),
+    // pas toutes les secondes (sinon spam pour les lecteurs d'écran).
+    const status = screen.getByRole('status');
+    expect(status).toHaveAttribute('aria-live', 'polite');
+    expect(status).toHaveTextContent(/30\s*minute/i);
   });
 
   it('modal : ESC ferme la modal', async () => {

@@ -11,13 +11,22 @@
  *
  * UX "ajouter un contact" : V1 = Libre-only, on sélectionne parmi nos
  * matches (cf. décision #43). Si 0 match → empty state dédié.
+ *
+ * A11y (chantier 01, tâche 4.3, issue #61) : onglets ARIA (roving tabindex +
+ * flèches + tabpanel lié), bottom-sheet avec focus trap / ESC / restauration
+ * du focus, focus ring `shadow-focus` (cf. DESIGN.md), cibles tactiles ≥ 44px.
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { TrustBadge } from '@/components/TrustBadge';
 import type { TrustBand } from '@/lib/trust/compute-level';
 
 type Tab = 'cercle' | 'niveau';
+
+const TABS: { value: Tab; label: string }[] = [
+  { value: 'cercle', label: 'Mon Cercle' },
+  { value: 'niveau', label: 'Mon niveau' },
+];
 
 interface TrustLevelResponse {
   band: TrustBand;
@@ -132,7 +141,7 @@ export default function TrustSettingsPage() {
           type="button"
           onClick={() => router.back()}
           aria-label="Retour"
-          className="rounded-full p-2 hover:bg-fill-subtle focus:outline-none focus:ring-2 focus:ring-coral"
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-content hover:bg-fill-subtle focus-visible:outline-none focus-visible:shadow-focus"
         >
           <svg
             width="20"
@@ -159,32 +168,23 @@ export default function TrustSettingsPage() {
       )}
 
       {/* Onglets */}
-      <div
-        role="tablist"
-        aria-label="Sections des paramètres de confiance"
-        className="mb-4 flex rounded-xl border border-hairline bg-surface p-1"
-      >
-        <TabButton
-          active={tab === 'cercle'}
-          onClick={() => setTab('cercle')}
-          label="Mon Cercle"
-        />
-        <TabButton
-          active={tab === 'niveau'}
-          onClick={() => setTab('niveau')}
-          label="Mon niveau"
-        />
-      </div>
+      <TabList tab={tab} onTabChange={setTab} />
 
-      {tab === 'cercle' ? (
-        <CercleTab
-          contacts={contacts}
-          onAddClick={() => setShowAdd(true)}
-          onRemove={handleRemove}
-        />
-      ) : (
-        <NiveauTab trust={trust} />
-      )}
+      <div
+        role="tabpanel"
+        id={`trust-panel-${tab}`}
+        aria-labelledby={`trust-tab-${tab}`}
+      >
+        {tab === 'cercle' ? (
+          <CercleTab
+            contacts={contacts}
+            onAddClick={() => setShowAdd(true)}
+            onRemove={handleRemove}
+          />
+        ) : (
+          <NiveauTab trust={trust} />
+        )}
+      </div>
 
       {showAdd && (
         <AddContactSheet
@@ -205,29 +205,71 @@ export default function TrustSettingsPage() {
   );
 }
 
-function TabButton({
-  active,
-  onClick,
-  label,
+/**
+ * Onglets accessibles : roving tabindex (un seul tab dans l'ordre de
+ * tabulation), navigation aux flèches / Home / End, activation immédiate.
+ * Cf. WAI-ARIA APG « Tabs ».
+ */
+function TabList({
+  tab,
+  onTabChange,
 }: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
+  tab: Tab;
+  onTabChange: (t: Tab) => void;
 }) {
+  const refs = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({});
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    const idx = TABS.findIndex((t) => t.value === tab);
+    let next = idx;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      next = (idx + 1) % TABS.length;
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      next = (idx - 1 + TABS.length) % TABS.length;
+    } else if (e.key === 'Home') {
+      next = 0;
+    } else if (e.key === 'End') {
+      next = TABS.length - 1;
+    } else {
+      return;
+    }
+    e.preventDefault();
+    const nextValue = TABS[next].value;
+    onTabChange(nextValue);
+    refs.current[nextValue]?.focus();
+  }
+
   return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-coral ${
-        active
-          ? 'bg-coral text-white'
-          : 'text-muted hover:bg-fill-subtle'
-      }`}
+    <div
+      role="tablist"
+      aria-label="Sections des paramètres de confiance"
+      onKeyDown={handleKeyDown}
+      className="mb-4 flex rounded-xl border border-hairline bg-surface p-1"
     >
-      {label}
-    </button>
+      {TABS.map((t) => {
+        const active = tab === t.value;
+        return (
+          <button
+            key={t.value}
+            ref={(el) => {
+              refs.current[t.value] = el;
+            }}
+            type="button"
+            role="tab"
+            id={`trust-tab-${t.value}`}
+            aria-selected={active}
+            aria-controls={`trust-panel-${t.value}`}
+            tabIndex={active ? 0 : -1}
+            onClick={() => onTabChange(t.value)}
+            className={`flex min-h-[44px] flex-1 items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:shadow-focus ${
+              active ? 'bg-coral text-white' : 'text-muted hover:bg-fill-subtle'
+            }`}
+          >
+            {t.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -262,7 +304,7 @@ function CercleTab({
         <button
           type="button"
           onClick={onAddClick}
-          className="rounded-md bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-coral-dark focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2"
+          className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-coral px-4 text-sm font-medium text-white hover:bg-coral-dark focus-visible:outline-none focus-visible:shadow-focus"
         >
           + Ajouter un contact
         </button>
@@ -286,13 +328,12 @@ function CercleTab({
               <p className="font-medium text-content">
                 {c.contact.displayName}
                 {c.contact.isVerified && (
-                  <span
-                    aria-label="vérifié"
-                    className="ml-1 text-coral"
-                    title="Identité vérifiée"
-                  >
-                    ✓
-                  </span>
+                  <>
+                    <span aria-hidden="true" className="ml-1 text-coral">
+                      ✓
+                    </span>
+                    <span className="sr-only">, identité vérifiée</span>
+                  </>
                 )}
               </p>
             </div>
@@ -300,7 +341,7 @@ function CercleTab({
               type="button"
               onClick={() => onRemove(c.id)}
               aria-label={`Retirer ${c.contact.displayName} du Cercle`}
-              className="rounded-md p-1 text-muted hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-coral"
+              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md text-muted hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:shadow-focus"
             >
               <svg
                 width="20"
@@ -320,7 +361,7 @@ function CercleTab({
       <button
         type="button"
         onClick={onAddClick}
-        className="w-full rounded-xl border-2 border-dashed border-coral/40 bg-coral/5 px-4 py-3 text-sm font-medium text-coral hover:bg-coral/10 focus:outline-none focus:ring-2 focus:ring-coral"
+        className="min-h-[44px] w-full rounded-xl border-2 border-dashed border-coral/40 bg-coral/5 px-4 py-3 text-sm font-medium text-coral hover:bg-coral/10 focus-visible:outline-none focus-visible:shadow-focus"
       >
         + Ajouter un contact
       </button>
@@ -420,6 +461,9 @@ function NiveauTab({ trust }: { trust: TrustLevelResponse | null }) {
                 >
                   {f.achieved ? '✓' : '○'}
                 </span>
+                <span className="sr-only">
+                  {f.achieved ? 'Acquis :' : 'À faire :'}
+                </span>
                 {f.label}
               </span>
               <span
@@ -448,7 +492,7 @@ function NiveauTab({ trust }: { trust: TrustLevelResponse | null }) {
       {/* Lien vers l'explication détaillée */}
       <a
         href="/trust/how-it-works"
-        className="block text-center text-sm font-medium text-coral-dark underline decoration-coral/40 underline-offset-2 hover:decoration-coral"
+        className="flex min-h-[44px] items-center justify-center rounded-md text-center text-sm font-medium text-coral-dark underline decoration-coral/40 underline-offset-2 hover:decoration-coral focus-visible:outline-none focus-visible:shadow-focus"
       >
         Comment marche la confiance ?
       </a>
@@ -473,6 +517,52 @@ function AddContactSheet({
   const [loadingMatches, setLoadingMatches] = useState(true);
   const [addingId, setAddingId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousFocus = useRef<HTMLElement | null>(null);
+
+  // Focus trap + ESC + restauration du focus (miroir du DurationModal de
+  // CheckinButton). Les éléments focusables sont ré-interrogés à chaque Tab
+  // car le contenu de la sheet est chargé de façon asynchrone.
+  useEffect(() => {
+    previousFocus.current = document.activeElement as HTMLElement | null;
+    dialogRef.current
+      ?.querySelector<HTMLElement>(
+        'button:not([disabled]), [href], input, select, textarea',
+      )
+      ?.focus();
+
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const dialog = dialogRef.current;
+      const focusable = dialog
+        ? Array.from(
+            dialog.querySelectorAll<HTMLElement>(
+              'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+            ),
+          )
+        : [];
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      previousFocus.current?.focus();
+    };
+  }, [onClose]);
 
   useEffect(() => {
     let cancelled = false;
@@ -539,23 +629,27 @@ function AddContactSheet({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Ajouter un contact à mon Cercle"
+      aria-labelledby="add-contact-title"
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-lg rounded-t-2xl bg-surface p-5 shadow-lg sm:rounded-2xl"
       >
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-content">
+          <h2
+            id="add-contact-title"
+            className="text-lg font-semibold text-content"
+          >
             Ajouter un contact
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Fermer"
-            className="rounded-full p-1 text-muted hover:bg-fill-subtle"
+            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-muted hover:bg-fill-subtle focus-visible:outline-none focus-visible:shadow-focus"
           >
             <svg
               width="20"
@@ -596,16 +690,20 @@ function AddContactSheet({
                   <span className="flex-1 font-medium text-content">
                     {m.displayName}
                     {m.isVerified && (
-                      <span className="ml-1 text-coral" title="vérifié">
-                        ✓
-                      </span>
+                      <>
+                        <span aria-hidden="true" className="ml-1 text-coral">
+                          ✓
+                        </span>
+                        <span className="sr-only">, identité vérifiée</span>
+                      </>
                     )}
                   </span>
                   <button
                     type="button"
                     onClick={() => handleAdd(m.id)}
                     disabled={already || addingId === m.id}
-                    className="rounded-md bg-coral px-3 py-1 text-sm font-medium text-white hover:bg-coral-dark focus:outline-none focus:ring-2 focus:ring-coral disabled:opacity-50"
+                    aria-label={`Ajouter ${m.displayName} à mon Cercle`}
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-coral px-3 text-sm font-medium text-white hover:bg-coral-dark focus-visible:outline-none focus-visible:shadow-focus disabled:opacity-50"
                   >
                     {already
                       ? 'Déjà'
