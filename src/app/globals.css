@@ -411,6 +411,13 @@ html[data-theme='retro'] [data-lobby] {
   /* Police des titres — varie par thème via --head-font (Baloo cartoon, Space
      Grotesk arcade/retro ; défaut = sans). Garde-fou : display en titres only. */
   --font-head: var(--head-font);
+
+  /* Échelle de largeurs centralisée (#277, épic #273 — cf. DESIGN.md § Shell
+     unifié). Source de vérité unique en remplacement des max-w-* dispersés
+     (448/512/672/768/1080). Génèrent max-w-content / max-w-reading ; l'app garde
+     max-w-lg (512px, défaut Tailwind). Consommés par le composant SiteShell. */
+  --container-content: 1080px;
+  --container-reading: 720px;
 }
 
 /* Base typography: 18px base, 1.6 line-height, Geist Sans

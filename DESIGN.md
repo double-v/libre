@@ -301,18 +301,24 @@ d'accès Paramètres — à réconcilier en #281.
 
 ### Échelle de largeurs (centralisée, #277)
 
-Une seule source de vérité (`SiteShell` / utilitaire), en remplacement des `max-w-*`
-dispersés (448 / 512 / 672 / 768 / 1080 aujourd'hui) :
+Une seule source de vérité — le composant **`SiteShell`** (cf. Component Library),
+adossé aux tokens `--container-*` de `globals.css` (`@theme`) — en remplacement des
+`max-w-*` dispersés (448 / 512 / 672 / 768 / 1080 aujourd'hui) :
 
-| Largeur | Valeur | Usage |
-|---------|--------|-------|
-| `content` | ~1080px | pages contenu larges (home, sections marketing) |
-| `reading` | ~720px | texte long centré (manifesto, légal) |
-| `app` | `max-w-lg` (512px) | app connectée mobile-first (feed, messages, profil) |
+| Largeur (`width`) | Utilitaire | Valeur | Usage |
+|-------------------|------------|--------|-------|
+| `content` | `max-w-content` | 1080px | pages contenu larges (home, sections marketing) |
+| `reading` | `max-w-reading` | 720px | texte long centré (manifesto, légal) |
+| `app` | `max-w-lg` | 512px | app connectée mobile-first (feed, messages, profil) |
 
 Décision (#273) : les pages *contenu* adoptent `content`/`reading` ; l'app garde
 `app` (mobile-first, UX cartes/swipe) **dans le même shell/nav/tokens**. Remplace la
 grille marketing `max-w-2xl` de la section **Layout** ci-dessus une fois migré.
+
+**Largeur `content` — question ouverte tranchée (#277)** : une **seule valeur**
+`1080px` (pas d'échelle fine hero 1180 / sections 1080). Le hero de la home peut
+déborder localement en `max-w-*` explicite si besoin ; l'échelle partagée reste à
+un seul cran large pour rester une vraie source de vérité (moins de boutons).
 
 ### Ambiance & décor
 
@@ -330,8 +336,8 @@ grille marketing `max-w-2xl` de la section **Layout** ci-dessus une fois migré.
 
 ### Questions ouvertes (tranchées au fil des sous-tickets)
 
-- Largeur `content` : valeur unique ~1080px, ou échelle fine reprise de la home
-  (hero 1180 / sections 1080) ? (#277)
+- ~~Largeur `content` : valeur unique ~1080px, ou échelle fine reprise de la home
+  (hero 1180 / sections 1080) ?~~ **Tranché (#277)** : valeur unique `1080px`.
 - `/manifesto` & légal : structure seule, ou une touche de décor discrète ? (#278 / #279)
 
 ## Shapes
@@ -546,6 +552,7 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 | `ThemeMenu` | closed, open, focus-trap | popover (desktop), bottom-sheet (mobile) | `LobbyThemeSwitcher`, radios d'apparence en double |
 | `ThemeToggle` | light, dark, auto | icon-button (cycle Mode) | boutons Mode ad hoc dans les headers |
 | `TopNav` | guest, connecté, admin | — | Header inline `(main)`, `PublicHeader`, header lobby |
+| `SiteShell` | — | content, reading, app | Les `mx-auto max-w-* px-*` ad hoc dispersés (448/512/672/768/1080) |
 
 ### Règles
 
@@ -554,6 +561,24 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 - Tous ont un équivalent dark mode.
 - Tous ont des props ARIA cohérentes (cf. section Accessibility de `PRODUCT.md`).
 - Aucun n'utilise `bg-gray-*` Tailwind brut : on passe par les tokens coral/blush/sand/abricot/miel/rose-poudré.
+
+### SiteShell (`src/components/ui/SiteShell.tsx`)
+
+Conteneur central partagé du **shell unifié** (#277, épic #273) : une colonne
+centrée (`mx-auto`), pleine largeur sous le plafond, avec gouttières responsives
+(`px-4 sm:px-6`). **Source de vérité unique des largeurs** — remplace les
+`mx-auto max-w-* px-*` recodés zone par zone.
+
+- **Prop `width`** (défaut `content`) → échelle centralisée ci-dessus :
+  `content` (`max-w-content`, ~1080px) · `reading` (`max-w-reading`, ~720px) ·
+  `app` (`max-w-lg`, 512px). Les utilitaires `max-w-content`/`max-w-reading`
+  proviennent des tokens `--container-*` de `globals.css` (`@theme`).
+- **Prop `as`** : balise sémantique (`div` défaut, `main`, `section`, `article`).
+- **`className` additif** (ex. `py-12`, alignement) — ne surcharge pas les
+  largeurs/gouttières de l'échelle (passer par `width` pour ça).
+- **Server Component** (pur wrapper, aucun hook) — utilisable dans les layouts.
+- Consommé au fil de la migration : #278 manifesto, #279 légal, #280 app,
+  #281 auth/admin.
 
 ### Toast (`src/components/ui/Toast.tsx` + `src/lib/toast.ts`)
 
