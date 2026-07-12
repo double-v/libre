@@ -60,14 +60,14 @@ export default function AdminVerificationsPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">Vérifications</h1>
+      <h1 className="mb-6 text-2xl font-bold text-content">Vérifications</h1>
 
       <div className="mb-4 flex gap-2">
         {Object.entries(statusLabels).map(([key, label]) => (
           <button
             key={key}
             onClick={() => setStatus(key)}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium ${status === key ? 'bg-coral text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'}`}
+            className={`rounded-md px-3 py-1.5 text-sm font-medium ${status === key ? 'bg-coral text-white' : 'bg-fill-subtle text-muted hover:bg-fill-subtle'}`}
           >
             {label}
           </button>
@@ -77,9 +77,9 @@ export default function AdminVerificationsPage() {
       {actionError && <div className="mb-3 rounded-md bg-red-50 p-2 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-400">{actionError}</div>}
 
       {loading ? (
-        <p className="text-gray-500">Chargement…</p>
+        <p className="text-muted">Chargement…</p>
       ) : verifications.length === 0 ? (
-        <p className="text-gray-500">Aucune vérification.</p>
+        <p className="text-muted">Aucune vérification.</p>
       ) : (
         <div className="space-y-3">
           {verifications.map((v) => (
@@ -87,9 +87,9 @@ export default function AdminVerificationsPage() {
               <div className="flex items-start gap-4">
                 <img src={v.selfieUrl} alt="Selfie de vérification" className="h-24 w-24 rounded-lg object-cover" />
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900 dark:text-gray-100">{v.user.displayName}</p>
-                  <p className="text-sm text-gray-500">{v.user.email}</p>
-                  <p className="mt-1 text-xs text-gray-400">{new Date(v.createdAt).toLocaleDateString('fr-FR')}</p>
+                  <p className="font-medium text-content">{v.user.displayName}</p>
+                  <p className="text-sm text-muted">{v.user.email}</p>
+                  <p className="mt-1 text-xs text-muted">{new Date(v.createdAt).toLocaleDateString('fr-FR')}</p>
                   <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                     v.status === 'pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                     : v.status === 'approved' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'

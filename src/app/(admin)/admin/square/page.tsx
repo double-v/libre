@@ -18,7 +18,7 @@ export default function AdminSquarePage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">La Place</h1>
+      <h1 className="mb-6 text-2xl font-bold text-content">La Place</h1>
 
       <div className="mb-6 flex gap-2 overflow-x-auto">
         {TABS.map((tab) => (
@@ -28,7 +28,7 @@ export default function AdminSquarePage() {
             className={`shrink-0 rounded-lg px-4 py-2 text-sm font-medium ${
               activeTab === tab.id
                 ? 'bg-coral text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+                : 'bg-fill-subtle text-muted hover:bg-fill-subtle'
             }`}
           >
             {tab.icon} {tab.label}

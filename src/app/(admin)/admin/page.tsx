@@ -26,7 +26,7 @@ export default function AdminDashboard() {
   }, []);
 
   if (loading) {
-    return <div className="text-center text-gray-500">Chargement…</div>;
+    return <div className="text-center text-muted">Chargement…</div>;
   }
 
   if (error) {
@@ -44,10 +44,10 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">Tableau de bord</h1>
+      <h1 className="mb-6 text-2xl font-bold text-content">Tableau de bord</h1>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {cards.map((card) => (
-          <div key={card.label} className={`rounded-xl border border-gray-200 p-4 dark:border-gray-700 ${card.color}`}>
+          <div key={card.label} className={`rounded-xl border border-hairline p-4 ${card.color}`}>
             <p className="text-sm font-medium opacity-80">{card.label}</p>
             <p className="mt-1 text-3xl font-bold">{card.value}</p>
           </div>

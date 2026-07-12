@@ -98,10 +98,10 @@ export default function AdminCircleAlertsPage() {
 
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <h1 className="mb-2 text-2xl font-bold text-content">
         Alertes de sécurité du Cercle
       </h1>
-      <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+      <p className="mb-6 text-sm text-muted">
         Alertes envoyées aux contacts de confiance lorsqu&apos;un check-in de
         sécurité expire. Marquez-les comme traitées une fois suivies.
       </p>
@@ -114,10 +114,10 @@ export default function AdminCircleAlertsPage() {
             className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium ${
               status === key
                 ? 'bg-coral text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+                : 'bg-fill-subtle text-muted hover:bg-fill-subtle'
             }`}
           >
-            <span className={`h-2 w-2 rounded-full ${STATUS_DOT[key] ?? 'bg-gray-400'}`} />
+            <span className={`h-2 w-2 rounded-full ${STATUS_DOT[key] ?? 'bg-muted'}`} />
             {label}
           </button>
         ))}
@@ -130,42 +130,42 @@ export default function AdminCircleAlertsPage() {
       )}
 
       {loading ? (
-        <p className="text-gray-500">Chargement…</p>
+        <p className="text-muted">Chargement…</p>
       ) : alerts.length === 0 ? (
-        <p className="text-gray-500">Aucune alerte dans cette catégorie.</p>
+        <p className="text-muted">Aucune alerte dans cette catégorie.</p>
       ) : (
         <div className="space-y-3">
           {alerts.map((a) => (
             <div
               key={a.id}
               data-testid="alert-row"
-              className="rounded-xl border border-gray-200 p-4 dark:border-gray-700"
+              className="rounded-xl border border-hairline p-4"
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm">
-                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                    <span className="font-medium text-content">
                       {a.checkin.user.displayName}
                     </span>
-                    <span className="text-gray-500"> · check-in </span>
-                    <span className="font-mono text-xs text-gray-500">{a.checkin.id.slice(0, 8)}</span>
-                    <span className="text-gray-500"> ({a.checkin.status})</span>
+                    <span className="text-muted"> · check-in </span>
+                    <span className="font-mono text-xs text-muted">{a.checkin.id.slice(0, 8)}</span>
+                    <span className="text-muted"> ({a.checkin.status})</span>
                   </p>
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                  <p className="mt-1 text-sm text-muted">
                     Alerte envoyée à{' '}
-                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                    <span className="font-medium text-content">
                       {a.contact.displayName}
                     </span>
                   </p>
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="mt-1 text-xs text-muted">
                     Expirait le {formatDate(a.checkin.expiresAt)} · alerte du {formatDate(a.sentAt)}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span
-                    className={`flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300`}
+                    className={`flex items-center gap-1.5 rounded-full bg-fill-subtle px-2.5 py-0.5 text-xs font-medium text-muted`}
                   >
-                    <span className={`h-2 w-2 rounded-full ${STATUS_DOT[a.deliveryStatus] ?? 'bg-gray-400'}`} />
+                    <span className={`h-2 w-2 rounded-full ${STATUS_DOT[a.deliveryStatus] ?? 'bg-muted'}`} />
                     {STATUS_LABELS[a.deliveryStatus] ?? a.deliveryStatus}
                   </span>
                 </div>
@@ -191,15 +191,15 @@ export default function AdminCircleAlertsPage() {
           <button
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page === 1}
-            className="rounded-md border border-gray-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-gray-600"
+            className="rounded-md border border-hairline-strong px-3 py-1 text-sm disabled:opacity-50"
           >
             Précédent
           </button>
-          <span className="px-3 py-1 text-sm text-gray-500">{page} / {totalPages}</span>
+          <span className="px-3 py-1 text-sm text-muted">{page} / {totalPages}</span>
           <button
             onClick={() => setPage(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
-            className="rounded-md border border-gray-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-gray-600"
+            className="rounded-md border border-hairline-strong px-3 py-1 text-sm disabled:opacity-50"
           >
             Suivant
           </button>
