@@ -1,12 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { SITE_THEMES } from '@/lib/site-themes';
-
-type Mode = 'auto' | 'light' | 'dark';
-
-const MODE_KEY = 'libre-theme';
-const SKIN_KEY = 'libre-skin';
+import { useThemePreference, type Mode } from '@/hooks/useThemePreference';
 
 const MODES: { id: Mode; label: string }[] = [
   { id: 'auto', label: 'Auto (système)' },
@@ -14,64 +9,15 @@ const MODES: { id: Mode; label: string }[] = [
   { id: 'dark', label: 'Sombre' },
 ];
 
-/** Applique le mode clair/sombre : `.dark` sur <html>. 'auto' suit l'OS. */
-function applyMode(mode: Mode) {
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const dark = mode === 'dark' || (mode === 'auto' && prefersDark);
-  document.documentElement.classList.toggle('dark', dark);
-}
-
-/** Applique le skin : `data-theme` sur <html>. Les valeurs vivent en CSS. */
-function applySkin(skin: string) {
-  document.documentElement.setAttribute('data-theme', skin);
-}
-
 /**
- * Réglage d'apparence utilisateur : mode (clair/sombre/auto) × skin.
- * Persistance locale (localStorage) — la synchro compte (User.skin) viendra
- * dans une itération suivante. Le choix de skin est un signal doux, jamais
- * gamifié (cf. PRODUCT.md, principe 4).
+ * Réglage d'apparence utilisateur : mode (clair/sombre/auto) × thème.
+ *
+ * Miroir « paramètres » du `ThemeMenu` : même source de vérité
+ * (`useThemePreference` → `localStorage` + DOM + synchro best-effort du compte).
+ * Le choix de thème est un signal doux, jamais gamifié (cf. PRODUCT.md, principe 4).
  */
 export default function AppearanceSettings() {
-  const [mode, setMode] = useState<Mode>('auto');
-  const [skin, setSkin] = useState<string>(SITE_THEMES[0].id);
-
-  useEffect(() => {
-    // Post-hydratation : on lit les préférences réelles (localStorage / DOM) et
-    // on aligne l'UI. Le SSR rend les défauts → un seul flip, SSR-safe (cf. #193).
-    const storedMode = localStorage.getItem(MODE_KEY);
-    const m: Mode =
-      storedMode === 'light' || storedMode === 'dark' || storedMode === 'auto'
-        ? storedMode
-        : 'auto';
-    const currentSkin =
-      localStorage.getItem(SKIN_KEY) ||
-      document.documentElement.getAttribute('data-theme') ||
-      SITE_THEMES[0].id;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMode(m);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSkin(currentSkin);
-  }, []);
-
-  function chooseMode(m: Mode) {
-    setMode(m);
-    localStorage.setItem(MODE_KEY, m);
-    applyMode(m);
-  }
-
-  function chooseSkin(s: string) {
-    setSkin(s);
-    localStorage.setItem(SKIN_KEY, s);
-    applySkin(s);
-    // Best-effort : synchronise le compte pour les autres appareils. Un échec
-    // (hors-ligne, session expirée…) ne doit jamais casser le choix local.
-    void fetch('/api/users/skin', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ skin: s }),
-    }).catch(() => {});
-  }
+  const { ready, mode, theme, setMode, setTheme } = useThemePreference();
 
   return (
     <section className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:p-5">
@@ -80,7 +26,7 @@ export default function AppearanceSettings() {
       </h2>
       <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
         Le mode clair/sombre et le thème visuel. Votre choix est gardé sur cet
-        appareil.
+        appareil (et synchronisé sur votre compte si vous êtes connecté).
       </p>
 
       <fieldset className="mt-4">
@@ -92,7 +38,7 @@ export default function AppearanceSettings() {
             <label
               key={m.id}
               className={`cursor-pointer rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                mode === m.id
+                ready && mode === m.id
                   ? 'border-coral bg-coral text-white'
                   : 'border-gray-300 text-gray-700 hover:border-coral dark:border-gray-600 dark:text-gray-300'
               }`}
@@ -101,8 +47,8 @@ export default function AppearanceSettings() {
                 type="radio"
                 name="libre-mode"
                 value={m.id}
-                checked={mode === m.id}
-                onChange={() => chooseMode(m.id)}
+                checked={ready && mode === m.id}
+                onChange={() => setMode(m.id)}
                 className="sr-only"
               />
               {m.label}
@@ -125,11 +71,18 @@ export default function AppearanceSettings() {
                 type="radio"
                 name="libre-skin"
                 value={t.id}
-                checked={skin === t.id}
-                onChange={() => chooseSkin(t.id)}
+                checked={ready && theme === t.id}
+                onChange={() => setTheme(t.id)}
                 className="mt-1 h-4 w-4 cursor-pointer accent-coral"
               />
-              <span className="flex-1">
+              <span
+                data-theme={t.id}
+                aria-hidden="true"
+                className="mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full border border-hairline bg-surface"
+              >
+                <span className="block h-full w-1/2 translate-x-full bg-coral" />
+              </span>
+              <span className="min-w-0 flex-1">
                 <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">
                   {t.label}
                 </span>

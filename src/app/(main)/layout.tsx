@@ -5,10 +5,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
+import TopNav from '@/components/ui/TopNav';
 
 const MatchDialog = dynamic(() => import('@/components/MatchDialog'), { ssr: false });
 const FeedbackButton = dynamic(() => import('@/components/FeedbackButton'), { ssr: false });
-const ThemeToggle = dynamic(() => import('@/components/ThemeToggle'), { ssr: false });
 const ToastHost = dynamic(() => import('@/components/ui/Toast'), { ssr: false });
 
 const BETA_DISMISSED_KEY = 'libre_beta_dismissed';
@@ -92,46 +92,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Chrome du haut : bannière + header en une seule pile sticky qui porte
-          la safe-area (.pt-safe) — évite le double-inset et garde le contenu
-          sous l'encoche/status bar en mode standalone. */}
-      <div className="sticky top-0 z-40 bg-white/80 pt-safe shadow-sm backdrop-blur-md dark:bg-gray-950/80">
-        <BetaBanner onFeedback={() => window.dispatchEvent(new Event('open-feedback'))} />
-
-        <header>
-          <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-2">
-          <Link href="/discover" aria-label="Accueil Libre" className="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className="h-8 w-8" aria-hidden="true">
-              <rect width="512" height="512" rx="96" fill="#E8634A"/>
-              <g fill="#fff">
-                <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(-60 256 188)"/>
-                <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(-30 256 188)"/>
-                <rect x="236" y="42" width="40" height="120" rx="20"/>
-                <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(30 256 188)"/>
-                <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(60 256 188)"/>
-                <path d="M256,195 C256,170 218,130 180,130 C130,130 105,175 105,215 C105,300 256,375 256,390 C256,375 407,300 407,215 C407,175 382,130 332,130 C294,130 256,170 256,195 Z"/>
-              </g>
-            </svg>
-            <span className="text-lg font-bold text-coral dark:text-coral-light">Libre</span>
-          </Link>
-          <div className="flex items-center gap-1">
-            {session?.user?.role?.toUpperCase() === 'ADMIN' && (
-              <Link href="/admin" aria-label="Administration" className="rounded-full p-2 text-gray-500 transition-colors hover:bg-purple-50 hover:text-purple-600 dark:text-gray-400 dark:hover:bg-purple-900/30 dark:hover:text-purple-400" title="Administration">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-              </Link>
-            )}
-            <Link href="/settings" aria-label="Paramètres" className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-              </svg>
-            </Link>
-          </div>
-        </div>
-        </header>
-      </div>
+      {/* En-tête unifié (marque + ThemeMenu + admin/paramètres) + bannière bêta
+          dans le même conteneur sticky (safe-area portée par TopNav). */}
+      <TopNav
+        banner={
+          <BetaBanner onFeedback={() => window.dispatchEvent(new Event('open-feedback'))} />
+        }
+      />
 
       <main id="main-content" role="main" className="flex-1 pb-nav">{children}</main>
 
@@ -183,7 +150,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       )}
 
       <FeedbackButton />
-      <ThemeToggle />
       <ToastHost />
     </div>
   );

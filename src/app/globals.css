@@ -55,13 +55,29 @@
   --fill-subtle: #1f2937;
 }
 
-/* ── Skins (cf. DESIGN.md § Theming — Mode × Skin) ──────────────────────────
-   Chaque skin redéfinit les tokens en blocs CSS *mode-aware* :
-   html[data-theme="x"] = clair, html[data-theme="x"].dark = sombre.
-   Sélectivité html[data-theme] (0,1,1) > :root, .dark idem > :root.dark.
-   Le skin par défaut « libre » vit dans :root / :root.dark ci-dessus. */
+/* ── Thèmes (cf. DESIGN.md § Theming — Mode × Thème) ─────────────────────────
+   Chaque thème redéfinit les tokens en blocs *mode-aware* :
+   [data-theme="x"] = clair, html[data-theme="x"].dark = sombre.
+   Sélecteur d'ATTRIBUT (pas `html[…]`) → **nestable** : un `<div data-theme="x">`
+   (vignette d'aperçu du ThemeMenu) résout localement la palette CLAIRE du thème,
+   sans dépendre du thème racine. Le bloc sombre reste ancré sur `html.dark`
+   (root only) : les vignettes prévisualisent donc toujours le clair (catalogue).
+   Le thème `libre` a aussi un bloc d'attribut explicite (pour l'aperçu imbriqué),
+   en plus de `:root` / `:root.dark` qui reste le défaut SSR / sans-JS. */
 
-html[data-theme='libre-warm'] {
+[data-theme='libre'] {
+  --coral: #e8634a;
+  --coral-light: #f09a88;
+  --terracotta: #c4503a;
+  --coral-dark: #9e3a28;
+  --blush: #fdf0ed;
+  --sand: #f5e6d8;
+  --surface: #ffffff;
+  --content: #171717;
+  --hairline: #e5e7eb;
+}
+
+[data-theme='libre-warm'] {
   --coral: #d9542e;
   --coral-light: #e68b6e;
   --terracotta: #a33a20;
@@ -106,7 +122,7 @@ html[data-theme='libre-warm'].dark {
    Cf. DESIGN.md § Theming — Catalogue. */
 
 /* cartoon — plum-black chaud, rondeurs Baloo */
-html[data-theme='cartoon'] {
+[data-theme='cartoon'] {
   --coral: #e8634a;
   --coral-light: #f09a88;
   --terracotta: #c4503a;
@@ -154,7 +170,7 @@ html[data-theme='cartoon'].dark {
 }
 
 /* arcade — néon sur bleu-noir, coin biseauté */
-html[data-theme='arcade'] {
+[data-theme='arcade'] {
   --coral: #e8634a;
   --coral-light: #f09a88;
   --terracotta: #c4503a;
@@ -202,7 +218,7 @@ html[data-theme='arcade'].dark {
 }
 
 /* retro — 8-bit, ombres dures, arrondis nets, pixel-clip */
-html[data-theme='retro'] {
+[data-theme='retro'] {
   --coral: #e8634a;
   --coral-light: #f09a88;
   --terracotta: #c4503a;
