@@ -2,7 +2,10 @@ import { render, screen, fireEvent, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // useSession pilote l'invitation guest ; par défaut : non connecté.
-const mockSession = vi.fn(() => ({ data: null, status: 'unauthenticated' }));
+type SessionShape = { data: { user: { id: string } } | null; status: string };
+const mockSession = vi.fn(
+  (): SessionShape => ({ data: null, status: 'unauthenticated' }),
+);
 vi.mock('next-auth/react', () => ({ useSession: () => mockSession() }));
 
 import ThemeMenu from '@/components/ui/ThemeMenu';
@@ -74,7 +77,7 @@ describe('ThemeMenu', () => {
   });
 
   it('masque l’invitation quand l’utilisateur est connecté', () => {
-    mockSession.mockReturnValue({ data: { user: { id: 'u1' } }, status: 'authenticated' } as ReturnType<typeof mockSession>);
+    mockSession.mockReturnValue({ data: { user: { id: 'u1' } }, status: 'authenticated' });
     render(<ThemeMenu />);
     fireEvent.click(screen.getByRole('button', { name: /thème et apparence/i }));
     expect(within(screen.getByRole('dialog')).queryByRole('link', { name: /crée un compte/i })).toBeNull();
