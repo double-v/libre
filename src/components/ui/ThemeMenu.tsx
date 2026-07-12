@@ -210,19 +210,30 @@ export default function ThemeMenu({ className = '' }: { className?: string }) {
 }
 
 /**
- * Mini-aperçu d'un thème : porte `data-theme` en local → résout la palette CLAIRE
- * du thème (surface + accent coral) indépendamment du thème racine. C'est le
+ * Thèmes prévisualisés dans leur mode SOMBRE : leur identité dominante est
+ * l'ambiance sombre (prune, bleu-nuit néon, noir 8-bit). libre / libre-warm
+ * restent en clair (leur identité). La vignette porte `data-theme` (+ `dark`
+ * si besoin) en local → résout la palette du thème indépendamment du thème racine.
+ */
+const DARK_IDENTITY = new Set(['cartoon', 'arcade', 'retro']);
+
+/**
+ * Mini-aperçu d'un thème : affiche ses **couleurs dominantes** — fond ambiant
+ * (`--background`) + accent coral + pointe d'or (`--gold`). C'est aussi le
  * garde-fou visuel de re-skin (cf. DESIGN.md § ThemeMenu).
  */
 function ThemeSwatch({ id, size }: { id: string; size: 'sm' | 'md' }) {
-  const dim = size === 'sm' ? 'h-5 w-5' : 'h-8 w-8';
+  const dim = size === 'sm' ? 'h-5 w-5' : 'h-9 w-9';
+  const darkPreview = DARK_IDENTITY.has(id) ? 'dark ' : '';
   return (
     <span
       data-theme={id}
       aria-hidden="true"
-      className={`${dim} relative shrink-0 overflow-hidden rounded-full border border-hairline bg-surface`}
+      className={`${darkPreview}${dim} relative shrink-0 overflow-hidden rounded-full border border-hairline bg-background`}
     >
+      {/* moitié droite = accent coral, pastille = or : les 3 couleurs dominantes */}
       <span className="absolute inset-y-0 right-0 w-1/2 bg-coral" />
+      <span className="absolute left-[16%] top-[16%] h-[30%] w-[30%] rounded-full bg-gold" />
     </span>
   );
 }

@@ -56,14 +56,15 @@
 }
 
 /* ── Thèmes (cf. DESIGN.md § Theming — Mode × Thème) ─────────────────────────
-   Chaque thème redéfinit les tokens en blocs *mode-aware* :
-   [data-theme="x"] = clair, html[data-theme="x"].dark = sombre.
-   Sélecteur d'ATTRIBUT (pas `html[…]`) → **nestable** : un `<div data-theme="x">`
-   (vignette d'aperçu du ThemeMenu) résout localement la palette CLAIRE du thème,
-   sans dépendre du thème racine. Le bloc sombre reste ancré sur `html.dark`
-   (root only) : les vignettes prévisualisent donc toujours le clair (catalogue).
-   Le thème `libre` a aussi un bloc d'attribut explicite (pour l'aperçu imbriqué),
-   en plus de `:root` / `:root.dark` qui reste le défaut SSR / sans-JS. */
+   Chaque thème redéfinit les tokens en blocs *mode-aware*, en sélecteur
+   d'ATTRIBUT (pas `html[…]`) → **nestable** : clair `[data-theme="x"]`,
+   sombre `[data-theme="x"].dark`. Un `<span data-theme="x">` (vignette du
+   ThemeMenu) résout localement la palette du thème sans dépendre du thème
+   racine ; en ajoutant la classe `dark` sur la vignette, on prévisualise la
+   palette SOMBRE (identité dominante de cartoon/arcade/retro).
+   Sur `<html>` le comportement est inchangé (clair par ordre source, sombre par
+   `.dark`). Le thème `libre` a aussi un bloc d'attribut explicite (aperçu
+   imbriqué), en plus de `:root` / `:root.dark` (défaut SSR / sans-JS). */
 
 [data-theme='libre'] {
   --coral: #e8634a;
@@ -72,6 +73,8 @@
   --coral-dark: #9e3a28;
   --blush: #fdf0ed;
   --sand: #f5e6d8;
+  --gold: #e8a04e;
+  --background: #ffffff;
   --surface: #ffffff;
   --content: #171717;
   --hairline: #e5e7eb;
@@ -84,6 +87,7 @@
   --coral-dark: #7a2a18;
   --blush: #fbe8dd;
   --sand: #efd8c2;
+  --gold: #d98a3e;
   --background: #fffbf7;
   --foreground: #1f1410;
   --surface: #fffbf7;
@@ -145,7 +149,7 @@ html[data-theme='libre-warm'].dark {
   --head-font: var(--font-baloo), system-ui, sans-serif;
   --btn-clip: none;
 }
-html[data-theme='cartoon'].dark {
+[data-theme='cartoon'].dark {
   --coral: #e8634a;
   --coral-light: #ff9478;
   --terracotta: #c4503a;
@@ -193,7 +197,7 @@ html[data-theme='cartoon'].dark {
   --head-font: var(--font-space-grotesk), system-ui, sans-serif;
   --btn-clip: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
 }
-html[data-theme='arcade'].dark {
+[data-theme='arcade'].dark {
   --coral: #e8634a;
   --coral-light: #ff8a6d;
   --terracotta: #c4503a;
@@ -241,7 +245,7 @@ html[data-theme='arcade'].dark {
   --head-font: var(--font-space-grotesk), system-ui, sans-serif;
   --btn-clip: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
 }
-html[data-theme='retro'].dark {
+[data-theme='retro'].dark {
   --coral: #e8634a;
   --coral-light: #ff8a6d;
   --terracotta: #c4503a;
