@@ -69,7 +69,7 @@ export default function SquareMessageList({
         aria-label="Messages de la Place"
       >
         {messages.length === 0 && (
-          <p className="text-center text-sm text-gray-400">La Place est calme pour le moment…</p>
+          <p className="text-center text-sm text-muted">La Place est calme pour le moment…</p>
         )}
         {messages.map((msg) => {
           if (msg.isSystem) {
@@ -98,7 +98,7 @@ export default function SquareMessageList({
                     {msg.pseudonym}
                   </span>
                 )}
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-muted">
                   {new Date(msg.timestamp).toLocaleTimeString('fr-FR', {
                     hour: '2-digit',
                     minute: '2-digit',
@@ -115,14 +115,14 @@ export default function SquareMessageList({
                     className="max-h-60 max-w-[240px] rounded-md object-contain"
                   />
                 ) : (
-                  <p className="text-sm text-gray-800 dark:text-gray-200">{msg.content}</p>
+                  <p className="text-sm text-content">{msg.content}</p>
                 )}
                 {isReported ? (
                   <span className="text-xs text-green-600 dark:text-green-400">✓</span>
                 ) : (
                   <button
                     onClick={() => setReportingMessageId(msg.id)}
-                    className="invisible text-xs text-gray-400 hover:text-red-500 group-hover:visible"
+                    className="invisible text-xs text-muted hover:text-red-500 group-hover:visible"
                     aria-label="Signaler"
                   >
                     ⚑
@@ -140,14 +140,14 @@ export default function SquareMessageList({
                       className={
                         isActive
                           ? 'rounded-full border border-coral bg-blush px-1.5 py-0.5 text-xs transition-colors dark:border-coral-light dark:bg-coral/10'
-                          : 'rounded-full border border-transparent px-1.5 py-0.5 text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-800'
+                          : 'rounded-full border border-transparent px-1.5 py-0.5 text-xs transition-colors hover:bg-fill-subtle'
                       }
                       aria-pressed={isActive}
                       aria-label={`Réagir avec ${emoji}`}
                     >
                       {emoji}
                       {msgReactions[emoji] ? (
-                        <span className="ml-0.5 text-[10px] text-gray-500">{msgReactions[emoji]}</span>
+                        <span className="ml-0.5 text-[10px] text-muted">{msgReactions[emoji]}</span>
                       ) : null}
                     </button>
                   );

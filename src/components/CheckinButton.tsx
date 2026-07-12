@@ -174,7 +174,7 @@ export function CheckinButton() {
             {formatRemaining(active.secondsRemaining)}
           </span>
         </div>
-        <p className="text-xs text-gray-600">
+        <p className="text-xs text-muted">
           Si tu ne reviens pas à temps, ton Cercle est alerté automatiquement.
         </p>
         <div className="flex flex-wrap items-center gap-2">
@@ -190,7 +190,7 @@ export function CheckinButton() {
             type="button"
             onClick={handleCancel}
             disabled={actionInFlight}
-            className="rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-coral disabled:opacity-50"
+            className="rounded-md px-2 py-1.5 text-sm font-medium text-muted hover:bg-fill-subtle focus:outline-none focus:ring-2 focus:ring-coral disabled:opacity-50"
           >
             Annuler
           </button>
@@ -211,7 +211,7 @@ export function CheckinButton() {
         type="button"
         onClick={() => setShowModal(true)}
         title="Tu as un RDV ? Si tu ne reviens pas dans le temps choisi, ton Cercle est alerté."
-        className="rounded-xl border border-coral/30 bg-white px-3 py-2 text-sm font-medium text-coral-dark hover:bg-coral/5 focus:outline-none focus:ring-2 focus:ring-coral"
+        className="rounded-xl border border-coral/30 bg-surface px-3 py-2 text-sm font-medium text-coral-dark hover:bg-coral/5 focus:outline-none focus:ring-2 focus:ring-coral"
       >
         🛡 Activer un check-in de sécurité
       </button>
@@ -285,15 +285,15 @@ function DurationModal({
       <div
         ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-t-2xl bg-white p-5 shadow-lg sm:rounded-2xl"
+        className="w-full max-w-md rounded-t-2xl bg-surface p-5 shadow-lg sm:rounded-2xl"
       >
         <h2
           id="checkin-modal-title"
-          className="mb-1 text-lg font-semibold text-gray-900"
+          className="mb-1 text-lg font-semibold text-content"
         >
           Durée du check-in
         </h2>
-        <p className="mb-4 text-sm text-gray-600">
+        <p className="mb-4 text-sm text-muted">
           Si tu ne valides pas avant la fin, ton Cercle est alerté.
         </p>
 
@@ -310,7 +310,7 @@ function DurationModal({
               type="button"
               disabled={inFlight}
               onClick={() => onChoose(d.value)}
-              className="rounded-lg border border-coral/30 bg-white px-3 py-3 text-sm font-medium text-coral-dark hover:bg-coral/5 focus:outline-none focus:ring-2 focus:ring-coral disabled:opacity-50"
+              className="rounded-lg border border-coral/30 bg-surface px-3 py-3 text-sm font-medium text-coral-dark hover:bg-coral/5 focus:outline-none focus:ring-2 focus:ring-coral disabled:opacity-50"
             >
               {d.label}
             </button>
@@ -321,7 +321,7 @@ function DurationModal({
           type="button"
           onClick={onClose}
           disabled={inFlight}
-          className="mt-4 w-full rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-coral disabled:opacity-50"
+          className="mt-4 w-full rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-fill-subtle focus:outline-none focus:ring-2 focus:ring-coral disabled:opacity-50"
         >
           Annuler
         </button>

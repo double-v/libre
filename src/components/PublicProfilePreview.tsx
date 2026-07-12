@@ -32,10 +32,10 @@ export default function PublicProfilePreview({
   return (
     <article
       aria-label="Aperçu public de votre profil"
-      className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800"
+      className="overflow-hidden rounded-xl border border-hairline bg-surface shadow-sm"
     >
       {heroPhoto ? (
-        <div className="relative aspect-[4/5] w-full bg-gray-100 dark:bg-gray-900">
+        <div className="relative aspect-[4/5] w-full bg-fill-subtle">
           <Image
             src={photoUrl(heroPhoto)}
             alt={`Photo de ${displayName}`}
@@ -55,18 +55,18 @@ export default function PublicProfilePreview({
 
       <div className="space-y-3 p-4 sm:p-5">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-xl font-semibold text-content">
             {displayName}{age != null ? `, ${age}` : ''}
           </h2>
           {isVerified && <VerificationBadge isVerified />}
         </div>
 
         {distance && (
-          <p className="text-sm text-gray-600 dark:text-gray-400">à {distance}</p>
+          <p className="text-sm text-muted">à {distance}</p>
         )}
 
         {bio && (
-          <p className="text-sm text-gray-700 dark:text-gray-300">{bio}</p>
+          <p className="text-sm text-muted">{bio}</p>
         )}
 
         {interests.length > 0 && (
@@ -74,7 +74,7 @@ export default function PublicProfilePreview({
             {interests.map((interest) => (
               <span
                 key={interest}
-                className="inline-block rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                className="inline-block rounded-full bg-fill-subtle px-2.5 py-0.5 text-xs font-medium text-muted"
               >
                 {interest}
               </span>

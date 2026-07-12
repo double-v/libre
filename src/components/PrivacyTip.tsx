@@ -4,7 +4,7 @@ interface PrivacyTipProps {
 
 export default function PrivacyTip({ tip }: PrivacyTipProps) {
   return (
-    <p className="flex items-start gap-1.5 text-xs leading-snug text-gray-600 dark:text-gray-400">
+    <p className="flex items-start gap-1.5 text-xs leading-snug text-muted">
       <span className="mt-0.5 shrink-0" aria-hidden="true">&#9432;</span>
       <span>{tip}</span>
     </p>

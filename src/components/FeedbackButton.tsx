@@ -68,7 +68,7 @@ export default function FeedbackButton() {
   return (
     <div className="fixed bottom-chrome right-4 z-40" ref={panelRef}>
       {open && (
-        <div className="mb-2 w-72 rounded-xl border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-800 dark:bg-gray-950">
+        <div className="mb-2 w-72 rounded-xl border border-hairline bg-surface p-4 shadow-lg">
           {submitted ? (
             <p className="py-4 text-center text-sm text-coral">
               Merci pour votre retour !
@@ -76,13 +76,13 @@ export default function FeedbackButton() {
           ) : (
             <form onSubmit={handleSubmit}>
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                <span className="text-sm font-semibold text-content">
                   Signaler / Suggérer
                 </span>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
+                  className="text-muted hover:text-content"
                   aria-label="Fermer"
                 >
                   &times;
@@ -98,7 +98,7 @@ export default function FeedbackButton() {
                     className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
                       category === cat
                         ? 'bg-coral text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+                        : 'bg-fill-subtle text-muted hover:bg-fill-subtle'
                     }`}
                   >
                     {cat === 'bug'
@@ -120,7 +120,7 @@ export default function FeedbackButton() {
                       ? 'Votre idée...'
                       : 'Votre question...'
                 }
-                className="mb-3 h-24 w-full resize-none rounded-lg border border-gray-200 bg-gray-50 p-2 text-sm text-gray-900 focus:border-coral focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
+                className="mb-3 h-24 w-full resize-none rounded-lg border border-hairline bg-fill-subtle p-2 text-sm text-content focus:border-coral focus:outline-none dark:placeholder:text-muted"
                 required
                 minLength={5}
                 maxLength={2000}

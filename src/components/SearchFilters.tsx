@@ -48,9 +48,9 @@ interface SearchFiltersProps {
 }
 
 const LABEL_CLASS =
-  'mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400';
+  'mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted';
 const RANGE_CLASS =
-  'h-1.5 w-full cursor-pointer appearance-none rounded-full bg-gray-200 accent-coral dark:bg-gray-700';
+  'h-1.5 w-full cursor-pointer appearance-none rounded-full bg-fill-subtle accent-coral';
 
 export default function SearchFilters({
   value,
@@ -156,7 +156,7 @@ export default function SearchFilters({
         <div className="max-h-48 space-y-3 overflow-y-auto">
           {INTEREST_CATEGORIES.map((cat) => (
             <div key={cat.name}>
-              <p className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">{cat.name}</p>
+              <p className="mb-1 text-xs font-medium text-muted">{cat.name}</p>
               <div className="flex flex-wrap gap-1">
                 {cat.items.map((tag) => (
                   <TagButton

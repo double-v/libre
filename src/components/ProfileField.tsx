@@ -13,12 +13,12 @@ export default function ProfileField({ label, children, empty }: ProfileFieldPro
 
   return (
     <div>
-      <dt className="text-xs font-medium uppercase tracking-wider text-gray-600 dark:text-gray-400">
+      <dt className="text-xs font-medium uppercase tracking-wider text-muted">
         {label}
       </dt>
-      <dd className="text-sm text-gray-900 dark:text-gray-100">
+      <dd className="text-sm text-content">
         {showEmpty ? (
-          <span className="italic text-gray-600 dark:text-gray-400">Non renseigné</span>
+          <span className="italic text-muted">Non renseigné</span>
         ) : (
           children
         )}

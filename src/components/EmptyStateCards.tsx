@@ -36,7 +36,7 @@ export default function EmptyStateCards({ context }: EmptyStateCardsProps) {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6">
-      <p className="mb-6 text-center text-gray-500 dark:text-gray-400">
+      <p className="mb-6 text-center text-muted">
         Personne {context} pour le moment
       </p>
 
@@ -44,19 +44,19 @@ export default function EmptyStateCards({ context }: EmptyStateCardsProps) {
         {placeholderProfiles.map((profile, i) => (
           <div
             key={i}
-            className="animate-fade-in rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+            className="animate-fade-in rounded-xl border border-hairline bg-surface p-4 shadow-sm"
             style={{ animationDelay: `${i * 100}ms` }}
           >
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-fill-subtle">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted">
                   <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
               </div>
               <div>
-                <p className="font-medium text-gray-400 dark:text-gray-500">{profile.name}</p>
-                <p className="text-sm text-gray-300 dark:text-gray-600">{profile.bio}</p>
+                <p className="font-medium text-muted">{profile.name}</p>
+                <p className="text-sm text-muted">{profile.bio}</p>
               </div>
             </div>
           </div>
@@ -74,7 +74,7 @@ export default function EmptyStateCards({ context }: EmptyStateCardsProps) {
             </div>
             <div className="flex-1">
               <p className="font-medium text-coral dark:text-coral-light">Invite quelqu&apos;un sur Libre</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Partage le lien et agrandis la communauté</p>
+              <p className="text-sm text-muted">Partage le lien et agrandis la communauté</p>
             </div>
             <button
               onClick={handleShare}

@@ -44,7 +44,7 @@ export default function ProfileCompleteness({ profile, onSuggestionClick }: Prof
         aria-live="polite"
         className="mb-6 rounded-xl border border-coral/15 bg-blush p-4 dark:border-coral/20 dark:bg-coral/10"
       >
-        <p className="text-sm text-gray-700 dark:text-gray-300">Commence par remplir ton profil</p>
+        <p className="text-sm text-muted">Commence par remplir ton profil</p>
       </div>
     );
   }
@@ -73,10 +73,10 @@ export default function ProfileCompleteness({ profile, onSuggestionClick }: Prof
       className="mb-6 rounded-xl border border-coral/15 bg-blush p-4 dark:border-coral/20 dark:bg-coral/10"
     >
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+        <p className="text-sm font-medium text-content">
           {copy.headline}
         </p>
-        <span className="text-xs text-gray-600 dark:text-gray-400">{filled.length}/{CHECKS.length}</span>
+        <span className="text-xs text-muted">{filled.length}/{CHECKS.length}</span>
       </div>
       <div className="mb-2 h-1.5 w-full rounded-full bg-coral/15 dark:bg-coral/20">
         <div
@@ -86,7 +86,7 @@ export default function ProfileCompleteness({ profile, onSuggestionClick }: Prof
       </div>
       {nextMissing && copy.kind !== 'complete' && (
         <>
-          <p className="text-xs text-gray-700 dark:text-gray-300">
+          <p className="text-xs text-muted">
             Ajoute {nextMissing.label}
             {onSuggestionClick && (
               <button
@@ -100,7 +100,7 @@ export default function ProfileCompleteness({ profile, onSuggestionClick }: Prof
           </p>
           {/* Le « pourquoi » : relier la complétion à la qualité de rencontre
               (North Star), sans promesse racoleuse. */}
-          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          <p className="mt-1 text-xs text-muted">
             Plus ton profil te ressemble, plus les rencontres sont justes.
           </p>
         </>

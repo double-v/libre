@@ -41,7 +41,7 @@ export default function TagSelector({
     <div className="space-y-4">
       {categories.map((category) => (
         <div key={category.name}>
-          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">
             {category.name}
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -71,13 +71,13 @@ export default function TagSelector({
             }}
             placeholder={placeholder}
             maxLength={30}
-            className="flex-1 rounded-full border border-gray-300 px-3 py-1 text-xs focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+            className="flex-1 rounded-full border border-hairline-strong px-3 py-1 text-xs focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
           />
           <button
             type="button"
             onClick={addCustom}
             disabled={!customInput.trim()}
-            className="rounded-full border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 transition-colors hover:border-gray-400 disabled:opacity-40"
+            className="rounded-full border border-hairline-strong px-3 py-1 text-xs font-medium text-muted transition-colors hover:border-hairline-strong disabled:opacity-40"
           >
             Ajouter
           </button>
