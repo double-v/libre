@@ -162,16 +162,21 @@ Registre unique `src/lib/site-themes.ts` (`SITE_THEMES`). Chaque thème est déc
 
 La home publique (`src/app/page.tsx`, épic #243) garde sa **mise en page lobby**
 (hero ambiant, skyline parallax, personnages qui marchent, ciel jour/nuit) et son
-identité **sombre-chaude** comme *présentation* — mais **puise dans les mêmes tokens
-de thème** que le reste de l'app (`--coral`, `--head-font`, `--rad-card`,
-`--btn-clip`, `--gold`…). Changer de thème depuis le `ThemeMenu` reskin la landing
-comme l'app ; c'est **le même composant de sélection** partout (plus de switcher
-lobby séparé, plus d'axe `data-lobby`).
+identité **sombre-chaude** comme *présentation*. Son **thème n'est plus un axe
+séparé** : c'est le **`ThemeMenu` global** qui le pilote (le même sélecteur que
+partout, dans `LobbyNav`). Sélectionner `arcade`/`retro` reskin l'ambiance
+lobby ; `libre`/`libre-warm`/`cartoon` → ambiance cartoon par défaut.
 
-- Les classes `.lobby-*` de `globals.css` consomment les **tokens unifiés**
-  (réconciliation menée avec l'arrivée du `ThemeMenu` sur la landing).
-- Le décor ambiant reste **sombre-chaud** par design, jamais froid bleuté
-  (cf. PRODUCT.md, anti-réf) — c'est une présentation, pas un axe de token séparé.
+- Le conteneur racine porte `data-lobby` comme **simple marqueur** (sans valeur) ;
+  les tokens `--lobby-*` **cascadent depuis `html[data-theme]`** (bloc par défaut =
+  cartoon, `html[data-theme='arcade'|'retro'] [data-lobby]` surchargent). Les
+  classes `.lobby-*` consomment `--lobby-*` — **inchangées** (réconciliation
+  CSS-only, sans réécrire les composants).
+- **Toujours sombre par design** (indépendant du mode `.dark`) : l'ambiant reste
+  sombre-chaud, jamais froid bleuté (cf. PRODUCT.md, anti-réf) — le `ThemeMenu`
+  expose le mode clair/sombre pour la suite de l'app, sans altérer l'ambiant.
+- Plus de switcher lobby dédié, plus de clé `libre-lobby-theme`, plus de script
+  no-flash local (le script de `layout.tsx` pose `data-theme` avant paint).
 - **Garde-fous** (comme tout thème) : **reduced-motion** obligatoire sur chaque
   animation (blobs, mot rotatif, personnages/bulles, parallax skyline, oiseaux,
   étoiles, scanlines) — settle statique ; WCAG AA ; focus ring coral ; cibles

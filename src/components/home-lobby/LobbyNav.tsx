@@ -1,24 +1,17 @@
 import Link from 'next/link';
-import LobbyThemeSwitcher from './LobbyThemeSwitcher';
-import type { LobbyThemeId } from './lobby-theme';
-
-interface LobbyNavProps {
-  /** Thème lobby actif (pour le switcher). */
-  themeValue: LobbyThemeId;
-  /** Changement de thème depuis le switcher. */
-  onThemeChange: (id: LobbyThemeId) => void;
-}
+import ThemeMenu from '@/components/ui/ThemeMenu';
 
 /**
  * Barre de navigation sticky de la landing « lobby » (#245, épic #243).
  *
  * Marque (pastille coral + cœur) → `/`, liens réels (`/manifesto`, `/login`),
- * switcher de thème (foundation #244) et CTA `/register`. Style via classes
- * `.lobby-nav*` de `globals.css` (tokens `--lobby-*`, focus ring coral, cibles
- * ≥ 44px, `overflow-x:auto` en mobile). A11y : marque et liens = vrais `<a>`
- * (Next `Link`), switcher = `<button>` `aria-pressed`.
+ * le **`ThemeMenu` global** (thème + clair/sombre, le même que dans toute l'app —
+ * il re-skinne l'ambiance lobby via `html[data-theme]`) et CTA `/register`. Style
+ * via classes `.lobby-nav*` de `globals.css` (tokens `--lobby-*`, focus ring coral,
+ * cibles ≥ 44px, `overflow-x:auto` en mobile). A11y : marque et liens = vrais
+ * `<a>` (Next `Link`).
  */
-export default function LobbyNav({ themeValue, onThemeChange }: LobbyNavProps) {
+export default function LobbyNav() {
   return (
     <nav className="lobby-nav" aria-label="Navigation principale">
       <Link href="/" aria-label="Accueil Libre" className="lobby-nav__brand">
@@ -40,7 +33,7 @@ export default function LobbyNav({ themeValue, onThemeChange }: LobbyNavProps) {
       </div>
 
       <div className="lobby-nav__actions">
-        <LobbyThemeSwitcher value={themeValue} onChange={onThemeChange} />
+        <ThemeMenu />
         <Link href="/register" className="lobby-nav__cta">
           Créer un compte
         </Link>

@@ -1,17 +1,20 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, expect, it, beforeAll, beforeEach, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
 
-// next/font ne peut pas s'exécuter hors compilation Next : on stub la classe de vars.
-vi.mock('@/lib/fonts', () => ({ lobbyFontVars: 'font-vars-mock' }));
+// LobbyNav intègre le ThemeMenu global (client, useSession).
+vi.mock('next-auth/react', () => ({
+  useSession: () => ({ data: null, status: 'unauthenticated' }),
+}));
 
 import HomeLobby from '@/components/home-lobby/HomeLobby';
-import { LOBBY_STORAGE_KEY } from '@/components/home-lobby/lobby-theme';
 
-// jsdom n'implémente pas matchMedia ; RotatingWord (dans le HERO) l'utilise.
-beforeAll(() => {
+// jsdom n'implémente pas matchMedia ; RotatingWord (HERO), HomeLobby (reduced
+// motion) et le ThemeMenu (mode auto) l'utilisent.
+beforeEach(() => {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
-    value: vi.fn().mockImplementation((query: string) => ({
+    configurable: true,
+    value: (query: string) => ({
       matches: false,
       media: query,
       onchange: null,
@@ -20,44 +23,25 @@ beforeAll(() => {
       addListener: vi.fn(),
       removeListener: vi.fn(),
       dispatchEvent: vi.fn(),
-    })),
+    }),
   });
+  global.fetch = vi.fn(() => Promise.resolve({ ok: true, json: async () => ({}) } as Response));
 });
 
-describe('HomeLobby (shell #244)', () => {
-  beforeEach(() => {
-    localStorage.removeItem(LOBBY_STORAGE_KEY);
+describe('HomeLobby (landing)', () => {
+  it('porte le marqueur data-lobby sur son conteneur racine', () => {
+    const { container } = render(<HomeLobby />);
+    expect(container.querySelector('[data-lobby]')).not.toBeNull();
   });
 
-  it('démarre en cartoon (défaut SSR)', () => {
-    const { container } = render(<HomeLobby />);
-    expect(container.querySelector('[data-lobby]')).toHaveAttribute('data-lobby', 'cartoon');
-    expect(screen.getByRole('button', { name: 'Cartoon' })).toHaveAttribute('aria-pressed', 'true');
+  it('intègre le ThemeMenu global (plus de switcher lobby dédié)', () => {
+    render(<HomeLobby />);
+    expect(screen.getByRole('button', { name: /thème et apparence/i })).toBeInTheDocument();
   });
 
-  it('changer de thème met à jour data-lobby, le storage et la pill active', () => {
+  it('expose les landmarks a11y : <main id="main-content"> + footer', () => {
     const { container } = render(<HomeLobby />);
-    fireEvent.click(screen.getByRole('button', { name: 'Rétro 8-bit' }));
-
-    expect(container.querySelector('[data-lobby]')).toHaveAttribute('data-lobby', 'retro');
-    expect(localStorage.getItem(LOBBY_STORAGE_KEY)).toBe('retro');
-    expect(screen.getByRole('button', { name: 'Rétro 8-bit' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: 'Cartoon' })).toHaveAttribute('aria-pressed', 'false');
-  });
-
-  it('rend le script no-flash en premier enfant du conteneur', () => {
-    const { container } = render(<HomeLobby />);
-    const root = container.querySelector('[data-lobby]');
-    const firstChild = root?.firstElementChild;
-    expect(firstChild?.tagName).toBe('SCRIPT');
-    expect(firstChild?.innerHTML).toContain('data-lobby');
-  });
-
-  it('expose les landmarks a11y du cutover : <main id="main-content"> + footer', () => {
-    const { container } = render(<HomeLobby />);
-    const main = container.querySelector('main#main-content');
-    expect(main).not.toBeNull();
-    // le lien d'évitement (rendu par page.tsx) doit pouvoir viser ce main
+    expect(container.querySelector('main#main-content')).not.toBeNull();
     expect(container.querySelector('footer.lobby-footer')).not.toBeNull();
   });
 });
