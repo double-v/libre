@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { SiteNavView } from '@/components/ui/SiteNav';
+import SiteShell from '@/components/ui/SiteShell';
 
 const CANONICAL_ORIGIN = 'https://www.getlibre.fr';
 
@@ -97,90 +99,16 @@ const onRefuseDe = [
 export default function ManifestoPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-content">
-      {/* Skip-link : déjà couvert par le layout racine, on garde une
-          ancre #main-content pour la navigation clavier cohérente. */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-surface focus:px-4 focus:py-2 focus:text-coral focus:shadow-md"
-      >
-        Aller au contenu principal
-      </a>
-
-      {/* ====== NAV publique (réplique légère du header de la home) ====== */}
-      <nav
-        aria-label="Navigation principale"
-        className="mx-auto flex w-full max-w-2xl items-center justify-between px-6 py-4"
-      >
-        <Link
-          href="/"
-          aria-label="Accueil Libre"
-          className="flex items-center gap-2"
-        >
-          <svg
-            viewBox="76 36 360 360"
-            className="h-8 w-8"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <rect
-              x="236"
-              y="42"
-              width="40"
-              height="120"
-              rx="20"
-              transform="rotate(-60 256 188)"
-            />
-            <rect
-              x="236"
-              y="42"
-              width="40"
-              height="120"
-              rx="20"
-              transform="rotate(-30 256 188)"
-            />
-            <rect x="236" y="42" width="40" height="120" rx="20" />
-            <rect
-              x="236"
-              y="42"
-              width="40"
-              height="120"
-              rx="20"
-              transform="rotate(30 256 188)"
-            />
-            <rect
-              x="236"
-              y="42"
-              width="40"
-              height="120"
-              rx="20"
-              transform="rotate(60 256 188)"
-            />
-            <path d="M256,195 C256,170 218,130 180,130 C130,130 105,175 105,215 C105,300 256,375 256,390 C256,375 407,300 407,215 C407,175 382,130 332,130 C294,130 256,170 256,195 Z" />
-          </svg>
-          <span className="text-2xl font-bold tracking-tight text-coral">
-            Libre
-          </span>
-        </Link>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/login"
-            className="text-sm font-medium text-muted hover:text-content"
-          >
-            Se connecter
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-full bg-coral px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-terracotta"
-          >
-            Créer un compte
-          </Link>
-        </div>
-      </nav>
+      {/* Shell unifié (#278, épic #273) : nav partagée (variante guest —
+          /manifesto est une page publique/marketing) + échelle de largeurs
+          `reading` (720px) au lieu du max-w-2xl recodé. Le skip-link vit
+          désormais dans le layout racine ; on garde l'ancre #main-content. */}
+      <SiteNavView variant="guest" width="reading" />
 
       <main id="main-content" className="flex-1">
         {/* ====== HERO ====== */}
-        <section className="px-6 py-12 sm:py-16">
-          <div className="mx-auto max-w-2xl text-center">
+        <section className="py-12 sm:py-16">
+          <SiteShell width="reading" className="text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-coral">
               Notre manifesto
             </p>
@@ -192,15 +120,12 @@ export default function ManifestoPage() {
               boosts et en données personnelles. On a décidé de faire
               autrement. Voici comment, et pourquoi.
             </p>
-          </div>
+          </SiteShell>
         </section>
 
         {/* ====== ON EST LIBRES DE ====== */}
-        <section
-          aria-labelledby="libres-de"
-          className="bg-blush px-6 py-14 dark:bg-coral/10"
-        >
-          <div className="mx-auto max-w-2xl">
+        <section aria-labelledby="libres-de" className="bg-blush py-14 dark:bg-coral/10">
+          <SiteShell width="reading">
             <h2
               id="libres-de"
               className="mb-2 text-3xl font-bold text-content"
@@ -224,15 +149,12 @@ export default function ManifestoPage() {
                 </li>
               ))}
             </ul>
-          </div>
+          </SiteShell>
         </section>
 
         {/* ====== ON REFUSE DE ====== */}
-        <section
-          aria-labelledby="refuse-de"
-          className="px-6 py-14"
-        >
-          <div className="mx-auto max-w-2xl">
+        <section aria-labelledby="refuse-de" className="py-14">
+          <SiteShell width="reading">
             <h2
               id="refuse-de"
               className="mb-2 text-3xl font-bold text-content"
@@ -259,15 +181,12 @@ export default function ManifestoPage() {
                 </li>
               ))}
             </ul>
-          </div>
+          </SiteShell>
         </section>
 
         {/* ====== COMMENT ON FINANCE ====== */}
-        <section
-          aria-labelledby="finance"
-          className="bg-sand px-6 py-14 dark:bg-coral/5"
-        >
-          <div className="mx-auto max-w-2xl">
+        <section aria-labelledby="finance" className="bg-sand py-14 dark:bg-coral/5">
+          <SiteShell width="reading">
             <h2
               id="finance"
               className="mb-2 text-3xl font-bold text-content"
@@ -318,15 +237,17 @@ export default function ManifestoPage() {
                 </p>
               </div>
             </div>
-          </div>
+          </SiteShell>
         </section>
 
         {/* ====== CTA + LIEN RETOUR HOME ====== */}
         <section
           aria-labelledby="cta"
-          className="bg-gradient-to-br from-coral to-terracotta px-6 py-16 text-center"
+          className="bg-gradient-to-br from-coral to-terracotta py-16 text-center"
         >
-          <div className="mx-auto max-w-2xl">
+          {/* Focus ring blanc conservé : shadow-focus (coral) serait invisible
+              sur ce fond coral — l'anneau blanc reste le choix a11y correct ici. */}
+          <SiteShell width="reading">
             <h2
               id="cta"
               className="mb-2 text-3xl font-extrabold text-white sm:text-4xl"
@@ -359,35 +280,28 @@ export default function ManifestoPage() {
                 ← Retour à l&rsquo;accueil
               </Link>
             </p>
-          </div>
+          </SiteShell>
         </section>
       </main>
 
       {/* ====== FOOTER ====== */}
-      <footer className="px-6 py-8 text-center">
-        <div className="mb-3 flex items-center justify-center gap-4 text-xs text-muted">
-          <Link
-            href="/cgu"
-            className="hover:text-muted"
-          >
-            Conditions générales d&rsquo;utilisation
-          </Link>
-          <Link
-            href="/confidentialite"
-            className="hover:text-muted"
-          >
-            Politique de confidentialité
-          </Link>
-          <Link
-            href="/mentions-legales"
-            className="hover:text-muted"
-          >
-            Mentions légales
-          </Link>
-        </div>
-        <p className="text-xs text-muted">
-          Presse &amp; médias : contact@getlibre.fr
-        </p>
+      <footer className="py-8 text-center">
+        <SiteShell width="reading">
+          <div className="mb-3 flex flex-wrap items-center justify-center gap-4 text-xs text-muted">
+            <Link href="/cgu" className="hover:text-content">
+              Conditions générales d&rsquo;utilisation
+            </Link>
+            <Link href="/confidentialite" className="hover:text-content">
+              Politique de confidentialité
+            </Link>
+            <Link href="/mentions-legales" className="hover:text-content">
+              Mentions légales
+            </Link>
+          </div>
+          <p className="text-xs text-muted">
+            Presse &amp; médias : contact@getlibre.fr
+          </p>
+        </SiteShell>
       </footer>
     </div>
   );
