@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
-import TopNav from '@/components/ui/TopNav';
+import SiteNav from '@/components/ui/SiteNav';
 
 const MatchDialog = dynamic(() => import('@/components/MatchDialog'), { ssr: false });
 const FeedbackButton = dynamic(() => import('@/components/FeedbackButton'), { ssr: false });
@@ -92,9 +92,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* En-tête unifié (marque + ThemeMenu + admin/paramètres) + bannière bêta
-          dans le même conteneur sticky (safe-area portée par TopNav). */}
-      <TopNav
+      {/* Shell unifié (#280, épic #273) : la nav du haut passe sur le SiteNav
+          partagé (variante connectée résolue via session), largeur « app »
+          (max-w-lg, mobile-first). La bannière bêta reste câblée dans le même
+          conteneur sticky (safe-area portée par SiteNav). La bottom tab bar
+          coexiste (décision DESIGN.md § Navigation, on ne fusionne pas). */}
+      <SiteNav
+        width="app"
         banner={
           <BetaBanner onFeedback={() => window.dispatchEvent(new Event('open-feedback'))} />
         }
@@ -102,7 +106,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       <main id="main-content" role="main" className="flex-1 pb-nav">{children}</main>
 
-      <nav role="navigation" aria-label="Navigation principale" className="fixed bottom-0 left-0 right-0 z-50 border-t border-hairline bg-surface pb-safe">
+      {/* Label distinct de la nav du haut (SiteNav = « Navigation principale »)
+          pour ne pas dupliquer le landmark : la tab bar navigue entre sections. */}
+      <nav role="navigation" aria-label="Navigation des sections" className="fixed bottom-0 left-0 right-0 z-50 border-t border-hairline bg-surface pb-safe">
         <div className="mx-auto flex min-h-14 max-w-lg items-center justify-around">
           {navItems.map((item) => {
             const isActive =
