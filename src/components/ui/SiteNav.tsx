@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import ThemeToggle from './ThemeToggle';
 import SiteShell, { type ShellWidth } from './SiteShell';
+import HeartMark from './HeartMark';
 
 /**
  * SiteNav — nav unique du shell unifié (#276, épic #273).
@@ -112,14 +113,8 @@ export default function SiteNav({
 function Brand({ href }: { href: string }) {
   return (
     <Link href={href} aria-label="Accueil Libre" className="flex items-center gap-2 text-coral">
-      <svg viewBox="76 36 360 360" className="h-8 w-8" fill="currentColor" aria-hidden="true">
-        <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(-60 256 188)" />
-        <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(-30 256 188)" />
-        <rect x="236" y="42" width="40" height="120" rx="20" />
-        <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(30 256 188)" />
-        <rect x="236" y="42" width="40" height="120" rx="20" transform="rotate(60 256 188)" />
-        <path d="M256,195 C256,170 218,130 180,130 C130,130 105,175 105,215 C105,300 256,375 256,390 C256,375 407,300 407,215 C407,175 382,130 332,130 C294,130 256,170 256,195 Z" />
-      </svg>
+      {/* Logo de référence unique (#294) : le cœur de la marque (HeartMark). */}
+      <HeartMark className="h-8 w-8" />
       <span className="text-lg font-bold tracking-tight">Libre</span>
     </Link>
   );

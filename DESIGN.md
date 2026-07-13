@@ -558,6 +558,7 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 | `TopNav` | guest, connecté, admin | — | Header inline `(main)`, `PublicHeader`, header lobby |
 | `SiteShell` | — | content, reading, app | Les `mx-auto max-w-* px-*` ad hoc dispersés (448/512/672/768/1080) |
 | `SiteNav` | guest, connecté | guest, authed (× width) | `LobbyNav`, `TopNav`, nav ad hoc de `/manifesto` |
+| `HeartMark` | — | glyphe seul (taille via className/props) | Les deux glyphes de marque en double (cœur lobby + cœur-soleil à rayons) |
 
 ### Règles
 
@@ -588,6 +589,22 @@ home-only). Colonne interne = `SiteShell` (échelle de largeurs #277). Remplace
   `useSession` (surchargeable pour les contextes forcés, ex. landing = `guest`).
 - **A11y** : landmark `<nav aria-label="Navigation principale">`, marque
   labellisée, focus ring coral, cibles ≥ 44px.
+
+### HeartMark (`src/components/ui/HeartMark.tsx`)
+
+**Logo de référence unique** de la marque Libre (#294, épic #273) — le glyphe cœur
+de la home (`lobby-nav`). Source de vérité unique du glyphe : remplace l'ancien
+« cœur-soleil à rayons » qui vivait en double dans `SiteNav`, `TopNav` et `Logo`.
+
+- **Glyphe seul** (pas de wordmark, pas de lien) : les surfaces l'enveloppent de
+  leur propre `<Link aria-label="Accueil Libre">` + wordmark « Libre ». Le lobby le
+  place dans sa pastille coral (`.lobby-nav__logo` / `.lobby-footer__logo`).
+- **`fill="currentColor"`** → theme-aware : hérite de la couleur du parent
+  (`text-coral` dans les navs, `#fff` sur la pastille lobby). Zéro hex inline.
+- **Décoratif** (`aria-hidden`) ; taille via `className` (`h-8 w-8`…) ou attributs
+  SVG (`width`/`height`), props SVG transmises.
+- Consommé par : `Logo`, `SiteNav`, `TopNav` (le temps de sa vie, cleanup #283),
+  `LobbyNav`, `LobbyFooter`.
 
 ### SiteShell (`src/components/ui/SiteShell.tsx`)
 

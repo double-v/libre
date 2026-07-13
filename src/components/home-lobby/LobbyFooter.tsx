@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import HeartMark from '@/components/ui/HeartMark';
 
 /**
  * Pied de page de la landing « lobby » (#250, épic #243).
@@ -23,9 +24,7 @@ export default function LobbyFooter() {
       <div className="lobby-footer__inner">
         <div className="lobby-footer__brand">
           <span className="lobby-footer__logo" aria-hidden="true">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 21s-7.5-4.6-10-9.3C.4 8.1 2 4 6 4c2.2 0 3.8 1.3 6 3.7C14.2 5.3 15.8 4 18 4c4 0 5.6 4.1 4 7.7C19.5 16.4 12 21 12 21z" />
-            </svg>
+            <HeartMark width={16} height={16} />
           </span>
           <span className="lobby-footer__wordmark">Libre</span>
         </div>

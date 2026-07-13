@@ -37,6 +37,14 @@ describe('<SiteNavView /> — variante guest', () => {
     expect(screen.queryByRole('link', { name: 'Paramètres' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Administration' })).toBeNull();
   });
+
+  it('la marque utilise le glyphe cœur de référence (HeartMark), plus le cœur-soleil à rayons (#294)', () => {
+    const { container } = render(<SiteNavView variant="guest" />);
+    const brand = screen.getByRole('link', { name: 'Accueil Libre' });
+    // glyphe de référence = un path cœur unique ; l'ancien cœur-soleil avait 5 <rect>.
+    expect(brand.querySelector('path')).toHaveAttribute('d', expect.stringMatching(/^M12 21s-7\.5-4\.6-10-9\.3/));
+    expect(container.querySelectorAll('rect')).toHaveLength(0);
+  });
 });
 
 describe('<SiteNavView /> — variante connecté', () => {
