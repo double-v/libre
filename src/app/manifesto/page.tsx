@@ -99,16 +99,16 @@ const onRefuseDe = [
 export default function ManifestoPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-content">
-      {/* Shell unifié (#278, épic #273) : nav partagée (variante guest —
-          /manifesto est une page publique/marketing) + échelle de largeurs
-          `reading` (720px) au lieu du max-w-2xl recodé. Le skip-link vit
-          désormais dans le layout racine ; on garde l'ancre #main-content. */}
-      <SiteNavView variant="guest" width="reading" />
+      {/* Shell unifié (#278, épic #273 ; largeur élargie #293) : nav partagée
+          (variante guest — /manifesto est une page publique/marketing) + largeur
+          contenu globale `content` (1080px) au lieu du max-w-2xl recodé. Le
+          skip-link vit dans le layout racine ; on garde l'ancre #main-content. */}
+      <SiteNavView variant="guest" width="content" />
 
       <main id="main-content" className="flex-1">
         {/* ====== HERO ====== */}
         <section className="py-12 sm:py-16">
-          <SiteShell width="reading" className="text-center">
+          <SiteShell width="content" className="text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-coral">
               Notre manifesto
             </p>
@@ -125,7 +125,7 @@ export default function ManifestoPage() {
 
         {/* ====== ON EST LIBRES DE ====== */}
         <section aria-labelledby="libres-de" className="bg-blush py-14 dark:bg-coral/10">
-          <SiteShell width="reading">
+          <SiteShell width="content">
             <h2
               id="libres-de"
               className="mb-2 text-3xl font-bold text-content"
@@ -154,7 +154,7 @@ export default function ManifestoPage() {
 
         {/* ====== ON REFUSE DE ====== */}
         <section aria-labelledby="refuse-de" className="py-14">
-          <SiteShell width="reading">
+          <SiteShell width="content">
             <h2
               id="refuse-de"
               className="mb-2 text-3xl font-bold text-content"
@@ -186,7 +186,7 @@ export default function ManifestoPage() {
 
         {/* ====== COMMENT ON FINANCE ====== */}
         <section aria-labelledby="finance" className="bg-sand py-14 dark:bg-coral/5">
-          <SiteShell width="reading">
+          <SiteShell width="content">
             <h2
               id="finance"
               className="mb-2 text-3xl font-bold text-content"
@@ -247,7 +247,7 @@ export default function ManifestoPage() {
         >
           {/* Focus ring blanc conservé : shadow-focus (coral) serait invisible
               sur ce fond coral — l'anneau blanc reste le choix a11y correct ici. */}
-          <SiteShell width="reading">
+          <SiteShell width="content">
             <h2
               id="cta"
               className="mb-2 text-3xl font-extrabold text-white sm:text-4xl"
@@ -286,7 +286,7 @@ export default function ManifestoPage() {
 
       {/* ====== FOOTER ====== */}
       <footer className="py-8 text-center">
-        <SiteShell width="reading">
+        <SiteShell width="content">
           <div className="mb-3 flex flex-wrap items-center justify-center gap-4 text-xs text-muted">
             <Link href="/cgu" className="hover:text-content">
               Conditions générales d&rsquo;utilisation

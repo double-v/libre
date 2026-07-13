@@ -10,12 +10,13 @@ export const metadata: Metadata = {
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      {/* Shell unifié (#279, épic #273) : nav partagée + colonne « reading »
-          (720px, échelle centralisée #277 — DESIGN.md § Shell). Remplace la
-          TopNav max-w-3xl recodée. Nav adaptative (guest/connecté) via session.
-          Le <main id="main-content"> devient la cible du skip-link racine. */}
-      <SiteNav width="reading" />
-      <SiteShell as="main" id="main-content" width="reading" className="py-12">
+      {/* Shell unifié (#279, épic #273 ; largeur élargie #293) : nav partagée +
+          colonne `content` (1080px, largeur contenu globale desktop — DESIGN.md
+          § Shell). Remplace la TopNav max-w-3xl recodée. Nav adaptative
+          (guest/connecté) via session. Le <main id="main-content"> = cible du
+          skip-link racine. */}
+      <SiteNav width="content" />
+      <SiteShell as="main" id="main-content" width="content" className="py-12">
         {/* Breadcrumb */}
         <nav className="mb-8 text-sm text-muted" aria-label="Fil d'Ariane">
           <Link href="/" className="hover:text-coral">Accueil</Link>

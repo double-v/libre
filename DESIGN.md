@@ -307,13 +307,17 @@ adossé aux tokens `--container-*` de `globals.css` (`@theme`) — en remplaceme
 
 | Largeur (`width`) | Utilitaire | Valeur | Usage |
 |-------------------|------------|--------|-------|
-| `content` | `max-w-content` | 1080px | pages contenu larges (home, sections marketing) |
-| `reading` | `max-w-reading` | 720px | texte long centré (manifesto, légal) |
+| `content` | `max-w-content` | 1080px | **largeur contenu globale desktop** — pages contenu (home, manifesto, légal, sections marketing) |
+| `reading` | `max-w-reading` | 720px | texte long resserré — **option lisibilité** (non défaut ; réservé à un besoin explicite) |
 | `app` | `max-w-lg` | 512px | app connectée mobile-first (feed, messages, profil) |
 
-Décision (#273) : les pages *contenu* adoptent `content`/`reading` ; l'app garde
-`app` (mobile-first, UX cartes/swipe) **dans le même shell/nav/tokens**. Remplace la
-grille marketing `max-w-2xl` de la section **Layout** ci-dessus une fois migré.
+Décision (#273, précisée #293 le 2026-07-13) : la **largeur de contenu globale
+(desktop) est `content` (~1080px)** = la largeur du container de la home ; les pages
+contenu (home, manifesto, légal…) l'adoptent. `reading` (720) n'est **pas** le défaut
+— c'est une option de lisibilité (la spec #275 avait dérivé en mappant manifesto/légal
+sur `reading` ; corrigé en #293). L'app garde `app` (mobile-first, UX cartes/swipe)
+**dans le même shell/nav/tokens**. Remplace la grille marketing `max-w-2xl` de la
+section **Layout** ci-dessus une fois migré.
 
 **Largeur `content` — question ouverte tranchée (#277)** : une **seule valeur**
 `1080px` (pas d'échelle fine hero 1180 / sections 1080). Le hero de la home peut

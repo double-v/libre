@@ -35,6 +35,12 @@ describe('<ManifestoPage /> — shell migration (#278)', () => {
     expect(container.innerHTML).not.toMatch(/max-w-2xl/);
   });
 
+  it('adopte la largeur contenu globale (content 1080, plus reading 720) — #293', () => {
+    const { container } = render(<ManifestoPage />);
+    expect(container.innerHTML).toMatch(/max-w-content/);
+    expect(container.innerHTML).not.toMatch(/max-w-reading/);
+  });
+
   it('préserve le contenu et les sections clés du manifesto', () => {
     render(<ManifestoPage />);
     expect(
