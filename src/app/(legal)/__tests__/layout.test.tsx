@@ -59,6 +59,16 @@ describe('LegalLayout — shell migration (#279)', () => {
     expect(container.innerHTML).not.toMatch(/max-w-3xl/);
   });
 
+  it('adopte la largeur contenu globale (content 1080, plus reading 720) — #293', () => {
+    const { container } = render(
+      <LegalLayout>
+        <p>Contenu légal</p>
+      </LegalLayout>,
+    );
+    expect(container.innerHTML).toMatch(/max-w-content/);
+    expect(container.innerHTML).not.toMatch(/max-w-reading/);
+  });
+
   it('expose un landmark <main id="main-content"> (cible du skip-link racine)', () => {
     render(
       <LegalLayout>
