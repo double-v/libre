@@ -5,6 +5,7 @@ import { getDb } from '@/lib/db';
 import { debugLog } from '@/lib/logger';
 import Link from 'next/link';
 import ThemeMenu from '@/components/ui/ThemeMenu';
+import HeartMark from '@/components/ui/HeartMark';
 
 const adminNavItems = [
   { href: '/admin', label: 'Tableau de bord', icon: 'dashboard' },
@@ -128,7 +129,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="flex min-h-screen">
       <aside className="hidden w-56 shrink-0 border-r border-hairline bg-fill-subtle md:block">
         <div className="flex items-center justify-between gap-2 p-4">
-          <Link href="/admin" className="text-lg font-bold text-coral dark:text-coral-light">
+          {/* Marque avec le logo cœur de référence (#294) ; l'admin garde son
+              ThemeMenu (pas de nav app / Paramètres dans cette zone power). */}
+          <Link href="/admin" className="inline-flex items-center gap-2 text-lg font-bold text-coral dark:text-coral-light">
+            <HeartMark className="h-6 w-6" />
             Libre Admin
           </Link>
           <ThemeMenu />
@@ -156,7 +160,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="flex flex-1 flex-col md:hidden">
         <header className="border-b border-hairline bg-surface p-4">
           <div className="flex items-center justify-between gap-2">
-            <Link href="/admin" className="text-lg font-bold text-coral dark:text-coral-light">
+            <Link href="/admin" className="inline-flex items-center gap-2 text-lg font-bold text-coral dark:text-coral-light">
+              <HeartMark className="h-6 w-6" />
               Libre Admin
             </Link>
             <div className="flex items-center gap-2">

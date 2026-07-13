@@ -1,20 +1,15 @@
-import Logo from '@/components/Logo';
-import ThemeMenu from '@/components/ui/ThemeMenu';
+import { SiteNavView } from '@/components/ui/SiteNav';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      {/* Barre minimale : la marque est déjà le Logo centré ci-dessous ; on
-          n'expose ici que le ThemeMenu (theming accessible dès le login). */}
-      <div className="flex justify-end px-4 pt-safe">
-        <div className="py-2">
-          <ThemeMenu />
-        </div>
-      </div>
-      <div className="flex flex-1 flex-col items-center justify-center px-4 pb-8">
-        <div className="mb-8">
-          <Logo />
-        </div>
+      {/* Navbar unifiée du site (#281, épic #273) : variante guest, comme partout
+          ailleurs (marque + Manifesto + Se connecter / Créer un compte). Aucun
+          sélecteur de thème — auth est un contexte invité, le thème est celui par
+          défaut du site (comme la landing). Remplace le ThemeMenu + le logo
+          centré recodés. La marque de la navbar tient lieu de logo. */}
+      <SiteNavView variant="guest" />
+      <div className="flex flex-1 flex-col items-center justify-center px-4 py-8">
         <div className="w-full max-w-md rounded-card bg-surface p-8 shadow-soft ring-1 ring-hairline">{children}</div>
       </div>
     </div>

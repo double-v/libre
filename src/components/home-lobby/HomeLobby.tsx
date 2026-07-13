@@ -19,9 +19,10 @@ interface HomeLobbyProps {
  *
  * L'ambiance (hero ambiant sombre-chaud) est portée par `data-lobby` +
  * les classes `.lobby-*` de `globals.css`. Le **thème** n'est plus un axe
- * séparé : il suit le thème global (`html[data-theme]`, piloté par le
- * `ThemeMenu` dans `LobbyNav`) — les tokens `--lobby-*` cascadent depuis
- * `html[data-theme]`. Plus de switcher lobby, plus de clé `libre-lobby-theme`,
+ * séparé : il suit le thème global (`html[data-theme]`) — les tokens `--lobby-*`
+ * cascadent depuis `html[data-theme]`. La landing **n'expose aucun sélecteur**
+ * (thème = défaut du site) ; le choix du thème vit dans les Paramètres (app) et
+ * le ThemeMenu de l'admin. Plus de switcher lobby, plus de clé `libre-lobby-theme`,
  * plus de script no-flash local : le script de `layout.tsx` pose déjà
  * `data-theme` avant paint. `data-lobby` est un simple marqueur constant.
  */
