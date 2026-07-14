@@ -15,7 +15,8 @@ const MODES: { id: Mode; label: string }[] = [
 /**
  * ThemeMenu — le point d'entrée UNIQUE du theming (mode × thème), composant DS.
  *
- * Un seul bouton dans le `TopNav`, présent partout. Ouvre un popover (desktop) /
+ * Un seul bouton, **en admin uniquement** (zone power, sans nav app ni page
+ * Paramètres ; réconcilié #281). Ouvre un popover (desktop) /
  * bottom-sheet (mobile) : segment Mode (Clair/Sombre/Auto) + grille Thème (une
  * carte par `SITE_THEMES`, mini-aperçu re-skinné via `data-theme` local) +
  * invitation guest. Lit/écrit via `useThemePreference` (source de vérité unique).

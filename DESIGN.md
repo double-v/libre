@@ -268,11 +268,13 @@ Base unit: 4px.
 
 ## Shell unifié (#273)
 
-> **En cours** (épic #273). Objectif : un **seul** shell (nav + colonne centrale +
+> **Livré** (épic #273). Objectif atteint : un **seul** shell (nav + colonne centrale +
 > tokens), issu du design validé de la home, consommé par **toutes** les zones — en
-> remplacement des ~5 shells ad hoc actuels (`LobbyNav`, `TopNav`, nav maison de
-> `/manifesto`, largeurs `max-w-*` dispersées). Migration progressive zone par
-> zone ; `TopNav`/`LobbyNav` retirés au cleanup (#283).
+> remplacement des shells ad hoc (`TopNav`, nav maison de `/manifesto`, largeurs
+> `max-w-*` dispersées). `TopNav` supprimé au cleanup (#283). **Exception assumée** :
+> la home garde son `LobbyNav` bespoke comme signature always-dark (décision
+> opérateur #283) — le langage visuel de la `lobby-nav` (pastille, CTA pill, sticky
+> translucide) est néanmoins incarné par `SiteNav` partout ailleurs (#282).
 
 ### Principes
 
@@ -298,8 +300,9 @@ même signature partout, en tokens sémantiques (pas de `--lobby-*`). Deux varia
   **bottom tab bar** reste la nav de sections de l'app — décision : on **ne fusionne
   pas** la tab bar dans la barre du haut, les deux coexistent.
 
-Remplace `LobbyNav`, `TopNav` et la nav ad hoc de `/manifesto`. A11y : landmark
-`<nav aria-label>`, focus ring coral, cibles ≥ 44px.
+Remplace `TopNav` (supprimé #283) et la nav ad hoc de `/manifesto` ; la home garde
+son `LobbyNav` bespoke (signature always-dark). A11y : landmark `<nav aria-label>`,
+focus ring coral, cibles ≥ 44px.
 
 **Contrôle du thème (règle figée, session 2026-07-12)** : le nav ne porte que le
 `ThemeToggle` (axe **Mode**) ; le **choix du thème** vit dans les Paramètres
@@ -376,23 +379,25 @@ un seul cran large pour rester une vraie source de vérité (moins de boutons).
 
 ### Navigation
 
-- **`TopNav`** (DS, `src/components/ui/TopNav.tsx`) : **en-tête unifié**, présent
-  partout (app connectée, guest, admin, pages légales). Marque (`Logo`) → `/`
-  (guest) ou `/discover` (connecté) ; à droite, le **`ThemeToggle`** (bascule Mode
-  Clair/Sombre/Auto ; le choix du **thème** vit dans les Paramètres — cf.
-  `AppearanceSettings`), puis les actions selon l'état de session :
+- **`SiteNav`** (DS, `src/components/ui/SiteNav.tsx`) : **nav unique** du shell
+  unifié (#273), présente sur toutes les zones app/contenu (guest, connecté,
+  admin, légal, manifesto). Marque = **pastille coral** (`HeartMark`) → `/`
+  (guest) ou `/discover` (connecté) ; à droite, le **`ThemeToggle`** (Mode) en
+  connecté, ou les actions selon l'état de session :
   - **guest** : *Manifesto* / *Se connecter* / **Créer un compte** (CTA `Button`).
-  - **connecté** : *Admin* (si `ADMIN`) + *Paramètres*.
+  - **connecté** : `ThemeToggle` + *Admin* (si `ADMIN`) + *Paramètres*.
   Sticky, `bg-surface/80 backdrop-blur`, porte la safe-area (`pt-safe`). Ne
   remplace **pas** la bottom tab bar (nav principale mobile de l'app connectée) :
-  les deux coexistent.
+  les deux coexistent. Cf. § dédié « SiteNav — nav unique » + Component Library.
+  **Exception** : la home garde son `LobbyNav` bespoke (signature always-dark).
 - **Bottom tab bar** (app connectée) : 4 onglets (Découvrir, Messages, La Place,
   Profil), `bg-surface border-t border-hairline`, icônes + labels, actif coral.
 - **`ThemeMenu`** (DS, `src/components/ui/ThemeMenu.tsx`) : popover mode×thème —
   **admin uniquement** (cf. § dédié plus bas ; auth/landing = aucun sélecteur).
 - **`ThemeToggle`** (DS, `src/components/ui/ThemeToggle.tsx`) : bascule **Mode seul**
-  (Clair → Sombre → Auto, un clic, sans popover) portée par le `TopNav` (cf. § dédié plus bas).
-- **Auth nav**: Centered Logo component (heart-sun icon + "Libre" text), links to `/`
+  (Clair → Sombre → Auto, un clic, sans popover) portée par le `SiteNav` de l'app
+  connectée (cf. § dédié plus bas).
+- **Auth nav** : `SiteNavView` variante guest (aucun sélecteur) + carte centrée (#281).
 
 ### Buttons
 
@@ -564,9 +569,8 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 | `Toast` | enter, visible, exit (auto-dismiss) | success, info, error | Confirmations fugaces d'action (signalement, check-in validé, sauvegarde) |
 | `ThemeMenu` | closed, open, focus-trap | popover (desktop), bottom-sheet (mobile) | `LobbyThemeSwitcher`, radios d'apparence en double |
 | `ThemeToggle` | light, dark, auto | icon-button (cycle Mode) | boutons Mode ad hoc dans les headers |
-| `TopNav` | guest, connecté, admin | — | Header inline `(main)`, `PublicHeader`, header lobby |
 | `SiteShell` | — | content, reading, app | Les `mx-auto max-w-* px-*` ad hoc dispersés (448/512/672/768/1080) |
-| `SiteNav` | guest, connecté | guest, authed (× width) | `LobbyNav`, `TopNav`, nav ad hoc de `/manifesto` |
+| `SiteNav` | guest, connecté | guest, authed (× width) | `TopNav`, nav ad hoc de `/manifesto` (la home garde `LobbyNav`) |
 | `HeartMark` | — | glyphe seul (taille via className/props) | Les deux glyphes de marque en double (cœur lobby + cœur-soleil à rayons) |
 
 ### Règles
@@ -583,8 +587,9 @@ Nav **unique** du shell unifié (#276, épic #273) — une barre sticky transluc
 thémée (`bg-surface/80 backdrop-blur-md`, `border-hairline`, `pt-safe`),
 theme-aware (respecte le mode clair/sombre ; le sombre-chaud *always dark* reste
 home-only). Colonne interne = `SiteShell` (échelle de largeurs #277). Remplace
-`LobbyNav`, `TopNav` et la nav ad hoc de `/manifesto` (branchée zone par zone en
-#278→#281 ; navs historiques supprimées au cleanup #283).
+`TopNav` et la nav ad hoc de `/manifesto` (branchées zone par zone en #278→#281 ;
+`TopNav` supprimé au cleanup #283). **Exception** : la home garde son `LobbyNav`
+bespoke comme signature always-dark (décision opérateur #283).
 
 - **Marque** = pastille coral signature (`bg-coral` + cœur `HeartMark` `text-white`,
   radius theme-aware `rounded-control`) + wordmark « Libre » (`text-content`) —
@@ -616,8 +621,8 @@ de la home (`lobby-nav`). Source de vérité unique du glyphe : remplace l'ancie
   **blanc** (`text-white`) sur la pastille coral, `text-coral` sinon. Zéro hex inline.
 - **Décoratif** (`aria-hidden`) ; taille via `className` (`h-8 w-8`…) ou attributs
   SVG (`width`/`height`), props SVG transmises.
-- Consommé par : `Logo`, `SiteNav`, `TopNav` (le temps de sa vie, cleanup #283),
-  `LobbyNav`, `LobbyFooter`.
+- Consommé par : `SiteNav`, `LobbyNav`, `LobbyFooter` (`Logo` supprimé #281,
+  `TopNav` supprimé #283).
 
 ### SiteShell (`src/components/ui/SiteShell.tsx`)
 
@@ -700,16 +705,17 @@ sélecteurs ad hoc historiques (`LobbyThemeSwitcher`, radios en double).
 
 ### ThemeToggle (`src/components/ui/ThemeToggle.tsx`)
 
-Bascule d'apparence **compacte** (axe **Mode** uniquement), portée par le `TopNav`.
-Un `icon-button` qui **cycle** Clair → Sombre → Auto (système) en un clic, **sans
-popover** — pensé pour un geste rapide et fréquent. Le **choix du thème** (skin)
-n'est *pas* ici : il vit dans les Paramètres (`AppearanceSettings`) et sur la
-landing (`ThemeMenu` complet).
+Bascule d'apparence **compacte** (axe **Mode** uniquement), portée par le `SiteNav`
+de l'app connectée. Un `icon-button` qui **cycle** Clair → Sombre → Auto (système)
+en un clic, **sans popover** — pensé pour un geste rapide et fréquent. Le **choix du
+thème** (skin) n'est *pas* ici : il vit dans les Paramètres (`AppearanceSettings`) ;
+le `ThemeMenu` complet ne subsiste qu'en admin ; les contextes invités (landing,
+`(auth)`) n'exposent aucun sélecteur.
 
 - **Bouton** : `icon-button` (`min-h-[44px]`, `rounded-control`, `text-muted` →
   `hover:bg-fill-subtle hover:text-content`) ; icône = état courant (soleil / lune /
   écran « système »), `aria-hidden`. S'aligne visuellement sur les autres boutons
-  d'icône du `TopNav` (Admin, Paramètres).
+  d'icône du `SiteNav` (Admin, Paramètres).
 - **A11y** : `aria-label` **dynamique** annonçant le mode courant **et** l'action au
   clic (« Apparence : Sombre. Cliquer pour passer en Auto (système). ») ; cible
   ≥ 44px ; focus ring coral. Pas d'animation propre — le swap d'icône est instantané,
