@@ -13,8 +13,10 @@ import HeartMark from './HeartMark';
  * Une seule barre, deux variantes de session (`guest` / `authed`), dans le langage
  * visuel de la home : sticky, translucide thémée (`bg-surface/80 backdrop-blur`),
  * theme-aware (respecte le mode clair/sombre — pas de neutre froid), safe-area.
- * Remplace `LobbyNav`, `TopNav` et la nav ad hoc de `/manifesto` (branchée zone
- * par zone dans #278→#281 ; les navs historiques tombent au cleanup #283).
+ * Nav unique de toutes les zones app/contenu : remplace `TopNav` (supprimé au
+ * cleanup #283) et la nav ad hoc de `/manifesto` (branchées zone par zone en
+ * #278→#281). Seule exception : la home garde son `LobbyNav` bespoke comme
+ * signature always-dark (décision opérateur #283, cf. DESIGN.md § La landing).
  *
  * Contrôle du thème (règle figée, session 2026-07-12) : la variante connectée
  * porte le `ThemeToggle` (axe Mode seul) ; le choix du thème vit dans les

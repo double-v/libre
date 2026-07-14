@@ -1,5 +1,5 @@
 /**
- * Tests composant — ThemeToggle (bascule Mode du TopNav).
+ * Tests composant — ThemeToggle (bascule Mode du SiteNav de l'app connectée).
  *
  * Vérifie :
  * 1. Défaut sans préférence stockée = Auto (système), action annoncée = passer en Clair

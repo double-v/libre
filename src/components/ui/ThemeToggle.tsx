@@ -5,10 +5,11 @@ import { useThemePreference, type Mode } from '@/hooks/useThemePreference';
 /**
  * ThemeToggle — bascule d'apparence compacte (axe **Mode** uniquement), composant DS.
  *
- * Un seul `icon-button` dans le `TopNav` : **cycle** Clair → Sombre → Auto (système)
- * en un clic, sans popover. Le **choix du thème** (skin) ne vit pas ici mais dans
- * les Paramètres (`AppearanceSettings`) et sur la landing (`ThemeMenu` complet).
- * Source de vérité unique : `useThemePreference`.
+ * Un seul `icon-button` dans le `SiteNav` de l'app connectée : **cycle** Clair →
+ * Sombre → Auto (système) en un clic, sans popover. Le **choix du thème** (skin)
+ * ne vit pas ici mais dans les Paramètres (`AppearanceSettings`) ; le `ThemeMenu`
+ * complet (mode × thème) ne subsiste qu'en admin. Les contextes invités (landing,
+ * `(auth)`) n'exposent aucun sélecteur. Source de vérité unique : `useThemePreference`.
  *
  * A11y : `aria-label` dynamique (mode courant + action au clic) ; cible ≥ 44px ;
  * focus ring coral ; icône décorative (`aria-hidden`). Pas d'animation propre — le
