@@ -109,13 +109,20 @@ export default function SiteNav({
   return <SiteNavView variant={resolvedVariant} isAdmin={resolvedIsAdmin} width={width} banner={banner} />;
 }
 
-/** Marque cœur-soleil (currentColor + text-coral, zéro hex inline). */
+/**
+ * Marque = pastille coral signature + wordmark, fidèle à la `lobby-nav` (#282).
+ * Logo de référence unique (#294) = HeartMark ; enfermé dans une pastille coral
+ * (fond `bg-coral`, glyphe `text-white`) au radius theme-aware `rounded-control`
+ * — même traitement que `.lobby-nav__logo`, mais en tokens sémantiques (pas de
+ * `--lobby-*`) pour rester clair/sombre partout. Zéro hex inline (cf. CLAUDE.md).
+ */
 function Brand({ href }: { href: string }) {
   return (
-    <Link href={href} aria-label="Accueil Libre" className="flex items-center gap-2 text-coral">
-      {/* Logo de référence unique (#294) : le cœur de la marque (HeartMark). */}
-      <HeartMark className="h-8 w-8" />
-      <span className="text-lg font-bold tracking-tight">Libre</span>
+    <Link href={href} aria-label="Accueil Libre" className="flex items-center gap-2">
+      <span className="inline-flex h-8 w-8 items-center justify-center rounded-control bg-coral text-white">
+        <HeartMark className="h-[18px] w-[18px]" />
+      </span>
+      <span className="text-lg font-bold tracking-tight text-content">Libre</span>
     </Link>
   );
 }

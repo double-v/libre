@@ -174,6 +174,11 @@ connectée / aux Paramètres). `arcade`/`retro` reskin l'ambiance lobby ;
   cartoon, `html[data-theme='arcade'|'retro'] [data-lobby]` surchargent). Les
   classes `.lobby-*` consomment `--lobby-*` — **inchangées** (réconciliation
   CSS-only, sans réécrire les composants).
+- **Ambiance home-only, verrouillée** : `data-lobby` et les classes `.lobby-*` ne
+  vivent **que** sous `src/components/home-lobby/` ; partout ailleurs = shell
+  theme-aware (tokens sémantiques). Une **garde de non-régression**
+  (`src/__tests__/lobby-confinement.test.ts`, #282) échoue si l'ambiance fuit hors
+  de la home.
 - **Toujours sombre par design** (indépendant du mode `.dark`) : l'ambiant reste
   sombre-chaud, jamais froid bleuté (cf. PRODUCT.md, anti-réf) — le mode
   clair/sombre choisi ailleurs dans l'app n'altère pas l'ambiant.
@@ -283,7 +288,10 @@ Base unit: 4px.
 ### `SiteNav` — nav unique (composant DS, #276)
 
 Barre **sticky** translucide thémée (`bg-surface/80 backdrop-blur`, `border-hairline`,
-`pt-safe`), marque cœur-soleil → `/` (guest) ou `/discover` (connecté). Deux variantes :
+`pt-safe`), marque = **pastille coral** (cœur `HeartMark` blanc, radius theme-aware
+`rounded-control`) + wordmark → `/` (guest) ou `/discover` (connecté). La pastille
+**incarne fidèlement** le logo de la `lobby-nav` (rapprochement #282, épic #273) —
+même signature partout, en tokens sémantiques (pas de `--lobby-*`). Deux variantes :
 
 - **guest** : liens publics (*Manifesto*, *Se connecter*) + CTA **Créer un compte**.
 - **connecté** : `ThemeToggle` (Mode) + *Admin* (si `ADMIN`) + *Paramètres*. La
@@ -578,6 +586,9 @@ home-only). Colonne interne = `SiteShell` (échelle de largeurs #277). Remplace
 `LobbyNav`, `TopNav` et la nav ad hoc de `/manifesto` (branchée zone par zone en
 #278→#281 ; navs historiques supprimées au cleanup #283).
 
+- **Marque** = pastille coral signature (`bg-coral` + cœur `HeartMark` `text-white`,
+  radius theme-aware `rounded-control`) + wordmark « Libre » (`text-content`) —
+  fidèle au `.lobby-nav__logo`, en tokens sémantiques (rapprochement #282).
 - **`SiteNavView`** (présentationnel pur) : `variant` (`guest` | `authed`),
   `isAdmin?`, `width?` (échelle #277, défaut `content`), `banner?`.
   - **guest** : marque → `/`, liens publics *Manifesto* / *Se connecter*, CTA
@@ -598,10 +609,11 @@ de la home (`lobby-nav`). Source de vérité unique du glyphe : remplace l'ancie
 « cœur-soleil à rayons » qui vivait en double dans `SiteNav`, `TopNav` et `Logo`.
 
 - **Glyphe seul** (pas de wordmark, pas de lien) : les surfaces l'enveloppent de
-  leur propre `<Link aria-label="Accueil Libre">` + wordmark « Libre ». Le lobby le
-  place dans sa pastille coral (`.lobby-nav__logo` / `.lobby-footer__logo`).
-- **`fill="currentColor"`** → theme-aware : hérite de la couleur du parent
-  (`text-coral` dans les navs, `#fff` sur la pastille lobby). Zéro hex inline.
+  leur propre `<Link aria-label="Accueil Libre">` + wordmark « Libre ». Il est
+  posé dans une **pastille coral** : `.lobby-nav__logo` / `.lobby-footer__logo`
+  (lobby) et, depuis #282, `SiteNav` (tokens `bg-coral` + `rounded-control`).
+- **`fill="currentColor"`** → theme-aware : hérite de la couleur du parent — cœur
+  **blanc** (`text-white`) sur la pastille coral, `text-coral` sinon. Zéro hex inline.
 - **Décoratif** (`aria-hidden`) ; taille via `className` (`h-8 w-8`…) ou attributs
   SVG (`width`/`height`), props SVG transmises.
 - Consommé par : `Logo`, `SiteNav`, `TopNav` (le temps de sa vie, cleanup #283),
