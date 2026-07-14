@@ -45,6 +45,17 @@ describe('<SiteNavView /> — variante guest', () => {
     expect(brand.querySelector('path')).toHaveAttribute('d', expect.stringMatching(/^M12 21s-7\.5-4\.6-10-9\.3/));
     expect(container.querySelectorAll('rect')).toHaveLength(0);
   });
+
+  it('encapsule le cœur dans la pastille coral signature de la lobby-nav — fond coral, cœur blanc, radius theme-aware (#282)', () => {
+    render(<SiteNavView variant="guest" />);
+    const brand = screen.getByRole('link', { name: 'Accueil Libre' });
+    // Rapprochement #282 : pastille coral (bg-coral + glyphe text-white) au radius
+    // theme-aware `rounded-control` — fidèle au `.lobby-nav__logo`, pas un cœur nu.
+    const pastille = brand.querySelector('svg')!.parentElement as HTMLElement;
+    expect(pastille).toHaveClass('bg-coral', 'text-white', 'rounded-control');
+    // Le wordmark reprend la couleur de texte principale (theme-aware), pas coral.
+    expect(brand.querySelector('span:last-child')).toHaveClass('text-content');
+  });
 });
 
 describe('<SiteNavView /> — variante connecté', () => {
