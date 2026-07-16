@@ -8,15 +8,19 @@ import Image from 'next/image';
 import { photoUrl } from '@/lib/photos';
 import { useEncryptedChat } from '@/hooks/useEncryptedChat';
 import ShareContactButton from '@/components/ShareContactButton';
-import ShareContactNotice from '@/components/ShareContactNotice';
-import { isShareContactMessage } from '@/lib/shareContact';
 import { mergeMessages } from '@/lib/chat-messages';
 import ProfileModal from '@/components/ProfileModal';
 import { CheckinButton } from '@/components/CheckinButton';
+import ChatMessageList from '@/components/chat/ChatMessageList';
 
 // Taille de page (miroir du défaut serveur, #200). On ne charge/déchiffre que
 // cette tranche au départ ; le scroll-up charge les plus anciennes.
 const PAGE_SIZE = 50;
+
+// Index de base Virtuoso pour le prepend (#200, chantier 4) : on le décrémente du
+// nombre d'items préfixés au scroll-up → Virtuoso préserve la position sans saut.
+// Valeur haute pour ne jamais passer sous 0 (des milliers de tranches de marge).
+const VIRTUOSO_START_INDEX = 1_000_000;
 
 interface Message {
   id: string;
@@ -81,16 +85,12 @@ export default function ChatConversationPage() {
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loadingOlder, setLoadingOlder] = useState(false);
+  // Ancre de prepend Virtuoso (#200) : décrémentée du nombre d'anciens préfixés.
+  const [firstItemIndex, setFirstItemIndex] = useState(VIRTUOSO_START_INDEX);
 
   const { privateKey, publicKey, ready } = useEncryptedChat();
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
-  // Vrai le temps d'un prepend (scroll-up) : évite que l'effet de bas de fil
-  // ne ramène brutalement l'utilisateur en bas après l'insertion des anciens.
-  const prependingRef = useRef(false);
   const cacheRef = useRef<Map<string, string>>(loadPlaintextCache(conversationId));
   const pendingOwnRef = useRef<Set<string>>(new Set());
 
@@ -129,19 +129,9 @@ export default function ChatConversationPage() {
     [privateKey, otherPublicKey, conversationId, tryDecrypt],
   );
 
-  // ─── Scroll ──────────────────────────────────────────────────────
-
-  useEffect(() => {
-    // Après un chargement de messages plus anciens (prepend), on ne scrolle pas
-    // en bas : la position est préservée par loadOlder. On consomme le flag.
-    if (prependingRef.current) {
-      prependingRef.current = false;
-      return;
-    }
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length]);
-
   // ─── Load conversation & messages ────────────────────────────────
+  // (Le scroll — départ en bas, stick-to-bottom, prepend sans saut — est porté
+  //  par `ChatMessageList`/Virtuoso : plus de gestion manuelle de scrollTop ici.)
 
   const loadConversation = useCallback(async () => {
     try {
@@ -163,6 +153,7 @@ export default function ChatConversationPage() {
       const msgData = await msgRes.json();
       const base: Message[] = msgData.messages || [];
       setNextCursor(msgData.nextCursor ?? null);
+      setFirstItemIndex(VIRTUOSO_START_INDEX); // reset l'ancre pour un fil neuf
 
       // First render raw (fast), then decrypt in background
       setMessages(base);
@@ -180,9 +171,6 @@ export default function ChatConversationPage() {
   const loadOlder = useCallback(async () => {
     if (!nextCursor || loadingOlder) return;
     setLoadingOlder(true);
-    const container = listRef.current;
-    const prevHeight = container?.scrollHeight ?? 0;
-    const prevTop = container?.scrollTop ?? 0;
     try {
       const res = await fetch(
         `/api/chat/${conversationId}/messages?cursor=${encodeURIComponent(nextCursor)}&limit=${PAGE_SIZE}`,
@@ -192,16 +180,13 @@ export default function ChatConversationPage() {
       const older: Message[] = data.messages || [];
       const decrypted = await applyDecryption(older);
       // Prepend + dédoublonnage/retri (mergeMessages) : pas de doublon ni de trou.
-      prependingRef.current = true;
       setMessages((prev) => mergeMessages(decrypted, prev));
       setNextCursor(data.nextCursor ?? null);
-      // Préserve la position de lecture : le contenu inséré au-dessus décale la
-      // hauteur — on ré-ancre le scroll sur le delta après le rendu.
-      requestAnimationFrame(() => {
-        if (container) {
-          container.scrollTop = prevTop + (container.scrollHeight - prevHeight);
-        }
-      });
+      // La pagination curseur (skip:1 + cursor) renvoie une tranche strictement
+      // plus ancienne, sans recouvrement → `older.length` items sont préfixés. On
+      // décrémente l'ancre Virtuoso d'autant : la position de lecture est préservée
+      // sans toucher à `scrollTop` (Virtuoso ré-ancre sur `firstItemIndex`).
+      if (older.length > 0) setFirstItemIndex((f) => f - older.length);
     } catch {
       setError('Impossible de charger les messages plus anciens');
     } finally {
@@ -339,7 +324,6 @@ export default function ChatConversationPage() {
   // ─── Delete own message ──────────────────────────────────────────
 
   const handleDelete = async (id: string) => {
-    setMenuOpenId(null);
     try {
       const res = await fetch(`/api/chat/${conversationId}/messages/${id}`, {
         method: 'DELETE',
@@ -357,28 +341,6 @@ export default function ChatConversationPage() {
     } catch {
       setError('Impossible de supprimer le message');
     }
-  };
-
-  // Ferme le menu « … » au clavier (Échap) ou au clic en dehors.
-  useEffect(() => {
-    if (!menuOpenId) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMenuOpenId(null);
-    };
-    const onClick = () => setMenuOpenId(null);
-    document.addEventListener('keydown', onKey);
-    document.addEventListener('click', onClick);
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.removeEventListener('click', onClick);
-    };
-  }, [menuOpenId]);
-
-  // ─── UI helpers ──────────────────────────────────────────────────
-
-  const formatTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   };
 
   const e2eEnabled = !!(privateKey && otherPublicKey);
@@ -441,129 +403,19 @@ export default function ChatConversationPage() {
         </div>
       )}
 
-      {/* Messages list */}
-      <div
-        ref={listRef}
-        aria-live="polite"
-        aria-label="Messages de la conversation"
-        className="flex-1 space-y-2 overflow-y-auto p-4"
-      >
-        {/* Charger les plus anciens (pagination par curseur, #200) */}
-        {nextCursor &&
-          (loadingOlder ? (
-            <div className="space-y-2 pb-1" aria-hidden="true">
-              <div className="h-8 w-2/3 animate-pulse rounded-2xl bg-fill-subtle motion-reduce:animate-none" />
-              <div className="ml-auto h-8 w-1/2 animate-pulse rounded-2xl bg-fill-subtle motion-reduce:animate-none" />
-            </div>
-          ) : (
-            <div className="flex justify-center pb-1">
-              <button
-                type="button"
-                onClick={loadOlder}
-                className="rounded-full border border-hairline-strong px-4 py-1.5 text-xs font-medium text-muted hover:bg-fill-subtle focus-visible:outline-none focus-visible:shadow-focus"
-              >
-                Charger les messages plus anciens
-              </button>
-            </div>
-          ))}
-        {messages.length === 0 && (
-          <p className="text-center text-sm text-muted">
-            Commencez la conversation !
-          </p>
-        )}
-        {messages.map((msg) => {
-          const isSent = msg.senderId !== otherUser?.id;
-
-          // Message supprimé par son auteur → tombstone (prioritaire sur le
-          // badge partage-réseaux). Les deux côtés voient « Message supprimé ».
-          if (msg.deletedAt) {
-            return (
-              <div key={msg.id} className={`flex ${isSent ? 'justify-end' : 'justify-start'}`}>
-                <div className="max-w-[80%] rounded-2xl bg-fill-subtle px-4 py-2">
-                  <p className="break-words text-sm italic text-muted">
-                    Message supprimé
-                  </p>
-                  <p className="mt-1 text-xs text-muted">
-                    {formatTime(msg.createdAt)}
-                  </p>
-                </div>
-              </div>
-            );
-          }
-
-          // Partage de réseaux : badge système, jamais le JSON brut (issue #207).
-          if (isShareContactMessage(msg.content)) {
-            return (
-              <ShareContactNotice
-                key={msg.id}
-                isSent={isSent}
-                otherName={otherUser?.displayName ?? 'Cette personne'}
-              />
-            );
-          }
-          return (
-            <div
-              key={msg.id}
-              className={`group flex items-end gap-1 ${isSent ? 'justify-end' : 'justify-start'}`}
-            >
-              {/* Menu « … » — uniquement sur ses propres messages, atteignable au
-                  clavier (bouton focusable), pas seulement à l'appui long. */}
-              {isSent && (
-                <div className="relative">
-                  <button
-                    type="button"
-                    aria-haspopup="menu"
-                    aria-expanded={menuOpenId === msg.id}
-                    aria-label="Options du message"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setMenuOpenId((prev) => (prev === msg.id ? null : msg.id));
-                    }}
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted opacity-0 transition-opacity duration-[var(--motion-fast)] hover:bg-fill-subtle hover:text-muted focus-visible:opacity-100 focus-visible:outline-none focus-visible:shadow-focus group-hover:opacity-100 motion-reduce:transition-none"
-                  >
-                    <span aria-hidden="true">⋯</span>
-                  </button>
-                  {menuOpenId === msg.id && (
-                    <div
-                      role="menu"
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute bottom-9 right-0 z-10 min-w-[8rem] overflow-hidden rounded-lg border border-hairline bg-surface shadow-pop"
-                    >
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => handleDelete(msg.id)}
-                        className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none dark:text-red-400 dark:hover:bg-red-900/30 dark:focus-visible:bg-red-900/30"
-                      >
-                        Supprimer
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-              <div
-                className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                  isSent
-                    ? 'bg-terracotta text-white dark:bg-coral dark:text-white'
-                    : 'bg-fill-subtle text-content'
-                }`}
-              >
-                <p className="break-words text-sm">{msg.content}</p>
-                <p
-                  className={`mt-1 text-xs ${
-                    isSent
-                      ? 'text-white/60'
-                      : 'text-muted'
-                  }`}
-                >
-                  {formatTime(msg.createdAt)}
-                </p>
-              </div>
-            </div>
-          );
-        })}
-        <div ref={bottomRef} />
-      </div>
+      {/* Messages list — virtualisée (#200, chantier 4). Toute la mécanique de
+          rendu + scroll (départ en bas, stick-to-bottom, prepend sans saut, menu
+          « … », tombstone, badge partage) vit dans ce composant présentationnel. */}
+      <ChatMessageList
+        messages={messages}
+        otherUserId={otherUser?.id}
+        otherUserName={otherUser?.displayName ?? 'Cette personne'}
+        firstItemIndex={firstItemIndex}
+        hasOlder={nextCursor != null}
+        loadingOlder={loadingOlder}
+        onLoadOlder={loadOlder}
+        onDelete={handleDelete}
+      />
 
       {/* Input area */}
       <div className="border-t border-hairline p-4">
