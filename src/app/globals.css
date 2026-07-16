@@ -38,6 +38,17 @@
   --rad-control: 6px;        /* → rounded-control (varie par thème) */
   --head-font: var(--font-sans, "Inter", Arial, sans-serif); /* → font-head */
   --btn-clip: none;          /* silhouette bouton (biseau arcade, pixel retro) */
+
+  /* Navbar unifiée (épic #273) — LA barre unique de l'app (SiteNav), guest +
+     connecté + home. Base = surface translucide « presque transparente » + blur,
+     déclinée automatiquement par thème×mode (dérive de --surface/--content/etc.).
+     La home la surcharge en instance always-dark (bloc [data-lobby] plus bas) :
+     le look LobbyNav historique (noir presque transparent) n'est qu'une instance
+     de cette base. Un seul composant les consomme — zéro hex inline côté TSX. */
+  --nav-bg: color-mix(in srgb, var(--surface) 80%, transparent);
+  --nav-border: var(--hairline);
+  --nav-text: var(--content);
+  --nav-text-dim: var(--muted);
 }
 
 :root.dark {
@@ -303,6 +314,16 @@ html[data-theme='libre-warm'].dark {
   --lobby-cta-shadow: 0 10px 24px -8px rgba(232, 99, 74, 0.4);
   --lobby-panel-bg: linear-gradient(180deg, rgba(255, 210, 122, 0.06), rgba(255, 255, 255, 0.01));
   --lobby-bg-texture: none;
+
+  /* Navbar unifiée sur la home = instance always-dark de la base : la barre
+     reprend le look LobbyNav historique (noir presque transparent + blur),
+     indépendant du mode .dark. Le même composant SiteNav rend ainsi la home
+     comme les autres zones, sans nav bespoke. Texte = tokens lobby (cascade
+     par thème arcade/retro). Cf. DESIGN.md § La landing « lobby ». */
+  --nav-bg: rgba(0, 0, 0, 0.45);
+  --nav-border: rgba(255, 255, 255, 0.06);
+  --nav-text: var(--lobby-text);
+  --nav-text-dim: var(--lobby-text-dim);
 }
 
 html[data-theme='arcade'] [data-lobby] {
@@ -387,6 +408,16 @@ html[data-theme='retro'] [data-lobby] {
   --color-hairline-strong: var(--hairline-strong);
   --color-fill-subtle: var(--fill-subtle);
 
+  /* Navbar unifiée (#273, épic #273) — la barre `SiteNav` consomme ces tokens
+     (base dérivée de surface/content/hairline/muted ; surchargés en instance
+     always-dark sous `[data-lobby]` pour la home). Génèrent bg-nav-surface,
+     border-nav-border, text-nav-text, text-nav-text-dim. Cf. blocs :root +
+     [data-lobby]. */
+  --color-nav-surface: var(--nav-bg);
+  --color-nav-border: var(--nav-border);
+  --color-nav-text: var(--nav-text);
+  --color-nav-text-dim: var(--nav-text-dim);
+
   /* Radius tokens — indirection var() → varient par thème (rounded-card/-control) */
   --radius-card: var(--rad-card);
   --radius-control: var(--rad-control);
@@ -414,7 +445,7 @@ html[data-theme='retro'] [data-lobby] {
 
   /* Échelle de largeurs centralisée (#277, épic #273 — cf. DESIGN.md § Shell
      unifié). Source de vérité unique en remplacement des max-w-* dispersés
-     (448/512/672/768/1080). Génèrent max-w-content / max-w-reading ; l'app garde
+     (448/512/672/768/1080). Génèrent max-w-content / max-w-reading; l'app garde
      max-w-lg (512px, défaut Tailwind). Consommés par le composant SiteShell. */
   --container-content: 1080px;
   --container-reading: 720px;
@@ -577,114 +608,9 @@ input::placeholder, textarea::placeholder {
   box-shadow: 0 0 0 3px rgb(232 99 74 / 0.6); /* ring coral accessible */
 }
 
-/* Nav sticky (#245). Le conteneur racine du lobby porte overflow-x: clip
-   (sticky-safe, ne crée pas de scroll-container) pour que ce sticky colle bien
-   au viewport. */
-.lobby-nav {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 24px;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  /* Pas d'`overflow` sur desktop : le popover du ThemeMenu (position:absolute,
-     ancré sous la nav) doit déborder librement. `overflow-x:auto` forcerait
-     `overflow-y` à `auto` (spec CSS) → la nav devient un scroll-container qui
-     croppe le popover à la hauteur du bandeau (bug home). Le scroll horizontal
-     est réservé au mobile (bloc ci-dessous), où le ThemeMenu est un bottom-sheet
-     `fixed` non concerné par l'overflow de la nav. */
-}
-@media (max-width: 640px) {
-  .lobby-nav {
-    overflow-x: auto; /* la barre défile si les items ne tiennent pas */
-  }
-}
-.lobby-nav__brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  flex-shrink: 0;
-  text-decoration: none;
-}
-.lobby-nav__logo {
-  width: 30px;
-  height: 30px;
-  border-radius: var(--lobby-radius-sm);
-  background: var(--lobby-accent);
-  color: #fff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.lobby-nav__wordmark {
-  font-weight: 700;
-  font-size: 20px;
-  letter-spacing: -0.01em;
-  color: var(--lobby-text);
-}
-.lobby-nav__links,
-.lobby-nav__actions {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-.lobby-nav__links {
-  gap: 16px;
-}
-.lobby-nav__actions {
-  gap: 14px;
-}
-.lobby-nav__link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  color: var(--lobby-text-dim);
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-  text-decoration: none;
-  border-radius: 8px;
-  padding: 0 4px;
-  transition: color var(--motion-fast) var(--ease-out-soft);
-}
-.lobby-nav__link:hover {
-  color: var(--lobby-text);
-}
-.lobby-nav__link:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgb(232 99 74 / 0.6);
-}
-.lobby-nav__cta {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  padding: 0 16px;
-  font-size: 13px;
-  font-weight: 700;
-  white-space: nowrap;
-  color: #fff;
-  background: var(--lobby-accent);
-  border-radius: var(--lobby-radius-sm);
-  clip-path: var(--lobby-btn-clip);
-  text-decoration: none;
-  flex-shrink: 0;
-  transition: transform var(--motion-fast) var(--ease-out-soft);
-}
-.lobby-nav__cta:hover {
-  transform: translateY(-1px);
-}
-.lobby-nav__cta:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgb(232 99 74 / 0.6);
-}
+/* Nav de la home = navbar unifiée `SiteNav` (épic #273, 2026-07-14) : plus de
+   `.lobby-nav*` bespoke — la barre unique consomme les tokens --nav-* (surchargés
+   en instance always-dark sous [data-lobby]). Ancien bloc `.lobby-nav*` supprimé. */
 
 /* HERO (#246). Blobs `lobbyPulse` figés par le bloc global reduced-motion.
    Pas d'`overflow` ici : les blobs débordent librement (halo gold de droite non

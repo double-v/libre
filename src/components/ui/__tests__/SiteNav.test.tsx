@@ -10,7 +10,8 @@
  *    CTA « Créer un compte » → /register, AUCUN ThemeToggle (règle landing figée)
  * 2. Variante connecté : marque → `/discover`, ThemeToggle (Mode), Paramètres ;
  *    Admin seulement si `isAdmin`
- * 3. Barre theme-aware : sticky, bg-surface translucide + blur, hairline, pt-safe
+ * 3. Barre theme-aware : sticky, translucide via tokens --nav-* (bg-nav-surface +
+ *    border-nav-border) + blur, pt-safe ; texte routé sur les tokens nav
  * 4. Échelle de largeurs #277 : colonne interne = SiteShell (max-w-content défaut,
  *    max-w-lg en width="app")
  * 5. A11y : landmark <nav aria-label>, marque labellisée, cibles ≥ 44px
@@ -53,8 +54,9 @@ describe('<SiteNavView /> — variante guest', () => {
     // theme-aware `rounded-control` — fidèle au `.lobby-nav__logo`, pas un cœur nu.
     const pastille = brand.querySelector('svg')!.parentElement as HTMLElement;
     expect(pastille).toHaveClass('bg-coral', 'text-white', 'rounded-control');
-    // Le wordmark reprend la couleur de texte principale (theme-aware), pas coral.
-    expect(brand.querySelector('span:last-child')).toHaveClass('text-content');
+    // Le wordmark reprend la couleur de texte de la nav (token --nav-text,
+    // theme-aware ; always-dark sous [data-lobby] pour la home), pas coral.
+    expect(brand.querySelector('span:last-child')).toHaveClass('text-nav-text');
   });
 });
 
@@ -81,10 +83,20 @@ describe('<SiteNavView /> — variante connecté', () => {
 });
 
 describe('<SiteNavView /> — barre & largeurs', () => {
-  it('is a sticky, theme-aware translucent bar with safe-area', () => {
+  it('is a sticky, theme-aware translucent bar (tokens --nav-*) with safe-area', () => {
     const { container } = render(<SiteNavView variant="guest" />);
     const bar = container.firstElementChild as HTMLElement;
-    expect(bar).toHaveClass('sticky', 'bg-surface/80', 'backdrop-blur-md', 'border-hairline', 'pt-safe');
+    // La barre consomme les tokens nav (base = surface/hairline ; surchargés en
+    // instance always-dark sous [data-lobby] → look home), pas bg-surface/hairline directs.
+    expect(bar).toHaveClass('sticky', 'bg-nav-surface', 'backdrop-blur-md', 'border-nav-border', 'pt-safe');
+  });
+
+  it('routes public links through the dimmed nav text token', () => {
+    render(<SiteNavView variant="guest" />);
+    // Les liens publics (Manifesto/Se connecter) = text-nav-text-dim (theme-aware,
+    // clair sur la home always-dark) au lieu de text-muted direct.
+    expect(screen.getByRole('link', { name: 'Se connecter' })).toHaveClass('text-nav-text-dim');
+    expect(screen.getByRole('link', { name: 'Manifesto' })).toHaveClass('text-nav-text-dim');
   });
 
   it('uses the centralized width scale for the inner column (#277)', () => {
@@ -104,6 +116,18 @@ describe('<SiteNavView /> — barre & largeurs', () => {
     // Le CTA et les liens publics respectent la cible tactile.
     expect(screen.getByRole('link', { name: 'Créer un compte' })).toHaveClass('min-h-[44px]');
     expect(screen.getByRole('link', { name: 'Se connecter' })).toHaveClass('min-h-[44px]');
+  });
+
+  it('collapses cleanly on mobile: Manifesto hidden < sm, CTA never wraps', () => {
+    // Garde de non-régression du bug mobile (invisible en jsdom, vu au pixel) :
+    // la base des liens ne doit PAS porter d'`inline-flex` inconditionnel, sinon
+    // il écrase le `hidden` responsive → Manifesto restait visible < sm.
+    render(<SiteNavView variant="guest" />);
+    const manifesto = screen.getByRole('link', { name: 'Manifesto' });
+    expect(manifesto).toHaveClass('hidden', 'sm:inline-flex');
+    expect(manifesto).not.toHaveClass('inline-flex');
+    // Le CTA reste sur une ligne quand la barre se resserre.
+    expect(screen.getByRole('link', { name: 'Créer un compte' })).toHaveClass('whitespace-nowrap');
   });
 });
 
