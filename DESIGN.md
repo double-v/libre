@@ -174,6 +174,11 @@ connectée / aux Paramètres). `arcade`/`retro` reskin l'ambiance lobby ;
   cartoon, `html[data-theme='arcade'|'retro'] [data-lobby]` surchargent). Les
   classes `.lobby-*` consomment `--lobby-*` — **inchangées** (réconciliation
   CSS-only, sans réécrire les composants).
+- **Nav = `SiteNav` unifiée** (variante `guest`), plus de `LobbyNav` bespoke
+  (#273) : `[data-lobby]` surcharge les tokens `--nav-*` en instance
+  **always-dark**, donc la barre unique reprend le look historique (noir
+  translucide + blur) sur la home. Le reste de l'ambiance (hero, blobs, skyline,
+  personnages…) garde ses classes `.lobby-*`.
 - **Ambiance home-only, verrouillée** : `data-lobby` et les classes `.lobby-*` ne
   vivent **que** sous `src/components/home-lobby/` ; partout ailleurs = shell
   theme-aware (tokens sémantiques). Une **garde de non-régression**
@@ -271,10 +276,11 @@ Base unit: 4px.
 > **Livré** (épic #273). Objectif atteint : un **seul** shell (nav + colonne centrale +
 > tokens), issu du design validé de la home, consommé par **toutes** les zones — en
 > remplacement des shells ad hoc (`TopNav`, nav maison de `/manifesto`, largeurs
-> `max-w-*` dispersées). `TopNav` supprimé au cleanup (#283). **Exception assumée** :
-> la home garde son `LobbyNav` bespoke comme signature always-dark (décision
-> opérateur #283) — le langage visuel de la `lobby-nav` (pastille, CTA pill, sticky
-> translucide) est néanmoins incarné par `SiteNav` partout ailleurs (#282).
+> `max-w-*` dispersées). `TopNav` supprimé au cleanup (#283) ; **home migrée sur
+> `SiteNav`** (`LobbyNav` retiré, #273). Le langage visuel de la `lobby-nav`
+> (pastille, CTA pill, sticky translucide) est incarné par `SiteNav` **partout**,
+> la home reprenant son look **always-dark** via l'override `[data-lobby]` des
+> tokens `--nav-*` (#282).
 
 ### Principes
 
@@ -289,8 +295,9 @@ Base unit: 4px.
 
 ### `SiteNav` — nav unique (composant DS, #276)
 
-Barre **sticky** translucide thémée (`bg-surface/80 backdrop-blur`, `border-hairline`,
-`pt-safe`), marque = **pastille coral** (cœur `HeartMark` blanc, radius theme-aware
+Barre **sticky** translucide thémée via les tokens `--nav-*` (`bg-nav-surface`,
+`border-nav-border`, `pt-safe` ; always-dark sur la home via `[data-lobby]`),
+marque = **pastille coral** (cœur `HeartMark` blanc, radius theme-aware
 `rounded-control`) + wordmark → `/` (guest) ou `/discover` (connecté). La pastille
 **incarne fidèlement** le logo de la `lobby-nav` (rapprochement #282, épic #273) —
 même signature partout, en tokens sémantiques (pas de `--lobby-*`). Deux variantes :
@@ -300,8 +307,8 @@ même signature partout, en tokens sémantiques (pas de `--lobby-*`). Deux varia
   **bottom tab bar** reste la nav de sections de l'app — décision : on **ne fusionne
   pas** la tab bar dans la barre du haut, les deux coexistent.
 
-Remplace `TopNav` (supprimé #283) et la nav ad hoc de `/manifesto` ; la home garde
-son `LobbyNav` bespoke (signature always-dark). A11y : landmark `<nav aria-label>`,
+Remplace `TopNav` (supprimé #283), la nav ad hoc de `/manifesto` et `LobbyNav`
+(home migrée sur `SiteNav`, #273). A11y : landmark `<nav aria-label>`,
 focus ring coral, cibles ≥ 44px.
 
 **Contrôle du thème (règle figée, session 2026-07-12)** : le nav ne porte que le
@@ -386,10 +393,11 @@ un seul cran large pour rester une vraie source de vérité (moins de boutons).
   connecté, ou les actions selon l'état de session :
   - **guest** : *Manifesto* / *Se connecter* / **Créer un compte** (CTA `Button`).
   - **connecté** : `ThemeToggle` + *Admin* (si `ADMIN`) + *Paramètres*.
-  Sticky, `bg-surface/80 backdrop-blur`, porte la safe-area (`pt-safe`). Ne
+  Sticky, translucide via les tokens `--nav-*` (`bg-nav-surface` ; always-dark sur
+  la home via l'override `[data-lobby]`), porte la safe-area (`pt-safe`). Ne
   remplace **pas** la bottom tab bar (nav principale mobile de l'app connectée) :
   les deux coexistent. Cf. § dédié « SiteNav — nav unique » + Component Library.
-  **Exception** : la home garde son `LobbyNav` bespoke (signature always-dark).
+  La **home** est incluse : `LobbyNav` retiré, migrée sur `SiteNav` (#273).
 - **Bottom tab bar** (app connectée) : 4 onglets (Découvrir, Messages, La Place,
   Profil), `bg-surface border-t border-hairline`, icônes + labels, actif coral.
 - **`ThemeMenu`** (DS, `src/components/ui/ThemeMenu.tsx`) : popover mode×thème —
@@ -570,7 +578,7 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 | `ThemeMenu` | closed, open, focus-trap | popover (desktop), bottom-sheet (mobile) | `LobbyThemeSwitcher`, radios d'apparence en double |
 | `ThemeToggle` | light, dark, auto | icon-button (cycle Mode) | boutons Mode ad hoc dans les headers |
 | `SiteShell` | — | content, reading, app | Les `mx-auto max-w-* px-*` ad hoc dispersés (448/512/672/768/1080) |
-| `SiteNav` | guest, connecté | guest, authed (× width) | `TopNav`, nav ad hoc de `/manifesto` (la home garde `LobbyNav`) |
+| `SiteNav` | guest, connecté | guest, authed (× width) | `LobbyNav`, `TopNav`, nav ad hoc de `/manifesto` |
 | `HeartMark` | — | glyphe seul (taille via className/props) | Les deux glyphes de marque en double (cœur lobby + cœur-soleil à rayons) |
 
 ### Règles
@@ -584,16 +592,20 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 ### SiteNav (`src/components/ui/SiteNav.tsx`)
 
 Nav **unique** du shell unifié (#276, épic #273) — une barre sticky translucide
-thémée (`bg-surface/80 backdrop-blur-md`, `border-hairline`, `pt-safe`),
-theme-aware (respecte le mode clair/sombre ; le sombre-chaud *always dark* reste
-home-only). Colonne interne = `SiteShell` (échelle de largeurs #277). Remplace
-`TopNav` et la nav ad hoc de `/manifesto` (branchées zone par zone en #278→#281 ;
-`TopNav` supprimé au cleanup #283). **Exception** : la home garde son `LobbyNav`
-bespoke comme signature always-dark (décision opérateur #283).
+thémée via les tokens **`--nav-*`** (`bg-nav-surface`, `border-nav-border`,
+`text-nav-text[-dim]`, `backdrop-blur-md`, `pt-safe`), theme-aware. **Un seul
+composant, deux instances de thème** : la base des `--nav-*` dérive de
+`surface`/`content`/`hairline`/`muted` (suit le mode clair/sombre) ; sous
+`[data-lobby]` (la home) ils sont **surchargés en instance always-dark** (noir
+translucide + blur, texte lobby) → la barre reprend le look `LobbyNav` historique
+**sans nav bespoke**. Colonne interne = `SiteShell` (échelle de largeurs #277 ; la
+home en `content`, comme les autres zones contenu). Nav unique de **toutes** les
+zones, home comprise (#273) : remplace `LobbyNav` (home, #273), `TopNav` (supprimé
+au cleanup #283) et la nav ad hoc de `/manifesto` (branchées zone par zone en #278→#281).
 
 - **Marque** = pastille coral signature (`bg-coral` + cœur `HeartMark` `text-white`,
-  radius theme-aware `rounded-control`) + wordmark « Libre » (`text-content`) —
-  fidèle au `.lobby-nav__logo`, en tokens sémantiques (rapprochement #282).
+  radius theme-aware `rounded-control`) + wordmark « Libre » (`text-nav-text`) —
+  fidèle au logo lobby historique, en tokens sémantiques (rapprochement #282).
 - **`SiteNavView`** (présentationnel pur) : `variant` (`guest` | `authed`),
   `isAdmin?`, `width?` (échelle #277, défaut `content`), `banner?`.
   - **guest** : marque → `/`, liens publics *Manifesto* / *Se connecter*, CTA
@@ -615,14 +627,14 @@ de la home (`lobby-nav`). Source de vérité unique du glyphe : remplace l'ancie
 
 - **Glyphe seul** (pas de wordmark, pas de lien) : les surfaces l'enveloppent de
   leur propre `<Link aria-label="Accueil Libre">` + wordmark « Libre ». Il est
-  posé dans une **pastille coral** : `.lobby-nav__logo` / `.lobby-footer__logo`
-  (lobby) et, depuis #282, `SiteNav` (tokens `bg-coral` + `rounded-control`).
+  posé dans une **pastille coral** : `.lobby-footer__logo` (lobby) et, depuis #282,
+  `SiteNav` — home comprise (#273) — (tokens `bg-coral` + `rounded-control`).
 - **`fill="currentColor"`** → theme-aware : hérite de la couleur du parent — cœur
   **blanc** (`text-white`) sur la pastille coral, `text-coral` sinon. Zéro hex inline.
 - **Décoratif** (`aria-hidden`) ; taille via `className` (`h-8 w-8`…) ou attributs
   SVG (`width`/`height`), props SVG transmises.
-- Consommé par : `SiteNav`, `LobbyNav`, `LobbyFooter` (`Logo` supprimé #281,
-  `TopNav` supprimé #283).
+- Consommé par : `SiteNav` (home comprise), `LobbyFooter` (`Logo` supprimé #281,
+  `TopNav` supprimé #283, `LobbyNav` supprimé #273 — home migrée sur `SiteNav`).
 
 ### SiteShell (`src/components/ui/SiteShell.tsx`)
 

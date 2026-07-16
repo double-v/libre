@@ -11,12 +11,14 @@ import HeartMark from './HeartMark';
  * SiteNav — nav unique du shell unifié (#276, épic #273).
  *
  * Une seule barre, deux variantes de session (`guest` / `authed`), dans le langage
- * visuel de la home : sticky, translucide thémée (`bg-surface/80 backdrop-blur`),
- * theme-aware (respecte le mode clair/sombre — pas de neutre froid), safe-area.
- * Nav unique de toutes les zones app/contenu : remplace `TopNav` (supprimé au
- * cleanup #283) et la nav ad hoc de `/manifesto` (branchées zone par zone en
- * #278→#281). Seule exception : la home garde son `LobbyNav` bespoke comme
- * signature always-dark (décision opérateur #283, cf. DESIGN.md § La landing).
+ * visuel de la home : sticky, translucide + blur via les tokens `--nav-*`
+ * (`bg-nav-surface` / `border-nav-border` / `text-nav-text[-dim]`), theme-aware
+ * (base dérivée de surface/content — pas de neutre froid), safe-area. Sous
+ * `[data-lobby]` (la home) ces tokens sont surchargés en instance **always-dark**
+ * : le même composant rend le look `LobbyNav` historique sans nav bespoke.
+ * Nav unique de **toutes** les zones, home comprise (#273) : remplace `LobbyNav`
+ * (home, #273), `TopNav` (supprimé au cleanup #283) et la nav ad hoc de
+ * `/manifesto` (branchées zone par zone en #278→#281).
  *
  * Contrôle du thème (règle figée, session 2026-07-12) : la variante connectée
  * porte le `ThemeToggle` (axe Mode seul) ; le choix du thème vit dans les
@@ -38,13 +40,18 @@ export interface SiteNavViewProps {
   banner?: ReactNode;
 }
 
-// Tokens only (cf. CLAUDE.md) : text-muted/coral, focus ring coral, cibles ≥ 44px.
+// Tokens only (cf. CLAUDE.md) : texte via --nav-* (theme-aware, always-dark sous
+// [data-lobby]), focus ring coral, cibles ≥ 44px.
 const iconLinkClass =
-  'inline-flex min-h-[44px] items-center rounded-control p-2 text-muted transition-colors hover:bg-fill-subtle hover:text-content focus-visible:outline-none focus-visible:shadow-focus';
+  'inline-flex min-h-[44px] items-center rounded-control p-2 text-nav-text-dim transition-colors hover:bg-fill-subtle hover:text-nav-text focus-visible:outline-none focus-visible:shadow-focus';
+// Pas de `display` dans la base : chaque consommateur pose le sien (`inline-flex`
+// ou `hidden sm:inline-flex`), sinon un `inline-flex` de base écraserait le `hidden`
+// responsive (bug : Manifesto restait visible < sm). `whitespace-nowrap` empêche le
+// retour à la ligne quand la barre se resserre (mobile).
 const textLinkClass =
-  'inline-flex min-h-[44px] items-center px-2 text-sm font-medium text-muted transition-colors hover:text-content focus-visible:outline-none focus-visible:shadow-focus';
+  'min-h-[44px] items-center whitespace-nowrap px-2 text-sm font-medium text-nav-text-dim transition-colors hover:text-nav-text focus-visible:outline-none focus-visible:shadow-focus';
 const ctaClass =
-  'inline-flex min-h-[44px] items-center rounded-full bg-coral px-4 text-sm font-semibold text-white transition-colors hover:bg-terracotta focus-visible:outline-none focus-visible:shadow-focus';
+  'inline-flex min-h-[44px] items-center whitespace-nowrap rounded-full bg-coral px-4 text-sm font-semibold text-white transition-colors hover:bg-terracotta focus-visible:outline-none focus-visible:shadow-focus';
 
 /**
  * Partie présentationnelle pure (sans session) — toute la logique de rendu.
@@ -54,7 +61,7 @@ export function SiteNavView({ variant, isAdmin = false, width = 'content', banne
   const authed = variant === 'authed';
 
   return (
-    <div className="sticky top-0 z-40 border-b border-hairline bg-surface/80 pt-safe backdrop-blur-md">
+    <div className="sticky top-0 z-40 border-b border-nav-border bg-nav-surface pt-safe backdrop-blur-md">
       {banner}
       <nav aria-label="Navigation principale">
         <SiteShell width={width} className="flex items-center justify-between gap-2 py-2">
@@ -78,7 +85,7 @@ export function SiteNavView({ variant, isAdmin = false, width = 'content', banne
                 <Link href="/manifesto" className={`hidden sm:inline-flex ${textLinkClass}`}>
                   Manifesto
                 </Link>
-                <Link href="/login" className={textLinkClass}>
+                <Link href="/login" className={`inline-flex ${textLinkClass}`}>
                   Se connecter
                 </Link>
                 <Link href="/register" className={ctaClass}>
@@ -124,7 +131,7 @@ function Brand({ href }: { href: string }) {
       <span className="inline-flex h-8 w-8 items-center justify-center rounded-control bg-coral text-white">
         <HeartMark className="h-[18px] w-[18px]" />
       </span>
-      <span className="text-lg font-bold tracking-tight text-content">Libre</span>
+      <span className="text-lg font-bold tracking-tight text-nav-text">Libre</span>
     </Link>
   );
 }
