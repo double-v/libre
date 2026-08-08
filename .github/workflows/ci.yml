@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+# Un push qui en remplace un autre sur la même réf rend le run précédent inutile :
+# on l'annule. Ça évite surtout qu'un run mort continue de disputer l'advisory
+# lock du job `test` (cf. #313) à celui qui vient de le remplacer.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # Lint job — jusqu'à #194 la CI ne lançait QUE vitest, donc les erreurs ESLint
   # (set-state-in-effect, rules-of-hooks, no-explicit-any…) étaient invisibles en
@@ -34,6 +41,28 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+
+    # `npx prisma migrate deploy` (plus bas) prend un advisory lock PostgreSQL
+    # GLOBAL — `pg_advisory_lock(72707369)`, timeout 10 s — sur la base Neon dev
+    # que TOUS les runs partagent. Deux runs simultanés, même sur deux PR sans
+    # rapport, se disputent ce lock unique : le perdant meurt en `P1002` au step
+    # `migrate deploy`, et `vitest` est *skipped*. La PR passe au rouge sans
+    # qu'un seul test n'ait tourné, ce qui accuse son contenu à tort. Le 2026-08-08
+    # ça avait mis 7 PR Dependabot sur 7 en échec, dont celles qui fermaient une
+    # alerte critical (cf. #313).
+    #
+    # Le groupe est donc volontairement CONSTANT, pas indexé sur `github.ref` :
+    # la contention est *entre* branches, un groupe par réf ne réglerait rien.
+    # Il est posé sur ce job seul — `lint` ne touche pas la base et reste parallèle.
+    #
+    # `cancel-in-progress: false` fait la queue au lieu de tuer le run en cours.
+    # Limite connue de GitHub : un seul run peut attendre par groupe ; au-delà,
+    # celui qui patientait est annulé. Un « cancelled » reste relançable et
+    # lisible, là où le `P1002` induisait en erreur — mais ça reste une rustine.
+    # Le vrai fix est une DB éphémère par run (ticket séparé, cf. #313).
+    concurrency:
+      group: prisma-migrate-shared-dev-db
+      cancel-in-progress: false
 
     # Database: the DATABASE_URL secret is configured at the repo level
     # (Settings → Secrets and variables → Actions) and points at the dev
