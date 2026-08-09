@@ -1,10 +1,21 @@
 name: CI
 
 on:
+  # `rc` est la branche de livraison des agents (verrou de livraison par projet,
+  # ghwork-control spec 002) : leurs PR y sont fusionnées, jamais dans `main`,
+  # et le passage `rc` → `main` reste un geste humain.
+  #
+  # Sans `rc` ici, une PR qui la vise ne déclenche aucun check — et le contrat
+  # d'acceptation refuse de fusionner sur un rollup vide (« vert non prouvé ne
+  # vaut pas vert »). La branche serait donc inutilisable.
+  #
+  # Le `push` compte autant que la `pull_request` : c'est lui qui laisse un run
+  # attaché à `rc`, sans quoi l'écart `rc` → `main` s'afficherait en permanence
+  # « aucun run de CI ».
   push:
-    branches: [main]
+    branches: [main, rc]
   pull_request:
-    branches: [main]
+    branches: [main, rc]
 
 # Un push qui en remplace un autre sur la même réf rend le run précédent inutile :
 # on l'annule. Ça évite surtout qu'un run mort continue de disputer l'advisory
