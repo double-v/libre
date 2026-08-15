@@ -36,6 +36,8 @@ interface ProfileData {
   searchGenders: string[];
   searchOrientations: string[];
   searchInterests: string[];
+  searchDistanceKm: number | null;
+  practicesVisibility: string;
   invisibleMode: boolean;
 }
 
@@ -94,9 +96,8 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [photoError, setPhotoError] = useState('');
   const [editSearchFilters, setEditSearchFilters] = useState<SearchFiltersValue>({
-    genders: [], orientations: [], ageMin: 18, ageMax: 99, interests: [],
+    genders: [], orientations: [], ageMin: 18, ageMax: 99, interests: [], distanceKm: null,
   });
-  const [editMaxDistanceKm, setEditMaxDistanceKm] = useState(50);
   const [editSocialLinks, setEditSocialLinks] = useState<Record<string, string>>({});
   const [editSocialPlatform, setEditSocialPlatform] = useState('Instagram');
   const [editSocialUrl, setEditSocialUrl] = useState('');
@@ -152,8 +153,8 @@ export default function ProfilePage() {
         ageMin: profile?.ageMin ?? 18,
         ageMax: profile?.ageMax ?? 99,
         interests: profile?.searchInterests ?? [],
+        distanceKm: profile?.searchDistanceKm ?? null,
       });
-      setEditMaxDistanceKm(profile?.maxDistanceKm ?? 50);
     }
     if (section === 'social') setEditSocialLinks(profile?.socialLinks ?? {});
   };
@@ -179,6 +180,34 @@ export default function ProfilePage() {
       setError(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde');
     } finally {
       setSaving(false);
+    }
+  };
+
+  /**
+   * Visibilité des pratiques (#328) — enregistrée au clic, sans passer par le
+   * mode édition : un réglage de confidentialité doit être lisible et
+   * modifiable en permanence, pas caché derrière un bouton « Modifier ».
+   * Optimiste, avec retour arrière si l'écriture échoue.
+   */
+  const savePracticesVisibility = async (visibility: string) => {
+    if (!profile || profile.practicesVisibility === visibility) return;
+    const previous = profile.practicesVisibility;
+    setProfile({ ...profile, practicesVisibility: visibility });
+    try {
+      const res = await fetch('/api/users/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ practicesVisibility: visibility }),
+      });
+      if (!res.ok) throw new Error();
+      toast(
+        visibility === 'public'
+          ? 'Tes pratiques sont visibles par tout le monde.'
+          : 'Tes pratiques ne sont visibles que par tes matches.',
+      );
+    } catch {
+      setProfile((p) => (p ? { ...p, practicesVisibility: previous } : p));
+      setError('Impossible d\'enregistrer ce réglage, réessaie.');
     }
   };
 
@@ -345,7 +374,34 @@ export default function ProfilePage() {
             <p className="mt-1 text-xs text-muted">
               Certaines personnes aiment explorer des pratiques sensuelles ou spécifiques. C&apos;est totalement optionnel.
             </p>
-            <PrivacyTip tip="Ces préférences sont privées. Elles ne s&apos;affichent que pour vos matches, pas publiquement." />
+            {/* Réglage de visibilité (#328) : la phrase qui vivait ici
+                promettait « réservé aux matches » alors que l'API renvoyait le
+                champ à tout compte connecté. Elle décrit désormais un réglage
+                réel, et laisse le choix. */}
+            <div className="mt-3">
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">
+                Qui peut les voir
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                <TagButton
+                  label="Mes matches"
+                  selected={profile.practicesVisibility !== 'public'}
+                  onClick={() => savePracticesVisibility('matches')}
+                />
+                <TagButton
+                  label="Tout le monde"
+                  selected={profile.practicesVisibility === 'public'}
+                  onClick={() => savePracticesVisibility('public')}
+                />
+              </div>
+            </div>
+            <PrivacyTip
+              tip={
+                profile.practicesVisibility === 'public'
+                  ? 'Ces pratiques sont visibles par tous les comptes, y compris dans les découvertes. Tu peux revenir en arrière à tout moment.'
+                  : 'Seules les personnes avec qui tu as matché voient ces pratiques. Elles n\'apparaissent ni dans les découvertes, ni sur ta fiche publique.'
+              }
+            />
             {editingSection === 'practices' ? (
               <div className="mt-3 space-y-3">
                 <TagSelector categories={PRACTICE_CATEGORIES} selected={editPractices} onChange={setEditPractices} placeholder="Ajouter une pratique..." />
@@ -462,8 +518,6 @@ export default function ProfilePage() {
                 <SearchFilters
                   value={editSearchFilters}
                   onChange={setEditSearchFilters}
-                  distanceKm={editMaxDistanceKm}
-                  onDistanceChange={setEditMaxDistanceKm}
                   framed={false}
                 />
                 <EditActions
@@ -471,7 +525,7 @@ export default function ProfilePage() {
                   onSave={() => saveSection({
                     ageMin: editSearchFilters.ageMin,
                     ageMax: editSearchFilters.ageMax,
-                    maxDistanceKm: editMaxDistanceKm,
+                    searchDistanceKm: editSearchFilters.distanceKm,
                     searchGenders: editSearchFilters.genders,
                     searchOrientations: editSearchFilters.orientations,
                     searchInterests: editSearchFilters.interests,
@@ -494,7 +548,9 @@ export default function ProfilePage() {
                     : <span className="text-xs italic text-muted">Toutes</span>}
                 </div>
                 <ProfileField label="Tranche d'âge">{profile.ageMin} – {profile.ageMax} ans</ProfileField>
-                <ProfileField label="Distance max">{profile.maxDistanceKm} km</ProfileField>
+                <ProfileField label="Distance max">
+                  {profile.searchDistanceKm !== null ? `${profile.searchDistanceKm} km` : 'Partout'}
+                </ProfileField>
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wider text-muted">Centres d&apos;intérêt recherchés</p>
                   {profile.searchInterests.length > 0

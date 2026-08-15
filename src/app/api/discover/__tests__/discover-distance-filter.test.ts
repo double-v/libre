@@ -249,17 +249,16 @@ describe('GET /api/discover?tab=nearby — précision conservée (#327)', () => 
     expect(serre.users).toHaveLength(0);
   });
 
-  it('retombe sur searchDistanceKm puis maxDistanceKm quand la requête ne dit rien', async () => {
-    fakeDb.profile.findUnique.mockResolvedValue({
-      userId: ME_ID,
-      lastKnownLat: PARIS.lat,
-      lastKnownLng: PARIS.lng,
-      maxDistanceKm: 50,
-      searchDistanceKm: 10,
-    });
-    fakeDb.profile.findMany.mockResolvedValue([makeProfile(randomUUID(), { deltaLng: 0.5 })]); // ~36 km
+  it('sans filtre, ratisse « partout » plutôt qu\'un rayon caché', async () => {
+    // Un seul contrôle de distance dans l'app : pas de filtre = pas de limite,
+    // ici aussi. Le tri par distance croissante garde les plus proches en tête,
+    // et les rayons réglés à la main ont été repris comme filtre par la
+    // migration — personne ne perd son réglage, personne n'hérite d'un défaut.
+    fakeDb.profile.findMany.mockResolvedValue([makeProfile(randomUUID(), { deltaLng: 2 })]); // ~146 km
 
     const body = await (await GET(makeRequest('tab=nearby'))).json();
-    expect(body.users).toHaveLength(0); // 36 km > searchDistanceKm=10
+
+    expect(body.users).toHaveLength(1);
+    expect(body.users[0].distanceKm).toBeGreaterThan(100);
   });
 });

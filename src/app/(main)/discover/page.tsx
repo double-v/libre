@@ -21,21 +21,6 @@ const SEGMENTS: { key: Segment; label: string }[] = [
   { key: 'crossings', label: 'Croisements' },
 ];
 
-const RADIUS_STEPS = [10, 25, 50, 100] as const;
-
-function closestRadiusIndex(value: number): number {
-  let closest = 0;
-  let minDiff = Infinity;
-  RADIUS_STEPS.forEach((step, i) => {
-    const diff = Math.abs(step - value);
-    if (diff < minDiff) {
-      minDiff = diff;
-      closest = i;
-    }
-  });
-  return closest;
-}
-
 interface DiscoveredUser {
   userId: string;
   displayName: string;
@@ -44,11 +29,13 @@ interface DiscoveredUser {
   genderIdentity: string;
   orientation: string[];
   interests: string[];
-  practices: string[];
+  /** Absent quand le profil réserve ses pratiques à ses matches (#328). */
+  practices?: string[];
   photos: string[];
   isVerified: boolean;
   online: boolean;
   distanceKm?: number;
+  distanceBucket?: string;
 }
 
 function buildUrl(tab: FeedTab, cursor?: string, filters?: SearchFiltersValue): string {
@@ -60,6 +47,8 @@ function buildUrl(tab: FeedTab, cursor?: string, filters?: SearchFiltersValue): 
     if (filters.ageMin > 18) params.set('ageMin', String(filters.ageMin));
     if (filters.ageMax < 99) params.set('ageMax', String(filters.ageMax));
     if (filters.interests.length) params.set('interests', filters.interests.join(','));
+    // Paramètre absent = « partout » : le serveur ne doit pas deviner un rayon.
+    if (filters.distanceKm !== null) params.set('distance', String(filters.distanceKm));
   }
   return `/api/discover?${params}`;
 }
@@ -79,8 +68,6 @@ export default function DiscoverPage() {
   const [passedIds, setPassedIds] = useState<Set<string>>(new Set());
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [nearbyReason, setNearbyReason] = useState<NearbyReason | null>(null);
-  const [radiusKm, setRadiusKm] = useState<number>(50);
-  const [radiusSaving, setRadiusSaving] = useState(false);
   const [geoRequesting, setGeoRequesting] = useState(false);
   const [geoError, setGeoError] = useState('');
   const [activeFeedKey, setActiveFeedKey] = useState('');
@@ -185,8 +172,8 @@ export default function DiscoverPage() {
               ageMin: p.ageMin ?? 18,
               ageMax: p.ageMax ?? 99,
               interests: p.searchInterests ?? [],
+              distanceKm: p.searchDistanceKm ?? null,
             });
-            if (p.maxDistanceKm) setRadiusKm(p.maxDistanceKm);
           }
         }
       } catch {
@@ -212,6 +199,7 @@ export default function DiscoverPage() {
           ageMin: f.ageMin,
           ageMax: f.ageMax,
           searchInterests: f.interests,
+          searchDistanceKm: f.distanceKm,
         }),
       }).catch(() => { /* best-effort */ });
     }, 600);
@@ -220,26 +208,6 @@ export default function DiscoverPage() {
   // (aucun setState), donc laisser la dernière écriture partir même si on quitte
   // /discover rapidement garantit que le dernier changement de filtre est bien
   // persisté (sinon on perdrait l'édition faite < 600 ms avant la navigation).
-
-  async function handleRadiusChange(newRadius: number) {
-    if (radiusSaving || newRadius === radiusKm) return;
-    const previous = radiusKm;
-    setRadiusKm(newRadius);
-    setRadiusSaving(true);
-    try {
-      const res = await fetch('/api/users/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ maxDistanceKm: newRadius }),
-      });
-      if (!res.ok) throw new Error();
-      await fetchPage(true);
-    } catch {
-      setRadiusKm(previous);
-    } finally {
-      setRadiusSaving(false);
-    }
-  }
 
   function handleActivateGeoloc() {
     setGeoError('');
@@ -369,32 +337,21 @@ export default function DiscoverPage() {
         </div>
       )}
 
-      {/* Rayon de recherche (segment à proximité) */}
-      {segment === 'nearby' && (
-        <div className="mb-4 rounded-xl border border-hairline bg-surface p-4">
-          <label
-            htmlFor="nearby-radius"
-            className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted"
-          >
-            Rayon de recherche : {radiusKm} km
-          </label>
-          <input
-            id="nearby-radius"
-            type="range"
-            min={0}
-            max={RADIUS_STEPS.length - 1}
-            step={1}
-            value={closestRadiusIndex(radiusKm)}
-            disabled={radiusSaving}
-            onChange={(e) => handleRadiusChange(RADIUS_STEPS[Number(e.target.value)])}
-            aria-valuetext={`${radiusKm} kilomètres`}
-            className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-fill-subtle accent-coral disabled:opacity-50"
-          />
-          <div className="mt-1 flex justify-between text-xs text-muted">
-            {RADIUS_STEPS.map((step) => (
-              <span key={step}>{step} km</span>
-            ))}
-          </div>
+      {/* Filtre posé mais géoloc absente : le feed part complet, on explique
+          pourquoi la distance ne mord pas plutôt que de rendre une page vide. */}
+      {isFeed && segment !== 'nearby' && nearbyReason === 'geoloc_required' && (
+        <div className="mb-4 rounded-xl bg-blush p-3 text-sm text-coral-dark dark:bg-coral/10 dark:text-coral-light">
+          <p className="mb-2">
+            Active ta géoloc pour filtrer par distance — en attendant, ton feed reste complet.
+          </p>
+          <Button type="button" size="sm" onClick={handleActivateGeoloc} loading={geoRequesting}>
+            Activer ma géolocalisation
+          </Button>
+          {geoError && (
+            <p role="alert" className="mt-2 text-red-600 dark:text-red-400">
+              {geoError}
+            </p>
+          )}
         </div>
       )}
 
@@ -432,10 +389,12 @@ export default function DiscoverPage() {
             </p>
           )}
         </div>
-      ) : segment === 'nearby' && nearbyReason === 'empty_feed' ? (
+      ) : nearbyReason === 'empty_feed' ? (
         <div className="animate-fade-in rounded-xl border border-hairline bg-surface p-6 text-center">
           <p className="text-muted">
-            Personne dans un rayon de {radiusKm} km. Élargis ta recherche ou reviens plus tard.
+            {filters.distanceKm !== null
+              ? `Personne dans un rayon de ${filters.distanceKm} km. Élargis ta distance ou reviens plus tard.`
+              : 'Personne à découvrir pour le moment. Reviens plus tard.'}
           </p>
         </div>
       ) : visibleUsers.length === 0 ? (
@@ -452,6 +411,7 @@ export default function DiscoverPage() {
               isVerified={user.isVerified}
               online={user.online}
               distanceKm={user.distanceKm}
+              distanceBucket={user.distanceBucket}
               photos={user.photos}
               interests={user.interests}
               practices={user.practices}

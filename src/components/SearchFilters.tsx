@@ -13,6 +13,9 @@ export interface SearchFiltersValue {
   ageMin: number;
   ageMax: number;
   interests: string[];
+  /** Distance maximale en km. `null` = « partout » : c'est une valeur, pas une
+   *  absence de réglage, et c'est l'état par défaut (#327). */
+  distanceKm: number | null;
 }
 
 export const EMPTY_SEARCH_FILTERS: SearchFiltersValue = {
@@ -21,7 +24,12 @@ export const EMPTY_SEARCH_FILTERS: SearchFiltersValue = {
   ageMin: 18,
   ageMax: 99,
   interests: [],
+  distanceKm: null,
 };
+
+// Le curseur couvre 1→500 km ; la dernière position vaut « partout » (null).
+export const DISTANCE_MIN_KM = 1;
+export const DISTANCE_MAX_KM = 500;
 
 export function hasActiveFilters(v: SearchFiltersValue): boolean {
   return (
@@ -29,7 +37,8 @@ export function hasActiveFilters(v: SearchFiltersValue): boolean {
     v.orientations.length > 0 ||
     v.ageMin > 18 ||
     v.ageMax < 99 ||
-    v.interests.length > 0
+    v.interests.length > 0 ||
+    v.distanceKm !== null
   );
 }
 
@@ -39,10 +48,6 @@ interface SearchFiltersProps {
   /** Enveloppe dans une carte « filter-panel ». Faux quand on est déjà dans
    *  une carte (ex : ProfileSection) pour éviter la double bordure. */
   framed?: boolean;
-  /** Contrôle de distance optionnel — rendu seulement là où la géoloc filtre
-   *  réellement (préférences du profil). Absent → pas de slider distance. */
-  distanceKm?: number;
-  onDistanceChange?: (km: number) => void;
   /** Bouton « Réinitialiser les filtres ». */
   showReset?: boolean;
 }
@@ -56,8 +61,6 @@ export default function SearchFilters({
   value,
   onChange,
   framed = true,
-  distanceKm,
-  onDistanceChange,
   showReset = true,
 }: SearchFiltersProps) {
   const toggle = <T,>(arr: T[], item: T): T[] =>
@@ -65,12 +68,7 @@ export default function SearchFilters({
 
   const set = (patch: Partial<SearchFiltersValue>) => onChange({ ...value, ...patch });
 
-  const reset = () => {
-    onChange(EMPTY_SEARCH_FILTERS);
-    onDistanceChange?.(50);
-  };
-
-  const showDistance = distanceKm !== undefined && onDistanceChange !== undefined;
+  const reset = () => onChange(EMPTY_SEARCH_FILTERS);
 
   const body = (
     <div className="space-y-4">
@@ -133,22 +131,33 @@ export default function SearchFilters({
         </div>
       </div>
 
-      {/* Distance (optionnel) */}
-      {showDistance && (
-        <div>
-          <p className={LABEL_CLASS}>Distance maximale : {distanceKm} km</p>
-          <input
-            type="range"
-            min={1}
-            max={500}
-            value={distanceKm}
-            aria-label="Distance maximale"
-            aria-valuetext={`${distanceKm} kilomètres`}
-            onChange={(e) => onDistanceChange?.(Number(e.target.value))}
-            className={RANGE_CLASS}
-          />
+      {/* Distance — la dernière position du curseur vaut « partout » (#327).
+          Sans cet état, tout compte existant hériterait d'un rayon qu'il n'a
+          jamais choisi et verrait son feed rétrécir sans rien avoir demandé. */}
+      <div>
+        <p className={LABEL_CLASS}>
+          Distance maximale : {value.distanceKm === null ? 'partout' : `${value.distanceKm} km`}
+        </p>
+        <input
+          type="range"
+          min={DISTANCE_MIN_KM}
+          max={DISTANCE_MAX_KM}
+          value={value.distanceKm ?? DISTANCE_MAX_KM}
+          aria-label="Distance maximale"
+          aria-valuetext={
+            value.distanceKm === null ? 'partout' : `${value.distanceKm} kilomètres`
+          }
+          onChange={(e) => {
+            const km = Number(e.target.value);
+            set({ distanceKm: km >= DISTANCE_MAX_KM ? null : km });
+          }}
+          className={RANGE_CLASS}
+        />
+        <div className="mt-1 flex justify-between text-xs text-muted">
+          <span>{DISTANCE_MIN_KM} km</span>
+          <span>partout</span>
         </div>
-      )}
+      </div>
 
       {/* Centres d'intérêt */}
       <div>
@@ -172,7 +181,7 @@ export default function SearchFilters({
         </div>
       </div>
 
-      {showReset && (hasActiveFilters(value) || (showDistance && distanceKm !== 50)) && (
+      {showReset && hasActiveFilters(value) && (
         <button
           type="button"
           onClick={reset}

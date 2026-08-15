@@ -292,10 +292,12 @@ export async function GET(request: NextRequest) {
       if (!myProfile || !hasGeoloc) {
         return NextResponse.json({ users: [], nextCursor: null, reason: 'geoloc_required' });
       }
-      // Le filtre de la session prime ; à défaut on retombe sur le rayon
-      // historique du segment (`maxDistanceKm`), qui reste la préférence
-      // persistée des comptes n'ayant jamais touché au nouveau filtre.
-      const maxDist = distanceFilterKm ?? myProfile.searchDistanceKm ?? myProfile.maxDistanceKm ?? 50;
+      // Un seul contrôle de distance dans l'app : pas de filtre = « partout »,
+      // ici aussi. Le segment trie par distance croissante, donc « partout » ne
+      // noie personne — les plus proches restent en tête. Les comptes qui
+      // avaient réglé un rayon serré le retrouvent : la migration a recopié
+      // `maxDistanceKm` dans `searchDistanceKm` quand il n'était pas au défaut.
+      const maxDist = distanceFilterKm ?? MAX_DISTANCE_KM;
       const candidates = await getDb().profile.findMany({
         where: { ...baseWhere, ...geoWhere(maxDist) },
         include: profileInclude,
