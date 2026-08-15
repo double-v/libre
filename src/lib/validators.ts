@@ -119,3 +119,11 @@ export const adminBanSchema = z.object({
 export const adminHandleFeedbackSchema = z.object({
   status: z.enum(['open', 'resolved']),
 });
+
+// `reason` est requis ici, contrairement à adminBanSchema : un retrait de photo
+// est invisible pour la personne concernée, et indéfendable sans motif si elle
+// conteste. Le bannissement, lui, se voit.
+export const adminRemovePhotoSchema = z.object({
+  photoKey: z.string().min(1).max(300),
+  reason: z.string().min(3).max(500),
+});

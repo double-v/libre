@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import AdminUserPhotos from '@/components/admin/AdminUserPhotos';
 
 interface UserDetail {
   id: string;
@@ -157,6 +158,17 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
           </div>
         </div>
       </div>
+
+      {/* Photos — modération (#323). Extrait en composant : la fiche devenait
+          longue, et un composant isolé se valide sur pixels sans session admin. */}
+      <AdminUserPhotos
+        userId={user.id}
+        displayName={user.displayName}
+        photos={user.profile?.photos ?? []}
+        onPhotosChange={(photos) =>
+          setUser({ ...user, profile: user.profile ? { ...user.profile, photos } : null })
+        }
+      />
 
       {/* Reports received */}
       {user.reportsReceived.length > 0 && (

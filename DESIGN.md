@@ -704,6 +704,29 @@ Chat — un seul branchement couvre les quatre surfaces.
   (`useFocusTrap`), fermeture Échap, cibles `min-h-11` (44px), `aria-pressed`
   sur les motifs. `motion-reduce:transition-none` sur toutes les transitions.
 
+### AdminUserPhotos (`src/components/admin/AdminUserPhotos.tsx`)
+
+Galerie de modération des photos d'un profil (#323). La fiche admin n'affichait
+qu'un compteur (`photos.length`) : aucune vignette, aucun retrait possible — les
+seuls leviers face à un avatar hors charte étaient bannir ou supprimer le compte.
+
+- **L'avatar est distingué** (`Avatar (public)`, en coral) : c'est la seule photo
+  visible par tout compte connecté, donc la priorité absolue en modération. Les
+  autres ne sont accessibles qu'aux matches — et à l'admin, via la dérogation
+  **tracée** du proxy `/api/photos/[key]` (`VIEW_PRIVATE_PHOTO`).
+- **Conséquences dites avant l'acte** : retirer `photos[0]` promeut la suivante ;
+  retirer la dernière laisse le profil sans avatar. Les deux sont annoncés dans
+  le panneau de confirmation.
+- **Motif obligatoire** (≥ 3 caractères, validé serveur *et* client) : un retrait
+  de photo est invisible pour la personne concernée et indéfendable sans motif si
+  elle conteste. C'est la différence avec le bannissement, qui se voit.
+- **Vignettes** : `<img>` brut et non `next/image` — le proxy redirige vers une
+  URL R2 signée à TTL court que le cache d'image mettrait en défaut. Tuile
+  `bg-fill-subtle` + `overflow-hidden` : une clé orpheline (objet R2 disparu)
+  dégrade en tuile neutre au lieu de faire déborder le texte alt.
+- **Légende empilée** sous la vignette : à 128px de large, libellé et bouton
+  côte à côte se chevauchaient dès que le libellé passait à la ligne.
+
 ### ThemeMenu (`src/components/ui/ThemeMenu.tsx`)
 
 Point d'entrée **complet** du theming (mode **et** thème réunis), en **popover**.

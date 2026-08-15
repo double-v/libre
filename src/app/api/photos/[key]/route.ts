@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { getPhotoSignedUrl, isR2Configured } from '@/lib/r2';
 import { rateLimit, limits, rateLimitHeaders } from '@/lib/rate-limit';
+import { verifyAdmin } from '@/lib/admin';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ key: string }> }) {
   try {
@@ -69,7 +70,32 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       });
 
       if (!isMatch) {
-        return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+        // Dérogation ADMIN (#323) : sans elle, un admin non matché reçoit 403
+        // sur toute photo autre que l'avatar, et la galerie de modération
+        // n'affiche que des vignettes cassées — donc aucune modération photo
+        // possible. On ouvre l'accès, mais on le trace : consulter les photos
+        // privées d'un profil est un acte de modération, pas une consultation
+        // ordinaire. Seul le franchissement de la garde est journalisé —
+        // l'avatar est public, le tracer noierait le journal.
+        const admin = await verifyAdmin();
+        if (!admin) {
+          return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+        }
+
+        // Best-effort : un échec d'écriture du journal ne doit pas casser
+        // l'affichage après une autorisation déjà acquise (cf. REX Pusher).
+        try {
+          await getDb().moderationLog.create({
+            data: {
+              adminId: admin.userId,
+              targetUserId: ownerId,
+              action: 'VIEW_PRIVATE_PHOTO',
+              reason: decodedKey,
+            },
+          });
+        } catch (err) {
+          console.error('[photos] moderation log failed:', err);
+        }
       }
     }
 
