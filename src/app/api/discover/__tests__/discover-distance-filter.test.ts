@@ -24,6 +24,7 @@ const fakeDb = {
   profile: { findUnique: vi.fn(), findMany: vi.fn() },
   block: { findMany: vi.fn() },
   like: { findMany: vi.fn() },
+  match: { findMany: vi.fn() },
 };
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => fakeDb }));
 
@@ -56,6 +57,7 @@ function makeProfile(
     orientation: [],
     interests: [],
     practices: [],
+    practicesVisibility: 'matches',
     photos: [],
     lastKnownLat: opts.lat ?? PARIS.lat,
     lastKnownLng: opts.lng ?? PARIS.lng + (opts.deltaLng ?? 0),
@@ -74,6 +76,7 @@ beforeEach(() => {
   mockRateLimit.mockResolvedValue({ success: true, remaining: 59, resetAt: Date.now() + 60_000 });
   fakeDb.block.findMany.mockResolvedValue([]);
   fakeDb.like.findMany.mockResolvedValue([]);
+  fakeDb.match.findMany.mockResolvedValue([]);
   fakeDb.profile.findMany.mockResolvedValue([]);
   fakeDb.profile.findUnique.mockResolvedValue({
     userId: ME_ID,

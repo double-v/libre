@@ -71,6 +71,10 @@ model Profile {
   relationshipType String[]
   interests        String[]
   practices        String[]  @default([])
+  // Qui voit `practices` : 'matches' (défaut) ou 'public' (#328). Le champ
+  // était renvoyé à tout compte connecté alors que /profil promettait
+  // l'inverse ; la promesse devient la valeur par défaut.
+  practicesVisibility String @default("matches")
   socialLinks      Json      @default("{}")
   photos           String[]
   maxDistanceKm    Int       @default(50)

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { GENDER_OPTIONS } from '@/lib/taxonomy';
+import { PRACTICES_VISIBILITY_VALUES } from '@/lib/profile-visibility';
 
 const VALID_REPORT_REASONS = ['harassment', 'spam', 'fake', 'inappropriate', 'other'] as const;
 
@@ -44,6 +45,7 @@ export const profileUpdateSchema = z.object({
   relationshipType: z.array(z.string().max(30)).max(10).optional(),
   interests: z.array(z.string().max(30)).max(20).optional(),
   practices: z.array(z.string().max(30)).max(20).optional(),
+  practicesVisibility: z.enum(PRACTICES_VISIBILITY_VALUES).optional(),
   socialLinks: z.record(z.string(), z.string()).optional(),
   photos: z.array(z.string()).max(6).optional(),
   invisibleMode: z.boolean().optional(),

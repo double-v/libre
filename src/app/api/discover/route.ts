@@ -4,6 +4,7 @@ import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { haversineDistance } from '@/lib/geoloc';
 import { boundingBox, distanceBucket, type DistanceBucket } from '@/lib/discover-distance';
+import { canSeePractices } from '@/lib/profile-visibility';
 import { rateLimit, limits } from '@/lib/rate-limit';
 
 const PAGE_SIZE = 20;
@@ -43,6 +44,7 @@ type ProfileWithUser = {
   orientation: string[];
   interests: string[];
   practices: string[];
+  practicesVisibility: string;
   photos: string[];
   lastKnownLat: number;
   lastKnownLng: number;
@@ -57,7 +59,7 @@ interface FeedUser {
   genderIdentity: string;
   orientation: string[];
   interests: string[];
-  practices: string[];
+  practices?: string[];
   photos: string[];
   isVerified: boolean;
   lastActive: Date;
@@ -136,6 +138,16 @@ export async function GET(request: NextRequest) {
     });
     const likedIds = new Set(likes.map((l) => l.likedId));
 
+    // Matches du lecteur : seule clé qui ouvre les champs réservés (#328).
+    // Un match implique un like, donc ces profils sont en pratique déjà hors
+    // du feed — la règle est appliquée quand même, pour ne pas dépendre d'une
+    // exclusion qui pourrait changer.
+    const matches = await getDb().match.findMany({
+      where: { OR: [{ userA: userId }, { userB: userId }] },
+      select: { userA: true, userB: true },
+    });
+    const matchedIds = new Set(matches.map((m) => (m.userA === userId ? m.userB : m.userA)));
+
     const excludeIds = [...blockedIds, ...likedIds];
 
     // Build base where clause: exclude self, banned, invisible, blocked, already-liked
@@ -199,7 +211,16 @@ export async function GET(request: NextRequest) {
         genderIdentity: p.genderIdentity,
         orientation: p.orientation,
         interests: p.interests,
-        practices: p.practices,
+        // Pratiques : réservées aux matches par défaut (#328). Clé omise, pas
+        // tableau vide — « tu n'y as pas accès » et « cette personne n'en a
+        // renseigné aucune » ne sont pas la même information.
+        ...(canSeePractices({
+          visibility: p.practicesVisibility,
+          isSelf: false,
+          isMatched: matchedIds.has(p.userId),
+        })
+          ? { practices: p.practices }
+          : {}),
         photos: p.photos,
         isVerified: p.user.isVerified,
         lastActive: p.user.lastActive,
