@@ -39,7 +39,17 @@ export async function GET(
         where: { status: 'pending' },
         take: 10,
         orderBy: { createdAt: 'desc' },
-        select: { id: true, reason: true, createdAt: true, reporterId: true },
+        // description + reporter sont consommés par la page de détail : sans
+        // la relation, r.reporter.displayName jetait un TypeError dès qu'un
+        // utilisateur avait un signalement en attente — soit exactement le
+        // cas où l'admin ouvre la fiche (#321).
+        select: {
+          id: true,
+          reason: true,
+          description: true,
+          createdAt: true,
+          reporter: { select: { id: true, displayName: true } },
+        },
       },
       verificationRequests: {
         orderBy: { createdAt: 'desc' },

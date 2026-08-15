@@ -11,11 +11,13 @@ export async function GET() {
     bannedUsers,
     pendingReports,
     pendingVerifications,
+    openFeedback,
   ] = await Promise.all([
     getDb().user.count(),
     getDb().user.count({ where: { isBanned: true } }),
     getDb().report.count({ where: { status: 'pending' } }),
     getDb().verificationRequest.count({ where: { status: 'pending' } }),
+    getDb().feedback.count({ where: { status: 'open' } }),
   ]);
 
   return NextResponse.json({
@@ -23,5 +25,6 @@ export async function GET() {
     bannedUsers,
     pendingReports,
     pendingVerifications,
+    openFeedback,
   });
 }

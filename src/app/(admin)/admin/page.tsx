@@ -7,6 +7,7 @@ interface DashboardStats {
   bannedUsers: number;
   pendingReports: number;
   pendingVerifications: number;
+  openFeedback: number;
 }
 
 export default function AdminDashboard() {
@@ -40,12 +41,13 @@ export default function AdminDashboard() {
     { label: 'Bannis', value: stats.bannedUsers, color: 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
     { label: 'Signalements en attente', value: stats.pendingReports, color: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
     { label: 'Vérifications en attente', value: stats.pendingVerifications, color: 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
+    { label: 'Retours à traiter', value: stats.openFeedback, color: 'bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400' },
   ];
 
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-content">Tableau de bord</h1>
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         {cards.map((card) => (
           <div key={card.label} className={`rounded-xl border border-hairline p-4 ${card.color}`}>
             <p className="text-sm font-medium opacity-80">{card.label}</p>
