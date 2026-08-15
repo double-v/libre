@@ -129,7 +129,12 @@ export default function CrossingsView() {
           />
         ))}
       </div>
-      <ProfileModal userId={selectedUserId ?? ''} open={!!selectedUserId} onClose={() => setSelectedUserId(null)} />
+      <ProfileModal
+        userId={selectedUserId ?? ''}
+        open={!!selectedUserId}
+        onClose={() => setSelectedUserId(null)}
+        onBlocked={(id) => setCrossings((prev) => prev.filter((c) => c.id !== id))}
+      />
     </>
   );
 }

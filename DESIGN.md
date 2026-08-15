@@ -678,6 +678,32 @@ en compte, check-in validé, sauvegarde), pas pour récompenser l'usage répét�
   intrusive) ; bouton Fermer 44px avec `aria-label` ; auto-dismiss (3,5s défaut,
   max 3 visibles).
 
+### ReportUserModal (`src/components/ui/ReportUserModal.tsx`)
+
+Point d'entrée **unique** pour signaler ou bloquer un profil (#322). Monté dans
+`ProfileModal`, qui est la fiche commune à Découvrir, Croisements, Messages et
+Chat — un seul branchement couvre les quatre surfaces.
+
+- **Pourquoi les deux actions ensemble** : elles répondent au même moment vécu
+  (« cette personne me pose un problème »). On n'oblige pas à choisir d'emblée —
+  un écran `choose` ouvre sur les deux chemins, et après un signalement on
+  *propose* le blocage sans le présélectionner : signaler quelqu'un n'implique
+  pas vouloir l'effacer.
+- **Déclencheur** : lien texte discret « Signaler ou bloquer » en pied de fiche,
+  séparé par une `border-t border-hairline`. Discret mais toujours atteignable —
+  la sécurité ne se cache pas dans un menu kebab, et ne crie pas non plus.
+- **Motifs** : miroir exact de `reportSchema` (`src/lib/validators.ts`), libellés
+  français pleins (« Harcèlement ou intimidation », pas « harassment »).
+- **Conséquences annoncées avant l'acte** : l'écran de blocage dit que la
+  conversation sera supprimée, parce que l'API supprime le match et que les
+  conversations tombent en cascade. On ne fait pas découvrir la perte après coup.
+- **Copy** : aucun délai promis sur le traitement (« Un humain va regarder ce
+  signalement ») — le traitement est humain, on ne s'engage pas sur un SLA.
+  Erreurs traduites en langage humain, jamais de code brut type `rate_limited`.
+- **A11y** : `role="dialog" aria-modal="true"` + `aria-labelledby`, focus trap
+  (`useFocusTrap`), fermeture Échap, cibles `min-h-11` (44px), `aria-pressed`
+  sur les motifs. `motion-reduce:transition-none` sur toutes les transitions.
+
 ### ThemeMenu (`src/components/ui/ThemeMenu.tsx`)
 
 Point d'entrée **complet** du theming (mode **et** thème réunis), en **popover**.
