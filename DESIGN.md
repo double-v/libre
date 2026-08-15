@@ -727,6 +727,33 @@ seuls leviers face à un avatar hors charte étaient bannir ou supprimer le comp
 - **Légende empilée** sous la vignette : à 128px de large, libellé et bouton
   côte à côte se chevauchaient dès que le libellé passait à la ligne.
 
+### SensitivePhoto (`src/components/ui/SensitivePhoto.tsx`)
+
+Photo classée sensible : surface floutée + action « Voir » (#330). Répond au cas
+où une photo licite mais hors charte arrive dans le feed — jusqu'ici le seul
+levier était de la supprimer.
+
+- **Le flou vient du serveur, jamais du CSS.** `filter: blur()` laisserait
+  l'original arriver dans le navigateur, donc lisible dans l'onglet réseau : la
+  garantie ne serait qu'un décor. Le composant affiche l'URL que le proxy lui
+  donne — c'est `/api/photos/[key]` qui décide quel objet R2 est servi.
+- **Trois tailles, une seule logique** : `avatar` (48 px, feed), `tile`
+  (galerie), `hero` (fiche). À 48 px le bouton ne peut pas tenir une cible de
+  44 px : la pastille reste lisible mais la vraie zone cliquable est la carte,
+  qui ouvre la fiche — c'est là que la révélation a de la place.
+- **Révéler ne mémorise rien** : le clic ajoute `?reveal=1` à la requête suivante
+  et ne modifie pas le réglage de la personne. Voir une photo n'est pas
+  consentir à toutes les suivantes.
+- **Le voile n'est pas un mur** : l'action reste disponible même quand le
+  réglage du lecteur dit non. Le contraste du bouton (fond `rgb(23 23 23 / .55)`,
+  bordure blanche translucide) est tenu sur n'importe quel flou, clair ou sombre
+  — un bouton en tokens de surface deviendrait illisible sur une photo claire.
+- **Le propriétaire voit net**, avec une pastille `Suggestive` / `Explicite` en
+  bas à gauche : il doit savoir comment sa photo apparaît aux autres, sinon la
+  classification est une sanction invisible.
+- **Vignettes en `<img>` brut**, comme `AdminUserPhotos` : le proxy redirige vers
+  une URL signée à TTL court que le cache de `next/image` mettrait en défaut.
+
 ### ThemeMenu (`src/components/ui/ThemeMenu.tsx`)
 
 Point d'entrée **complet** du theming (mode **et** thème réunis), en **popover**.

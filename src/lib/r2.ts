@@ -130,10 +130,19 @@ export async function generateBlurredDerivative(key: string): Promise<string> {
   // Import dynamique : `sharp` est un binaire natif lourd, inutile de le
   // charger dans les routes qui ne floutent rien.
   const sharp = (await import('sharp')).default;
-  const blurred = await sharp(buffer)
-    .resize(24, 24, { fit: 'inside' })   // l'information disparaît ici
-    .blur(8)                              // et le reste devient une tache douce
-    .resize(512, 512, { fit: 'inside' })  // dimensions utilisables en vignette
+
+  // DEUX PASSES, et c'est indispensable : sharp ne chaîne pas deux `resize`
+  // dans un même pipeline — le second écrase le premier. Enchaînés, le
+  // sous-échantillonnage n'aurait jamais lieu et il ne resterait qu'un flou
+  // léger sur l'image pleine taille : un texte y reste parfaitement lisible
+  // (vérifié sur pixels, un numéro de téléphone se lisait encore).
+  const minuscule = await sharp(buffer)
+    .resize(16, 16, { fit: 'inside' })    // l'information disparaît ici
+    .toBuffer();
+
+  const blurred = await sharp(minuscule)
+    .blur(4)                              // adoucit les marches d'escalier
+    .resize(512, 512, { fit: 'inside', kernel: 'cubic' })
     .jpeg({ quality: 70 })
     .toBuffer();
 
