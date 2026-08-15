@@ -29,6 +29,9 @@ const fakeDb = {
   like: {
     findMany: vi.fn(),
   },
+  match: {
+    findMany: vi.fn(),
+  },
 };
 vi.mock('@/lib/db', () => ({
   __esModule: true,
@@ -58,6 +61,7 @@ beforeEach(() => {
   mockRateLimit.mockResolvedValue({ success: true, remaining: 59, resetAt: Date.now() + 60_000 });
   fakeDb.block.findMany.mockResolvedValue([]);
   fakeDb.like.findMany.mockResolvedValue([]);
+  fakeDb.match.findMany.mockResolvedValue([]);
   fakeDb.profile.findMany.mockResolvedValue([]);
 });
 
@@ -102,6 +106,7 @@ describe('GET /api/discover?tab=nearby (issue #137)', () => {
         orientation: [],
         interests: [],
         practices: [],
+        practicesVisibility: 'matches',
         photos: [],
         lastKnownLat: 43.3,
         lastKnownLng: 5.4,
@@ -131,6 +136,7 @@ describe('GET /api/discover?tab=nearby (issue #137)', () => {
         orientation: [],
         interests: [],
         practices: [],
+        practicesVisibility: 'matches',
         photos: [],
         lastKnownLat: 48.86,
         lastKnownLng: 2.36,
@@ -170,6 +176,7 @@ describe('GET /api/discover?tab=nearby — pagination cursor (issue #180)', () =
         orientation: [],
         interests: [],
         practices: [],
+        practicesVisibility: 'matches',
         photos: [],
         lastKnownLat: 48.85,
         lastKnownLng: 2.35 + (i + 1) * 0.005, // ~0.37 km de pas, monotone croissant

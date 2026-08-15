@@ -5,6 +5,7 @@ import { photoUrl } from '@/lib/photos';
 import Button from '@/components/ui/Button';
 import Tag from '@/components/ui/Tag';
 import Card from '@/components/ui/Card';
+import { distanceBucketLabel } from '@/lib/discover-distance';
 interface ProfileCardProps {
   id: string;
   displayName: string;
@@ -14,6 +15,9 @@ interface ProfileCardProps {
   online?: boolean;
   distanceM?: number;
   distanceKm?: number;
+  /** Tranche large (« 3–5 km ») servie hors segment « À proximité » : c'est
+   *  tout ce que l'API laisse sortir là où la précision n'apporte rien (#327). */
+  distanceBucket?: string;
   photos?: string[];
   interests?: string[];
   practices?: string[];
@@ -22,9 +26,18 @@ interface ProfileCardProps {
   onProfileClick?: (userId: string) => void;
 }
 
-function formatDistance(meters?: number, kilometers?: number): string | null {
+function formatDistance(
+  meters?: number,
+  kilometers?: number,
+  bucket?: string,
+): string | null {
+  const bucketLabel = distanceBucketLabel(bucket);
+  if (bucketLabel) return bucketLabel;
   if (kilometers != null) {
-    return kilometers < 1 ? `${Math.round(kilometers * 1000)} m` : `${kilometers.toFixed(1)} km`;
+    if (kilometers < 1) return `${Math.round(kilometers * 1000)} m`;
+    // Le serveur arrondit déjà au km sur ce segment : « 4.0 km » afficherait
+    // une décimale qui ne veut rien dire.
+    return Number.isInteger(kilometers) ? `${kilometers} km` : `${kilometers.toFixed(1)} km`;
   }
   if (meters != null) {
     return meters >= 1000 ? `${(meters / 1000).toFixed(1)} km` : `${Math.round(meters)} m`;
@@ -41,6 +54,7 @@ export default function ProfileCard({
   online,
   distanceM,
   distanceKm,
+  distanceBucket,
   photos,
   interests,
   practices,
@@ -48,7 +62,7 @@ export default function ProfileCard({
   onPass,
   onProfileClick,
 }: ProfileCardProps) {
-  const distance = formatDistance(distanceM, distanceKm);
+  const distance = formatDistance(distanceM, distanceKm, distanceBucket);
 
   return (
     <Card

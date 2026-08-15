@@ -62,6 +62,7 @@ export async function PUT(request: Request) {
     if (data.relationshipType !== undefined) { updateData.relationshipType = data.relationshipType; createData.relationshipType = data.relationshipType; }
     if (data.interests !== undefined) { updateData.interests = data.interests; createData.interests = data.interests; }
     if (data.practices !== undefined) { updateData.practices = data.practices; createData.practices = data.practices; }
+    if (data.practicesVisibility !== undefined) { updateData.practicesVisibility = data.practicesVisibility; createData.practicesVisibility = data.practicesVisibility; }
     if (data.socialLinks !== undefined) { updateData.socialLinks = data.socialLinks; createData.socialLinks = data.socialLinks; }
     if (data.photos !== undefined) { updateData.photos = data.photos; createData.photos = data.photos; }
     if (data.invisibleMode !== undefined) { updateData.invisibleMode = data.invisibleMode; createData.invisibleMode = data.invisibleMode; }
@@ -71,6 +72,9 @@ export async function PUT(request: Request) {
     if (data.searchGenders !== undefined) { updateData.searchGenders = data.searchGenders; createData.searchGenders = data.searchGenders; }
     if (data.searchOrientations !== undefined) { updateData.searchOrientations = data.searchOrientations; createData.searchOrientations = data.searchOrientations; }
     if (data.searchInterests !== undefined) { updateData.searchInterests = data.searchInterests; createData.searchInterests = data.searchInterests; }
+    // `null` porte du sens ici (« partout ») : seul `undefined` veut dire
+    // « champ non fourni, n'y touche pas » (#327).
+    if (data.searchDistanceKm !== undefined) { updateData.searchDistanceKm = data.searchDistanceKm; createData.searchDistanceKm = data.searchDistanceKm; }
 
     const profile = await getDb().profile.upsert({
       where: { userId: session.user.id },

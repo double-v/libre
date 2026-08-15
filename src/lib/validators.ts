@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { GENDER_OPTIONS } from '@/lib/taxonomy';
+import { PRACTICES_VISIBILITY_VALUES } from '@/lib/profile-visibility';
 
 const VALID_REPORT_REASONS = ['harassment', 'spam', 'fake', 'inappropriate', 'other'] as const;
 
@@ -44,6 +45,7 @@ export const profileUpdateSchema = z.object({
   relationshipType: z.array(z.string().max(30)).max(10).optional(),
   interests: z.array(z.string().max(30)).max(20).optional(),
   practices: z.array(z.string().max(30)).max(20).optional(),
+  practicesVisibility: z.enum(PRACTICES_VISIBILITY_VALUES).optional(),
   socialLinks: z.record(z.string(), z.string()).optional(),
   photos: z.array(z.string()).max(6).optional(),
   invisibleMode: z.boolean().optional(),
@@ -54,6 +56,9 @@ export const profileUpdateSchema = z.object({
   searchGenders: z.array(z.string().max(30)).max(11).optional(),
   searchOrientations: z.array(z.string().max(30)).max(10).optional(),
   searchInterests: z.array(z.string().max(30)).max(20).optional(),
+  // `null` est une valeur métier ici (« partout »), pas une absence : il doit
+  // traverser la validation pour pouvoir effacer un filtre déjà posé (#327).
+  searchDistanceKm: z.number().int().min(1).max(500).nullable().optional(),
 }).refine((data) => {
   if (data.ageMin !== undefined && data.ageMax !== undefined) {
     return data.ageMin <= data.ageMax;

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
+import { canSeePractices } from '@/lib/profile-visibility';
 
 export async function GET(
   request: Request,
@@ -32,6 +33,7 @@ export async function GET(
             relationshipType: true,
             interests: true,
             practices: true,
+            practicesVisibility: true,
             photos: true,
             invisibleMode: true,
           },
@@ -74,8 +76,27 @@ export async function GET(
       publicProfile.orientation = user.profile.orientation;
       publicProfile.relationshipType = user.profile.relationshipType;
       publicProfile.interests = user.profile.interests;
-      publicProfile.practices = user.profile.practices;
       publicProfile.photos = user.profile.photos;
+
+      // Pratiques : réservées aux matches par défaut (#328). La clé est omise
+      // quand le lecteur n'y a pas droit — un tableau vide se lirait comme
+      // « cette personne n'en a renseigné aucune », ce qui est une autre
+      // information que « tu n'y as pas accès ».
+      const isSelf = user.id === session.user.id;
+      const isMatched = isSelf
+        ? false
+        : !!(await getDb().match.findFirst({
+            where: {
+              OR: [
+                { userA: session.user.id, userB: user.id },
+                { userA: user.id, userB: session.user.id },
+              ],
+            },
+            select: { id: true },
+          }));
+      if (canSeePractices({ visibility: user.profile.practicesVisibility, isSelf, isMatched })) {
+        publicProfile.practices = user.profile.practices;
+      }
     }
 
     if (user.userKey) {
