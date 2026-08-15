@@ -54,6 +54,9 @@ export const profileUpdateSchema = z.object({
   searchGenders: z.array(z.string().max(30)).max(11).optional(),
   searchOrientations: z.array(z.string().max(30)).max(10).optional(),
   searchInterests: z.array(z.string().max(30)).max(20).optional(),
+  // `null` est une valeur métier ici (« partout »), pas une absence : il doit
+  // traverser la validation pour pouvoir effacer un filtre déjà posé (#327).
+  searchDistanceKm: z.number().int().min(1).max(500).nullable().optional(),
 }).refine((data) => {
   if (data.ageMin !== undefined && data.ageMax !== undefined) {
     return data.ageMin <= data.ageMax;

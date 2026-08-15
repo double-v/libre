@@ -82,6 +82,12 @@ model Profile {
   searchGenders      String[] @default([])
   searchOrientations String[] @default([])
   searchInterests    String[] @default([])
+  // Filtre de distance du feed (#327). NULL = « partout » : volontairement
+  // distinct de `maxDistanceKm` (rayon historique du segment « À proximité »,
+  // qui vaut 50 chez tout le monde par défaut). Réutiliser `maxDistanceKm`
+  // aurait silencieusement rétréci le feed « Pour toi » de tous les comptes
+  // existants dès la mise en ligne du filtre.
+  searchDistanceKm   Int?
   invisibleMode    Boolean   @default(false)
   lastKnownLat     Float     @default(0) @map("last_known_lat")
   lastKnownLng     Float     @default(0) @map("last_known_lng")
@@ -91,6 +97,9 @@ model Profile {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Le filtre de distance (#327) pousse une bounding box lat/lng dans le WHERE :
+  // sans index, chaque page de feed refait un seq scan de la table profils.
+  @@index([lastKnownLat, lastKnownLng])
   @@map("profiles")
 }
 
