@@ -63,6 +63,7 @@ export async function PUT(request: Request) {
     if (data.interests !== undefined) { updateData.interests = data.interests; createData.interests = data.interests; }
     if (data.practices !== undefined) { updateData.practices = data.practices; createData.practices = data.practices; }
     if (data.practicesVisibility !== undefined) { updateData.practicesVisibility = data.practicesVisibility; createData.practicesVisibility = data.practicesVisibility; }
+    if (data.photoSensitivityOptIn !== undefined) { updateData.photoSensitivityOptIn = data.photoSensitivityOptIn; createData.photoSensitivityOptIn = data.photoSensitivityOptIn; }
     if (data.socialLinks !== undefined) { updateData.socialLinks = data.socialLinks; createData.socialLinks = data.socialLinks; }
     if (data.photos !== undefined) { updateData.photos = data.photos; createData.photos = data.photos; }
     if (data.invisibleMode !== undefined) { updateData.invisibleMode = data.invisibleMode; createData.invisibleMode = data.invisibleMode; }
