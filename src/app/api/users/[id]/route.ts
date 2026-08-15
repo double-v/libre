@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { canSeePractices } from '@/lib/profile-visibility';
+import { veiledPhotoKeys } from '@/lib/photo-veil';
 
 export async function GET(
   request: Request,
@@ -69,6 +70,8 @@ export async function GET(
       lastActive: user.lastActive,
     };
 
+    const isSelf = user.id === session.user.id;
+
     if (user.profile) {
       publicProfile.age = age;
       publicProfile.bio = user.profile.bio;
@@ -78,11 +81,30 @@ export async function GET(
       publicProfile.interests = user.profile.interests;
       publicProfile.photos = user.profile.photos;
 
+      // Où poser le voile (#330) : calculé ici, avec la même décision que le
+      // proxy, pour que l'écran ne puisse pas diverger de ce qui sera servi.
+      const viewer = isSelf
+        ? null
+        : await getDb().profile.findUnique({
+            where: { userId: session.user.id },
+            select: { photoSensitivityOptIn: true },
+          });
+      publicProfile.veiledPhotos = await veiledPhotoKeys({
+        keys: user.profile.photos,
+        viewerThreshold: viewer?.photoSensitivityOptIn,
+        isOwner: isSelf,
+        // Rôle lu depuis le JWT, et non relu en base comme dans le proxy :
+        // ici il ne décide d'aucun accès, seulement de l'endroit où poser le
+        // voile. Un jeton périmé afficherait au pire un bouton « Voir » en
+        // trop, jamais une photo qui aurait dû rester floutée — la garde, elle,
+        // est côté proxy.
+        isAdmin: session.user.role === 'ADMIN',
+      });
+
       // Pratiques : réservées aux matches par défaut (#328). La clé est omise
       // quand le lecteur n'y a pas droit — un tableau vide se lirait comme
       // « cette personne n'en a renseigné aucune », ce qui est une autre
       // information que « tu n'y as pas accès ».
-      const isSelf = user.id === session.user.id;
       const isMatched = isSelf
         ? false
         : !!(await getDb().match.findFirst({

@@ -36,6 +36,8 @@ interface DiscoveredUser {
   online: boolean;
   distanceKm?: number;
   distanceBucket?: string;
+  /** Clés servies floutées à ce lecteur (#330). */
+  veiledPhotos?: string[];
 }
 
 function buildUrl(tab: FeedTab, cursor?: string, filters?: SearchFiltersValue): string {
@@ -413,6 +415,7 @@ export default function DiscoverPage() {
               distanceKm={user.distanceKm}
               distanceBucket={user.distanceBucket}
               photos={user.photos}
+              veiledPhotos={user.veiledPhotos}
               interests={user.interests}
               practices={user.practices}
               onLike={() => handleLike(user.userId)}

@@ -5,6 +5,7 @@ import { getDb } from '@/lib/db';
 import { getPhotoSignedUrl, isR2Configured } from '@/lib/r2';
 import { rateLimit, limits, rateLimitHeaders } from '@/lib/rate-limit';
 import { verifyAdmin } from '@/lib/admin';
+import { canSeeOriginal } from '@/lib/photo-sensitivity';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ key: string }> }) {
   try {
@@ -99,7 +100,43 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       }
     }
 
-    const signedUrl = await getPhotoSignedUrl(decodedKey);
+    // Sensibilité (#330) — s'ajoute à la garde ci-dessus, ne la remplace pas.
+    // Une photo peut être accessible (avatar public, ou match) ET classée : ce
+    // sont deux questions distinctes, « as-tu le droit de voir ce profil » puis
+    // « as-tu demandé à voir ce contenu ». Le flou est servi depuis un dérivé
+    // stocké : à ce stade, l'original n'a pas encore quitté le serveur.
+    const moderation = await getDb().photoModeration.findUnique({
+      where: { key: decodedKey },
+      select: { sensitivity: true, blurredKey: true },
+    });
+
+    let servedKey = decodedKey;
+    if (moderation) {
+      // `?reveal=1` = le clic « Voir ». Ce n'est pas un contournement : la
+      // révélation au cas par cas est le comportement voulu, y compris pour un
+      // compte dont le seuil dit non. Ce qui compte est conservé — sans geste
+      // explicite, l'original ne part pas.
+      const reveal = request.nextUrl.searchParams.get('reveal') === '1';
+      const admin = isOwner ? null : await verifyAdmin();
+      const viewer = isOwner
+        ? null
+        : await getDb().profile.findUnique({
+            where: { userId: session.user.id },
+            select: { photoSensitivityOptIn: true },
+          });
+
+      if (!canSeeOriginal({
+        level: moderation.sensitivity,
+        viewerThreshold: viewer?.photoSensitivityOptIn,
+        isOwner,
+        isAdmin: !!admin,
+        reveal,
+      })) {
+        servedKey = moderation.blurredKey;
+      }
+    }
+
+    const signedUrl = await getPhotoSignedUrl(servedKey);
     return NextResponse.redirect(signedUrl, {
       headers: {
         'Cache-Control': 'private, max-age=900',

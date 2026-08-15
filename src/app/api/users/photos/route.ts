@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getDb } from '@/lib/db';
-import { uploadPhoto, deletePhoto, isR2Configured } from '@/lib/r2';
+import { uploadPhoto, deletePhoto, isR2Configured, generateBlurredDerivative } from '@/lib/r2';
+import { isSensitivityLevel } from '@/lib/photo-sensitivity';
 import { rateLimit, limits } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
@@ -37,6 +38,25 @@ export async function POST(request: Request) {
     }
 
     const key = await uploadPhoto(file, session.user.id);
+
+    // Auto-déclaration (#332) : se classer soi-même est le chemin sain, la
+    // modération a posteriori arrivant toujours après que quelqu'un a vu la
+    // photo. Une valeur invalide est ignorée plutôt que refusée — on ne fait
+    // pas échouer un upload valide sur un champ optionnel mal formé.
+    const declared = formData.get('sensitivity');
+    if (isSensitivityLevel(declared)) {
+      // Même règle que côté modération : pas de classification sans flou
+      // disponible, sinon la garantie serait vide. Ici l'échec ne perd rien
+      // d'autre — la photo est déjà en ligne, elle reste simplement ordinaire.
+      try {
+        const blurredKey = await generateBlurredDerivative(key);
+        await getDb().photoModeration.create({
+          data: { key, ownerId: session.user.id, sensitivity: declared, blurredKey },
+        });
+      } catch (err) {
+        console.error('[photos] auto-déclaration non appliquée pour', key, err);
+      }
+    }
 
     const updated = await getDb().profile.upsert({
       where: { userId: session.user.id },
@@ -88,6 +108,19 @@ export async function DELETE(request: Request) {
       } catch (err) {
         console.error('[photos] R2 delete failed for key:', photoKey, err instanceof Error ? err.message : 'unknown error');
       }
+
+    // La photo disparaît : sa classification et son dérivé n'ont plus d'objet
+    // (#330). Best-effort — la photo est déjà retirée, un reliquat ne blesse
+    // personne, et l'échec ne doit pas faire croire à un retrait raté.
+    try {
+      const moderation = await getDb().photoModeration.findUnique({ where: { key: photoKey } });
+      if (moderation) {
+        await getDb().photoModeration.delete({ where: { key: photoKey } });
+        await deletePhoto(moderation.blurredKey);
+      }
+    } catch (err) {
+      console.error('[photos] nettoyage de la classification échoué pour', photoKey, err);
+    }
     }
 
     return NextResponse.json({ photos: updated.photos }, { status: 200 });

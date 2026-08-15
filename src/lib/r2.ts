@@ -1,6 +1,7 @@
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { fileTypeFromBuffer } from 'file-type';
+import { blurredKeyFor } from '@/lib/photo-sensitivity';
 
 function getR2Client(): S3Client | null {
   if (!process.env.R2_ACCOUNT_ID || !process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
@@ -96,4 +97,62 @@ export async function deletePhoto(key: string): Promise<void> {
     Bucket: process.env.R2_BUCKET_NAME!,
     Key: key,
   }));
+}
+/**
+ * Génère et stocke le dérivé flouté d'une photo classée sensible (#330).
+ *
+ * Le flou est produit **ici**, côté serveur, et jamais en CSS : un filtre CSS
+ * laisserait l'original arriver dans le navigateur, donc lisible dans l'onglet
+ * réseau — la garantie ne serait qu'un décor (cf. #328).
+ *
+ * On **réduit fortement avant de flouter**, et c'est le point important : un
+ * flou gaussien seul est partiellement réversible (déconvolution), alors qu'un
+ * sous-échantillonnage détruit l'information pour de bon. Le
+ * ré-agrandissement qui suit ne sert qu'à garder une vignette aux bonnes
+ * dimensions.
+ *
+ * Renvoie la clé du dérivé. Lève si la génération échoue : l'appelant ne doit
+ * surtout pas classer une photo qu'il ne saurait pas flouter.
+ */
+export async function generateBlurredDerivative(key: string): Promise<string> {
+  const client = getR2Client();
+  if (!client) {
+    throw new Error('Stockage non configuré.');
+  }
+  const bucket = process.env.R2_BUCKET_NAME!;
+
+  const original = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+  if (!original.Body) {
+    throw new Error('Photo introuvable dans le stockage.');
+  }
+  const buffer = Buffer.from(await original.Body.transformToByteArray());
+
+  // Import dynamique : `sharp` est un binaire natif lourd, inutile de le
+  // charger dans les routes qui ne floutent rien.
+  const sharp = (await import('sharp')).default;
+
+  // DEUX PASSES, et c'est indispensable : sharp ne chaîne pas deux `resize`
+  // dans un même pipeline — le second écrase le premier. Enchaînés, le
+  // sous-échantillonnage n'aurait jamais lieu et il ne resterait qu'un flou
+  // léger sur l'image pleine taille : un texte y reste parfaitement lisible
+  // (vérifié sur pixels, un numéro de téléphone se lisait encore).
+  const minuscule = await sharp(buffer)
+    .resize(16, 16, { fit: 'inside' })    // l'information disparaît ici
+    .toBuffer();
+
+  const blurred = await sharp(minuscule)
+    .blur(4)                              // adoucit les marches d'escalier
+    .resize(512, 512, { fit: 'inside', kernel: 'cubic' })
+    .jpeg({ quality: 70 })
+    .toBuffer();
+
+  const blurredKey = blurredKeyFor(key);
+  await client.send(new PutObjectCommand({
+    Bucket: bucket,
+    Key: blurredKey,
+    Body: blurred,
+    ContentType: 'image/jpeg',
+  }));
+
+  return blurredKey;
 }

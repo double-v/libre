@@ -1,7 +1,6 @@
 import VerificationBadge from '@/components/VerificationBadge';
 import OnlineIndicator from '@/components/OnlineIndicator';
-import Image from 'next/image';
-import { photoUrl } from '@/lib/photos';
+import SensitivePhoto from '@/components/ui/SensitivePhoto';
 import Button from '@/components/ui/Button';
 import Tag from '@/components/ui/Tag';
 import Card from '@/components/ui/Card';
@@ -19,6 +18,8 @@ interface ProfileCardProps {
    *  tout ce que l'API laisse sortir là où la précision n'apporte rien (#327). */
   distanceBucket?: string;
   photos?: string[];
+  /** Clés servies floutées à ce lecteur (#330), calculées côté serveur. */
+  veiledPhotos?: string[];
   interests?: string[];
   practices?: string[];
   onLike: () => void;
@@ -56,6 +57,7 @@ export default function ProfileCard({
   distanceKm,
   distanceBucket,
   photos,
+  veiledPhotos,
   interests,
   practices,
   onLike,
@@ -75,13 +77,11 @@ export default function ProfileCard({
       <div className="flex items-start gap-3">
         {photos && photos.length > 0 ? (
           <div className="relative">
-            <Image
-              src={photoUrl(photos[0])}
+            <SensitivePhoto
+              photoKey={photos[0]}
               alt={displayName}
-              width={48}
-              height={48}
-              className="h-12 w-12 rounded-full object-cover"
-              unoptimized
+              size="avatar"
+              veiled={veiledPhotos?.includes(photos[0])}
             />
             <OnlineIndicator online={online} />
           </div>

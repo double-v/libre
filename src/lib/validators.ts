@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { GENDER_OPTIONS } from '@/lib/taxonomy';
 import { PRACTICES_VISIBILITY_VALUES } from '@/lib/profile-visibility';
+import { SENSITIVITY_LEVELS, SENSITIVITY_THRESHOLDS } from '@/lib/photo-sensitivity';
 
 const VALID_REPORT_REASONS = ['harassment', 'spam', 'fake', 'inappropriate', 'other'] as const;
 
@@ -46,6 +47,7 @@ export const profileUpdateSchema = z.object({
   interests: z.array(z.string().max(30)).max(20).optional(),
   practices: z.array(z.string().max(30)).max(20).optional(),
   practicesVisibility: z.enum(PRACTICES_VISIBILITY_VALUES).optional(),
+  photoSensitivityOptIn: z.enum(SENSITIVITY_THRESHOLDS).optional(),
   socialLinks: z.record(z.string(), z.string()).optional(),
   photos: z.array(z.string()).max(6).optional(),
   invisibleMode: z.boolean().optional(),
@@ -129,6 +131,20 @@ export const adminHandleFeedbackSchema = z.object({
 // est invisible pour la personne concernée, et indéfendable sans motif si elle
 // conteste. Le bannissement, lui, se voit.
 export const adminRemovePhotoSchema = z.object({
+  photoKey: z.string().min(1).max(300),
+  reason: z.string().min(3).max(500),
+});
+
+// Classement d'une photo par la modération (#330). Motif obligatoire au même
+// titre que pour un retrait : classer est invisible pour la personne concernée
+// et indéfendable sans motif si elle conteste.
+export const adminClassifyPhotoSchema = z.object({
+  photoKey: z.string().min(1).max(300),
+  sensitivity: z.enum(SENSITIVITY_LEVELS),
+  reason: z.string().min(3).max(500),
+});
+
+export const adminDeclassifyPhotoSchema = z.object({
   photoKey: z.string().min(1).max(300),
   reason: z.string().min(3).max(500),
 });

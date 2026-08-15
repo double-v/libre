@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { photoSensitivityMap } from '@/lib/photo-veil';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
 import { adminBanSchema } from '@/lib/validators';
@@ -63,7 +64,11 @@ export async function GET(
     return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
   }
 
-  return NextResponse.json({ user });
+  // Classification des photos (#330) : la galerie de modération doit afficher
+  // l'état courant, sinon l'admin ne sait pas ce qu'il a déjà classé.
+  const photoSensitivity = await photoSensitivityMap(user.profile?.photos ?? []);
+
+  return NextResponse.json({ user, photoSensitivity });
 }
 
 export async function PATCH(

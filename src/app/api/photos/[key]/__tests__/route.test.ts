@@ -42,6 +42,11 @@ const fakeDb = {
   user: {
     findUnique: vi.fn(),
   },
+  // Sensibilité des photos (#330) : le proxy consulte la table de
+  // classification. Pas de ligne = photo ordinaire = comportement d'origine.
+  photoModeration: {
+    findUnique: vi.fn(),
+  },
   moderationLog: {
     create: vi.fn(),
   },
@@ -78,6 +83,7 @@ beforeEach(() => {
   mockIsR2Configured.mockReturnValue(true);
   mockRateLimit.mockResolvedValue({ success: true, remaining: 59, resetAt: Date.now() + 60_000 });
   mockGetPhotoSignedUrl.mockResolvedValue('https://r2.example.com/signed-url');
+  fakeDb.photoModeration.findUnique.mockResolvedValue(null);
   // Par défaut : viewer non-admin (le rôle relu en base fait foi).
   fakeDb.user.findUnique.mockResolvedValue({ role: 'USER' });
   fakeDb.moderationLog.create.mockResolvedValue({});

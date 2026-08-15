@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { profileUpdateSchema } from '@/lib/validators';
+import { photoSensitivityMap } from '@/lib/photo-veil';
 
 export async function GET() {
   try {
@@ -20,8 +21,18 @@ export async function GET() {
       return NextResponse.json({ profile: null, displayName: '', isVerified: false }, { status: 200 });
     }
 
+    // Classification de ses propres photos (#330) : le propriétaire les voit
+    // toujours nettes, mais doit savoir lesquelles arrivent floutées aux autres
+    // — sans ça la classification serait une sanction invisible.
+    const photoSensitivity = await photoSensitivityMap(user.profile?.photos ?? []);
+
     return NextResponse.json(
-      { profile: user.profile, displayName: user.displayName, isVerified: user.isVerified },
+      {
+        profile: user.profile,
+        displayName: user.displayName,
+        isVerified: user.isVerified,
+        photoSensitivity,
+      },
       { status: 200 }
     );
   } catch (error) {
@@ -63,6 +74,7 @@ export async function PUT(request: Request) {
     if (data.interests !== undefined) { updateData.interests = data.interests; createData.interests = data.interests; }
     if (data.practices !== undefined) { updateData.practices = data.practices; createData.practices = data.practices; }
     if (data.practicesVisibility !== undefined) { updateData.practicesVisibility = data.practicesVisibility; createData.practicesVisibility = data.practicesVisibility; }
+    if (data.photoSensitivityOptIn !== undefined) { updateData.photoSensitivityOptIn = data.photoSensitivityOptIn; createData.photoSensitivityOptIn = data.photoSensitivityOptIn; }
     if (data.socialLinks !== undefined) { updateData.socialLinks = data.socialLinks; createData.socialLinks = data.socialLinks; }
     if (data.photos !== undefined) { updateData.photos = data.photos; createData.photos = data.photos; }
     if (data.invisibleMode !== undefined) { updateData.invisibleMode = data.invisibleMode; createData.invisibleMode = data.invisibleMode; }

@@ -17,6 +17,10 @@ vi.mock('next-auth', () => ({
 const fakeDb = {
   user: { findUnique: vi.fn() },
   match: { findFirst: vi.fn() },
+  // Voile des photos sensibles (#330) : la route calcule les clés voilées pour
+  // le lecteur. Aucune classification ici = aucune photo voilée.
+  profile: { findUnique: vi.fn() },
+  photoModeration: { findMany: vi.fn() },
 };
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => fakeDb }));
 
@@ -58,6 +62,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockGetServerSession.mockResolvedValue({ user: { id: ME_ID } });
   fakeDb.match.findFirst.mockResolvedValue(null);
+  fakeDb.profile.findUnique.mockResolvedValue({ photoSensitivityOptIn: 'none' });
+  fakeDb.photoModeration.findMany.mockResolvedValue([]);
 });
 
 describe('GET /api/users/[id] — pratiques (#328)', () => {

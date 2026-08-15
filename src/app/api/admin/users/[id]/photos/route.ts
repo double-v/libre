@@ -71,5 +71,16 @@ export async function DELETE(
     console.error('[admin/photos] R2 delete failed for key:', photoKey, err);
   }
 
+  // Idem pour la classification et son dérivé (#330) : la photo n'existe plus.
+  try {
+    const moderation = await getDb().photoModeration.findUnique({ where: { key: photoKey } });
+    if (moderation) {
+      await getDb().photoModeration.delete({ where: { key: photoKey } });
+      await deletePhoto(moderation.blurredKey);
+    }
+  } catch (err) {
+    console.error('[admin/photos] nettoyage de la classification échoué pour', photoKey, err);
+  }
+
   return NextResponse.json({ photos: updated.photos });
 }
