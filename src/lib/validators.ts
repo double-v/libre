@@ -112,3 +112,10 @@ export const adminBanSchema = z.object({
   banned: z.boolean(),
   reason: z.string().max(500).optional(),
 });
+
+// Les catégories reprennent celles que le front propose déjà dans
+// FeedbackButton — les élargir ici sans les exposer côté UI créerait des
+// statuts fantômes impossibles à produire.
+export const adminHandleFeedbackSchema = z.object({
+  status: z.enum(['open', 'resolved']),
+});

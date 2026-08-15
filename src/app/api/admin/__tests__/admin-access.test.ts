@@ -39,6 +39,9 @@ const fakeDb = {
   verificationRequest: {
     count: vi.fn(),
   },
+  feedback: {
+    count: vi.fn(),
+  },
   moderationLog: {
     findMany: vi.fn(),
     count: vi.fn(),
@@ -139,6 +142,7 @@ describe('Admin access control — canonical requireAdmin() routes', () => {
         fakeDb.user.count.mockResolvedValue(0);
         fakeDb.report.count.mockResolvedValue(0);
         fakeDb.verificationRequest.count.mockResolvedValue(0);
+        fakeDb.feedback.count.mockResolvedValue(0);
         fakeDb.moderationLog.findMany.mockResolvedValue([]);
         fakeDb.moderationLog.count.mockResolvedValue(0);
         fakeDb.report.findMany.mockResolvedValue([]);
