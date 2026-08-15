@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Pusher from 'pusher-js';
 import { encryptMessage, decryptMessage } from '@/lib/crypto';
 import Image from 'next/image';
@@ -76,6 +76,7 @@ function savePlaintextCache(conversationId: string, cache: Map<string, string>):
 export default function ChatConversationPage() {
   const params = useParams<{ conversationId: string }>();
   const conversationId = params.conversationId;
+  const router = useRouter();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [otherUser, setOtherUser] = useState<ConversationData['otherUser'] | null>(null);
@@ -446,6 +447,10 @@ export default function ChatConversationPage() {
         userId={selectedUserId ?? ''}
         open={!!selectedUserId}
         onClose={() => setSelectedUserId(null)}
+        // Bloquer supprime le match, et la conversation tombe en cascade :
+        // rester sur cette page laisserait une vue morte dont chaque envoi
+        // échouerait. On repart vers la liste.
+        onBlocked={() => router.replace('/messages')}
       />
     </div>
   );

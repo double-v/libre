@@ -474,7 +474,14 @@ export default function DiscoverPage() {
           )}
         </div>
       )}
-      <ProfileModal userId={selectedUserId ?? ''} open={!!selectedUserId} onClose={() => setSelectedUserId(null)} />
+      <ProfileModal
+        userId={selectedUserId ?? ''}
+        open={!!selectedUserId}
+        onClose={() => setSelectedUserId(null)}
+        // `passedIds` filtre déjà `visibleUsers` : on réutilise ce canal plutôt
+        // que de refetcher tout le feed pour faire disparaître une carte.
+        onBlocked={(id) => setPassedIds((prev) => new Set(prev).add(id))}
+      />
     </div>
   );
 }

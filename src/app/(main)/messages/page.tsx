@@ -223,7 +223,14 @@ export default function MessagesPage() {
         )}
       </section>
 
-      <ProfileModal userId={selectedUserId ?? ''} open={!!selectedUserId} onClose={() => setSelectedUserId(null)} />
+      <ProfileModal
+        userId={selectedUserId ?? ''}
+        open={!!selectedUserId}
+        onClose={() => setSelectedUserId(null)}
+        // Bloquer supprime le match côté serveur ; on retire la ligne tout de
+        // suite plutôt que de laisser une conversation fantôme cliquable.
+        onBlocked={(id) => setMatches((prev) => prev.filter((m) => m.user.id !== id))}
+      />
     </div>
   );
 }

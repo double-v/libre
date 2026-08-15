@@ -7,6 +7,7 @@ import { PublicTrustBadge } from '@/components/PublicTrustBadge';
 import { isOnline, formatLastSeen } from '@/lib/time';
 import Image from 'next/image';
 import { photoUrl } from '@/lib/photos';
+import ReportUserModal from '@/components/ui/ReportUserModal';
 
 interface PublicProfile {
   id: string;
@@ -35,6 +36,12 @@ interface ProfileModalProps {
    * (logique anti-stalk). Si null, on considère l'user comme newcomer.
    */
   viewerBand?: 'newcomer' | 'member' | 'trusted' | 'anchor' | null;
+  /**
+   * Appelé après un blocage réussi. L'API exclut déjà les personnes bloquées,
+   * mais la liste déjà chargée côté client, elle, ne le sait pas : sans ce
+   * signal la carte resterait affichée jusqu'au prochain fetch (#322).
+   */
+  onBlocked?: (userId: string) => void;
 }
 
 function calculateAge(birthDate: string): number {
@@ -56,11 +63,12 @@ function Spinner() {
   );
 }
 
-export default function ProfileModal({ userId, open, onClose, viewerBand = null }: ProfileModalProps) {
+export default function ProfileModal({ userId, open, onClose, viewerBand = null, onBlocked }: ProfileModalProps) {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState(0);
+  const [safetyOpen, setSafetyOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,6 +80,7 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null 
         setProfile(null);
         setError(null);
         setSelectedPhoto(0);
+        setSafetyOpen(false);
         return;
       }
       setLoading(true);
@@ -100,15 +109,17 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null 
     };
   }, [open, userId]);
 
-  // Close on Escape
+  // Close on Escape. Quand la modale signaler/bloquer est ouverte par-dessus,
+  // Escape lui revient : les deux écoutent `document`, sans cette garde la
+  // fiche se refermerait aussi et on perdrait le contexte d'un coup.
   useEffect(() => {
     if (!open) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape' && !safetyOpen) onClose();
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [open, onClose]);
+  }, [open, onClose, safetyOpen]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -313,10 +324,35 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null 
                   </div>
                 </div>
               )}
+
+              {/* Sécurité — discret et toujours atteignable. Ce point d'entrée
+                  est le seul du produit : ProfileModal est la fiche commune à
+                  Découvrir, Croisements, Messages et Chat (#322). */}
+              <div className="mt-2 border-t border-hairline pt-3">
+                <button
+                  type="button"
+                  onClick={() => setSafetyOpen(true)}
+                  className="min-h-11 text-sm text-muted underline underline-offset-2 hover:text-content"
+                >
+                  Signaler ou bloquer
+                </button>
+              </div>
             </div>
           </div>
         )}
       </div>
+
+      {safetyOpen && profile && (
+        <ReportUserModal
+          userId={profile.id}
+          displayName={profile.displayName}
+          onClose={() => setSafetyOpen(false)}
+          onBlocked={() => {
+            onBlocked?.(profile.id);
+            onClose();
+          }}
+        />
+      )}
     </div>
   );
 }
