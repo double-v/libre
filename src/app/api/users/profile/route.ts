@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { profileUpdateSchema } from '@/lib/validators';
+import { photoSensitivityMap } from '@/lib/photo-veil';
 
 export async function GET() {
   try {
@@ -20,8 +21,18 @@ export async function GET() {
       return NextResponse.json({ profile: null, displayName: '', isVerified: false }, { status: 200 });
     }
 
+    // Classification de ses propres photos (#330) : le propriétaire les voit
+    // toujours nettes, mais doit savoir lesquelles arrivent floutées aux autres
+    // — sans ça la classification serait une sanction invisible.
+    const photoSensitivity = await photoSensitivityMap(user.profile?.photos ?? []);
+
     return NextResponse.json(
-      { profile: user.profile, displayName: user.displayName, isVerified: user.isVerified },
+      {
+        profile: user.profile,
+        displayName: user.displayName,
+        isVerified: user.isVerified,
+        photoSensitivity,
+      },
       { status: 200 }
     );
   } catch (error) {

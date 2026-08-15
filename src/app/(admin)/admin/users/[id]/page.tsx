@@ -27,6 +27,8 @@ interface UserDetail {
 export default function AdminUserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [userId, setUserId] = useState<string>('');
   const [user, setUser] = useState<UserDetail | null>(null);
+  // Classification des photos (#330), servie avec la fiche.
+  const [photoSensitivity, setPhotoSensitivity] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [banReason, setBanReason] = useState('');
@@ -47,7 +49,10 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
         const r = await fetch(`/api/admin/users/${userId}`);
         if (!r.ok) throw new Error();
         const data = await r.json();
-        if (!cancelled) setUser(data.user);
+        if (!cancelled) {
+          setUser(data.user);
+          setPhotoSensitivity(data.photoSensitivity ?? {});
+        }
       } catch {
         if (!cancelled) setError('Impossible de charger l\'utilisateur');
       } finally {
@@ -165,6 +170,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
         userId={user.id}
         displayName={user.displayName}
         photos={user.profile?.photos ?? []}
+        sensitivity={photoSensitivity}
         onPhotosChange={(photos) =>
           setUser({ ...user, profile: user.profile ? { ...user.profile, photos } : null })
         }

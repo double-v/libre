@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { haversineDistance } from '@/lib/geoloc';
 import { boundingBox, distanceBucket, type DistanceBucket } from '@/lib/discover-distance';
 import { canSeePractices } from '@/lib/profile-visibility';
+import { veiledPhotoKeys } from '@/lib/photo-veil';
 import { rateLimit, limits } from '@/lib/rate-limit';
 
 const PAGE_SIZE = 20;
@@ -65,6 +66,9 @@ interface FeedUser {
   lastActive: Date;
   distanceKm?: number;
   distanceBucket?: DistanceBucket;
+  /** Clés servies floutées à ce lecteur (#330) : l'écran pose le voile
+   *  exactement là où le proxy servira le dérivé. */
+  veiledPhotos?: string[];
   online: boolean;
   age: number | null;
 }
@@ -371,6 +375,26 @@ export async function GET(request: NextRequest) {
       : profiles.length > PAGE_SIZE && users.length > 0
         ? users[users.length - 1].userId
         : null;
+
+    // Voile des photos sensibles (#330) : une seule requête pour tout le lot —
+    // vingt profils × six photos feraient un N+1 sur le chemin le plus chaud.
+    // On calcule ici plutôt que dans `toFeedUser`, qui est synchrone.
+    const veiled = new Set(
+      await veiledPhotoKeys({
+        keys: users.flatMap((u) => u.photos),
+        viewerThreshold: myProfile?.photoSensitivityOptIn,
+        isOwner: false,
+        // Rôle lu depuis le JWT, et non relu en base comme dans le proxy :
+        // ici il ne décide d'aucun accès, seulement de l'endroit où poser le
+        // voile. Un jeton périmé afficherait au pire un bouton « Voir » en
+        // trop, jamais une photo qui aurait dû rester floutée — la garde, elle,
+        // est côté proxy.
+        isAdmin: session.user.role === 'ADMIN',
+      }),
+    );
+    for (const u of users) {
+      u.veiledPhotos = u.photos.filter((k) => veiled.has(k));
+    }
 
     // issue #137: distinguish "geoloc active but nobody nearby" from other empty tabs,
     // so the frontend doesn't show a generic empty state when geoloc is the real blocker.

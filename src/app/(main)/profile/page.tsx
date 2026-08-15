@@ -6,6 +6,7 @@ import { signOut } from 'next-auth/react';
 import TagButton from '@/components/TagButton';
 import TagSelector from '@/components/TagSelector';
 import PrivacyTip from '@/components/PrivacyTip';
+import { SENSITIVITY_LABELS, SENSITIVITY_THRESHOLDS, THRESHOLD_LABELS } from '@/lib/photo-sensitivity';
 import ProfileCompleteness from '@/components/ProfileCompleteness';
 import ProfilePhotoHero from '@/components/ProfilePhotoHero';
 import ProfileSection from '@/components/ProfileSection';
@@ -38,6 +39,7 @@ interface ProfileData {
   searchInterests: string[];
   searchDistanceKm: number | null;
   practicesVisibility: string;
+  photoSensitivityOptIn: string;
   invisibleMode: boolean;
 }
 
@@ -93,6 +95,10 @@ export default function ProfilePage() {
   const [editInterests, setEditInterests] = useState<string[]>([]);
   const [editPractices, setEditPractices] = useState<string[]>([]);
   const [editPhotos, setEditPhotos] = useState<string[]>([]);
+  // Classification de ses propres photos (#330) : le propriétaire les voit
+  // nettes, mais doit savoir lesquelles arrivent floutées aux autres.
+  const [photoSensitivity, setPhotoSensitivity] = useState<Record<string, string>>({});
+  const [declareSensitive, setDeclareSensitive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [photoError, setPhotoError] = useState('');
   const [editSearchFilters, setEditSearchFilters] = useState<SearchFiltersValue>({
@@ -113,6 +119,7 @@ export default function ProfilePage() {
       setProfile(data.profile);
       setDisplayName(data.displayName ?? '');
       setIsVerified(Boolean(data.isVerified));
+      setPhotoSensitivity(data.photoSensitivity ?? {});
     } catch {
       setError('Impossible de charger le profil');
     } finally {
@@ -207,6 +214,29 @@ export default function ProfilePage() {
       );
     } catch {
       setProfile((p) => (p ? { ...p, practicesVisibility: previous } : p));
+      setError('Impossible d\'enregistrer ce réglage, réessaie.');
+    }
+  };
+
+  /**
+   * Seuil de consentement aux photos sensibles (#331). Enregistré au clic, hors
+   * mode édition, pour la même raison que la visibilité des pratiques : un
+   * réglage de confidentialité doit rester lisible et modifiable en permanence.
+   */
+  const savePhotoSensitivityOptIn = async (threshold: string) => {
+    if (!profile || profile.photoSensitivityOptIn === threshold) return;
+    const previous = profile.photoSensitivityOptIn;
+    setProfile({ ...profile, photoSensitivityOptIn: threshold });
+    try {
+      const res = await fetch('/api/users/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photoSensitivityOptIn: threshold }),
+      });
+      if (!res.ok) throw new Error();
+      toast('Réglage enregistré.');
+    } catch {
+      setProfile((p) => (p ? { ...p, photoSensitivityOptIn: previous } : p));
       setError('Impossible d\'enregistrer ce réglage, réessaie.');
     }
   };
@@ -412,6 +442,39 @@ export default function ProfilePage() {
             )}
           </ProfileSection>
 
+          {/* Photos sensibles — réglage du LECTEUR (#331), distinct de la
+              classification de ses propres photos. */}
+          <ProfileSection sectionId="photo-sensitivity" title="Photos sensibles" surface="blush" complete>
+            <p className="mt-1 text-xs text-muted">
+              Certaines photos sont classées par la modération ou par leur auteur.
+              Tu choisis ce qui s&apos;affiche sans que tu aies à le demander.
+            </p>
+            <div className="mt-3">
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">
+                J&apos;accepte de voir
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {SENSITIVITY_THRESHOLDS.map((threshold) => (
+                  <TagButton
+                    key={threshold}
+                    label={THRESHOLD_LABELS[threshold]}
+                    selected={(profile.photoSensitivityOptIn || 'none') === threshold}
+                    onClick={() => savePhotoSensitivityOptIn(threshold)}
+                  />
+                ))}
+              </div>
+            </div>
+            <PrivacyTip
+              tip={
+                profile.photoSensitivityOptIn === 'explicit'
+                  ? 'Toutes les photos s\'affichent directement, sans flou.'
+                  : profile.photoSensitivityOptIn === 'suggestive'
+                    ? 'Les photos suggestives s\'affichent directement. Les photos explicites restent floutées.'
+                    : 'Les photos classées arrivent floutées. Tu peux toujours en révéler une au cas par cas.'
+              }
+            />
+          </ProfileSection>
+
           {/* Photos */}
           <ProfileSection sectionId="photos" title="Photos" onEdit={() => startEdit('photos')} editing={editingSection === 'photos'} complete={profile.photos.length > 0}>
             <PrivacyTip tip="Évitez les photos avec des détails identifiables (lieux, plaques, etc.)." />
@@ -422,6 +485,14 @@ export default function ProfilePage() {
                     {editPhotos.map((url, i) => (
                       <div key={i} className="group relative aspect-square">
                         <Image src={`/api/photos/${encodeURIComponent(url)}`} alt={`Photo ${i + 1}`} fill className="rounded-lg object-cover" unoptimized />
+                        {photoSensitivity[url] && (
+                          /* Ses propres photos restent nettes, mais la
+                             classification doit se voir : sinon c'est une
+                             sanction invisible (#330). */
+                          <span className="absolute bottom-1 left-1 rounded-full bg-ink/60 px-2 py-0.5 text-[11px] font-semibold text-white">
+                            {SENSITIVITY_LABELS[photoSensitivity[url] as keyof typeof SENSITIVITY_LABELS] ?? 'Sensible'}
+                          </span>
+                        )}
                         <button
                           type="button"
                           onClick={async () => {
@@ -448,6 +519,23 @@ export default function ProfilePage() {
                   </div>
                 )}
                 {photoError && <p className="text-xs text-red-600 dark:text-red-400">{photoError}</p>}
+                {/* Auto-déclaration (#332) : le chemin sain, la modération a
+                    posteriori arrivant toujours après que quelqu'un a vu la
+                    photo. Copie descriptive, sans jugement sur ce qu'on publie. */}
+                <label className="flex items-start gap-2 text-sm text-content">
+                  <input
+                    type="checkbox"
+                    checked={declareSensitive}
+                    onChange={(e) => setDeclareSensitive(e.target.checked)}
+                    className="mt-1 h-4 w-4 accent-coral"
+                  />
+                  <span>
+                    Ma prochaine photo est suggestive
+                    <span className="block text-xs text-muted">
+                      Elle arrivera floutée aux personnes qui n&apos;ont pas demandé à voir ce contenu.
+                    </span>
+                  </span>
+                </label>
                 {editPhotos.length < 6 && (
                   <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-hairline-strong bg-fill-subtle p-4 transition-colors hover:border-coral hover:bg-blush dark:hover:border-coral-light dark:hover:bg-coral/10">
                     {uploading ? (
@@ -474,11 +562,18 @@ export default function ProfilePage() {
                         try {
                           const formData = new FormData();
                           formData.append('photo', file);
+                          // Auto-déclaration (#332) : se classer soi-même évite
+                          // que quelqu'un voie la photo avant la modération.
+                          if (declareSensitive) formData.append('sensitivity', 'suggestive');
                           const res = await fetch('/api/users/photos', { method: 'POST', body: formData });
                           const data = await res.json();
                           if (!res.ok) throw new Error(data.error || 'Erreur');
                           setEditPhotos(data.photos);
                           if (profile) setProfile({ ...profile, photos: data.photos });
+                          if (declareSensitive) {
+                            setPhotoSensitivity((m) => ({ ...m, [data.photo]: 'suggestive' }));
+                            setDeclareSensitive(false);
+                          }
                           toast('Photo ajoutée.');
                         } catch (err) {
                           setPhotoError(err instanceof Error ? err.message : 'Erreur lors de l\'envoi');

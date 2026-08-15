@@ -5,8 +5,7 @@ import OnlineIndicator from '@/components/OnlineIndicator';
 import VerificationBadge from '@/components/VerificationBadge';
 import { PublicTrustBadge } from '@/components/PublicTrustBadge';
 import { isOnline, formatLastSeen } from '@/lib/time';
-import Image from 'next/image';
-import { photoUrl } from '@/lib/photos';
+import SensitivePhoto from '@/components/ui/SensitivePhoto';
 import ReportUserModal from '@/components/ui/ReportUserModal';
 
 interface PublicProfile {
@@ -21,6 +20,8 @@ interface PublicProfile {
   interests?: string[];
   practices?: string[];
   photos?: string[];
+  /** Clés servies floutées à ce lecteur (#330), calculées côté serveur. */
+  veiledPhotos?: string[];
   relationshipType?: string | null;
   publicKey?: string | null;
   /** Band du user, si dispo côté API (cf. #59 — TODO enrichir /api/users/[id] ). */
@@ -146,6 +147,7 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null,
   const lastSeenText = profile ? formatLastSeen(new Date(profile.lastActive)) : '';
   const age = profile?.birthDate ? calculateAge(profile.birthDate) : null;
   const photos = profile?.photos ?? [];
+  const veiled = new Set(profile?.veiledPhotos ?? []);
   const mainPhoto = photos[selectedPhoto] ?? null;
   const initials = profile?.displayName?.charAt(0).toUpperCase() ?? '?';
 
@@ -188,12 +190,12 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null,
             {/* Photo section */}
             <div className="relative h-72 w-full">
               {mainPhoto ? (
-                <Image
-                  src={photoUrl(mainPhoto)}
+                <SensitivePhoto
+                  photoKey={mainPhoto}
                   alt={profile.displayName}
-                  fill
-                  className="rounded-t-2xl object-cover"
-                  unoptimized
+                  size="fill"
+                  veiled={veiled.has(mainPhoto)}
+                  className="rounded-t-2xl"
                 />
               ) : (
                 <div className="flex h-72 w-full items-center justify-center rounded-t-2xl bg-gradient-to-br from-blush to-coral/20">
@@ -222,7 +224,16 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null,
                         : 'border-transparent hover:border-hairline-strong'
                     }`}
                   >
-                    <Image src={photoUrl(photo)} alt={`Photo de ${profile.displayName} - ${i + 1}`} fill className="object-cover" unoptimized />
+                    {/* Vignette de 56 px : trop petite pour une cible de 44 px,
+                        donc pas de bouton ici. La sélectionner affiche la
+                        grande image, qui porte la révélation. */}
+                    <SensitivePhoto
+                      photoKey={photo}
+                      alt={`Photo de ${profile.displayName} - ${i + 1}`}
+                      size="fill"
+                      veiled={veiled.has(photo)}
+                      revealable={false}
+                    />
                   </button>
                 ))}
               </div>
