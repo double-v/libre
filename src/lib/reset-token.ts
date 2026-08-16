@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { SignJWT, jwtVerify } from 'jose';
 
 const SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET!);
@@ -8,6 +9,11 @@ export async function createResetToken(userId: string, email: string): Promise<s
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime(RESET_EXPIRY)
     .setIssuedAt()
+    // `iat` est à la seconde près : sans identifiant unique, deux demandes
+    // dans la même seconde pour le même compte produisent un jeton identique,
+    // donc le même `tokenHash` — et la création en base tombe sur la
+    // contrainte d'unicité, ce que l'utilisateur voit en 500 (cf. #334).
+    .setJti(randomUUID())
     .sign(SECRET);
 }
 
