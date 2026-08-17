@@ -270,7 +270,11 @@ par aucun chemin.
 - **FR-014**: L'effacement d'un message par son auteur DOIT valoir **pour les
   deux personnes** et laisser une trace neutre (« message supprimé ») : le pair
   sait qu'il y avait quelque chose, sans pouvoir savoir quoi. Le contenu effacé
-  NE DOIT plus être restituable, y compris dans la réponse réseau.
+  NE DOIT plus figurer dans aucune réponse d'API. Sa destruction en base
+  intervient après une **fenêtre de conservation pour la modération** — le code
+  actuel garde délibérément le chiffré pour cet usage (#201), et l'escrow le rend
+  désormais lisible par le service : la durée de cette fenêtre reste à trancher
+  au moment du lot correspondant (cf. [plan.md](./plan.md), § Risques).
 - **FR-015**: La conservation annoncée DOIT être dicible en une phrase dans les
   pages Confidentialité et FAQ : « tes messages vivent aussi longtemps que la
   conversation ; quand elle s'arrête, ils s'effacent ». Les **fils éphémères
