@@ -93,11 +93,18 @@ export function useEncryptedChat() {
       if (reponse.status === 404) {
         try {
           const paire = await generateKeyPair();
-          await fetch('/api/users/keys', {
+          const depot = await fetch('/api/users/keys', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ publicKey: paire.publicKey, privateKey: paire.privateKey }),
           });
+          // Si le dépôt échoue (coffre non configuré, réseau), la clé n'existe
+          // que dans cet onglet : chiffrer avec elle produirait des messages
+          // perdus au premier rechargement. On préfère ne pas démarrer.
+          if (!depot.ok) {
+            poser(null, null, 'indisponible');
+            return;
+          }
           poser(paire.publicKey, paire.privateKey, 'pret');
         } catch {
           poser(null, null, 'indisponible');

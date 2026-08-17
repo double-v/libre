@@ -119,6 +119,23 @@ describe('compte neuf (404)', () => {
     });
     expect(result.current.etat).toBe('pret');
   });
+
+  it('n’utilise PAS une clé neuve que le serveur a refusé de garder', async () => {
+    // Sinon la personne écrit avec une clé qui n'existe que dans cet onglet :
+    // au rechargement, le serveur redit 404, une autre paire naît, et les
+    // messages d'il y a cinq minutes sont déjà illisibles.
+    fetchMock.mockImplementation(async (url: string) =>
+      url.includes('/me')
+        ? coffre({ error: 'no_key' }, 404)
+        : coffre({ error: 'escrow_indisponible' }, 503),
+    );
+
+    const { result } = renderHook(() => useEncryptedChat());
+    await waitFor(() => expect(result.current.ready).toBe(true));
+
+    expect(result.current.privateKey).toBeNull();
+    expect(result.current.etat).toBe('indisponible');
+  });
 });
 
 describe('coffre vide mais clé publique connue', () => {
