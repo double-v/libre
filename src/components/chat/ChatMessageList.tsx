@@ -29,6 +29,8 @@ export interface ChatMessage {
   content: string;
   createdAt: string;
   deletedAt?: string | null;
+  /** Chiffré que cet appareil ne sait pas ouvrir (#198) : on le déclare, on ne l'affiche jamais. */
+  illisible?: boolean;
 }
 
 interface HeaderContext {
@@ -103,6 +105,20 @@ interface MessageRowProps {
  *  Exporté pour test unitaire (jsdom) : Virtuoso ne rend rien sans layout, donc la
  *  logique de rendu des lignes se teste ici, hors virtualisation. */
 export function MessageRow({ msg, isSent, otherUserName, menuOpen, onToggleMenu, onDelete }: MessageRowProps) {
+  // Illisible sur cet appareil (#198) : même registre que la pierre tombale —
+  // « il y avait quelque chose ici, tu ne le verras pas ». Afficher le chiffré
+  // brut ferait passer un problème de clé pour une donnée corrompue.
+  if (msg.illisible && !msg.deletedAt) {
+    return (
+      <div className={`flex ${isSent ? 'justify-end' : 'justify-start'}`}>
+        <div className="max-w-[80%] rounded-2xl bg-fill-subtle px-4 py-2">
+          <p className="break-words text-sm italic text-muted">Message illisible sur cet appareil</p>
+          <p className="mt-1 text-xs text-muted">{formatTime(msg.createdAt)}</p>
+        </div>
+      </div>
+    );
+  }
+
   // Message supprimé par son auteur → tombstone (prioritaire sur le badge partage).
   if (msg.deletedAt) {
     return (

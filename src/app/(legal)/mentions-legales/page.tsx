@@ -22,29 +22,29 @@ export default function MentionsLegalesPage() {
       {/* ─── Éditeur ─── */}
       <h2>Éditeur du site</h2>
       <ul>
-        <li><strong>Nom</strong> : Libre</li>
-        <li><strong>Statut</strong> : Projet à but non lucratif (association en cours de constitution)</li>
-        <li><strong>Responsable de la publication</strong> : Le collectif Libre</li>
-        <li><strong>E-mail</strong> : <a href="mailto:contact@getlibre.fr">contact@getlibre.fr</a></li>
+        <li><strong>Nom</strong>{' '}: Libre</li>
+        <li><strong>Statut</strong>{' '}: Projet à but non lucratif (association en cours de constitution)</li>
+        <li><strong>Responsable de la publication</strong>{' '}: Le collectif Libre</li>
+        <li><strong>E-mail</strong>{' '}: <a href="mailto:contact@getlibre.fr">contact@getlibre.fr</a></li>
       </ul>
 
       {/* ─── Hébergeur ─── */}
       <h2>Hébergeur</h2>
       <ul>
-        <li><strong>Société</strong> : Vercel Inc.</li>
-        <li><strong>Adresse</strong> : 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis</li>
-        <li><strong>Site web</strong> : <a href="https://vercel.com" target="_blank" rel="noopener noreferrer">vercel.com</a></li>
-        <li><strong>Téléphone</strong> : +1 (844) 412-7426</li>
+        <li><strong>Société</strong>{' '}: Vercel Inc.</li>
+        <li><strong>Adresse</strong>{' '}: 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis</li>
+        <li><strong>Site web</strong>{' '}: <a href="https://vercel.com" target="_blank" rel="noopener noreferrer">vercel.com</a></li>
+        <li><strong>Téléphone</strong>{' '}: +1 (844) 412-7426</li>
       </ul>
 
       {/* ─── Prestataires techniques ─── */}
       <h2>Prestataires techniques</h2>
       <ul>
-        <li><strong>CDN et sécurité</strong> : Cloudflare Inc., 101 Townsend St, San Francisco, CA 94107, États-Unis</li>
-        <li><strong>Envoi d&apos;e-mails</strong> : Resend Inc., San Francisco, CA, États-Unis</li>
-        <li><strong>Temps réel (WebSocket)</strong> : Pusher Ltd., London, Royaume-Uni</li>
-        <li><strong>Stockage photos</strong> : Cloudflare R2 (mêmes coordonnées que Cloudflare)</li>
-        <li><strong>Base de données</strong> : PostgreSQL hébergé via Vercel (Supabase)</li>
+        <li><strong>CDN et sécurité</strong>{' '}: Cloudflare Inc., 101 Townsend St, San Francisco, CA 94107, États-Unis</li>
+        <li><strong>Envoi d&apos;e-mails</strong>{' '}: Resend Inc., San Francisco, CA, États-Unis</li>
+        <li><strong>Temps réel (WebSocket)</strong>{' '}: Pusher Ltd., London, Royaume-Uni</li>
+        <li><strong>Stockage photos</strong>{' '}: Cloudflare R2 (mêmes coordonnées que Cloudflare)</li>
+        <li><strong>Base de données</strong>{' '}: PostgreSQL hébergé via Vercel (Supabase)</li>
       </ul>
 
       {/* ─── Propriété intellectuelle ─── */}
@@ -71,8 +71,8 @@ export default function MentionsLegalesPage() {
         de rectification, d&apos;effacement et de portabilité de vos données.
       </p>
       <ul>
-        <li><strong>Contact DPO</strong> : <a href="mailto:dpo@getlibre.fr">dpo@getlibre.fr</a></li>
-        <li><strong>Réclamation CNIL</strong> : <a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener noreferrer">cnil.fr/fr/plaintes</a></li>
+        <li><strong>Contact DPO</strong>{' '}: <a href="mailto:dpo@getlibre.fr">dpo@getlibre.fr</a></li>
+        <li><strong>Réclamation CNIL</strong>{' '}: <a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener noreferrer">cnil.fr/fr/plaintes</a></li>
       </ul>
 
       {/* ─── Cookies ─── */}

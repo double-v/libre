@@ -466,6 +466,32 @@ discret et chaleureux — univers coral, jamais de gris brut.
 |---|---|---|
 | `ShareContactNotice` (`src/components/`) | pill centrée `bg-blush text-coral-dark` (dark : `bg-coral/10 text-coral-light`), icône lien, copie FR selon émetteur/destinataire | Proposition d'échange de réseaux dans le chat (remplace l'ancien affichage JSON brut) |
 
+### État « message illisible » (#198)
+
+Un message peut ne pas être déchiffrable sur l'appareil courant (clé d'identité
+absente du coffre, ou héritée d'un autre appareil). Jusqu'à #198, ce cas
+retombait **en silence** sur l'affichage du chiffré brut : un pavé de base64 que
+personne ne comprend, et surtout aucune indication qu'il s'agit d'un problème
+réparable.
+
+Deux niveaux, **sans nouveau composant** (principe IV) :
+
+| Niveau | Rendu | Copie |
+|---|---|---|
+| Le message | Bulle du registre de la pierre tombale — `bg-fill-subtle`, `text-muted`, `italic`, du bon côté du fil | « Message illisible sur cet appareil » |
+| Le fil | `Alert variant="warning"` en tête de liste, une seule fois | « Tes messages ne peuvent pas être déchiffrés ici. Reconnecte-toi depuis l'appareil où tu écrivais avant : ils réapparaîtront. » |
+
+Règles :
+
+- **Ne jamais afficher le chiffré brut.** Un contenu qu'on ne sait pas lire se
+  déclare tel quel ; l'afficher quand même fait passer un problème de clé pour
+  une donnée corrompue.
+- La copie **n'accuse pas** et donne l'issue : ce n'est ni une faute, ni une
+  perte définitive tant que l'appareil d'origine existe.
+- Registre visuel volontairement **identique à la pierre tombale** : les deux
+  disent « il y avait quelque chose ici, tu ne le verras pas ». Une couleur
+  d'alerte par message rendrait un fil ancien anxiogène.
+
 ## Logo
 
 ### Heart-Sun (Cœur-soleil)

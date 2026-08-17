@@ -162,7 +162,7 @@ export async function GET() {
         consents,
       },
       // Note: messages are E2E encrypted and cannot be exported in readable form
-      messageContentDisclaimer: 'Le contenu de vos messages est chiffré de bout en bout (E2E). Il ne peut être exporté en clair car seul vous et votre correspondant possédez les clés de déchiffrement. Les identifiants de conversation sont inclus dans la section "social" ci-dessus, mais le contenu (table "messages", colonne "content") reste un blob chiffré illisible sans votre clé privée.',
+      messageContentDisclaimer: 'Le contenu de vos messages est chiffré (colonne "content" de la table "messages") et n\'est pas encore inclus en clair dans cet export. Ce n\'est pas une impossibilité technique : depuis la mise en place du coffre de clés, le service détient de quoi les déchiffrer. C\'est une limite de l\'export, appelée à être levée. Les identifiants de conversation figurent dans la section "social" ci-dessus.',
     };
 
     return new NextResponse(JSON.stringify(exportData, null, 2), {
