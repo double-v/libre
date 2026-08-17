@@ -217,6 +217,13 @@ Puis, sur l'app servie (le seul juge selon le principe V) :
 5. Falsifier la clé privée en mémoire → le message s'affiche **signalé comme
    illisible**, jamais en ciphertext brut.
 
+**Exécuté le 2026-08-17** sur PostgreSQL local (`libre_e2e_198`) + `next dev`,
+deux comptes appariés, Playwright piloté à la main : clé versée au coffre au
+premier chargement (`GET /api/users/keys/me` → `privateKey` présente), message
+servi chiffré par l'API, `localStorage` intégralement vidé (dont le cache clair),
+message relu en clair après rechargement, zéro bulle « illisible ». Le gate a
+aussi révélé un défaut d'empilement préexistant du composer mobile → #339.
+
 ## Risques
 
 | Risque | Parade |

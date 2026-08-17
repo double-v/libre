@@ -47,7 +47,7 @@ partiellement, avec la raison en clair.
 - [x] T016 [US1] Supprimer le repli silencieux de `tryDecrypt` dans `src/app/(main)/chat/[conversationId]/page.tsx` : un échec marque le message comme illisible au lieu de renvoyer le ciphertext tel quel
 - [x] T017 [US1] Afficher cet état dans `src/components/chat/ChatMessageList.tsx`, avec ce que la personne peut faire (revenir sur son appareil d'origine)
 - [x] T018 [US1] Purger la clé **et le cache de messages en clair** à la déconnexion (`loadPlaintextCache` écrit aujourd'hui les messages déchiffrés dans le stockage local : retirer la serrure en laissant la porte ouverte ne vaut rien)
-- [~] T019 [US1] Scénario écrit dans `tests/e2e/escrow-second-appareil.spec.ts`, **skippé** comme le reste de la suite E2E du dépôt : Playwright ne s'installe pas sur Ubuntu 26.04 (#164)
+- [x] T019 [US1] Scénario écrit dans `tests/e2e/escrow-second-appareil.spec.ts` et **exécuté pour de vrai** le 2026-08-17 (base locale + app servie + Playwright) : message relu en clair après purge intégrale du stockage. Reste `skip` dans la suite partagée, qui n'a pas encore ses fixtures (#164)
 - [x] T020 [US1] Gate visuel (principe V) : prototype rendu sur l'app servie (`next dev`), capturé en clair **et** sombre, mesuré en plusieurs points — bulle « illisible » du bon côté, aucun chiffré brut à l'écran, registre identique à la pierre tombale
 
 ---
@@ -67,10 +67,10 @@ partiellement, avec la raison en clair.
 
 **Test d'indépendance** : lire la page Confidentialité et confronter chaque phrase au comportement réel.
 
-- [ ] T025 [P] [US3] Test de non-régression dans `src/app/(legal)/__tests__/confidentialite.test.tsx` : la page contient la formulation honnête **et ne contient plus** de promesse du type « personne d'autre ne peut les lire » (FR-011)
-- [ ] T026 [US3] Réécrire la section messagerie de `src/app/(legal)/confidentialite/page.tsx` : chiffré en transit et au repos, le service peut techniquement lire, pourquoi ce choix, ce qui est conservé et jusqu'à quand (la vie du match)
-- [ ] T027 [P] [US3] Mentionner le cache de messages en clair sur l'appareil — l'omettre reproduirait la promesse non adossée corrigée en #328
-- [ ] T028 [P] [US3] Réconcilier `src/app/(legal)/cgu/page.tsx` et la FAQ sur la même posture, et vérifier qu'aucun autre écran ne promet davantage
+- [x] T025 [P] [US3] Test de non-régression dans `src/app/(legal)/__tests__/confidentialite.test.tsx` : la page contient la formulation honnête **et ne contient plus** de promesse du type « personne d'autre ne peut les lire » (FR-011)
+- [x] T026 [US3] Réécrire la section messagerie de `src/app/(legal)/confidentialite/page.tsx` : chiffré en transit et au repos, le service peut techniquement lire, pourquoi ce choix, ce qui est conservé et jusqu'à quand (la vie du match)
+- [x] T027 [P] [US3] Mentionner le cache de messages en clair sur l'appareil — l'omettre reproduirait la promesse non adossée corrigée en #328
+- [x] T028 [P] [US3] Réconcilier `src/app/(legal)/cgu/page.tsx` et la FAQ sur la même posture, et vérifier qu'aucun autre écran ne promet davantage
 
 ---
 
@@ -136,8 +136,8 @@ Phase 1 (mise en place)
 
 | Lot | User story | Issue |
 |---|---|---|
-| A | US1 — changer d'appareil | #198 (recadré sur ce seul récit le 2026-08-17) |
+| A | US1 — changer d'appareil | #198 (recadré sur ce seul récit le 2026-08-17) — PR #338 |
 | B | US2 — migration douce | #336 |
-| C | US3 — transparence | #337 |
+| C | US3 — transparence | #337 — livré dans la **même PR** que le lot A : déployer l'escrow sans la copie honnête laisserait une promesse fausse en production entre deux mises en ligne (précédent : PR #333, trois récits en une PR) |
 | D | US4 — historique de clés | #199 (débloqué par A) |
 | E | US5 — purge réelle | #202 (recadré : l'éphémère sort du périmètre) |
