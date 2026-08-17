@@ -131,6 +131,14 @@ model UserKey {
   publicKey    String
   keyCreatedAt DateTime @default(now())
 
+  // Escrow (#198) : la clé privée d'identité, scellée par la clé maître serveur
+  // (`CHAT_ESCROW_KEY`, cf. src/lib/crypto-escrow.ts). Jamais en clair ici.
+  // Nullable, et sans backfill possible : le serveur n'a jamais vu la clé privée
+  // des comptes d'avant la mise en service. C'est la migration douce (#336) qui
+  // la remonte depuis l'appareil qui la détient encore.
+  encryptedPrivateKey String?
+  escrowedAt          DateTime?
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_keys")
