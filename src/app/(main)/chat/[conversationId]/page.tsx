@@ -12,6 +12,7 @@ import { mergeMessages } from '@/lib/chat-messages';
 import ProfileModal from '@/components/ProfileModal';
 import { CheckinButton } from '@/components/CheckinButton';
 import ChatMessageList from '@/components/chat/ChatMessageList';
+import Alert from '@/components/ui/Alert';
 
 // Taille de page (miroir du défaut serveur, #200). On ne charge/déchiffre que
 // cette tranche au départ ; le scroll-up charge les plus anciennes.
@@ -28,6 +29,8 @@ interface Message {
   content: string;
   createdAt: string;
   deletedAt?: string | null;
+  /** Chiffré qu'on ne sait pas ouvrir sur cet appareil (#198). Jamais affiché tel quel. */
+  illisible?: boolean;
 }
 
 interface ConversationData {
@@ -91,20 +94,24 @@ export default function ChatConversationPage() {
   // Ancre de prepend Virtuoso (#200) : décrémentée du nombre d'anciens préfixés.
   const [firstItemIndex, setFirstItemIndex] = useState(VIRTUOSO_START_INDEX);
 
-  const { privateKey, publicKey, ready } = useEncryptedChat();
+  const { privateKey, publicKey, ready, etat: etatCle } = useEncryptedChat();
   const cacheRef = useRef<Map<string, string>>(loadPlaintextCache(conversationId));
   const pendingOwnRef = useRef<Set<string>>(new Set());
 
   // ─── Decryption helpers ──────────────────────────────────────────
 
+  // Un contenu qu'on ne sait pas ouvrir se DÉCLARE (#198). Avant, l'échec
+  // retombait sur le chiffré brut : la personne voyait du base64 sans jamais
+  // apprendre que son historique était devenu illisible, ni que c'était réparable.
   const tryDecrypt = useCallback(
-    async (content: string): Promise<string> => {
-      if (!privateKey || !otherPublicKey) return content;
-      if (!/^[A-Za-z0-9+/]+=*$/.test(content) || content.length < 30) return content;
+    async (content: string): Promise<{ texte: string; illisible: boolean }> => {
+      const ressembleAChiffre = /^[A-Za-z0-9+/]+=*$/.test(content) && content.length >= 30;
+      if (!ressembleAChiffre) return { texte: content, illisible: false };
+      if (!privateKey || !otherPublicKey) return { texte: content, illisible: true };
       try {
-        return await decryptMessage(content, otherPublicKey, privateKey);
+        return { texte: await decryptMessage(content, otherPublicKey, privateKey), illisible: false };
       } catch {
-        return content;
+        return { texte: content, illisible: true };
       }
     },
     [privateKey, otherPublicKey],
@@ -113,21 +120,20 @@ export default function ChatConversationPage() {
   // Decrypt a batch of messages; cache results; update localStorage
   const applyDecryption = useCallback(
     async (msgs: Message[]): Promise<Message[]> => {
-      if (!privateKey || !otherPublicKey) return msgs;
       const cache = cacheRef.current;
       const decrypted = await Promise.all(
         msgs.map(async (msg) => {
           const cached = cache.get(msg.id);
-          if (cached != null) return { ...msg, content: cached };
-          const plain = await tryDecrypt(msg.content);
-          if (plain !== msg.content) cache.set(msg.id, plain);
-          return { ...msg, content: plain };
+          if (cached != null) return { ...msg, content: cached, illisible: false };
+          const { texte, illisible } = await tryDecrypt(msg.content);
+          if (!illisible && texte !== msg.content) cache.set(msg.id, texte);
+          return { ...msg, content: texte, illisible };
         }),
       );
       savePlaintextCache(conversationId, cache);
       return decrypted;
     },
-    [privateKey, otherPublicKey, conversationId, tryDecrypt],
+    [conversationId, tryDecrypt],
   );
 
   // ─── Load conversation & messages ────────────────────────────────
@@ -395,8 +401,19 @@ export default function ChatConversationPage() {
         </div>
       )}
 
+      {/* Clé d'identité introuvable ou injoignable (#198) : on le dit, avec l'issue. */}
+      {(etatCle === 'illisible' || etatCle === 'indisponible') && (
+        <div className="mx-4 mt-2">
+          <Alert variant="warning">
+            {etatCle === 'illisible'
+              ? "Tes messages ne peuvent pas être déchiffrés ici. Reconnecte-toi depuis l'appareil où tu écrivais avant : ils réapparaîtront."
+              : 'Impossible de récupérer ta clé de messagerie pour le moment. Tes messages sont intacts — réessaie dans un instant.'}
+          </Alert>
+        </div>
+      )}
+
       {/* E2E status */}
-      {!e2eEnabled && (
+      {!e2eEnabled && etatCle !== 'illisible' && etatCle !== 'indisponible' && (
         <div className="mx-4 mt-2 rounded-md bg-yellow-50 p-2 text-xs text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
           {!otherPublicKey
             ? "Le chiffrement de bout en bout n'est pas disponible (l'autre utilisateur n'a pas encore de clés)"
