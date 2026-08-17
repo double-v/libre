@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { photoUrl } from '@/lib/photos';
 import { useEncryptedChat } from '@/hooks/useEncryptedChat';
 import ShareContactButton from '@/components/ShareContactButton';
-import { mergeMessages } from '@/lib/chat-messages';
+import { mergeMessages, etatDeLecture } from '@/lib/chat-messages';
 import ProfileModal from '@/components/ProfileModal';
 import { CheckinButton } from '@/components/CheckinButton';
 import ChatMessageList from '@/components/chat/ChatMessageList';
@@ -103,18 +103,24 @@ export default function ChatConversationPage() {
   // Un contenu qu'on ne sait pas ouvrir se DÉCLARE (#198). Avant, l'échec
   // retombait sur le chiffré brut : la personne voyait du base64 sans jamais
   // apprendre que son historique était devenu illisible, ni que c'était réparable.
+  // La décision elle-même vit dans `etatDeLecture` (testée) : elle distingue
+  // « on ne sait pas encore » de « on sait qu'on ne sait pas lire ».
   const tryDecrypt = useCallback(
     async (content: string): Promise<{ texte: string; illisible: boolean }> => {
-      const ressembleAChiffre = /^[A-Za-z0-9+/]+=*$/.test(content) && content.length >= 30;
-      if (!ressembleAChiffre) return { texte: content, illisible: false };
-      if (!privateKey || !otherPublicKey) return { texte: content, illisible: true };
+      const etat = etatDeLecture(content, {
+        pret: ready,
+        maCle: Boolean(privateKey),
+        clePair: Boolean(otherPublicKey),
+      });
+      if (etat === 'clair') return { texte: content, illisible: false };
+      if (etat === 'illisible') return { texte: content, illisible: true };
       try {
-        return { texte: await decryptMessage(content, otherPublicKey, privateKey), illisible: false };
+        return { texte: await decryptMessage(content, otherPublicKey!, privateKey!), illisible: false };
       } catch {
         return { texte: content, illisible: true };
       }
     },
-    [privateKey, otherPublicKey],
+    [ready, privateKey, otherPublicKey],
   );
 
   // Decrypt a batch of messages; cache results; update localStorage
@@ -352,7 +358,10 @@ export default function ChatConversationPage() {
 
   const e2eEnabled = !!(privateKey && otherPublicKey);
 
-  if (loading) {
+  // On attend aussi de savoir où en est la clé (#198) : afficher le fil avant
+  // reviendrait à montrer un contenu qu'on ne sait pas encore qualifier, puis à
+  // le requalifier sous les yeux de la personne.
+  if (loading || !ready) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <p className="text-muted">Chargement...</p>

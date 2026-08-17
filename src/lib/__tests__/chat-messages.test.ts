@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mergeMessages } from '../chat-messages';
+import { mergeMessages, etatDeLecture } from '../chat-messages';
 
 type M = { id: string; createdAt: string; content?: string };
 
@@ -35,5 +35,32 @@ describe('mergeMessages', () => {
     const one: M[] = [{ id: 'm1', createdAt: at('0') }];
     expect(mergeMessages(one, []).map((m) => m.id)).toEqual(['m1']);
     expect(mergeMessages([], one).map((m) => m.id)).toEqual(['m1']);
+  });
+});
+
+describe('etatDeLecture (#198)', () => {
+  const CHIFFRE = 'aX9TyVXpsRnIj0rvVkhgdrLG7lhn1WZO7SozJnTURJSEIWI2';
+  const pret = { pret: true, maCle: true, clePair: true };
+
+  it('laisse passer un texte qui n’est pas du chiffré', () => {
+    expect(etatDeLecture('Salut, ça va ?', pret)).toBe('clair');
+  });
+
+  it('déchiffre quand les deux clés sont là', () => {
+    expect(etatDeLecture(CHIFFRE, pret)).toBe('dechiffrer');
+  });
+
+  it('ne conclut RIEN tant que l’état de la clé n’est pas résolu — sinon tout le fil clignote « illisible » à l’ouverture', () => {
+    expect(etatDeLecture(CHIFFRE, { pret: false, maCle: false, clePair: false })).toBe('clair');
+    expect(etatDeLecture(CHIFFRE, { pret: false, maCle: true, clePair: true })).toBe('clair');
+  });
+
+  it('n’accuse pas l’appareil quand c’est le pair qui n’a pas de clé', () => {
+    expect(etatDeLecture(CHIFFRE, { pret: true, maCle: true, clePair: false })).toBe('clair');
+    expect(etatDeLecture(CHIFFRE, { pret: true, maCle: false, clePair: false })).toBe('clair');
+  });
+
+  it('déclare illisible quand le fil est chiffré pour nous et qu’on n’a pas notre clé', () => {
+    expect(etatDeLecture(CHIFFRE, { pret: true, maCle: false, clePair: true })).toBe('illisible');
   });
 });

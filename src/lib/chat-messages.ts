@@ -30,3 +30,34 @@ export function mergeMessages<T extends ChatMessageLike>(a: T[], b: T[]): T[] {
     return dt !== 0 ? dt : x.id.localeCompare(y.id);
   });
 }
+
+/**
+ * Que faire d'un contenu de message avant de l'afficher (#198) ?
+ *
+ * Trois issues, et la nuance entre elles est tout l'objet du correctif de revue :
+ *
+ * - `clair` — soit ce n'est pas du chiffré, soit on n'est pas en mesure de
+ *   conclure. Deux cas s'y rangent volontairement :
+ *     * **l'état de la clé n'est pas encore résolu** : conclure ici ferait
+ *       clignoter « Message illisible » sur tout le fil à chaque ouverture,
+ *       le temps que le coffre réponde ;
+ *     * **le pair n'a pas encore de clé publique** : rien n'a pu être chiffré
+ *       pour lui, ce n'est pas un problème d'appareil, et un bandeau dédié le
+ *       dit déjà. Accuser l'appareil enverrait la personne chercher une panne
+ *       qui n'existe pas, et qu'elle ne pourrait pas réparer.
+ * - `dechiffrer` — on a les deux clés : on tente.
+ * - `illisible` — on a de quoi savoir qu'on ne sait pas lire : le fil est
+ *   chiffré, le pair a une clé, mais pas nous. C'est le cas que #198 rend
+ *   visible au lieu de le taire.
+ */
+export type LectureMessage = 'clair' | 'dechiffrer' | 'illisible';
+
+export function etatDeLecture(
+  content: string,
+  ctx: { pret: boolean; maCle: boolean; clePair: boolean },
+): LectureMessage {
+  const ressembleAChiffre = /^[A-Za-z0-9+/]+=*$/.test(content) && content.length >= 30;
+  if (!ressembleAChiffre) return 'clair';
+  if (!ctx.pret || !ctx.clePair) return 'clair';
+  return ctx.maCle ? 'dechiffrer' : 'illisible';
+}
