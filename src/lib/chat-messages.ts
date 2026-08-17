@@ -61,3 +61,56 @@ export function etatDeLecture(
   if (!ctx.pret || !ctx.clePair) return 'clair';
   return ctx.maCle ? 'dechiffrer' : 'illisible';
 }
+
+/**
+ * Ce qu'il faut dire à la personne sur l'état du chiffrement de SA conversation.
+ *
+ * Une seule fonction pour les trois situations, parce qu'elles se recoupent et
+ * que les traiter séparément a produit le défaut qu'on corrige ici : le bandeau
+ * parlait du passé (« tes anciens messages sont illisibles ») sans jamais dire
+ * que **ce que la personne écrit maintenant part en clair**. `handleSend`
+ * retombe en effet sur le texte brut dès qu'une des deux clés manque — un
+ * silence qui dégrade la confidentialité sans prévenir personne.
+ *
+ * L'envoi n'est pas bloqué pour autant : couper la parole à quelqu'un dont la
+ * clé a disparu l'empêcherait de dire à l'autre que quelque chose s'est cassé.
+ * On informe, on ne décide pas à sa place (PRODUCT.md, « à vous de choisir »).
+ */
+export interface AvertissementChiffrement {
+  /** `warning` quand quelque chose est cassé, `info` quand c'est juste en cours. */
+  ton: 'warning' | 'info';
+  texte: string;
+}
+
+export function avertissementChiffrement(ctx: {
+  etatCle: 'chargement' | 'pret' | 'illisible' | 'indisponible';
+  clePair: boolean;
+}): AvertissementChiffrement | null {
+  const enClair = ' Ce que tu écris maintenant part sans chiffrement — évite d’y mettre ce que tu ne dirais pas à voix haute.';
+
+  if (ctx.etatCle === 'illisible') {
+    return {
+      ton: 'warning',
+      texte:
+        'Les messages de ce fil ne peuvent pas être déchiffrés sur cet appareil. Si tu écrivais avant depuis un autre téléphone ou navigateur, reconnecte-toi depuis celui-là : ils y sont toujours lisibles. Sinon, ils sont perdus pour toi — la personne en face, elle, continue de les voir.' +
+        enClair,
+    };
+  }
+  if (ctx.etatCle === 'indisponible') {
+    return {
+      ton: 'warning',
+      texte:
+        'Impossible de récupérer ta clé de messagerie pour le moment. Tes messages sont intacts, réessaie dans un instant.' +
+        enClair,
+    };
+  }
+  if (ctx.etatCle === 'chargement') return null;
+  if (!ctx.clePair) {
+    return {
+      ton: 'info',
+      texte:
+        'Cette personne n’a pas encore de clé de messagerie : le chiffrement ne peut pas s’établir.' + enClair,
+    };
+  }
+  return null;
+}

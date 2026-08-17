@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mergeMessages, etatDeLecture } from '../chat-messages';
+import { mergeMessages, etatDeLecture, avertissementChiffrement } from '../chat-messages';
 
 type M = { id: string; createdAt: string; content?: string };
 
@@ -62,5 +62,42 @@ describe('etatDeLecture (#198)', () => {
 
   it('déclare illisible quand le fil est chiffré pour nous et qu’on n’a pas notre clé', () => {
     expect(etatDeLecture(CHIFFRE, { pret: true, maCle: false, clePair: true })).toBe('illisible');
+  });
+});
+
+describe('avertissementChiffrement (#198)', () => {
+  const enClair = /sans chiffrement/;
+
+  it('ne dit rien quand tout va bien', () => {
+    expect(avertissementChiffrement({ etatCle: 'pret', clePair: true })).toBeNull();
+  });
+
+  it('ne dit rien tant que l’état de la clé n’est pas résolu', () => {
+    expect(avertissementChiffrement({ etatCle: 'chargement', clePair: false })).toBeNull();
+  });
+
+  it('prévient que l’envoi part en clair quand notre clé manque', () => {
+    const a = avertissementChiffrement({ etatCle: 'illisible', clePair: true })!;
+    expect(a.ton).toBe('warning');
+    expect(a.texte).toMatch(enClair);
+  });
+
+  it('dit que le fil peut être perdu, sans promettre un retour impossible', () => {
+    const a = avertissementChiffrement({ etatCle: 'illisible', clePair: true })!;
+    expect(a.texte).toMatch(/si tu écrivais avant/i); // condition, pas promesse
+    expect(a.texte).toMatch(/perdus pour toi/i);
+    expect(a.texte).toMatch(/continue de les voir/i); // l'asymétrie est dite
+  });
+
+  it('prévient aussi quand c’est le pair qui n’a pas de clé', () => {
+    const a = avertissementChiffrement({ etatCle: 'pret', clePair: false })!;
+    expect(a.ton).toBe('info');
+    expect(a.texte).toMatch(enClair);
+  });
+
+  it('prévient pendant une panne de coffre, sans affoler sur le passé', () => {
+    const a = avertissementChiffrement({ etatCle: 'indisponible', clePair: true })!;
+    expect(a.texte).toMatch(/intacts/);
+    expect(a.texte).toMatch(enClair);
   });
 });

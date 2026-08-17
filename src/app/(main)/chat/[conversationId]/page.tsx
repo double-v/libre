@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { photoUrl } from '@/lib/photos';
 import { useEncryptedChat } from '@/hooks/useEncryptedChat';
 import ShareContactButton from '@/components/ShareContactButton';
-import { mergeMessages, etatDeLecture } from '@/lib/chat-messages';
+import { mergeMessages, etatDeLecture, avertissementChiffrement } from '@/lib/chat-messages';
 import ProfileModal from '@/components/ProfileModal';
 import { CheckinButton } from '@/components/CheckinButton';
 import ChatMessageList from '@/components/chat/ChatMessageList';
@@ -357,6 +357,7 @@ export default function ChatConversationPage() {
   };
 
   const e2eEnabled = !!(privateKey && otherPublicKey);
+  const avertissement = avertissementChiffrement({ etatCle, clePair: !!otherPublicKey });
 
   // On attend aussi de savoir où en est la clé (#198) : afficher le fil avant
   // reviendrait à montrer un contenu qu'on ne sait pas encore qualifier, puis à
@@ -410,23 +411,11 @@ export default function ChatConversationPage() {
         </div>
       )}
 
-      {/* Clé d'identité introuvable ou injoignable (#198) : on le dit, avec l'issue. */}
-      {(etatCle === 'illisible' || etatCle === 'indisponible') && (
+      {/* État du chiffrement du fil (#198) : un seul bandeau, qui parle du passé
+          ET du présent — sans clé, ce qu'on écrit maintenant part en clair. */}
+      {avertissement && (
         <div className="mx-4 mt-2">
-          <Alert variant="warning">
-            {etatCle === 'illisible'
-              ? "Tes messages ne peuvent pas être déchiffrés ici. Reconnecte-toi depuis l'appareil où tu écrivais avant : ils réapparaîtront."
-              : 'Impossible de récupérer ta clé de messagerie pour le moment. Tes messages sont intacts — réessaie dans un instant.'}
-          </Alert>
-        </div>
-      )}
-
-      {/* E2E status */}
-      {!e2eEnabled && etatCle !== 'illisible' && etatCle !== 'indisponible' && (
-        <div className="mx-4 mt-2 rounded-md bg-yellow-50 p-2 text-xs text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-          {!otherPublicKey
-            ? "Le chiffrement n'est pas disponible : cette personne n'a pas encore de clé"
-            : "Vos clés de chiffrement sont en cours d'initialisation…"}
+          <Alert variant={avertissement.ton}>{avertissement.texte}</Alert>
         </div>
       )}
 
@@ -446,6 +435,12 @@ export default function ChatConversationPage() {
 
       {/* Input area */}
       <div className="border-t border-hairline p-4">
+        {/* Le bandeau est en haut du fil : sur une conversation longue, la
+            personne ne le voit plus au moment d'écrire. On redit l'essentiel
+            là où le geste se fait. */}
+        {avertissement && (
+          <p className="mb-2 text-xs text-muted">Ce message partira sans chiffrement.</p>
+        )}
         <form onSubmit={handleSend} aria-label="Envoyer un message" className="flex gap-2">
           <label htmlFor="chat-input" className="sr-only">
             Votre message
