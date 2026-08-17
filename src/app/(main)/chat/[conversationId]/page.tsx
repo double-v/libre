@@ -416,7 +416,7 @@ export default function ChatConversationPage() {
       {!e2eEnabled && etatCle !== 'illisible' && etatCle !== 'indisponible' && (
         <div className="mx-4 mt-2 rounded-md bg-yellow-50 p-2 text-xs text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
           {!otherPublicKey
-            ? "Le chiffrement de bout en bout n'est pas disponible (l'autre utilisateur n'a pas encore de clés)"
+            ? "Le chiffrement n'est pas disponible : cette personne n'a pas encore de clé"
             : "Vos clés de chiffrement sont en cours d'initialisation…"}
         </div>
       )}

@@ -35,7 +35,7 @@ export default function CGUPage() {
         <li>Création de profil personnel</li>
         <li>Découverte de célibataires par géolocalisation</li>
         <li>Système de &quot;like&quot; et de match mutuel</li>
-        <li>Messagerie chiffrée de bout en bout</li>
+        <li>Messagerie chiffrée (portée exacte décrite au §8.1 de la politique de confidentialité)</li>
         <li>Espace communautaire &quot;Le Carré&quot;</li>
         <li>Vérification d&apos;identité par selfie</li>
         <li>Signalement et modération</li>
@@ -78,7 +78,7 @@ export default function CGUPage() {
       <h3>4.3 Suppression</h3>
       <p>
         Vous pouvez supprimer votre compte à tout moment depuis les Paramètres.
-        La suppression est <strong>irréversible</strong> et entraîne l&apos;effacement de toutes vos données,
+        La suppression est <strong>irréversible</strong>{' '}et entraîne l&apos;effacement de toutes vos données,
         conformément au droit à l&apos;effacement (RGPD, art. 17).
       </p>
 
@@ -103,10 +103,10 @@ export default function CGUPage() {
         Libre dispose d&apos;un système de modération communautaire et administrative :
       </p>
       <ul>
-        <li><strong>Signalement</strong> : tout utilisateur peut signaler un comportement inapproprié</li>
-        <li><strong>Blocage</strong> : tout utilisateur peut bloquer un autre utilisateur</li>
-        <li><strong>Modération administrative</strong> : l&apos;équipe de modération peut avertir, bannir temporairement ou supprimer définitivement un compte</li>
-        <li><strong>Vérification d&apos;identité</strong> : le badge vérifié permet de confirmer qu&apos;un profil est authentique</li>
+        <li><strong>Signalement</strong>{' '}: tout utilisateur peut signaler un comportement inapproprié</li>
+        <li><strong>Blocage</strong>{' '}: tout utilisateur peut bloquer un autre utilisateur</li>
+        <li><strong>Modération administrative</strong>{' '}: l&apos;équipe de modération peut avertir, bannir temporairement ou supprimer définitivement un compte</li>
+        <li><strong>Vérification d&apos;identité</strong>{' '}: le badge vérifié permet de confirmer qu&apos;un profil est authentique</li>
       </ul>
       <p>
         Les décisions de modération peuvent être contestées par e-mail à

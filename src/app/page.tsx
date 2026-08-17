@@ -61,7 +61,7 @@ export default async function Home() {
       'Application de rencontre gratuite, sans abonnement ni revente de données.',
     featureList: [
       'Rencontre par géolocalisation',
-      'Messages chiffrés de bout en bout',
+      'Messages chiffrés',
       'Gratuit sans abonnement',
       'Badge vérifié',
       'Modération communautaire',
