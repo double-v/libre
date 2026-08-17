@@ -7,7 +7,8 @@ d'**issue** est le lot, jamais la tâche : une issue = une PR = un checkpoint
 opérateur (principe VI).
 
 Tests d'abord, conformément aux gates de la constitution. `[P]` = parallélisable
-(fichiers disjoints, aucune dépendance sur une tâche non terminée).
+(fichiers disjoints, aucune dépendance sur une tâche non terminée). `[~]` = fait
+partiellement, avec la raison en clair.
 
 **Hors périmètre, déjà livré** : pagination par curseur, déchiffrement paresseux
 (#200, PR #254), virtualisation de la liste (PR #303).
@@ -16,19 +17,19 @@ Tests d'abord, conformément aux gates de la constitution. `[P]` = parallélisab
 
 ## Phase 1 — Mise en place (avant tout code)
 
-- [ ] T001 Générer la clé maître (32 octets aléatoires, base64) et la déclarer dans les trois environnements Vercel — Production, Preview, Development **séparés** : une clé de preview ne doit jamais ouvrir la production
-- [ ] T002 [P] Ajouter `CHAT_ESCROW_KEY` à `.env.example` avec un commentaire disant ce que sa perte coûte (tous les messages irrécupérables)
-- [ ] T003 [P] Écrire la procédure d'exploitation dans `docs/escrow-cle-maitre.md` : génération, stockage, **sauvegarde hors ligne**, rotation via le préfixe `v1:`, conduite à tenir si la clé est absente en développement
+- [~] T001 **À faire par l'opérateur** — générer la clé maître (32 octets aléatoires, base64) et la déclarer dans les trois environnements Vercel — Production, Preview, Development **séparés** : une clé de preview ne doit jamais ouvrir la production
+- [x] T002 [P] Ajouter `CHAT_ESCROW_KEY` à `.env.example` avec un commentaire disant ce que sa perte coûte (tous les messages irrécupérables)
+- [x] T003 [P] Écrire la procédure d'exploitation dans `docs/escrow-cle-maitre.md` : génération, stockage, **sauvegarde hors ligne**, rotation via le préfixe `v1:`, conduite à tenir si la clé est absente en développement
 
 ---
 
 ## Phase 2 — Socle (bloquant pour US1 et US2)
 
-- [ ] T004 Écrire d'abord les tests dans `src/lib/__tests__/crypto-escrow.test.ts` : aller-retour enveloppe/désenveloppe, rejet d'un blob altéré (GCM), rejet avec une mauvaise clé maître, présence et lecture du préfixe de version
-- [ ] T005 Implémenter `src/lib/crypto-escrow.ts` (`import 'server-only'`) : `wrapPrivateKey` / `unwrapPrivateKey` en AES-256-GCM via `node:crypto`, enveloppe préfixée `v1:` — sans version, une rotation future de clé maître n'a aucun moyen de distinguer les formats
-- [ ] T006 Ajouter `encryptedPrivateKey String?` et `escrowedAt DateTime?` au modèle `UserKey` dans `prisma/schema.prisma`
-- [ ] T007 Écrire **à la main** la migration `prisma/migrations/<timestamp>_escrow_user_keys/migration.sql` (`ALTER TABLE "user_keys" ADD COLUMN "encryptedPrivateKey" TEXT, ADD COLUMN "escrowedAt" TIMESTAMP(3)`) — colonnes en camelCase entre guillemets, comme les colonnes existantes de cette table. **Jamais `prisma migrate dev`** : la base de développement est partagée
-- [ ] T008 [P] Test de garde dans `src/lib/__tests__/crypto-escrow-server-only.test.ts` : importer `crypto-escrow` depuis un contexte client doit échouer — la clé maître ne doit jamais atteindre un bundle
+- [x] T004 Écrire d'abord les tests dans `src/lib/__tests__/crypto-escrow.test.ts` : aller-retour enveloppe/désenveloppe, rejet d'un blob altéré (GCM), rejet avec une mauvaise clé maître, présence et lecture du préfixe de version
+- [x] T005 Implémenter `src/lib/crypto-escrow.ts` (`import 'server-only'`) : `wrapPrivateKey` / `unwrapPrivateKey` en AES-256-GCM via `node:crypto`, enveloppe préfixée `v1:` — sans version, une rotation future de clé maître n'a aucun moyen de distinguer les formats
+- [x] T006 Ajouter `encryptedPrivateKey String?` et `escrowedAt DateTime?` au modèle `UserKey` dans `prisma/schema.prisma`
+- [x] T007 Écrire **à la main** la migration `prisma/migrations/<timestamp>_escrow_user_keys/migration.sql` (`ALTER TABLE "user_keys" ADD COLUMN "encryptedPrivateKey" TEXT, ADD COLUMN "escrowedAt" TIMESTAMP(3)`) — colonnes en camelCase entre guillemets, comme les colonnes existantes de cette table. **Jamais `prisma migrate dev`** : la base de développement est partagée
+- [x] T008 [P] Test de garde dans `src/lib/__tests__/crypto-escrow-server-only.test.ts` : importer `crypto-escrow` depuis un contexte client doit échouer — la clé maître ne doit jamais atteindre un bundle
 
 ---
 
@@ -36,18 +37,18 @@ Tests d'abord, conformément aux gates de la constitution. `[P]` = parallélisab
 
 **Test d'indépendance** : vider intégralement le stockage local, recharger, et retrouver ses messages. Puis recommencer depuis un second navigateur et avec un compte Google.
 
-- [ ] T009 [P] [US1] Tests de la nouvelle route dans `src/app/api/users/keys/me/__tests__/route.test.ts` : 401 sans session, un compte ne reçoit **que** sa propre clé, `Cache-Control: no-store`, cas « publique connue mais coffre vide »
-- [ ] T010 [P] [US1] Tests de l'extension du POST dans `src/app/api/users/keys/__tests__/route.test.ts` : 400 si la privée ne correspond pas à la publique, 409 si une clé publique **différente** est déjà au coffre, succès nominal
-- [ ] T011 [P] [US1] Tests du hook dans `src/hooks/__tests__/useEncryptedChat.test.ts` — les quatre branches de l'arbre du plan, dont la plus importante : **publique connue + coffre vide + pas de clé locale correspondante → aucune régénération** (FR-005)
-- [ ] T012 [US1] Implémenter `GET /api/users/keys/me` dans `src/app/api/users/keys/me/route.ts` : session obligatoire, rate limit comme les autres routes authentifiées, désenveloppe côté serveur, `no-store`
-- [ ] T013 [US1] Étendre `POST /api/users/keys` dans `src/app/api/users/keys/route.ts` : accepte `privateKey`, **vérifie qu'elle correspond à la publique** avant d'envelopper — sans ce contrôle, un client fautif empoisonne le coffre de façon irréversible
-- [ ] T014 [US1] Refondre `src/hooks/useEncryptedChat.ts` selon l'arbre de décision du plan : clé privée en mémoire de session, plus aucune écriture disque, jamais de régénération quand une clé publique est connue
-- [ ] T015 [US1] Proposer dans `DESIGN.md` l'état visuel « message illisible » **avant** de l'implémenter (principe IV) — réutiliser le registre de la pierre tombale existante plutôt qu'inventer une surface
-- [ ] T016 [US1] Supprimer le repli silencieux de `tryDecrypt` dans `src/app/(main)/chat/[conversationId]/page.tsx` : un échec marque le message comme illisible au lieu de renvoyer le ciphertext tel quel
-- [ ] T017 [US1] Afficher cet état dans `src/components/chat/ChatMessageList.tsx`, avec ce que la personne peut faire (revenir sur son appareil d'origine)
-- [ ] T018 [US1] Purger la clé **et le cache de messages en clair** à la déconnexion (`loadPlaintextCache` écrit aujourd'hui les messages déchiffrés dans le stockage local : retirer la serrure en laissant la porte ouverte ne vaut rien)
-- [ ] T019 [US1] Test Playwright dans `tests/e2e/escrow-second-appareil.spec.ts` : échanger des messages, effacer le stockage, recharger, vérifier que l'historique est là
-- [ ] T020 [US1] Gate visuel (principe V) : prototype de l'état « illisible » validé, puis vérification sur l'app réellement servie — pas sur une assertion de classe
+- [x] T009 [P] [US1] Tests de la nouvelle route dans `src/app/api/users/keys/me/__tests__/route.test.ts` : 401 sans session, un compte ne reçoit **que** sa propre clé, `Cache-Control: no-store`, cas « publique connue mais coffre vide »
+- [x] T010 [P] [US1] Tests de l'extension du POST dans `src/app/api/users/keys/__tests__/route.test.ts` : 400 si la privée ne correspond pas à la publique, 409 si une clé publique **différente** est déjà au coffre, succès nominal
+- [x] T011 [P] [US1] Tests du hook dans `src/hooks/__tests__/useEncryptedChat.test.ts` — les quatre branches de l'arbre du plan, dont la plus importante : **publique connue + coffre vide + pas de clé locale correspondante → aucune régénération** (FR-005)
+- [x] T012 [US1] Implémenter `GET /api/users/keys/me` dans `src/app/api/users/keys/me/route.ts` : session obligatoire, rate limit comme les autres routes authentifiées, désenveloppe côté serveur, `no-store`
+- [x] T013 [US1] Étendre `POST /api/users/keys` dans `src/app/api/users/keys/route.ts` : accepte `privateKey`, **vérifie qu'elle correspond à la publique** avant d'envelopper — sans ce contrôle, un client fautif empoisonne le coffre de façon irréversible
+- [x] T014 [US1] Refondre `src/hooks/useEncryptedChat.ts` selon l'arbre de décision du plan : clé privée en mémoire de session, plus aucune écriture disque, jamais de régénération quand une clé publique est connue
+- [x] T015 [US1] Proposer dans `DESIGN.md` l'état visuel « message illisible » **avant** de l'implémenter (principe IV) — réutiliser le registre de la pierre tombale existante plutôt qu'inventer une surface
+- [x] T016 [US1] Supprimer le repli silencieux de `tryDecrypt` dans `src/app/(main)/chat/[conversationId]/page.tsx` : un échec marque le message comme illisible au lieu de renvoyer le ciphertext tel quel
+- [x] T017 [US1] Afficher cet état dans `src/components/chat/ChatMessageList.tsx`, avec ce que la personne peut faire (revenir sur son appareil d'origine)
+- [x] T018 [US1] Purger la clé **et le cache de messages en clair** à la déconnexion (`loadPlaintextCache` écrit aujourd'hui les messages déchiffrés dans le stockage local : retirer la serrure en laissant la porte ouverte ne vaut rien)
+- [~] T019 [US1] Scénario écrit dans `tests/e2e/escrow-second-appareil.spec.ts`, **skippé** comme le reste de la suite E2E du dépôt : Playwright ne s'installe pas sur Ubuntu 26.04 (#164)
+- [x] T020 [US1] Gate visuel (principe V) : prototype rendu sur l'app servie (`next dev`), capturé en clair **et** sombre, mesuré en plusieurs points — bulle « illisible » du bon côté, aucun chiffré brut à l'écran, registre identique à la pierre tombale
 
 ---
 
