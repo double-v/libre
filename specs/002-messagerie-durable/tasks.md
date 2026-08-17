@@ -135,8 +135,8 @@ Phase 1 (mise en place)
 
 | Lot | User story | Issue |
 |---|---|---|
-| A | US1 — changer d'appareil | #198 (à recadrer sur ce seul récit) |
-| B | US2 — migration douce | à créer |
-| C | US3 — transparence | à créer |
+| A | US1 — changer d'appareil | #198 (recadré sur ce seul récit le 2026-08-17) |
+| B | US2 — migration douce | #336 |
+| C | US3 — transparence | #337 |
 | D | US4 — historique de clés | #199 (débloqué par A) |
-| E | US5 — purge réelle | #202 (à recadrer : l'éphémère sort du périmètre) |
+| E | US5 — purge réelle | #202 (recadré : l'éphémère sort du périmètre) |
