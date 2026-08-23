@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Messages',
-  description: 'Vos matchs et conversations sur Libre. Chat chiffré de bout en bout.',
+  description: 'Vos matchs et conversations sur Libre. Chat chiffré.',
   alternates: { canonical: '/messages' },
 };
 

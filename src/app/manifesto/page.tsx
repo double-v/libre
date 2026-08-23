@@ -62,14 +62,14 @@ const onEstLibresDe = [
       "Géolocalisation transparente, filtres utiles, pas d'algorithme opaque qui décide pour vous. Vous voyez les gens, pas un classement sponsorisé.",
   },
   {
-    title: 'Gardner nos messages pour nous',
+    title: 'Garder nos messages pour nous',
     detail:
-      "Chiffrement de bout en bout : vos conversations ne passent que par vous et votre correspondant. Même nous, on ne les lit pas. On ne peut pas.",
+      "Vos messages sont chiffrés sur votre appareil et le restent chez nous. Nous gardons de quoi les déchiffrer — c'est ce qui permet à vos conversations de vous suivre quand vous changez de téléphone. On ne les lit pas, et on préfère vous le dire comme ça plutôt que de vous laisser croire qu'on ne pourrait pas.",
   },
   {
     title: 'Quitter quand on veut',
     detail:
-      "Suppression de compte en un clic, données effacées, photos parties. Pas de période de rétention cachée, pas de挽留 agressif par mail.",
+      "Suppression de compte en un clic, données effacées, photos parties. Pas de période de rétention cachée, pas de relance agressive par mail.",
   },
 ];
 

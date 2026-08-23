@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Messages',
-  description: 'Vos conversations sur Libre. Chat chiffré de bout en bout.',
+  description: 'Vos conversations sur Libre. Chat chiffré.',
   robots: { index: false, follow: true },
 };
 

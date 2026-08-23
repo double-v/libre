@@ -3,6 +3,11 @@ import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { rateLimit, limits } from '@/lib/rate-limit';
+import {
+  escrowDisponible,
+  wrapPrivateKey,
+  publiqueCorrespondALaPrivee,
+} from '@/lib/crypto-escrow';
 
 async function isValidECDHPublicKey(base64: string): Promise<boolean> {
   try {
@@ -37,7 +42,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { publicKey } = body;
+    const { publicKey, privateKey } = body;
 
     if (!publicKey || typeof publicKey !== 'string') {
       return NextResponse.json(
@@ -53,12 +58,43 @@ export async function POST(request: Request) {
       );
     }
 
+    // Une clé publique déjà enregistrée ne s'écrase pas. C'est LE geste qui a
+    // détruit des historiques : l'`upsert` d'origine remplaçait la clé sans en
+    // garder trace, et tout ce qui avait été chiffré pour l'ancienne devenait
+    // illisible. Une vraie rotation viendra par un chemin explicite (#199).
+    const existante = await getDb().userKey.findUnique({
+      where: { userId: session.user.id },
+      select: { publicKey: true },
+    });
+    if (existante && existante.publicKey !== publicKey) {
+      return NextResponse.json({ error: 'cle_deja_enregistree' }, { status: 409 });
+    }
+
+    let encryptedPrivateKey: string | undefined;
+    if (typeof privateKey === 'string' && privateKey.length > 0) {
+      if (!publiqueCorrespondALaPrivee(publicKey, privateKey)) {
+        // Sceller une privée qui n'ouvre pas cette publique empoisonnerait le
+        // coffre : le compte garderait une clé publique valide, recevrait des
+        // messages, et ne pourrait plus jamais les lire.
+        return NextResponse.json({ error: 'cle_non_appariee' }, { status: 400 });
+      }
+      if (!escrowDisponible()) {
+        return NextResponse.json({ error: 'escrow_indisponible' }, { status: 503 });
+      }
+      encryptedPrivateKey = wrapPrivateKey(privateKey, session.user.id);
+    }
+
+    const escrow = encryptedPrivateKey
+      ? { encryptedPrivateKey, escrowedAt: new Date() }
+      : {};
+
     await getDb().userKey.upsert({
       where: { userId: session.user.id },
-      update: { publicKey },
+      update: { publicKey, ...escrow },
       create: {
         userId: session.user.id,
         publicKey,
+        ...escrow,
       },
     });
 

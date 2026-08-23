@@ -66,7 +66,7 @@ export default function ConfidentialitePage() {
 
       <h3>2.4 Données de communication</h3>
       <ul>
-        <li>Messages envoyés dans les conversations (chiffrés de bout en bout — le serveur ne peut pas les lire)</li>
+        <li>Messages envoyés dans les conversations (chiffrés sur votre appareil, conservés chiffrés — voir §8.1 pour ce que cela protège exactement)</li>
         <li>Messages publics dans le &quot;Carré&quot; (pseudonymes, contenu)</li>
       </ul>
 
@@ -139,14 +139,14 @@ export default function ConfidentialitePage() {
       <h2>4. Finalités du traitement</h2>
       <p>Nous traitons vos données personnelles pour les finalités suivantes :</p>
       <ul>
-        <li><strong>Fournir le service</strong> : inscription, profil, découverte, match, messagerie chiffrée</li>
-        <li><strong>Géolocalisation</strong> : afficher les célibataires à proximité (uniquement si activé)</li>
-        <li><strong>Modération et sécurité</strong> : vérification d&apos;identité, signalement, anti-spam/anti-bot</li>
-        <li><strong>Amélioration du service</strong> : feedback utilisateur (avec votre consentement)</li>
-        <li><strong>Obligations légales</strong> : conservation des logs de modération si requis par la loi</li>
+        <li><strong>Fournir le service</strong>{' '}: inscription, profil, découverte, match, messagerie chiffrée</li>
+        <li><strong>Géolocalisation</strong>{' '}: afficher les célibataires à proximité (uniquement si activé)</li>
+        <li><strong>Modération et sécurité</strong>{' '}: vérification d&apos;identité, signalement, anti-spam/anti-bot</li>
+        <li><strong>Amélioration du service</strong>{' '}: feedback utilisateur (avec votre consentement)</li>
+        <li><strong>Obligations légales</strong>{' '}: conservation des logs de modération si requis par la loi</li>
       </ul>
       <p>
-        <strong>Nous n&apos;utilisons pas vos données à des fins publicitaires ou commerciales.</strong>
+        <strong>Nous n&apos;utilisons pas vos données à des fins publicitaires ou commerciales.</strong>{' '}
         Nous ne les vendons, ne les louons et ne les partageons jamais avec des tiers à des fins marketing.
       </p>
 
@@ -195,16 +195,16 @@ export default function ConfidentialitePage() {
       <h2>6. Destinataires des données</h2>
       <p>Vos données sont accessibles à :</p>
       <ul>
-        <li><strong>L&apos;équipe Libre</strong> : administrateurs pour la modération (contenu du Carré, signalements, demandes de vérification)</li>
-        <li><strong>Cloudflare</strong> : fournisseur de sécurité (Turnstile anti-bot, CDN). Politique de confidentialité : <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">cloudflare.com/privacypolicy</a></li>
-        <li><strong>Vercel</strong> : hébergement. Politique de confidentialité : <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">vercel.com/legal/privacy-policy</a></li>
-        <li><strong>Resend</strong> : envoi d&apos;e-mails transactionnels (vérification, réinitialisation). Politique : <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">resend.com/legal/privacy-policy</a></li>
-        <li><strong>Pusher</strong> : notifications en temps réel (WebSocket). Politique : <a href="https://pusher.com/legal/privacy/" target="_blank" rel="noopener noreferrer">pusher.com/legal/privacy</a></li>
-        <li><strong>Cloudflare R2</strong> : stockage des photos de profil. Même politique que Cloudflare ci-dessus.</li>
+        <li><strong>L&apos;équipe Libre</strong>{' '}: administrateurs pour la modération (contenu du Carré, signalements, demandes de vérification)</li>
+        <li><strong>Cloudflare</strong>{' '}: fournisseur de sécurité (Turnstile anti-bot, CDN). Politique de confidentialité : <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">cloudflare.com/privacypolicy</a></li>
+        <li><strong>Vercel</strong>{' '}: hébergement. Politique de confidentialité : <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">vercel.com/legal/privacy-policy</a></li>
+        <li><strong>Resend</strong>{' '}: envoi d&apos;e-mails transactionnels (vérification, réinitialisation). Politique : <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">resend.com/legal/privacy-policy</a></li>
+        <li><strong>Pusher</strong>{' '}: notifications en temps réel (WebSocket). Politique : <a href="https://pusher.com/legal/privacy/" target="_blank" rel="noopener noreferrer">pusher.com/legal/privacy</a></li>
+        <li><strong>Cloudflare R2</strong>{' '}: stockage des photos de profil. Même politique que Cloudflare ci-dessus.</li>
       </ul>
       <p>
-        <strong>Aucune donnée n&apos;est transférée à des fins publicitaires ou commerciales.</strong>
-        Aucun sous-traitant n&apos;accède à vos messages chiffrés de bout en bout.
+        <strong>Aucune donnée n&apos;est transférée à des fins publicitaires ou commerciales.</strong>{' '}
+        Aucun sous-traitant n&apos;a les moyens de déchiffrer vos messages : la clé qui le permet ne quitte jamais nos serveurs.
       </p>
 
       {/* ─── 7. Transferts hors UE ─── */}
@@ -222,14 +222,41 @@ export default function ConfidentialitePage() {
       {/* ─── 8. Sécurité ─── */}
       <h2>8. Mesures de sécurité</h2>
       <ul>
-        <li><strong>Chiffrement de bout en bout (E2E)</strong> des messages : seuls l&apos;expéditeur et le destinataire peuvent les lire</li>
-        <li><strong>Chiffrement en transit</strong> : TLS 1.3 sur toutes les communications</li>
-        <li><strong>Chiffrement au repos</strong> : base de données chiffrée sur le serveur</li>
-        <li><strong>Hashage des mots de passe</strong> : bcrypt avec coût 12</li>
-        <li><strong>Accès administrateur restreint</strong> : seuls les administrateurs vérifiés peuvent accéder aux données de modération</li>
-        <li><strong>Authentification</strong> : JWT avec clé secrète, tokens à durée limitée</li>
-        <li><strong>Protection anti-robot</strong> : Cloudflare Turnstile</li>
+        <li><strong>Chiffrement des messages</strong>{' '}: chiffrés sur votre appareil (ECDH P-256 + AES-256-GCM) et conservés chiffrés. Ce que cela protège exactement est détaillé en §8.1 — lisez-le, il dit aussi ce que cela ne protège pas.</li>
+        <li><strong>Chiffrement en transit</strong>{' '}: TLS 1.3 sur toutes les communications</li>
+        <li><strong>Chiffrement au repos</strong>{' '}: base de données chiffrée sur le serveur</li>
+        <li><strong>Hashage des mots de passe</strong>{' '}: bcrypt avec coût 12</li>
+        <li><strong>Accès administrateur restreint</strong>{' '}: seuls les administrateurs vérifiés peuvent accéder aux données de modération</li>
+        <li><strong>Authentification</strong>{' '}: JWT avec clé secrète, tokens à durée limitée</li>
+        <li><strong>Protection anti-robot</strong>{' '}: Cloudflare Turnstile</li>
       </ul>
+
+      <h3>8.1 Ce que le chiffrement protège — et ce qu&apos;il ne protège pas</h3>
+      <p>
+        Vos messages sont chiffrés sur votre appareil avant de partir, et restent chiffrés dans notre base de
+        données. Cela les met hors de portée d&apos;une interception réseau, d&apos;un accès à la seule base de
+        données, et de nos sous-traitants (hébergeur, temps réel, e-mail).
+      </p>
+      <p>
+        <strong>Cela ne nous met pas, nous, hors de portée.</strong>{' '}Nous conservons votre clé de déchiffrement,
+        elle-même scellée par une clé maître. Techniquement, nous pouvons donc lire vos messages. Nous ne le
+        faisons pas — mais nous préférons vous le dire plutôt que de vous laisser croire l&apos;inverse.
+      </p>
+      <p>
+        <strong>Pourquoi ce choix.</strong>{' '}Tant que la clé n&apos;existait que sur votre téléphone, changer
+        d&apos;appareil ou vider le cache de votre navigateur effaçait définitivement toutes vos conversations,
+        sans prévenir. Nous avons préféré réparer cela plutôt que de tenir une promesse que la réalité
+        contredisait.
+      </p>
+      <p>
+        <strong>Sur votre appareil.</strong>{' '}Pour éviter de tout redéchiffrer à chaque ouverture, les messages
+        déjà lus sont gardés en clair dans le stockage local de votre navigateur. Ils sont effacés lorsque vous
+        vous déconnectez.
+      </p>
+      <p>
+        <strong>Combien de temps.</strong>{' '}Vos messages vivent aussi longtemps que la conversation. Quand un
+        match se termine ou que votre compte est supprimé, ils disparaissent avec — clé comprise.
+      </p>
 
       {/* ─── 9. Vos droits ─── */}
       <h2>9. Vos droits RGPD</h2>
@@ -237,26 +264,26 @@ export default function ConfidentialitePage() {
         Conformément au RGPD et à la loi Informatique et Libertés, vous disposez des droits suivants :
       </p>
       <ul>
-        <li><strong>Droit d&apos;accès</strong> (art. 15 RGPD) : obtenir une copie de vos données personnelles</li>
-        <li><strong>Droit de rectification</strong> (art. 16) : modifier vos données inexactes ou incomplètes</li>
-        <li><strong>Droit à l&apos;effacement</strong> (art. 17) : supprimer votre compte et vos données</li>
-        <li><strong>Droit à la limitation</strong> (art. 18) : suspendre le traitement de certaines données</li>
-        <li><strong>Droit à la portabilité</strong> (art. 20) : exporter vos données dans un format structuré (JSON)</li>
-        <li><strong>Droit d&apos;opposition</strong> (art. 21) : vous opposer au traitement fondé sur l&apos;intérêt légitime</li>
-        <li><strong>Droit de retirer votre consentement</strong> (art. 7(3)) : à tout moment, sans affecter la licéité du traitement antérieur</li>
-        <li><strong>Droit de définir des directives post-mortem</strong> (art. 32 loi Informatique et Libertés)</li>
+        <li><strong>Droit d&apos;accès</strong>{' '}(art. 15 RGPD) : obtenir une copie de vos données personnelles</li>
+        <li><strong>Droit de rectification</strong>{' '}(art. 16) : modifier vos données inexactes ou incomplètes</li>
+        <li><strong>Droit à l&apos;effacement</strong>{' '}(art. 17) : supprimer votre compte et vos données</li>
+        <li><strong>Droit à la limitation</strong>{' '}(art. 18) : suspendre le traitement de certaines données</li>
+        <li><strong>Droit à la portabilité</strong>{' '}(art. 20) : exporter vos données dans un format structuré (JSON)</li>
+        <li><strong>Droit d&apos;opposition</strong>{' '}(art. 21) : vous opposer au traitement fondé sur l&apos;intérêt légitime</li>
+        <li><strong>Droit de retirer votre consentement</strong>{' '}(art. 7(3)) : à tout moment, sans affecter la licéité du traitement antérieur</li>
+        <li><strong>Droit de définir des directives post-mortem</strong>{' '}(art. 32 loi Informatique et Libertés)</li>
       </ul>
       <p>
         <strong>Comment exercer vos droits :</strong>
       </p>
       <ul>
-        <li><strong>Accès, rectification, portabilité</strong> : directement depuis vos paramètres de compte (Paramètres &gt; Exporter mes données)</li>
-        <li><strong>Effacement</strong> : depuis Paramètres &gt; Supprimer mon compte</li>
-        <li><strong>Tout autre droit</strong> : par e-mail à <a href="mailto:dpo@getlibre.fr">dpo@getlibre.fr</a></li>
+        <li><strong>Accès, rectification, portabilité</strong>{' '}: directement depuis vos paramètres de compte (Paramètres &gt; Exporter mes données)</li>
+        <li><strong>Effacement</strong>{' '}: depuis Paramètres &gt; Supprimer mon compte</li>
+        <li><strong>Tout autre droit</strong>{' '}: par e-mail à <a href="mailto:dpo@getlibre.fr">dpo@getlibre.fr</a></li>
       </ul>
       <p>
         Nous répondrons à votre demande dans un délai maximal d&apos;un mois. En cas de difficulté, vous pouvez
-        déposer une réclamation auprès de la <strong>CNIL</strong> : <a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener noreferrer">cnil.fr/fr/plaintes</a>.
+        déposer une réclamation auprès de la <strong>CNIL</strong>{' '}: <a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener noreferrer">cnil.fr/fr/plaintes</a>.
       </p>
 
       {/* ─── 10. Cookies ─── */}
@@ -321,7 +348,7 @@ export default function ConfidentialitePage() {
       {/* ─── 11. Profilage ─── */}
       <h2>11. Profilage et décisions automatisées</h2>
       <p>
-        Libre ne pratique <strong>aucun profilage</strong> au sens du RGPD (art. 22).
+        Libre ne pratique <strong>aucun profilage</strong>{' '}au sens du RGPD (art. 22).
         L&apos;algorithme de découverte se contente de filtrer par localisation, âge et préférences
         déclarées — il ne note pas les utilisateurs, ne prédit pas de comportement et ne prend
         aucune décision automatisée produisant des effets juridiques.

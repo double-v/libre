@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
+import { purgerSecretsLocaux } from '@/lib/session-cleanup';
 import { toast } from '@/lib/toast';
 import AppearanceSettings from '@/components/AppearanceSettings';
 
@@ -89,6 +90,7 @@ export default function SettingsPage() {
       if (!res.ok) {
         throw new Error('Failed to delete account');
       }
+      purgerSecretsLocaux();
       await signOut({ redirect: false });
       router.push('/');
     } catch {
@@ -98,6 +100,7 @@ export default function SettingsPage() {
   }
 
   async function handleSignOut() {
+    purgerSecretsLocaux();
     await signOut({ redirect: false });
     router.push('/login');
   }

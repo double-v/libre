@@ -58,6 +58,21 @@ describe('MessageRow', () => {
     expect(screen.queryByRole('button', { name: 'Options du message' })).toBeNull();
   });
 
+  it('déclare un message illisible au lieu d’afficher le chiffré brut (#198)', () => {
+    const chiffre = 'U2FsdGVkX1+abcdefghijklmnopqrstuvwxyz0123456789ABCDEF==';
+    renderRow({ msg: { ...base, content: chiffre, illisible: true } });
+    expect(screen.getByText('Message illisible sur cet appareil')).toBeInTheDocument();
+    expect(screen.queryByText(chiffre)).toBeNull();
+  });
+
+  it('la suppression prime sur l’illisibilité — un message supprimé reste supprimé', () => {
+    renderRow({
+      msg: { ...base, content: 'CHIFFRE', illisible: true, deletedAt: '2026-01-01T09:05:00Z' },
+    });
+    expect(screen.getByText('Message supprimé')).toBeInTheDocument();
+    expect(screen.queryByText('Message illisible sur cet appareil')).toBeNull();
+  });
+
   it('rend le badge de partage de réseaux, jamais le JSON brut (#207)', () => {
     const share = buildShareContactMessage();
     renderRow({ msg: { ...base, content: share }, isSent: true });
