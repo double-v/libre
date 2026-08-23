@@ -66,6 +66,11 @@ jobs:
     # la contention est *entre* branches, un groupe par réf ne réglerait rien.
     # Il est posé sur ce job seul — `lint` ne touche pas la base et reste parallèle.
     #
+    # Ce garde-fou reste nécessaire, mais il ne suffisait pas : le 2026-08-23 un
+    # `P1002` est survenu alors que la sérialisation avait parfaitement joué (le
+    # run `rc` avait bien attendu la fin du run `main`). La seconde moitié de la
+    # cause était le POOLER — cf. le commentaire du step de migration plus bas.
+    #
     # `cancel-in-progress: false` fait la queue au lieu de tuer le run en cours.
     # Limite connue de GitHub : un seul run peut attendre par groupe ; au-delà,
     # celui qui patientait est annulé. Un « cancelled » reste relançable et
@@ -99,7 +104,37 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
-      - run: npx prisma migrate deploy
+      # Migration : connexion DIRECTE, jamais le pooler.
+      #
+      # `migrate deploy` prend un advisory lock de SESSION
+      # (`pg_advisory_lock(72707369)`). À travers PgBouncer, ce verrou survit au
+      # client : la session serveur est rendue au pool en restant propriétaire du
+      # verrou, puis recyclée pour d'autres requêtes. Elle ne le relâche jamais.
+      # Le run suivant attend 10 s et meurt en `P1002` — sans qu'aucun test n'ait
+      # tourné, ce qui accuse son contenu à tort.
+      #
+      # Observé le 2026-08-23 (run 32629747321, merge de #354) : verrou tenu par
+      # une session `application_name = pgbouncer` idle, six minutes après la fin
+      # de la migration qui l'avait pris. Le verrou finit par disparaître quand
+      # Neon suspend le compute — d'où l'apparence de flakiness : assez long pour
+      # tuer un run, assez court pour n'être plus là quand on enquête.
+      #
+      # Prisma et Neon documentent tous deux la connexion directe pour les
+      # migrations. On dérive l'endpoint direct en retirant `-pooler` plutôt que
+      # d'ajouter un secret : une seule source de vérité, et rien à resynchroniser
+      # le jour où l'URL change. Le `sed` est sans effet si le secret pointe déjà
+      # en direct.
+      - name: Appliquer les migrations (endpoint direct)
+        run: |
+          # Ancré sur l'hôte (entre `@` et `/`) : un mot de passe qui
+          # contiendrait `-pooler.` ne doit pas être réécrit.
+          direct="$(printf '%s' "$DATABASE_URL" | sed 's|@\([^@/]*\)-pooler\.|@\1.|')"
+          if [ "$direct" = "$DATABASE_URL" ]; then
+            echo "DATABASE_URL vise déjà l'endpoint direct."
+          else
+            echo "Bascule pooler → direct pour la migration."
+          fi
+          DATABASE_URL="$direct" npx prisma migrate deploy
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
