@@ -3,7 +3,8 @@
  *
  * Vérifie :
  * 1. Colonne centrée pleine largeur avec gouttières par défaut (mx-auto w-full px-*)
- * 2. L'échelle nommée mappe la bonne largeur : content → max-w-content (~1080px),
+ * 2. L'échelle nommée mappe la bonne largeur : bleed → max-w-bleed (1400px),
+ *    wide → max-w-wide (1180px), content → max-w-content (~1080px),
  *    reading → max-w-reading (~720px), app → max-w-lg (512px)
  * 3. Défaut = content (pages contenu respirent large — densité douce)
  * 4. Balise sémantique via `as` ; className additionnel fusionné ; rest props passés
@@ -36,6 +37,27 @@ describe('<SiteShell />', () => {
 
     rerender(<SiteShell width="app" data-testid="shell">x</SiteShell>);
     expect(screen.getByTestId('shell')).toHaveClass('max-w-lg');
+
+    // Échelons ajoutés par #282 pour donner à #347 le vocabulaire complet.
+    rerender(<SiteShell width="wide" data-testid="shell">x</SiteShell>);
+    expect(screen.getByTestId('shell')).toHaveClass('max-w-wide');
+
+    rerender(<SiteShell width="bleed" data-testid="shell">x</SiteShell>);
+    expect(screen.getByTestId('shell')).toHaveClass('max-w-bleed');
+  });
+
+  it('garde ses gouttières sur wide, mais pas sur bleed (bandeau plein cadre)', () => {
+    // `bleed` est le bandeau ambiant : lui imposer des gouttières le rendrait
+    // plus étroit que la home, qui n'en met pas (cf. .lobby-band).
+    const { rerender } = render(
+      <SiteShell width="wide" data-testid="shell">x</SiteShell>,
+    );
+    expect(screen.getByTestId('shell')).toHaveClass('px-4', 'sm:px-6');
+
+    rerender(<SiteShell width="bleed" data-testid="shell">x</SiteShell>);
+    const el = screen.getByTestId('shell');
+    expect(el).toHaveClass('mx-auto', 'w-full', 'max-w-bleed');
+    expect(el.className).not.toContain('px-');
   });
 
   it('never mixes two width utilities at once', () => {
@@ -44,6 +66,8 @@ describe('<SiteShell />', () => {
     expect(cls).toContain('max-w-lg');
     expect(cls).not.toContain('max-w-content');
     expect(cls).not.toContain('max-w-reading');
+    expect(cls).not.toContain('max-w-wide');
+    expect(cls).not.toContain('max-w-bleed');
   });
 
   it('renders the requested semantic element (default div)', () => {
