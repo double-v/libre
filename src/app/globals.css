@@ -54,9 +54,9 @@
      déjà la bonne. Runtime (donc surchargeable par skin) : le bloc de thème
      Tailwind (inline) ne fait que les exposer via var(), sinon Tailwind les
      figerait à la compilation. `soft` = repos/hover, `pop` = surface flottante.
-     (Ne pas écrire la directive de thème en toutes lettres au-dessus de la
-     ligne 436 : `tests/unit/design-tokens.test.ts` la cherche par indexOf et
-     parserait ce commentaire à la place du vrai bloc.) */
+     (Piège : ne pas écrire la directive de thème en toutes lettres dans un
+     commentaire situé AVANT le vrai bloc — `tests/unit/design-tokens.test.ts`
+     la cherche par indexOf et parserait le commentaire à sa place.) */
   --elev-soft: 0 8px 20px -8px rgb(232 99 74 / 0.18);
   --elev-pop: 0 18px 40px -12px rgb(232 99 74 / 0.35);
 
@@ -527,8 +527,11 @@ html[data-theme='retro'] [data-lobby] {
 
   /* Échelle de largeurs centralisée (#277, épic #273 — cf. DESIGN.md § Shell
      unifié). Source de vérité unique en remplacement des max-w-* dispersés
-     (448/512/672/768/1080). Génèrent max-w-content / max-w-reading; l'app garde
-     max-w-lg (512px, défaut Tailwind). Consommés par le composant SiteShell. */
+     (448/512/672/768/1080). Génèrent max-w-bleed / max-w-wide / max-w-content /
+     max-w-reading ; l'app garde max-w-lg (512px, défaut Tailwind). Consommés par
+     le composant SiteShell. `wide` (1180) et `bleed` (1400) nomment les deux
+     crans que la home portait en dur (#282) — cf. DESIGN.md § Échelle de
+     largeurs, amendement de l'arbitrage #277. */
   --container-bleed: 1400px;
   --container-wide: 1180px;
   --container-content: 1080px;
