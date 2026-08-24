@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+ <meta charset="utf-8">
+ <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+ <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Geist:wght@400;500;600&display=swap">
+ <style>
+ body { margin: 0; background: #fff8f4; font-family: "Geist", system-ui, sans-serif; }
+ a { color: #c4503a; text-decoration: none; } a:hover { color: #9e3a28; }
+ .h { font-family: "Baloo 2", system-ui, sans-serif; }
+ </style>
+</helmet>
+
+<div style="width: 390px; height: 844px; background: #fff8f4; color: #2a1a20; display: flex; flex-direction: column; overflow: hidden;">
+
+ <div style="display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 16px; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid #f0ddd5; flex-shrink: 0;">
+ <div style="width: 28px; height: 28px; border-radius: 999px; background: #e8634a; display: flex; align-items: center; justify-content: center;">
+ <svg width="15" height="15" viewBox="0 0 24 24" fill="#ffffff"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+ </div>
+ <span class="h" style="font-size: 19px; font-weight: 700;">Libre</span>
+ <div style="margin-left: auto; display: flex; gap: 8px;">
+ <span style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 14px; color: #6b5560;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></span>
+ <span style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; align-self: center; border-radius: 999px; background: #fbeee7; color: #9e3a28; font-size: 14px; font-weight: 600;">S</span>
+ </div>
+ </div>
+
+ <div style="flex: 1; overflow: hidden; padding: 18px 16px 0;">
+ <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+ <h1 class="h" style="margin: 0; font-size: 27px; font-weight: 700; letter-spacing: -0.01em;">Découvrir</h1>
+ <span style="display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 15px; border-radius: 14px; border: 1px solid #e2c8bd; background: #ffffff; font-size: 14px; font-weight: 500;">
+ Filtres <span style="width: 6px; height: 6px; border-radius: 999px; background: #e8634a;"></span>
+ </span>
+ </div>
+
+ <div style="display: flex; gap: 3px; padding: 4px; margin-bottom: 18px; border-radius: 16px; background: #fbeee7;">
+ <span style="flex: 1; text-align: center; padding: 10px 6px; border-radius: 12px; background: #ffffff; font-size: 14px; font-weight: 600; box-shadow: 0 2px 8px -2px rgba(232, 99, 74, 0.16);">Pour toi</span>
+ <span style="flex: 1; text-align: center; padding: 10px 6px; border-radius: 12px; font-size: 14px; font-weight: 500; color: #6b5560;">À proximité</span>
+ <span style="flex: 1; text-align: center; padding: 10px 6px; border-radius: 12px; font-size: 14px; font-weight: 500; color: #6b5560;">Croisements</span>
+ </div>
+
+ <div style="border: 1px solid #f0ddd5; border-radius: 24px; background: #ffffff; box-shadow: 0 8px 24px -6px rgba(232, 99, 74, 0.18); overflow: hidden;">
+ <div style="position: relative; height: 300px; background: linear-gradient(150deg, #ffd9c9, #ffe9e0 55%, #fbeee7);">
+ <span style="position: absolute; top: 14px; left: 14px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px; background: rgba(255, 255, 255, 0.9); font-size: 12px; font-weight: 600;">
+ <span style="width: 7px; height: 7px; border-radius: 999px; background: #4ba883;"></span> En ligne
+ </span>
+ <span style="position: absolute; bottom: 14px; left: 14px; padding: 6px 11px; border-radius: 999px; background: rgba(42, 26, 32, 0.55); font-size: 12px; font-weight: 500; color: #ffffff;">à ~280 km</span>
+ <span class="h" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 76px; font-weight: 600; color: rgba(158, 58, 40, 0.22);">M</span>
+ </div>
+ <div style="padding: 18px;">
+ <div style="display: flex; align-items: center; gap: 7px;">
+ <h3 class="h" style="margin: 0; font-size: 21px; font-weight: 600;">Marion, 49</h3>
+ <svg width="17" height="17" viewBox="0 0 24 24" fill="#e8a04e"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 7.7l5.4-.8z"/></svg>
+ </div>
+ <p style="margin: 8px 0 0; font-size: 15px; line-height: 1.55; color: #6b5560;">Je cours le dimanche, je lis le reste du temps. Plutôt lève-tôt.</p>
+ <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px;">
+ <span style="padding: 6px 12px; border-radius: 999px; background: #fbeee7; font-size: 13px; color: #6b5560;">Course</span>
+ <span style="padding: 6px 12px; border-radius: 999px; background: #fbeee7; font-size: 13px; color: #6b5560;">Lecture</span>
+ </div>
+ <div style="display: flex; gap: 10px; margin-top: 18px;">
+ <span style="flex: 1; display: flex; align-items: center; justify-content: center; height: 48px; border-radius: 14px; border: 1px solid #e2c8bd; font-size: 15px; font-weight: 500;">Passer</span>
+ <span style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; height: 48px; border-radius: 14px; background: #e8634a; color: #ffffff; font-size: 15px; font-weight: 600; box-shadow: 0 8px 24px -6px rgba(232, 99, 74, 0.5);">
+ <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+ Like
+ </span>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <div style="display: flex; align-items: center; justify-content: space-around; height: 64px; padding-bottom: 8px; border-top: 1px solid #f0ddd5; background: #ffffff; flex-shrink: 0;">
+ <span style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 14px; color: #c4503a; font-size: 11px; font-weight: 600;">
+ <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+ Découvrir
+ </span>
+ <span style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 14px; color: #6b5560; font-size: 11px; font-weight: 500; position: relative;">
+ <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+ <span style="position: absolute; top: 4px; right: 8px; min-width: 17px; height: 17px; border-radius: 999px; background: #e8634a; color: #ffffff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;">2</span>
+ Messages
+ </span>
+ <span style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 14px; color: #6b5560; font-size: 11px; font-weight: 500;">
+ <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+ La Place
+ </span>
+ <span style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 14px; color: #6b5560; font-size: 11px; font-weight: 500;">
+ <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+ Profil
+ </span>
+ </div>
+</div>
+</x-dc>
+</body>
+</html>

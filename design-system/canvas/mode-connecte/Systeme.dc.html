@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+<head>
+ <meta charset="utf-8">
+ <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+ <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Geist:wght@400;500;600&display=swap">
+ <style>
+ body { margin: 0; background: #fff8f4; font-family: "Geist", system-ui, sans-serif; }
+ a { color: #c4503a; text-decoration: none; } a:hover { color: #9e3a28; }
+ .h { font-family: "Baloo 2", system-ui, sans-serif; }
+ .lbl { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b5560; margin: 0 0 14px; }
+ .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; }
+ </style>
+</helmet>
+
+<div style="box-sizing: border-box; width: 1200px; background: #fff8f4; color: #2a1a20; padding: 56px 48px 64px;">
+
+ <p style="margin: 0 0 10px; display: inline-flex; padding: 8px 12px; border-radius: 20px; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #9e3a28; background: rgba(232, 160, 78, 0.14); border: 1px solid rgba(232, 160, 78, 0.4);">Référence · lots #282 et #347</p>
+ <h1 class="h" style="margin: 0 0 12px; font-size: 40px; font-weight: 700; letter-spacing: -0.01em;">Le système, pas le nombre</h1>
+ <p style="margin: 0 0 44px; font-size: 17px; line-height: 1.6; color: #6b5560; max-width: 720px;">Le thème servi du site est <span class="mono" style="background: #fbeee7; padding: 2px 6px; border-radius: 5px;">cartoon</span> — c'est lui qui donne son allure à la home. L'app connectée l'a déjà : Baloo&nbsp;2, rayons 24&nbsp;px, palette corail. Ce qui lui manque n'est pas la palette, c'est la générosité de mise en page.</p>
+
+ <!-- Échelle de largeurs -->
+ <p class="lbl">Échelle de largeurs</p>
+ <div style="display: flex; flex-direction: column; gap: 11px; margin-bottom: 48px;">
+ <div style="display: flex; align-items: center; gap: 16px;">
+ <span class="mono" style="width: 132px; color: #6b5560;">bleed · 1400</span>
+ <div style="flex: 1; height: 34px; border-radius: 10px; background: repeating-linear-gradient(45deg, #ffe9e0, #ffe9e0 8px, #fbeee7 8px, #fbeee7 16px); display: flex; align-items: center; padding-left: 14px; font-size: 12px; color: #9e3a28;">bandeau ambiant — à créer</div>
+ </div>
+ <div style="display: flex; align-items: center; gap: 16px;">
+ <span class="mono" style="width: 132px; color: #6b5560;">wide · 1180</span>
+ <div style="width: 84%; height: 34px; border-radius: 10px; background: repeating-linear-gradient(45deg, #ffe9e0, #ffe9e0 8px, #fbeee7 8px, #fbeee7 16px); display: flex; align-items: center; padding-left: 14px; font-size: 12px; color: #9e3a28;">hero de la home — à créer</div>
+ </div>
+ <div style="display: flex; align-items: center; gap: 16px;">
+ <span class="mono" style="width: 132px; color: #2a1a20; font-weight: 600;">content · 1080</span>
+ <div style="width: 77%; height: 34px; border-radius: 10px; background: #e8634a; display: flex; align-items: center; padding-left: 14px; font-size: 12px; font-weight: 600; color: #ffffff;">sections de la home ET app connectée — existe déjà</div>
+ </div>
+ <div style="display: flex; align-items: center; gap: 16px;">
+ <span class="mono" style="width: 132px; color: #6b5560;">reading · 720</span>
+ <div style="width: 51%; height: 34px; border-radius: 10px; background: #f09a88; display: flex; align-items: center; padding-left: 14px; font-size: 12px; font-weight: 500; color: #ffffff;">fil de conversation, La Place — existe déjà</div>
+ </div>
+ <div style="display: flex; align-items: center; gap: 16px;">
+ <span class="mono" style="width: 132px; color: #6b5560;">app · 512</span>
+ <div style="width: 36%; height: 34px; border-radius: 10px; background: #e2c8bd; display: flex; align-items: center; padding-left: 14px; font-size: 12px; color: #6b5560;">cesse d'être le plafond de page</div>
+ </div>
+ </div>
+
+ <!-- Parité tokens -->
+ <p class="lbl">Parité home ↔ app — ce que #282 doit calibrer</p>
+ <div style="border: 1px solid #f0ddd5; border-radius: 24px; background: #ffffff; overflow: hidden; margin-bottom: 48px;">
+ <div style="display: grid; grid-template-columns: 190px 1fr 1fr 140px; background: #fbeee7; padding: 14px 20px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #6b5560;">
+ <span>Axe</span><span>Home (--lobby-*)</span><span>App (sémantique)</span><span>Écart</span>
+ </div>
+ <div style="display: grid; grid-template-columns: 190px 1fr 1fr 140px; padding: 15px 20px; border-top: 1px solid #f0ddd5; font-size: 14px; align-items: center;">
+ <span style="font-weight: 600;">Police de titre</span><span class="mono" style="color: #6b5560;">Baloo 2</span><span class="mono" style="color: #6b5560;">Baloo 2</span><span style="color: #3f8f6d; font-weight: 600;">aucun</span>
+ </div>
+ <div style="display: grid; grid-template-columns: 190px 1fr 1fr 140px; padding: 15px 20px; border-top: 1px solid #f0ddd5; font-size: 14px; align-items: center;">
+ <span style="font-weight: 600;">Rayon de carte</span><span class="mono" style="color: #6b5560;">30px</span><span class="mono" style="color: #6b5560;">24px</span><span style="color: #b8862f; font-weight: 600;">à aligner</span>
+ </div>
+ <div style="display: grid; grid-template-columns: 190px 1fr 1fr 140px; padding: 15px 20px; border-top: 1px solid #f0ddd5; font-size: 14px; align-items: center;">
+ <span style="font-weight: 600;">Ombre</span><span class="mono" style="color: #6b5560;">40px / .35 corail</span><span class="mono" style="color: #6b5560;">24px / .16 corail</span><span style="color: #b8862f; font-weight: 600;">2× trop plate</span>
+ </div>
+ <div style="display: grid; grid-template-columns: 190px 1fr 1fr 140px; padding: 15px 20px; border-top: 1px solid #f0ddd5; font-size: 14px; align-items: center;">
+ <span style="font-weight: 600;">Nav translucide</span><span class="mono" style="color: #6b5560;">--nav-bg surchargé</span><span class="mono" style="color: #6b5560;">--nav-bg + blur</span><span style="color: #3f8f6d; font-weight: 600;">déjà promu</span>
+ </div>
+ <div style="display: grid; grid-template-columns: 190px 1fr 1fr 140px; padding: 15px 20px; border-top: 1px solid #f0ddd5; font-size: 14px; align-items: center;">
+ <span style="font-weight: 600;">Panneau vitré</span><span class="mono" style="color: #6b5560;">dégradé + blur 6px</span><span class="mono" style="color: #a08a80;">—</span><span style="color: #c4503a; font-weight: 600;">à créer</span>
+ </div>
+ <div style="display: grid; grid-template-columns: 190px 1fr 1fr 140px; padding: 15px 20px; border-top: 1px solid #f0ddd5; font-size: 14px; align-items: center;">
+ <span style="font-weight: 600;">Rythme de section</span><span class="mono" style="color: #6b5560;">72px / gap 20px</span><span class="mono" style="color: #a08a80;">py-6 ad hoc</span><span style="color: #c4503a; font-weight: 600;">à tokeniser</span>
+ </div>
+ </div>
+
+ <!-- Grille -->
+ <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 48px;">
+ <div>
+ <p class="lbl">Grille — celle de .lobby-humans__grid</p>
+ <div style="border: 1px solid #f0ddd5; border-radius: 24px; background: #ffffff; padding: 22px;">
+ <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-bottom: 16px;">
+ <div style="height: 78px; border-radius: 16px; background: #ffe9e0;"></div>
+ <div style="height: 78px; border-radius: 16px; background: #ffe9e0;"></div>
+ <div style="height: 78px; border-radius: 16px; background: #ffe9e0;"></div>
+ </div>
+ <p class="mono" style="margin: 0; color: #6b5560;">repeat(3, minmax(0,1fr)) · gap 20px<br>→ 1 colonne sous 720px</p>
+ </div>
+ </div>
+ <div>
+ <p class="lbl">Cible tactile — plancher 44px</p>
+ <div style="border: 1px solid #f0ddd5; border-radius: 24px; background: #ffffff; padding: 22px;">
+ <div style="display: flex; gap: 12px; margin-bottom: 16px; align-items: center;">
+ <span style="display: flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border-radius: 14px; background: #e8634a; color: #ffffff; font-size: 15px; font-weight: 600; box-shadow: 0 10px 24px -8px rgba(232, 99, 74, 0.5);">Primaire</span>
+ <span style="display: flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border-radius: 14px; border: 1px solid #e2c8bd; font-size: 15px; font-weight: 500;">Secondaire</span>
+ <span style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 14px; border: 1px solid #e2c8bd; color: #6b5560;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+ </div>
+ <p class="mono" style="margin: 0; color: #6b5560;">hauteur 44px · rayon 14px (--rad-control)</p>
+ </div>
+ </div>
+ </div>
+
+ <!-- Palette -->
+ <p class="lbl">Palette cartoon — clair et sombre</p>
+ <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+ <div style="border: 1px solid #f0ddd5; border-radius: 24px; background: #ffffff; padding: 22px;">
+ <p style="margin: 0 0 16px; font-size: 14px; font-weight: 600;">Clair</p>
+ <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+ <div><div style="height: 52px; border-radius: 12px; background: #fff8f4; border: 1px solid #f0ddd5;"></div><p class="mono" style="margin: 7px 0 0; color: #6b5560;">#fff8f4</p></div>
+ <div><div style="height: 52px; border-radius: 12px; background: #ffe9e0;"></div><p class="mono" style="margin: 7px 0 0; color: #6b5560;">#ffe9e0</p></div>
+ <div><div style="height: 52px; border-radius: 12px; background: #e8634a;"></div><p class="mono" style="margin: 7px 0 0; color: #6b5560;">#e8634a</p></div>
+ <div><div style="height: 52px; border-radius: 12px; background: #2a1a20;"></div><p class="mono" style="margin: 7px 0 0; color: #6b5560;">#2a1a20</p></div>
+ </div>
+ </div>
+ <div style="border: 1px solid #3a2a30; border-radius: 24px; background: #1c1016; padding: 22px;">
+ <p style="margin: 0 0 16px; font-size: 14px; font-weight: 600; color: #fdf3ee;">Sombre — l'ambiance de la home</p>
+ <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+ <div><div style="height: 52px; border-radius: 12px; background: #1c1016; border: 1px solid #3a2a30;"></div><p class="mono" style="margin: 7px 0 0; color: #cbb8b0;">#1c1016</p></div>
+ <div><div style="height: 52px; border-radius: 12px; background: #241419;"></div><p class="mono" style="margin: 7px 0 0; color: #cbb8b0;">#241419</p></div>
+ <div><div style="height: 52px; border-radius: 12px; background: #ff9478;"></div><p class="mono" style="margin: 7px 0 0; color: #cbb8b0;">#ff9478</p></div>
+ <div><div style="height: 52px; border-radius: 12px; background: #ffd27a;"></div><p class="mono" style="margin: 7px 0 0; color: #cbb8b0;">#ffd27a</p></div>
+ </div>
+ </div>
+ </div>
+</div>
+</x-dc>
+</body>
+</html>

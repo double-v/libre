@@ -1,0 +1,189 @@
+{
+ "artboards": [
+ {
+ "file": "Main.dc.html",
+ "page": "desktop",
+ "x": 0,
+ "y": 0,
+ "w": 1440,
+ "h": 1330,
+ "title": "Découvrir — Pour toi"
+ },
+ {
+ "file": "Proximite.dc.html",
+ "page": "desktop",
+ "x": 1560,
+ "y": 0,
+ "w": 1440,
+ "h": 1160,
+ "title": "Découvrir — À proximité (sombre)"
+ },
+ {
+ "file": "Lancement.dc.html",
+ "page": "desktop",
+ "x": 3120,
+ "y": 0,
+ "w": 1440,
+ "h": 1750,
+ "title": "Découvrir — état de lancement"
+ },
+ {
+ "file": "Croisements.dc.html",
+ "page": "desktop",
+ "x": 0,
+ "y": 1890,
+ "w": 1440,
+ "h": 960,
+ "title": "Découvrir — Croisements"
+ },
+ {
+ "file": "Messages.dc.html",
+ "page": "desktop",
+ "x": 1560,
+ "y": 1890,
+ "w": 1440,
+ "h": 960,
+ "title": "Messages"
+ },
+ {
+ "file": "Conversation.dc.html",
+ "page": "desktop",
+ "x": 3120,
+ "y": 1890,
+ "w": 1440,
+ "h": 960,
+ "title": "Conversation"
+ },
+ {
+ "file": "LaPlace.dc.html",
+ "page": "desktop",
+ "x": 0,
+ "y": 2990,
+ "w": 1440,
+ "h": 1130,
+ "title": "La Place — polish"
+ },
+ {
+ "file": "Profil.dc.html",
+ "page": "desktop",
+ "x": 1560,
+ "y": 2990,
+ "w": 1440,
+ "h": 1230,
+ "title": "Mon profil"
+ },
+ {
+ "file": "Parametres.dc.html",
+ "page": "desktop",
+ "x": 3120,
+ "y": 2990,
+ "w": 1440,
+ "h": 1000,
+ "title": "Paramètres"
+ },
+ {
+ "file": "MobileDecouvrir.dc.html",
+ "page": "mobile",
+ "x": 0,
+ "y": 0,
+ "w": 390,
+ "h": 844,
+ "title": "Découvrir"
+ },
+ {
+ "file": "MobileLaPlace.dc.html",
+ "page": "mobile",
+ "x": 500,
+ "y": 0,
+ "w": 390,
+ "h": 844,
+ "title": "La Place"
+ },
+ {
+ "file": "MobileConversation.dc.html",
+ "page": "mobile",
+ "x": 1000,
+ "y": 0,
+ "w": 390,
+ "h": 844,
+ "title": "Conversation"
+ },
+ {
+ "file": "Systeme.dc.html",
+ "page": "systeme",
+ "x": 0,
+ "y": 0,
+ "w": 1200,
+ "h": 1600,
+ "title": "Système de layout"
+ }
+ ],
+ "annotations": [
+ {
+ "id": "note-lot-347",
+ "page": "desktop",
+ "x": 0,
+ "y": -190,
+ "w": 460,
+ "text": "LOT #347 — fondations\n\nColonne content 1080, sections dans SiteNav dès md, tab bar masquée en desktop.\n\nLes trois écrans de cette rangée montrent la grille 3 colonnes de la home (.lobby-humans__grid : gap 20px, 1 colonne sous 720px)."
+ },
+ {
+ "id": "note-lancement",
+ "page": "desktop",
+ "x": 3120,
+ "y": -190,
+ "w": 460,
+ "text": "LOT #348 + #346 — le vide comme cas nominal\n\nLes vignettes en pointillés complètent la rangée au lieu de n'apparaître qu'à zéro profil. Jamais confondables avec une personne.\n\nLa carte de parrainage est UNIQUE et vit en fin de grille."
+ },
+ {
+ "id": "note-lot-349",
+ "page": "desktop",
+ "x": 3120,
+ "y": 1700,
+ "w": 460,
+ "text": "LOT #349 — conversation\n\nLe fil reste à largeur de lecture (720) dans la colonne 1080 : un message sur 1080px est illisible.\n\nLe composeur est ancré au fil, pas à la fenêtre. Corriger #339 avant ou dans le même lot."
+ },
+ {
+ "id": "note-place",
+ "page": "desktop",
+ "x": 0,
+ "y": 2790,
+ "w": 460,
+ "text": "LA PLACE — polish\n\nLe reset quotidien devient un rituel affiché (compte à rebours) au lieu d'une disparition subie.\n\nLe pseudonyme du jour et la présence sont mis en avant : c'est ce qui donne envie d'entrer.\n\nAucune classe .lobby-* ici — le panneau vitré passe par un token sémantique (#282)."
+ },
+ {
+ "id": "note-mobile",
+ "page": "mobile",
+ "x": 0,
+ "y": -230,
+ "w": 470,
+ "text": "MOBILE — inchangé par la repasse\n\nSous md, tout reste exactement comme aujourd'hui : colonne unique, bottom tab bar, safe-area.\n\nPas de fausse barre d'état ni de faux clavier : sur un vrai téléphone, le système les dessine par-dessus.\n\nEn conversation la tab bar cède la place au composeur — c'est la racine du bug #339."
+ },
+ {
+ "id": "note-systeme",
+ "page": "systeme",
+ "x": 0,
+ "y": -230,
+ "w": 470,
+ "text": "PRÉREQUIS #282\n\nLe thème servi est cartoon : Baloo 2 et les rayons 24px sont DÉJÀ dans l'app.\n\nCe qui manque : deux échelons de largeur, le panneau vitré, le rythme de section, et une ombre deux fois plus profonde.\n\nCalibrage, pas réécriture."
+ }
+ ],
+ "launch": {
+ "view": "canvas",
+ "page": "desktop"
+ },
+ "pages": [
+ {
+ "id": "desktop",
+ "name": "Écrans desktop"
+ },
+ {
+ "id": "mobile",
+ "name": "Mobile"
+ },
+ {
+ "id": "systeme",
+ "name": "Système"
+ }
+ ]
+}
