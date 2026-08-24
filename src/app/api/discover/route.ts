@@ -384,12 +384,6 @@ export async function GET(request: NextRequest) {
         keys: users.flatMap((u) => u.photos),
         viewerThreshold: myProfile?.photoSensitivityOptIn,
         isOwner: false,
-        // Rôle lu depuis le JWT, et non relu en base comme dans le proxy :
-        // ici il ne décide d'aucun accès, seulement de l'endroit où poser le
-        // voile. Un jeton périmé afficherait au pire un bouton « Voir » en
-        // trop, jamais une photo qui aurait dû rester floutée — la garde, elle,
-        // est côté proxy.
-        isAdmin: session.user.role === 'ADMIN',
       }),
     );
     for (const u of users) {

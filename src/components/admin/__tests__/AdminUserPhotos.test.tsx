@@ -51,7 +51,10 @@ describe('<AdminUserPhotos />', () => {
 
   it('passe par le proxy signé plutôt que par une URL R2 en dur', () => {
     setup(['u-1/a.jpg']);
-    expect(screen.getByRole('img')).toHaveAttribute('src', '/api/photos/u-1%2Fa.jpg');
+    // `reveal=1` : depuis #359 le rôle n'ouvre plus l'original tout seul — la
+    // galerie de modération le demande, comme le bouton « Voir » des lecteurs.
+    // Sans ce paramètre elle n'afficherait que des aplats flous.
+    expect(screen.getByRole('img')).toHaveAttribute('src', '/api/photos/u-1%2Fa.jpg?reveal=1');
   });
 
   it('gère un profil sans photo', () => {

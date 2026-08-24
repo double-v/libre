@@ -133,7 +133,10 @@ export default function AdminUserPhotos({
                     next/image la mettrait en cache sous une clé périmée. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={photoUrl(key)}
+                  // `reveal=1` : la modération demande l'original, explicitement — c'est le
+                  // même canal que le bouton « Voir » des lecteurs. Sans ça, depuis que le
+                  // rôle n'ouvre plus rien, la galerie n'afficherait que des aplats flous.
+                  src={`${photoUrl(key)}?reveal=1`}
                   alt={`Photo ${i + 1} de ${displayName}`}
                   className="h-32 w-32 object-cover text-xs text-muted"
                 />

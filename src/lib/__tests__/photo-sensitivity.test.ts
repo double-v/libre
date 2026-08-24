@@ -13,7 +13,7 @@ import {
   isSensitivityThreshold,
 } from '../photo-sensitivity';
 
-const VISITEUR = { isOwner: false, isAdmin: false, reveal: false };
+const VISITEUR = { isOwner: false, reveal: false };
 
 describe('canSeeOriginal — photo non classée', () => {
   it('ne change rien au comportement d\'avant la feature', () => {
@@ -41,30 +41,45 @@ describe('canSeeOriginal — seuil du lecteur', () => {
   });
 });
 
-describe('canSeeOriginal — propriétaire et admin', () => {
+describe('canSeeOriginal — propriétaire', () => {
   it('laisse toujours voir ses propres photos, quel que soit son seuil', () => {
     expect(canSeeOriginal({
-      level: 'explicit', viewerThreshold: 'none', isOwner: true, isAdmin: false, reveal: false,
+      level: 'explicit', viewerThreshold: 'none', isOwner: true, reveal: false,
     })).toBe(true);
   });
 
-  it('laisse l\'admin voir l\'original : il ne peut pas modérer ce qu\'il ne voit pas', () => {
+  // Le rôle ouvrait tout, partout : un admin ne voyait donc jamais le flou et
+  // ne pouvait pas vérifier son propre classement. La modération passe
+  // maintenant par `reveal`, comme tout le monde.
+  it('n\'ouvre plus rien sur le seul rôle : un admin voit le flou comme les autres', () => {
     expect(canSeeOriginal({
-      level: 'explicit', viewerThreshold: 'none', isOwner: false, isAdmin: true, reveal: false,
+      level: 'explicit', viewerThreshold: 'none', isOwner: false, reveal: false,
+    })).toBe(false);
+    expect(canSeeOriginal({
+      level: 'explicit', viewerThreshold: 'none', isOwner: false, reveal: true,
     })).toBe(true);
+  });
+
+  it('respecte le seuil que l\'admin a choisi pour lui-même', () => {
+    expect(canSeeOriginal({
+      level: 'suggestive', viewerThreshold: 'suggestive', isOwner: false, reveal: false,
+    })).toBe(true);
+    expect(canSeeOriginal({
+      level: 'explicit', viewerThreshold: 'suggestive', isOwner: false, reveal: false,
+    })).toBe(false);
   });
 });
 
 describe('canSeeOriginal — le clic « Voir »', () => {
   it('révèle même quand le seuil du lecteur dit non (le flou est une porte)', () => {
     expect(canSeeOriginal({
-      level: 'explicit', viewerThreshold: 'none', isOwner: false, isAdmin: false, reveal: true,
+      level: 'explicit', viewerThreshold: 'none', isOwner: false, reveal: true,
     })).toBe(true);
   });
 
   it('sans le geste, rien ne part — c\'est la propriété qui compte', () => {
     expect(canSeeOriginal({
-      level: 'explicit', viewerThreshold: 'none', isOwner: false, isAdmin: false, reveal: false,
+      level: 'explicit', viewerThreshold: 'none', isOwner: false, reveal: false,
     })).toBe(false);
   });
 });

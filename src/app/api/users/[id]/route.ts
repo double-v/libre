@@ -93,12 +93,6 @@ export async function GET(
         keys: user.profile.photos,
         viewerThreshold: viewer?.photoSensitivityOptIn,
         isOwner: isSelf,
-        // Rôle lu depuis le JWT, et non relu en base comme dans le proxy :
-        // ici il ne décide d'aucun accès, seulement de l'endroit où poser le
-        // voile. Un jeton périmé afficherait au pire un bouton « Voir » en
-        // trop, jamais une photo qui aurait dû rester floutée — la garde, elle,
-        // est côté proxy.
-        isAdmin: session.user.role === 'ADMIN',
       });
 
       // Pratiques : réservées aux matches par défaut (#328). La clé est omise

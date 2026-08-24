@@ -72,8 +72,6 @@ export interface SeeOriginalInput {
   viewerThreshold: string | null | undefined;
   /** Le lecteur est le propriétaire de la photo. */
   isOwner: boolean;
-  /** Le lecteur est administrateur (accès déjà journalisé en amont). */
-  isAdmin: boolean;
   /** Le lecteur a cliqué « Voir » : consentement ponctuel, sans mémoire. */
   reveal: boolean;
 }
@@ -89,9 +87,15 @@ export interface SeeOriginalInput {
 export function canSeeOriginal(input: SeeOriginalInput): boolean {
   // Photo non classée : rien ne change par rapport à avant la feature.
   if (!input.level) return true;
-  // Ses propres photos restent nettes, et l'admin doit pouvoir modérer ce
-  // qu'il ne peut pas voir autrement.
-  if (input.isOwner || input.isAdmin) return true;
+  // Ses propres photos restent nettes.
+  //
+  // Le rôle d'admin, lui, n'ouvre plus rien ici. Il le faisait, et le résultat
+  // était qu'un admin ne voyait *jamais* le flou : son propre seuil était
+  // ignoré partout dans l'app, donc il ne pouvait pas vérifier son propre
+  // classement — une photo classée lui apparaissait exactement comme une photo
+  // ordinaire. La modération passe désormais par le même canal que tout le
+  // monde, `reveal` : un geste explicite, tracé par la galerie admin.
+  if (input.isOwner) return true;
   if (input.reveal) return true;
   return levelRank(input.level) <= thresholdRank(input.viewerThreshold);
 }

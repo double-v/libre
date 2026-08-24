@@ -1,6 +1,7 @@
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { fileTypeFromBuffer } from 'file-type';
+import { blurredDerivativeBuffer } from '@/lib/photo-blur';
 import { blurredKeyFor } from '@/lib/photo-sensitivity';
 
 function getR2Client(): S3Client | null {
@@ -105,7 +106,7 @@ export async function deletePhoto(key: string): Promise<void> {
  * laisserait l'original arriver dans le navigateur, donc lisible dans l'onglet
  * réseau — la garantie ne serait qu'un décor (cf. #328).
  *
- * On **réduit fortement avant de flouter**, et c'est le point important : un
+ * On **réduit fortement avant de flouter** (cf. `photo-blur.ts`) : un
  * flou gaussien seul est partiellement réversible (déconvolution), alors qu'un
  * sous-échantillonnage détruit l'information pour de bon. Le
  * ré-agrandissement qui suit ne sert qu'à garder une vignette aux bonnes
@@ -127,24 +128,7 @@ export async function generateBlurredDerivative(key: string): Promise<string> {
   }
   const buffer = Buffer.from(await original.Body.transformToByteArray());
 
-  // Import dynamique : `sharp` est un binaire natif lourd, inutile de le
-  // charger dans les routes qui ne floutent rien.
-  const sharp = (await import('sharp')).default;
-
-  // DEUX PASSES, et c'est indispensable : sharp ne chaîne pas deux `resize`
-  // dans un même pipeline — le second écrase le premier. Enchaînés, le
-  // sous-échantillonnage n'aurait jamais lieu et il ne resterait qu'un flou
-  // léger sur l'image pleine taille : un texte y reste parfaitement lisible
-  // (vérifié sur pixels, un numéro de téléphone se lisait encore).
-  const minuscule = await sharp(buffer)
-    .resize(16, 16, { fit: 'inside' })    // l'information disparaît ici
-    .toBuffer();
-
-  const blurred = await sharp(minuscule)
-    .blur(4)                              // adoucit les marches d'escalier
-    .resize(512, 512, { fit: 'inside', kernel: 'cubic' })
-    .jpeg({ quality: 70 })
-    .toBuffer();
+  const blurred = await blurredDerivativeBuffer(buffer, key);
 
   const blurredKey = blurredKeyFor(key);
   await client.send(new PutObjectCommand({
@@ -156,3 +140,4 @@ export async function generateBlurredDerivative(key: string): Promise<string> {
 
   return blurredKey;
 }
+
