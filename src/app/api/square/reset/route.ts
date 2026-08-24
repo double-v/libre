@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
-import { getTodayThemeConfig } from '@/lib/square/themes-server';
-import { addSystemMessage, broadcastReset } from '@/lib/square/store';
+import { resetSquare } from '@/lib/square/reset';
 
+/**
+ * Reset de La Place déclenché par le cron Vercel.
+ *
+ * Ce chemin n'a **jamais** tourné en prod : aucun `CRON_SECRET` n'y est défini,
+ * donc la garde ci-dessous répondait 401 à chaque passage, en silence (#13).
+ * Il reste en place — le jour où le secret existe, il redevient une ceinture —
+ * mais le reset ne dépend plus de lui : `ensureSquareFresh()` l'exécute au
+ * premier passage HTTP après l'heure dite.
+ */
 export async function GET(request: NextRequest) {
-  // Verify CRON_SECRET from Authorization header
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
@@ -12,25 +18,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Delete all reactions and messages
-  const deletedReactions = await getDb().squareReaction.deleteMany({});
-  const deletedMessages = await getDb().squareMessage.deleteMany({});
-
-  // Delete resolved/dismissed reports (keep pending ones)
-  await getDb().squareMessageReport.deleteMany({
-    where: { status: { not: 'pending' } },
-  });
-
-  // Create a system welcome message with today's theme label
-  const theme = await getTodayThemeConfig();
-  await addSystemMessage(`🗳️ Bienvenue sur La Place ! Aujourd'hui : ${theme.label}. ${theme.description}`);
-
-  // Broadcast reset to all connected clients
-  broadcastReset();
+  const outcome = await resetSquare();
 
   return NextResponse.json({
     success: true,
-    deletedMessages: deletedMessages.count,
-    deletedReactions: deletedReactions.count,
+    deletedMessages: outcome.deletedMessages,
+    deletedReactions: outcome.deletedReactions,
   });
 }
