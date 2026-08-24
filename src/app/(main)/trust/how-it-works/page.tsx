@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { TrustBadge } from '@/components/TrustBadge';
 import type { TrustBand } from '@/lib/trust/compute-level';
+import SiteShell from '@/components/ui/SiteShell';
 
 export const metadata: Metadata = {
   title: 'Comment marche la confiance',
@@ -57,7 +58,7 @@ const NEGATIVE_FACTORS: { label: string; points: string; how: string }[] = [
 
 export default function TrustHowItWorksPage() {
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
+    <SiteShell className="py-6 md:pb-section md:pt-11">
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-content">
           Comment marche la confiance
@@ -137,6 +138,6 @@ export default function TrustHowItWorksPage() {
           Voir mon niveau et mon Cercle
         </Link>
       </div>
-    </div>
+    </SiteShell>
   );
 }

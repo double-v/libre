@@ -7,6 +7,7 @@ import SearchFilters, { EMPTY_SEARCH_FILTERS, hasActiveFilters, type SearchFilte
 import EmptyStateCards from '@/components/EmptyStateCards';
 import CrossingsView from '@/components/CrossingsView';
 import Button from '@/components/ui/Button';
+import SiteShell from '@/components/ui/SiteShell';
 
 // Onglet unique de découverte : un seul écran, trois façons de rencontrer.
 // « Pour toi » = feed algorithmique, « À proximité » = rayon géoloc,
@@ -290,7 +291,7 @@ export default function DiscoverPage() {
   const visibleUsers = users.filter((u) => !passedIds.has(u.userId));
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
+    <SiteShell className="py-6 md:pb-section md:pt-11">
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-content">Découvrir</h1>
@@ -445,6 +446,6 @@ export default function DiscoverPage() {
         // que de refetcher tout le feed pour faire disparaître une carte.
         onBlocked={(id) => setPassedIds((prev) => new Set(prev).add(id))}
       />
-    </div>
+    </SiteShell>
   );
 }

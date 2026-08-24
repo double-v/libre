@@ -104,3 +104,57 @@ describe('MainLayout — shell migration (#280)', () => {
     expect(screen.getByText('Bêta')).toBeInTheDocument();
   });
 });
+
+/**
+ * Fondations desktop (#347, amendement de l'épic #273).
+ *
+ * L'app connectée quitte sa colonne mobile-first pour la largeur `content` de la
+ * home, et les quatre sections changent de surface selon le breakpoint : barre du
+ * haut à partir de `md`, tab bar en-dessous. Ces tests verrouillent le contrat de
+ * structure ; ils ne voient aucun pixel — le recouvrement des deux navs et
+ * l'espace mort en bas de page se vérifient en E2E (cf. CLAUDE.md).
+ */
+describe('MainLayout — fondations desktop (#347)', () => {
+  it('sert la colonne `content` au lieu de la colonne `app`', () => {
+    render(
+      <MainLayout>
+        <p>Contenu app</p>
+      </MainLayout>,
+    );
+    const topNav = screen.getByRole('navigation', { name: 'Navigation principale' });
+    // La colonne interne de la barre est le SiteShell : elle donne la largeur de
+    // page, donc c'est elle qui doit avoir quitté max-w-lg.
+    const column = topNav.firstElementChild;
+    expect(column).toHaveClass('max-w-content');
+    expect(column).not.toHaveClass('max-w-lg');
+  });
+
+  it('monte les sections dans la barre du haut à partir de md', () => {
+    render(
+      <MainLayout>
+        <p>Contenu app</p>
+      </MainLayout>,
+    );
+    const topNav = screen.getByRole('navigation', { name: 'Navigation principale' });
+    for (const label of ['Découvrir', 'Messages', 'La Place', 'Profil']) {
+      expect(within(topNav).getByRole('link', { name: label })).toBeInTheDocument();
+    }
+    // usePathname est figé sur /discover par le mock du fichier.
+    expect(within(topNav).getByRole('link', { name: 'Découvrir' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+  });
+
+  it('masque la tab bar à partir de md — un seul landmark par breakpoint', () => {
+    render(
+      <MainLayout>
+        <p>Contenu app</p>
+      </MainLayout>,
+    );
+    const tabBar = screen.getByRole('navigation', { name: 'Navigation des sections' });
+    expect(tabBar).toHaveClass('md:hidden');
+    // Sous md rien ne change : la barre reste fixée en bas, avec sa safe-area.
+    expect(tabBar).toHaveClass('fixed', 'bottom-0', 'pb-safe');
+  });
+});

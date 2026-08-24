@@ -157,3 +157,57 @@ describe('<SiteNav /> — dérivation depuis la session', () => {
     expect(screen.getByRole('link', { name: 'Paramètres' })).toBeInTheDocument();
   });
 });
+
+/**
+ * Sections de l'app dans la barre (#347, amendement desktop de l'épic #273).
+ *
+ * Deux surfaces rendent les mêmes quatre destinations à des breakpoints
+ * différents — `SiteNav` à partir de `md`, la bottom tab bar en-dessous — et ne
+ * coexistent jamais. Ces tests verrouillent le contrat de la surface desktop :
+ * qui les affiche, laquelle est marquée active, et le plancher de cible tactile.
+ * Ils ne prouvent rien sur des pixels : l'empilement des deux navs se vérifie
+ * en E2E (cf. CLAUDE.md, deux gates).
+ */
+describe('<SiteNavView /> — sections de l’app (#347)', () => {
+  const sections = ['Découvrir', 'Messages', 'La Place', 'Profil'];
+
+  it('renders the four sections for the authed variant when asked', () => {
+    render(<SiteNavView variant="authed" showSections pathname="/discover" />);
+    for (const label of sections) {
+      expect(screen.getByRole('link', { name: label })).toBeInTheDocument();
+    }
+    expect(screen.getByRole('link', { name: 'Messages' })).toHaveAttribute('href', '/messages');
+    expect(screen.getByRole('link', { name: 'La Place' })).toHaveAttribute('href', '/square');
+  });
+
+  it('keeps them out of the guest bar and of the authed bar that did not ask', () => {
+    // Un inscrit qui lit /manifesto est bien `authed` : la page n'est pas l'app
+    // pour autant, et n'a pas de tab bar à remplacer. D'où l'opt-in explicite.
+    const { unmount } = render(<SiteNavView variant="authed" pathname="/manifesto" />);
+    expect(screen.queryByRole('link', { name: 'Découvrir' })).toBeNull();
+    unmount();
+
+    render(<SiteNavView variant="guest" showSections pathname="/" />);
+    expect(screen.queryByRole('link', { name: 'Découvrir' })).toBeNull();
+  });
+
+  it('marks the current section — and stays marked on its sub-routes', () => {
+    const { unmount } = render(<SiteNavView variant="authed" showSections pathname="/messages" />);
+    expect(screen.getByRole('link', { name: 'Messages' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Découvrir' })).not.toHaveAttribute('aria-current');
+    unmount();
+
+    // /messages/abc reste dans Messages : l'état actif suit la sous-route.
+    render(<SiteNavView variant="authed" showSections pathname="/messages/abc" />);
+    expect(screen.getByRole('link', { name: 'Messages' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('hides them below md and holds the 44px touch floor', () => {
+    render(<SiteNavView variant="authed" showSections pathname="/discover" />);
+    const discover = screen.getByRole('link', { name: 'Découvrir' });
+    // Sous `md`, c'est la tab bar qui navigue : un seul landmark par breakpoint.
+    expect(discover.parentElement).toHaveClass('hidden', 'md:flex');
+    // La pastille du canvas fait 40px ; la cible, elle, garde le plancher.
+    expect(discover).toHaveClass('min-h-[44px]');
+  });
+});

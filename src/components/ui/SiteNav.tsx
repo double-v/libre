@@ -2,10 +2,12 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import ThemeToggle from './ThemeToggle';
 import SiteShell, { type ShellWidth } from './SiteShell';
 import HeartMark from './HeartMark';
+import { APP_SECTIONS, isSectionActive } from './AppSections';
 
 /**
  * SiteNav — nav unique du shell unifié (#276, épic #273).
@@ -24,8 +26,10 @@ import HeartMark from './HeartMark';
  * porte le `ThemeToggle` (axe Mode seul) ; le choix du thème vit dans les
  * Paramètres. La variante guest (dont la landing) n'expose **aucun** sélecteur.
  *
- * La bottom tab bar reste la nav de sections de l'app connectée : les deux
- * coexistent, on ne les fusionne pas.
+ * Nav de sections (#347, amendement desktop de l'épic #273) : à partir de `md`,
+ * la variante connectée porte elle-même les quatre sections (`showSections`) et
+ * la bottom tab bar s'efface. Sous `md`, l'inverse. Les deux ne coexistent plus
+ * — un seul landmark de navigation par breakpoint.
  */
 export type SiteNavVariant = 'guest' | 'authed';
 
@@ -38,6 +42,14 @@ export interface SiteNavViewProps {
   width?: ShellWidth;
   /** Contenu rendu au-dessus de la barre, dans le conteneur sticky (ex. bannière). */
   banner?: ReactNode;
+  /**
+   * Rend les quatre sections de l'app à partir de `md` (#347). Explicite, et non
+   * déduit de la session : un inscrit qui lit `/manifesto` est bien `authed`, mais
+   * cette page n'est pas l'app et n'a pas de tab bar à remplacer.
+   */
+  showSections?: boolean;
+  /** Route courante, pour l'état actif des sections (résolue par `SiteNav`). */
+  pathname?: string;
 }
 
 // Tokens only (cf. CLAUDE.md) : texte via --nav-* (theme-aware, always-dark sous
@@ -52,12 +64,27 @@ const textLinkClass =
   'min-h-[44px] items-center whitespace-nowrap px-2 text-sm font-medium text-nav-text-dim transition-colors hover:text-nav-text focus-visible:outline-none focus-visible:shadow-focus';
 const ctaClass =
   'inline-flex min-h-[44px] items-center whitespace-nowrap rounded-full bg-coral px-4 text-sm font-semibold text-white transition-colors hover:bg-terracotta focus-visible:outline-none focus-visible:shadow-focus';
+// Sections (#347) : pastille pleine à l'état actif, comme au canvas de référence
+// (design-system/canvas/mode-connecte). La cible tactile fait 44px, la pastille
+// 40px — le canvas dessine 40px partout, le plancher de CLAUDE.md prime.
+// L'encre de l'état actif est `content` et non `terracotta` : sur `--sunken`,
+// terracotta plafonne à 3,95:1, sous le seuil AA de 4,5:1 pour ce corps de texte.
+const sectionLinkClass =
+  'inline-flex min-h-[44px] items-center whitespace-nowrap rounded-control text-[15px] focus-visible:outline-none focus-visible:shadow-focus';
+const sectionPillClass = 'flex h-10 items-center gap-2 rounded-control px-4 transition-colors';
 
 /**
  * Partie présentationnelle pure (sans session) — toute la logique de rendu.
  * Exportée pour être testée directement (variantes + a11y) sans SessionProvider.
  */
-export function SiteNavView({ variant, isAdmin = false, width = 'content', banner }: SiteNavViewProps) {
+export function SiteNavView({
+  variant,
+  isAdmin = false,
+  width = 'content',
+  banner,
+  showSections = false,
+  pathname = '',
+}: SiteNavViewProps) {
   const authed = variant === 'authed';
 
   return (
@@ -65,7 +92,38 @@ export function SiteNavView({ variant, isAdmin = false, width = 'content', banne
       {banner}
       <nav aria-label="Navigation principale">
         <SiteShell width={width} className="flex items-center justify-between gap-2 py-2">
-          <Brand href={authed ? '/discover' : '/'} />
+          <div className="flex items-center gap-7">
+            <Brand href={authed ? '/discover' : '/'} />
+
+            {/* Sections adossées à la marque (#347) — masquées sous `md`, où la
+                bottom tab bar prend le relais. */}
+            {authed && showSections && (
+              <div className="hidden items-center gap-0.5 md:flex">
+                {APP_SECTIONS.map(({ href, label, Icon }) => {
+                  const active = isSectionActive(href, pathname);
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      aria-current={active ? 'page' : undefined}
+                      className={sectionLinkClass}
+                    >
+                      <span
+                        className={`${sectionPillClass} ${
+                          active
+                            ? 'bg-sunken font-semibold text-content'
+                            : 'font-medium text-nav-text-dim hover:bg-fill-subtle hover:text-nav-text'
+                        }`}
+                      >
+                        <Icon active={active} width={18} height={18} />
+                        {label}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           <div className="flex items-center gap-1 sm:gap-2">
             {authed ? (
@@ -110,12 +168,24 @@ export default function SiteNav({
   isAdmin,
   width,
   banner,
+  showSections,
+  pathname,
 }: Partial<SiteNavViewProps> = {}) {
   const { data: session, status } = useSession();
+  const currentPath = usePathname();
   const resolvedVariant: SiteNavVariant = variant ?? (status === 'authenticated' ? 'authed' : 'guest');
   const resolvedIsAdmin = isAdmin ?? session?.user?.role?.toUpperCase() === 'ADMIN';
 
-  return <SiteNavView variant={resolvedVariant} isAdmin={resolvedIsAdmin} width={width} banner={banner} />;
+  return (
+    <SiteNavView
+      variant={resolvedVariant}
+      isAdmin={resolvedIsAdmin}
+      width={width}
+      banner={banner}
+      showSections={showSections}
+      pathname={pathname ?? currentPath ?? ''}
+    />
+  );
 }
 
 /**

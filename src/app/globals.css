@@ -1260,6 +1260,15 @@ input::placeholder, textarea::placeholder {
 .bottom-chrome {
   bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 0.75rem);
 }
+/* À partir de `md` la tab bar est masquée (#347) : les sections vivent dans
+   SiteNav. On annule sa hauteur plutôt que de retoucher `.pb-nav` et
+   `.bottom-chrome` séparément — --nav-h reste la source unique, et les deux
+   suivent. Sans ça, l'app garde 3,5rem d'espace mort sous chaque page desktop. */
+@media (min-width: 768px) {
+  :root {
+    --nav-h: 0rem;
+  }
+}
 
 /* Mobile: slightly smaller base for comfort */
 @media (max-width: 640px) {

@@ -18,6 +18,7 @@ import SearchFilters, { type SearchFiltersValue } from '@/components/SearchFilte
 import { toast } from '@/lib/toast';
 import Image from 'next/image';
 import { INTEREST_CATEGORIES, PRACTICE_CATEGORIES, GENDER_OPTIONS } from '@/lib/taxonomy';
+import SiteShell from '@/components/ui/SiteShell';
 
 interface ProfileData {
   userId: string;
@@ -263,7 +264,7 @@ export default function ProfilePage() {
     : null;
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
+    <SiteShell className="py-6 md:pb-section md:pt-11">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-content">Profil</h1>
         <button
@@ -718,6 +719,6 @@ export default function ProfilePage() {
           </section>
         </div>
       )}
-    </div>
+    </SiteShell>
   );
 }

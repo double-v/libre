@@ -6,6 +6,7 @@ import { signOut } from 'next-auth/react';
 import { purgerSecretsLocaux } from '@/lib/session-cleanup';
 import { toast } from '@/lib/toast';
 import AppearanceSettings from '@/components/AppearanceSettings';
+import SiteShell from '@/components/ui/SiteShell';
 
 interface Profile {
   userId: string;
@@ -114,7 +115,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
+    <SiteShell className="py-6 md:pb-section md:pt-11">
       <h1 className="mb-6 text-2xl font-bold text-content">Paramètres</h1>
 
       {error && (
@@ -305,6 +306,6 @@ export default function SettingsPage() {
           </ul>
         </section>
       </div>
-    </div>
+    </SiteShell>
   );
 }

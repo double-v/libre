@@ -304,7 +304,7 @@ Base unit: 4px.
 ### Container Patterns
 
 - **Auth pages**: Centered column, `max-w-md`, logo above
-- **Main app**: Single panel with bottom tab nav, `max-w-lg`
+- **Main app**: colonne `content` (1080px) + sections dans `SiteNav` en desktop ; colonne unique + bottom tab bar sous `md` (#347)
 - **Marketing**: Full-width bands alternating surfaces
 
 ## Shell unifié (#273)
@@ -366,7 +366,7 @@ adossé aux tokens `--container-*` de `globals.css` (`@theme`) — en remplaceme
 | `wide` | `max-w-wide` | 1180px | hero — un cran plus large que le corps de page |
 | `content` | `max-w-content` | 1080px | **largeur contenu globale desktop** — pages contenu (home, manifesto, légal, sections marketing) |
 | `reading` | `max-w-reading` | 720px | texte long resserré — **option lisibilité** (non défaut ; réservé à un besoin explicite) |
-| `app` | `max-w-lg` | 512px | app connectée mobile-first (feed, messages, profil) |
+| `app` | `max-w-lg` | 512px | colonne resserrée **à l'intérieur** d'une page — n'est plus le plafond de page de `(main)` (#347) |
 
 Décision (#273, précisée #293 le 2026-07-13) : la **largeur de contenu globale
 (desktop) est `content` (~1080px)** = la largeur du container de la home ; les pages
@@ -375,6 +375,15 @@ contenu (home, manifesto, légal…) l'adoptent. `reading` (720) n'est **pas** l
 sur `reading` ; corrigé en #293). L'app garde `app` (mobile-first, UX cartes/swipe)
 **dans le même shell/nav/tokens**. Remplace la grille marketing `max-w-2xl` de la
 section **Layout** ci-dessus une fois migré.
+
+> **Amendement #347 (2026-08-23)** — « l'app garde `app` (mobile-first) » est
+> **renversé** : sur desktop, `(main)` adopte `content` (1080px) comme toutes les
+> autres zones. La colonne de 512px cesse d'être un plafond de page pour devenir
+> une largeur de **bloc** (un formulaire, un fil de conversation) à l'intérieur de
+> la colonne. Motif : c'était le dernier endroit où le shell unifié ne s'appliquait
+> pas, et une app centrée sur 512px au milieu d'un 27 pouces ne ressemblait plus au
+> site qu'elle prolonge. Une seule colonne — sidebar et master-detail explicitement
+> écartés. Maquettes de référence : `design-system/canvas/mode-connecte/`.
 
 **Largeur `content` — question ouverte tranchée (#277)** : une **seule valeur**
 `1080px` (pas d'échelle fine hero 1180 / sections 1080). Le hero de la home peut
@@ -457,11 +466,16 @@ se décide en #347, sur pixels — pas ici.
   - **connecté** : `ThemeToggle` + *Admin* (si `ADMIN`) + *Paramètres*.
   Sticky, translucide via les tokens `--nav-*` (`bg-nav-surface` ; always-dark sur
   la home via l'override `[data-lobby]`), porte la safe-area (`pt-safe`). Ne
-  remplace **pas** la bottom tab bar (nav principale mobile de l'app connectée) :
-  les deux coexistent. Cf. § dédié « SiteNav — nav unique » + Component Library.
-  La **home** est incluse : `LobbyNav` retiré, migrée sur `SiteNav` (#273).
+  Cf. § dédié « SiteNav — nav unique » + Component Library. La **home** est
+  incluse : `LobbyNav` retiré, migrée sur `SiteNav` (#273). En variante connectée,
+  la barre porte **les quatre sections à partir de `md`** (#347) : pastille pleine
+  (`bg-sunken`) à l'état actif, cible ≥ 44px, `aria-current="page"`.
 - **Bottom tab bar** (app connectée) : 4 onglets (Découvrir, Messages, La Place,
   Profil), `bg-surface border-t border-hairline`, icônes + labels, actif coral.
+  **Mobile-only depuis #347** (`md:hidden`) : au-delà, les sections vivent dans
+  `SiteNav` et `--nav-h` tombe à 0 pour que `.pb-nav` ne réserve plus rien. Les
+  deux surfaces ne coexistent plus — **un seul landmark de navigation par
+  breakpoint** — et lisent la même liste (`src/components/ui/AppSections.tsx`).
 - **`ThemeMenu`** (DS, `src/components/ui/ThemeMenu.tsx`) : popover mode×thème —
   **admin uniquement** (cf. § dédié plus bas ; auth/landing = aucun sélecteur).
 - **`ThemeToggle`** (DS, `src/components/ui/ThemeToggle.tsx`) : bascule **Mode seul**

@@ -8,6 +8,7 @@ import OnlineIndicator from '@/components/OnlineIndicator';
 import ProfileModal from '@/components/ProfileModal';
 import { formatLastSeen, isOnline } from '@/lib/time';
 import { photoUrl } from '@/lib/photos';
+import SiteShell from '@/components/ui/SiteShell';
 
 interface MatchUser {
   id: string;
@@ -130,7 +131,7 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
+    <SiteShell className="py-6 md:pb-section md:pt-11">
       <h1 className="mb-6 text-2xl font-bold text-content">Messages</h1>
 
       {error && (
@@ -231,6 +232,6 @@ export default function MessagesPage() {
         // suite plutôt que de laisser une conversation fantôme cliquable.
         onBlocked={(id) => setMatches((prev) => prev.filter((m) => m.user.id !== id))}
       />
-    </div>
+    </SiteShell>
   );
 }

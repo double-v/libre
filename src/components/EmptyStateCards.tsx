@@ -35,7 +35,11 @@ export default function EmptyStateCards({ context }: EmptyStateCardsProps) {
   };
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
+    // Les gouttières et le rythme viennent désormais du SiteShell de la page
+    // (#347) — les recoder ici les doublait. La largeur reste tenue le temps que
+    // #348 fasse de ces vignettes des cellules de la grille : étirées sur 1080px
+    // avant ça, elles flotteraient au milieu du vide.
+    <div className="mx-auto max-w-lg">
       <p className="mb-6 text-center text-muted">
         Personne {context} pour le moment
       </p>
