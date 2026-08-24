@@ -127,6 +127,8 @@ Les composants **ne codent jamais le mode en dur** (`bg-white dark:bg-dark-surfa
 | `--coral` / `--coral-light` / `--terracotta` / `--coral-dark` | `*-coral`, `*-coral-light`… | accent (varie par thème) | `text-coral`, `bg-coral`, `bg-terracotta` |
 | `--blush` / `--sand` / `--gold` | `bg-blush` / `bg-sand` / `text-gold` | fonds chauds / or (accomplissement) | — |
 | `--rad-card` / `--rad-control` | `rounded-card` / `rounded-control` | arrondis (**varient par thème**) | `rounded-xl`, `rounded-md` |
+| `--elev-soft` / `--elev-pop` | `shadow-soft` / `shadow-pop` | profondeur (**varie par thème × mode**, #282) | `shadow-sm`, `shadow-md` |
+| `--panel-bg` / `--panel-border` / `--panel-blur` | `.panel-glass`, `border-panel-border`, `backdrop-blur-panel` | panneau vitré (#282) | — |
 | `--head-font` | `font-head` | police des titres (**varie par thème**) | Geist |
 | `--btn-clip` | `clip-path` (classe / `style`) | silhouette bouton (biseau arcade, pixel retro) | — |
 
@@ -140,11 +142,19 @@ Registre unique `src/lib/site-themes.ts` (`SITE_THEMES`). Chaque thème est déc
 
 | id | Ex- | Direction | `--head-font` | `--rad-card` / `control` | Silhouette bouton |
 |---|---|---|---|---|---|
-| `libre` (défaut) | `default` | Coral/cream, chaud lumineux | Sans (Geist/Inter) | 16 / 6px | pleine |
-| `libre-warm` | `c-warm` | Terracotta, crème profond | Sans | 16 / 6px | pleine |
-| `cartoon` | ex-lobby | Plum-black chaud, rondeurs généreuses | Baloo 2 | 24 / 14px | pleine |
-| `arcade` | ex-lobby | Bleu-noir néon, glow coral | Space Grotesk | 16 / 10px | coin biseauté |
+| `libre` (défaut) | `default` | Coral/cream, chaud lumineux | Sans (Geist/Inter) | 30 / 6px | pleine |
+| `libre-warm` | `c-warm` | Terracotta, crème profond | Sans | 30 / 6px | pleine |
+| `cartoon` | ex-lobby | Plum-black chaud, rondeurs généreuses | Baloo 2 | 30 / 14px | pleine |
+| `arcade` | ex-lobby | Bleu-noir néon, glow coral | Space Grotesk | 20 / 10px | coin biseauté |
 | `retro` | ex-lobby | 8-bit, ombres dures, scanlines | Space Grotesk (+ Press Start 2P eyebrow) | 4 / 2px | pixel-clip |
+
+**Rayons alignés sur la home (#282, 2026-08-23)** : `--rad-card` vaut désormais le
+`--lobby-radius-lg` de son skin — c'est la condition pour qu'une carte de l'app soit
+« du même système » que sa contrepartie home. `--rad-control` n'est **pas** touché
+(la cible tactile reste 44px × rayon de contrôle propre au skin). Conséquence à
+regarder sur pixels : `libre` / `libre-warm` passent de 16 à 30px de rayon de carte
+tout en gardant un rayon de contrôle de 6px — l'écart carte↔contrôle y est le plus
+large des cinq skins.
 
 **Polices** (via `next/font/google`, self-host — **jamais** de `<link>` Google/CDN, cf. CSP + perf) : déclarées au **layout racine** (`--font-space-grotesk`, `--font-baloo`, `--font-press-start`), sélectionnées par thème via `--head-font`. Garde-fou : **Press Start 2P = eyebrow/accents du thème `retro` uniquement**, jamais le corps de texte (lisibilité).
 
@@ -157,6 +167,27 @@ Registre unique `src/lib/site-themes.ts` (`SITE_THEMES`). Chaque thème est déc
 - Le thème change l'**habillage**, jamais la **sémantique** : un CTA reste « accent » via `--coral`, une erreur reste `--error`.
 - Zéro valeur inline dans les composants — tout via tokens.
 - **Validation** : chaque composant DS est vérifié sur les 10 déclinaisons via `/design` + `/design-sync` (le render-check `variantsIdentical` détecte un thème/mode qui n'a pas re-skinné).
+
+### Panneau vitré (`.panel-glass`, #282)
+
+Équivalent **theme-aware** du panneau du hero de la home (`.lobby-steps`) : dégradé
+translucide + flou de fond + filet + profondeur. Promu exactement comme `--nav-bg`
+l'avait été — c'est le précédent que suit tout ce lot.
+
+| Var runtime | Rôle | Dérivation |
+|---|---|---|
+| `--panel-bg` | dégradé du voile | `color-mix()` sur `--gold` (chaleur) + `--surface` (opacité) — donc juste en clair comme en sombre |
+| `--panel-border` | filet | `color-mix(--content 10%, transparent)` — sombre sur clair, clair sur sombre, **une seule déclaration** |
+| `--panel-blur` | flou de fond (6px) | constant ; le token existe pour qu'un skin puisse le retirer |
+
+- Une **classe**, pas un token `--color-*` : un dégradé n'est pas une
+  `background-color`, il ne peut donc pas passer par la génération d'utilitaires.
+  `border-panel-border` et `backdrop-blur-panel` restent, eux, des utilitaires.
+- **Repli obligatoire** : sans `backdrop-filter` (Firefox sans le flag, Safari
+  ancien), un `@supports not` retombe sur `--surface` franche. Un voile translucide
+  sans flou derrière ne sépare plus rien.
+- `arcade` remplace la chaleur dorée par un voile neutre ; `retro` remplace le
+  dégradé par des scanlines. Même token, trois caractères.
 
 ### La landing « lobby »
 
@@ -260,10 +291,15 @@ Base unit: 4px.
 
 ### Grid
 
+> Les largeurs ci-dessous sont l'**état historique**, remplacé par l'échelle
+> centralisée de `SiteShell` (§ Shell unifié → Échelle de largeurs). Ne pas
+> recoder un `max-w-*` ad hoc : passer par `width`.
+
 - Max content: `max-w-md` (448px) for auth forms
 - Max content: `max-w-lg` (512px) for main app panels
 - Max content: `max-w-2xl` (672px) for marketing pages
-- Cards: `grid gap-4 sm:grid-cols-2 lg:grid-cols-3`
+- Cards: `grid gap-4 sm:grid-cols-2 lg:grid-cols-3` — la grille de cartes de la
+  home est `repeat(3, minmax(0, 1fr))` + `gap-grid` (20px), 1 colonne sous 720px.
 
 ### Container Patterns
 
@@ -326,6 +362,8 @@ adossé aux tokens `--container-*` de `globals.css` (`@theme`) — en remplaceme
 
 | Largeur (`width`) | Utilitaire | Valeur | Usage |
 |-------------------|------------|--------|-------|
+| `bleed` | `max-w-bleed` | 1400px | bandeau ambiant décoratif — **sans gouttières** (il touche les bords, comme `.lobby-band`) |
+| `wide` | `max-w-wide` | 1180px | hero — un cran plus large que le corps de page |
 | `content` | `max-w-content` | 1080px | **largeur contenu globale desktop** — pages contenu (home, manifesto, légal, sections marketing) |
 | `reading` | `max-w-reading` | 720px | texte long resserré — **option lisibilité** (non défaut ; réservé à un besoin explicite) |
 | `app` | `max-w-lg` | 512px | app connectée mobile-first (feed, messages, profil) |
@@ -342,6 +380,30 @@ section **Layout** ci-dessus une fois migré.
 `1080px` (pas d'échelle fine hero 1180 / sections 1080). Le hero de la home peut
 déborder localement en `max-w-*` explicite si besoin ; l'échelle partagée reste à
 un seul cran large pour rester une vraie source de vérité (moins de boutons).
+
+> **Amendement #282 (2026-08-23)** — l'arbitrage ci-dessus est **rouvert et
+> renversé** : `wide` (1180) et `bleed` (1400) rejoignent l'échelle. Le pari de
+> #277 était qu'un seul cran large suffirait et que le hero « déborderait
+> localement ». Il a débordé, mais **en dur** : `.lobby-hero__inner` portait
+> `1180px` et `.lobby-band` `1400px`, recopiés hors de toute source de vérité —
+> exactement ce que l'échelle devait empêcher. Nommer les deux crans coûte deux
+> lignes et rend le vocabulaire complet pour la repasse desktop (#347) ; les
+> garder anonymes coûtait deux valeurs orphelines. La home consomme désormais
+> `var(--container-wide)` / `var(--container-bleed)` : le partage est réel, pas
+> déclaratif.
+
+**Rythme de section (#282)** : le pas vertical de la home devient lui aussi un
+token partagé plutôt qu'une valeur recopiée surface par surface.
+
+| Token | Valeur | Utilitaire | Rôle |
+|---|---|---|---|
+| `--spacing-section` | 72px | `py-section` | pas vertical entre deux sections |
+| `--spacing-gutter` | 24px | `px-gutter` | gouttière horizontale de section |
+| `--spacing-grid` | 20px | `gap-grid` | gap de la grille de cartes (3 colonnes → 1 sous 720px) |
+
+Valeur **plate**, non responsive : c'est exactement ce que porte la home
+aujourd'hui, et la parité passe avant l'optimisation. Un éventuel `clamp()` mobile
+se décide en #347, sur pixels — pas ici.
 
 ### Ambiance & décor
 
@@ -544,13 +606,29 @@ Philosophy: color-block first, shadow rarely. Depth comes from surface contrast 
 
 ### Shadow Tokens (rare, intentional)
 
-| Token | Value | Use |
+| Token | Valeur (skin par défaut, clair) | Use |
 |---|---|---|
-| `shadow-soft` | `0 2px 8px -2px rgb(232 99 74 / 0.08)` | Cards au hover, modal ouverte — **toujours teinté coral** pour rester dans l'univers |
-| `shadow-pop` | `0 8px 24px -4px rgb(232 99 74 / 0.16)` | Menu ouvert, dropdown, célébration éphémère |
+| `shadow-soft` | `var(--elev-soft)` → `0 8px 20px -8px rgb(232 99 74 / 0.18)` | Cards au hover, modal ouverte — **toujours teinté coral** pour rester dans l'univers |
+| `shadow-pop` | `var(--elev-pop)` → `0 18px 40px -12px rgb(232 99 74 / 0.35)` | Menu ouvert, dropdown, panneau vitré, célébration éphémère |
 | `shadow-focus` | `0 0 0 3px rgb(232 99 74 / 0.4)` | Anneau de focus accessible (conforme WCAG 2.1) |
 
+**Profondeur calibrée sur la home (#282)** : `shadow-pop` reprend le rayon de flou de
+`--lobby-shadow` du skin — l'app était 2 à 4× plus plate que sa contrepartie home
+pour une teinte pourtant identique. `shadow-soft` est le demi-pas de la même rampe.
+Les deux passent par `var(--elev-*)`, **jamais** par un littéral : un littéral dans
+le bloc de thème Tailwind est inliné à la compilation et ne re-skinne plus (c'est le
+bug qui avait figé l'accent coral). En sombre, l'alpha monte d'un cran : un fond
+sombre absorbe la lumière, il faut plus pour lire la même profondeur.
+
+Par skin : `libre`/`libre-warm`/`cartoon` = ombre portée corail (flou 40px) ·
+`arcade` = **glow** sans décalage (flou 32px) · `retro` = **ombre dure 8-bit**
+(`4px 4px 0`, noire, sans flou).
+
 **Règle absolue** : pas d'ombre grise neutre (`shadow-md` par défaut Tailwind). Toute ombre porte la teinte coral pour rester dans le brand. Si tu hésites à mettre une ombre, mets une bordure à la place.
+**Une exception, déclarée (#282)** : `retro`, dont l'ombre dure noire *est* la
+signature 8-bit — c'est déjà ce que fait la home. Une exception nommée dans un bloc
+de skin n'est pas un `shadow-md` posé par défaut ; c'est ce dernier que la règle
+interdit.
 
 ## Motion
 
@@ -670,15 +748,21 @@ centrée (`mx-auto`), pleine largeur sous le plafond, avec gouttières responsiv
 `mx-auto max-w-* px-*` recodés zone par zone.
 
 - **Prop `width`** (défaut `content`) → échelle centralisée ci-dessus :
+  `bleed` (`max-w-bleed`, 1400px) · `wide` (`max-w-wide`, 1180px) ·
   `content` (`max-w-content`, ~1080px) · `reading` (`max-w-reading`, ~720px) ·
-  `app` (`max-w-lg`, 512px). Les utilitaires `max-w-content`/`max-w-reading`
-  proviennent des tokens `--container-*` de `globals.css` (`@theme`).
+  `app` (`max-w-lg`, 512px). Tous les utilitaires `max-w-*` de l'échelle
+  proviennent des tokens `--container-*` de `globals.css`.
+- **`bleed` est le seul échelon sans gouttières** (#282) : un bandeau ambiant
+  touche les bords par définition, et `.lobby-band` n'en met pas. Lui imposer
+  `px-4 sm:px-6` le rendrait plus étroit que son homologue home — donc plus le
+  même système.
 - **Prop `as`** : balise sémantique (`div` défaut, `main`, `section`, `article`).
 - **`className` additif** (ex. `py-12`, alignement) — ne surcharge pas les
   largeurs/gouttières de l'échelle (passer par `width` pour ça).
 - **Server Component** (pur wrapper, aucun hook) — utilisable dans les layouts.
 - Consommé au fil de la migration : #278 manifesto, #279 légal, #280 app,
-  #281 auth/admin.
+  #281 auth/admin. #282 a complété l'échelle (`wide`, `bleed`) ; #347 migre les
+  surfaces de l'app connectée dessus.
 
 ### Toast (`src/components/ui/Toast.tsx` + `src/lib/toast.ts`)
 

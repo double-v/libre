@@ -34,7 +34,7 @@
   --blush: #FDF0ED;
   --sand: #F5E6D8;
   --gold: #E8A04E;           /* or « accomplissement » (miel) — varie par thème */
-  --rad-card: 16px;          /* → rounded-card (varie par thème) */
+  --rad-card: 30px;          /* = --lobby-radius-lg (#282) — varie par thème */
   --rad-control: 6px;        /* → rounded-control (varie par thème) */
   --head-font: var(--font-sans, "Inter", Arial, sans-serif); /* → font-head */
   --btn-clip: none;          /* silhouette bouton (biseau arcade, pixel retro) */
@@ -49,6 +49,28 @@
   --nav-border: var(--hairline);
   --nav-text: var(--content);
   --nav-text-dim: var(--muted);
+
+  /* Élévation (#282) — profondeur calibrée sur --lobby-shadow, teinte corail
+     déjà la bonne. Runtime (donc surchargeable par skin) : le bloc de thème
+     Tailwind (inline) ne fait que les exposer via var(), sinon Tailwind les
+     figerait à la compilation. `soft` = repos/hover, `pop` = surface flottante.
+     (Piège : ne pas écrire la directive de thème en toutes lettres dans un
+     commentaire situé AVANT le vrai bloc — `tests/unit/design-tokens.test.ts`
+     la cherche par indexOf et parserait le commentaire à sa place.) */
+  --elev-soft: 0 8px 20px -8px rgb(232 99 74 / 0.18);
+  --elev-pop: 0 18px 40px -12px rgb(232 99 74 / 0.35);
+
+  /* Panneau vitré (#282) — équivalent theme-aware de --lobby-panel-bg, promu
+     exactement comme --nav-bg : un dégradé translucide dérivé des tokens
+     sémantiques (donc juste en clair comme en sombre) + un flou de fond.
+     Consommé par `.panel-glass`. */
+  --panel-bg: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--gold) 12%, transparent),
+    color-mix(in srgb, var(--surface) 55%, transparent)
+  );
+  --panel-border: color-mix(in srgb, var(--content) 10%, transparent);
+  --panel-blur: 6px;
 }
 
 :root.dark {
@@ -64,6 +86,16 @@
   --hairline: #374151;
   --hairline-strong: #374151;
   --fill-subtle: #1f2937;
+
+  /* Élévation & panneau en sombre : le fond absorbe la lumière, il faut un peu
+     plus d'alpha pour lire la même profondeur qu'en clair. */
+  --elev-soft: 0 8px 20px -8px rgb(232 99 74 / 0.24);
+  --elev-pop: 0 18px 40px -12px rgb(232 99 74 / 0.45);
+  --panel-bg: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--gold) 8%, transparent),
+    color-mix(in srgb, var(--surface) 30%, transparent)
+  );
 }
 
 /* ── Thèmes (cf. DESIGN.md § Theming — Mode × Thème) ─────────────────────────
@@ -155,7 +187,7 @@ html[data-theme='libre-warm'].dark {
   --hairline: #f0ddd5;
   --hairline-strong: #e2c8bd;
   --fill-subtle: #fbeee7;
-  --rad-card: 24px;
+  --rad-card: 30px;
   --rad-control: 14px;
   --head-font: var(--font-baloo), system-ui, sans-serif;
   --btn-clip: none;
@@ -178,7 +210,7 @@ html[data-theme='libre-warm'].dark {
   --hairline: #3a2a30;
   --hairline-strong: #4a363d;
   --fill-subtle: #2d1a20;
-  --rad-card: 24px;
+  --rad-card: 30px;
   --rad-control: 14px;
   --head-font: var(--font-baloo), system-ui, sans-serif;
   --btn-clip: none;
@@ -203,10 +235,18 @@ html[data-theme='libre-warm'].dark {
   --hairline: #e6e2ea;
   --hairline-strong: #d3cdd9;
   --fill-subtle: #f0edf2;
-  --rad-card: 16px;
+  --rad-card: 20px;
   --rad-control: 10px;
   --head-font: var(--font-space-grotesk), system-ui, sans-serif;
   --btn-clip: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+
+  --elev-soft: 0 0 18px rgb(232 99 74 / 0.16);
+  --elev-pop: 0 0 32px rgb(232 99 74 / 0.3);
+  --panel-bg: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--content) 6%, transparent),
+    color-mix(in srgb, var(--surface) 45%, transparent)
+  );
 }
 [data-theme='arcade'].dark {
   --coral: #e8634a;
@@ -226,10 +266,18 @@ html[data-theme='libre-warm'].dark {
   --hairline: #26263a;
   --hairline-strong: #34344e;
   --fill-subtle: #1a1a28;
-  --rad-card: 16px;
+  --rad-card: 20px;
   --rad-control: 10px;
   --head-font: var(--font-space-grotesk), system-ui, sans-serif;
   --btn-clip: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+
+  --elev-soft: 0 0 18px rgb(232 99 74 / 0.22);
+  --elev-pop: 0 0 32px rgb(232 99 74 / 0.4);
+  --panel-bg: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--content) 6%, transparent),
+    color-mix(in srgb, var(--surface) 28%, transparent)
+  );
 }
 
 /* retro — 8-bit, ombres dures, arrondis nets, pixel-clip */
@@ -255,6 +303,16 @@ html[data-theme='libre-warm'].dark {
   --rad-control: 2px;
   --head-font: var(--font-space-grotesk), system-ui, sans-serif;
   --btn-clip: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+
+  --elev-soft: 2px 2px 0 rgb(0 0 0 / 0.28);
+  --elev-pop: 4px 4px 0 rgb(0 0 0 / 0.5);
+  --panel-bg: repeating-linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--content) 5%, transparent) 0px,
+    color-mix(in srgb, var(--content) 5%, transparent) 2px,
+    color-mix(in srgb, var(--surface) 45%, transparent) 2px,
+    color-mix(in srgb, var(--surface) 45%, transparent) 4px
+  );
 }
 [data-theme='retro'].dark {
   --coral: #e8634a;
@@ -278,6 +336,16 @@ html[data-theme='libre-warm'].dark {
   --rad-control: 2px;
   --head-font: var(--font-space-grotesk), system-ui, sans-serif;
   --btn-clip: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+
+  --elev-soft: 2px 2px 0 rgb(0 0 0 / 0.35);
+  --elev-pop: 4px 4px 0 rgb(0 0 0 / 0.6);
+  --panel-bg: repeating-linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--content) 5%, transparent) 0px,
+    color-mix(in srgb, var(--content) 5%, transparent) 2px,
+    color-mix(in srgb, var(--surface) 28%, transparent) 2px,
+    color-mix(in srgb, var(--surface) 28%, transparent) 4px
+  );
 }
 
 /* ── Ambiance « lobby » (landing publique — épic #243) ──────────────────────
@@ -418,13 +486,27 @@ html[data-theme='retro'] [data-lobby] {
   --color-nav-text: var(--nav-text);
   --color-nav-text-dim: var(--nav-text-dim);
 
+  /* Panneau vitré (#282) — même mouvement que la nav : le traitement de la home
+     (dégradé translucide + flou) promu en tokens theme-aware. Génèrent
+     border-panel-border et backdrop-blur-panel ; le dégradé lui-même passe par
+     la classe `.panel-glass` (une gradient n'est pas une background-color, donc
+     pas un token --color-*). */
+  --color-panel-border: var(--panel-border);
+  --blur-panel: var(--panel-blur);
+
   /* Radius tokens — indirection var() → varient par thème (rounded-card/-control) */
   --radius-card: var(--rad-card);
   --radius-control: var(--rad-control);
 
-  /* Elevation (DESIGN.md > Elevation > Shadow Tokens) — always coral-tinted */
-  --shadow-soft: 0 2px 8px -2px rgb(232 99 74 / 0.08);
-  --shadow-pop: 0 8px 24px -4px rgb(232 99 74 / 0.16);
+  /* Élévation (DESIGN.md § Elevation — Shadow Tokens), toujours teintée corail.
+     ⚠️ Indirection var() OBLIGATOIRE : un littéral ici serait inliné par Tailwind
+     à la compilation, donc jamais surchargeable par skin (c'est le bug qui avait
+     figé l'accent corail). La profondeur vit dans --elev-* (#282), calibrée sur
+     --lobby-shadow skin par skin et mode par mode.
+     L'anneau de focus, lui, reste constant : c'est une affordance
+     d'accessibilité, pas une signature de skin. */
+  --shadow-soft: var(--elev-soft);
+  --shadow-pop: var(--elev-pop);
   --shadow-focus: 0 0 0 3px rgb(232 99 74 / 0.4);
 
   /* Motion (DESIGN.md > Motion) */
@@ -445,10 +527,22 @@ html[data-theme='retro'] [data-lobby] {
 
   /* Échelle de largeurs centralisée (#277, épic #273 — cf. DESIGN.md § Shell
      unifié). Source de vérité unique en remplacement des max-w-* dispersés
-     (448/512/672/768/1080). Génèrent max-w-content / max-w-reading; l'app garde
-     max-w-lg (512px, défaut Tailwind). Consommés par le composant SiteShell. */
+     (448/512/672/768/1080). Génèrent max-w-bleed / max-w-wide / max-w-content /
+     max-w-reading ; l'app garde max-w-lg (512px, défaut Tailwind). Consommés par
+     le composant SiteShell. `wide` (1180) et `bleed` (1400) nomment les deux
+     crans que la home portait en dur (#282) — cf. DESIGN.md § Échelle de
+     largeurs, amendement de l'arbitrage #277. */
+  --container-bleed: 1400px;
+  --container-wide: 1180px;
   --container-content: 1080px;
   --container-reading: 720px;
+
+  /* Rythme de section (#282) — le pas de la home (72px vertical, gouttière 24px,
+     gap de grille 20px) devient un token partagé plutôt qu'une valeur recopiée
+     surface par surface. Génèrent py-section / px-gutter / gap-grid. */
+  --spacing-section: 72px;
+  --spacing-gutter: 24px;
+  --spacing-grid: 20px;
 }
 
 /* Base typography: 18px base, 1.6 line-height, Geist Sans
@@ -525,6 +619,31 @@ input::placeholder, textarea::placeholder {
 
 .animate-toast-in {
   animation: toast-in var(--motion-base) var(--ease-out-soft) both;
+}
+
+/* ── Panneau vitré (#282, épic #273) ────────────────────────────────────────
+   Équivalent theme-aware du panneau du hero de la home (`.lobby-steps`) :
+   dégradé translucide + flou de fond + filet + profondeur. Tout vient des
+   tokens --panel-* / --elev-*, donc juste sur les 5 skins × 2 modes — c'est le
+   *langage* qui est partagé, pas le CSS de la home (qui reste confiné à
+   `home-lobby/`, cf. lobby-confinement.test.ts).
+   Cf. DESIGN.md § Theming — Panneau vitré. */
+.panel-glass {
+  border: 1px solid var(--panel-border);
+  border-radius: var(--rad-card);
+  background: var(--panel-bg);
+  backdrop-filter: blur(var(--panel-blur));
+  -webkit-backdrop-filter: blur(var(--panel-blur));
+  box-shadow: var(--elev-pop);
+}
+
+/* Sans backdrop-filter (Firefox sans le flag, Safari ancien), le dégradé seul ne
+   sépare plus assez du fond : on retombe sur une surface franche plutôt que sur
+   un panneau illisible. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .panel-glass {
+    background: var(--surface);
+  }
 }
 
 /* Keyframes de l'ambiance « lobby » (landing — épic #243). Préfixe `lobby`
@@ -626,7 +745,7 @@ input::placeholder, textarea::placeholder {
 .lobby-hero__inner {
   position: relative;
   z-index: 2;
-  max-width: 1180px;
+  max-width: var(--container-wide);
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
@@ -818,7 +937,7 @@ input::placeholder, textarea::placeholder {
 .lobby-band {
   position: relative;
   height: 280px;
-  max-width: 1400px;
+  max-width: var(--container-bleed);
   margin: 0 auto;
   overflow: hidden;
   pointer-events: none; /* décoratif intégral (aria-hidden) — ne capte aucun clic */
@@ -865,10 +984,10 @@ input::placeholder, textarea::placeholder {
    AA sur les 3 thèmes (texte sur voile sombre pour les légendes photo). Aucune
    animation propre → rien à figer en reduced-motion. */
 .lobby-section {
-  padding: 72px 24px;
+  padding: var(--spacing-section) var(--spacing-gutter);
 }
 .lobby-section__inner {
-  max-width: 1080px;
+  max-width: var(--container-content);
   margin: 0 auto;
 }
 .lobby-section__title {
@@ -903,7 +1022,7 @@ input::placeholder, textarea::placeholder {
 .lobby-humans__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: var(--spacing-grid);
   margin: 40px 0 0;
   padding: 0;
   list-style: none;
