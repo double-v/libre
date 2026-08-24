@@ -321,6 +321,20 @@ model SquareMessage {
   @@map("square_messages")
 }
 
+/// État singleton de La Place (#13) — le reset quotidien ne dépend plus d'un
+/// cron : c'est le premier passage HTTP après l'heure de reset qui l'exécute.
+/// Cette ligne est le témoin qui empêche les suivants de le refaire.
+model SquareState {
+  id String @id @default("singleton")
+  /// Borne du dernier reset appliqué (heure UTC pile, cf. `reset-clock.ts`) —
+  /// pas l'instant d'exécution : deux instances qui traitent la même journée
+  /// écrivent la même valeur, donc la réclamation reste idempotente.
+  lastResetAt DateTime @map("last_reset_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("square_state")
+}
+
 model SquareThemeConfig {
   id             String   @id @default(uuid()) @db.Uuid
   themeId        String   @unique

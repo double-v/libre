@@ -128,9 +128,18 @@ describe('GET /api/photos/[key] — photo classée (#330)', () => {
     expect(servedKey()).toBe(BOB_AVATAR);
   });
 
-  it('sert l\'original à un admin : il ne peut pas modérer ce qu\'il ne voit pas', async () => {
+  // Le rôle ouvrait l'original partout : un admin ne voyait donc jamais le flou
+  // et ne pouvait pas vérifier son propre classement (#359). La modération
+  // passe désormais par le même geste que les autres.
+  it('floute pour un admin comme pour n\'importe quel lecteur', async () => {
     fakeDb.user.findUnique.mockResolvedValue({ role: 'ADMIN' });
     await call(BOB_AVATAR);
+    expect(servedKey()).toBe(BOB_BLUR);
+  });
+
+  it('sert l\'original à la galerie de modération, qui le demande explicitement', async () => {
+    fakeDb.user.findUnique.mockResolvedValue({ role: 'ADMIN' });
+    await call(BOB_AVATAR, '?reveal=1');
     expect(servedKey()).toBe(BOB_AVATAR);
   });
 

@@ -20,7 +20,6 @@ interface VeilContext {
   keys: string[];
   viewerThreshold: string | null | undefined;
   isOwner: boolean;
-  isAdmin: boolean;
 }
 
 /**
@@ -32,9 +31,10 @@ interface VeilContext {
  */
 export async function veiledPhotoKeys(ctx: VeilContext): Promise<string[]> {
   if (ctx.keys.length === 0) return [];
-  // Le propriétaire et l'admin voient toujours l'original : inutile d'aller en
-  // base pour l'apprendre.
-  if (ctx.isOwner || ctx.isAdmin) return [];
+  // Le propriétaire voit toujours l'original : inutile d'aller en base pour
+  // l'apprendre. L'admin, lui, est un lecteur comme un autre sur ces écrans —
+  // c'est la galerie de modération qui demande l'original, explicitement.
+  if (ctx.isOwner) return [];
 
   const rows = await getDb().photoModeration.findMany({
     where: { key: { in: ctx.keys } },
@@ -46,7 +46,6 @@ export async function veiledPhotoKeys(ctx: VeilContext): Promise<string[]> {
       level: row.sensitivity,
       viewerThreshold: ctx.viewerThreshold,
       isOwner: false,
-      isAdmin: false,
       reveal: false,
     }))
     .map((row) => row.key);

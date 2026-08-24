@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 
+import { msUntilNextReset } from '@/lib/square/reset-clock';
+
 export interface ThemeInfo {
   themeId: string;
   label: string;
@@ -12,17 +14,6 @@ export interface ThemeInfo {
   allowFreeText: boolean;
   options: string[] | null;
   pseudonymNames?: string[] | null;
-}
-
-function getTimeUntilNextReset(): number {
-  const now = new Date();
-  const next3AM = new Date(now);
-  next3AM.setHours(3, 0, 0, 0);
-  // If it's already past 3 AM today, target tomorrow
-  if (now.getHours() >= 3) {
-    next3AM.setDate(next3AM.getDate() + 1);
-  }
-  return next3AM.getTime() - now.getTime();
 }
 
 function formatCountdown(ms: number): string {
@@ -39,11 +30,11 @@ export default function SquareThemeBanner({
   theme: ThemeInfo | null;
   pseudonym: string;
 }) {
-  const [countdown, setCountdown] = useState(getTimeUntilNextReset());
+  const [countdown, setCountdown] = useState(() => msUntilNextReset());
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCountdown(getTimeUntilNextReset());
+      setCountdown(msUntilNextReset());
     }, 60000);
     return () => clearInterval(interval);
   }, []);

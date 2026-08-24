@@ -6,10 +6,16 @@ import { getTodayThemeConfig, getPseudonymFromConfig } from '@/lib/square/themes
 import { checkContent } from '@/lib/square/moderation';
 import { rateLimit, limits } from '@/lib/rate-limit';
 import { getMessages, addMessage, getReactionsForMessages } from '@/lib/square/store';
+import { ensureSquareFresh } from '@/lib/square/reset';
 import { squareMessageSchema } from '@/lib/square/validators';
 import type { SquareMessage } from '@/lib/square/store';
 
 export async function GET() {
+  // Le reset quotidien s'exécute ici, avant la lecture : sans cron qui marche,
+  // c'est le premier arrivant après l'heure qui tourne la page (#13). Ne jette
+  // jamais — au pire la Place reste sur la veille une lecture de plus.
+  await ensureSquareFresh();
+
   const messages = await getMessages();
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
@@ -50,6 +56,10 @@ export async function POST(request: NextRequest) {
   if (user?.squareBannedUntil && user.squareBannedUntil > new Date()) {
     return NextResponse.json({ error: 'Vous êtes banni(e) de la Place' }, { status: 403 });
   }
+
+  // Écrire aussi doit tourner la page : sans ça, le premier message du jour
+  // s'ajouterait à la suite du fil de la veille.
+  await ensureSquareFresh();
 
   const theme = await getTodayThemeConfig();
   const body = await request.json();

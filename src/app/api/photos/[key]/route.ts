@@ -117,7 +117,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       // compte dont le seuil dit non. Ce qui compte est conservé — sans geste
       // explicite, l'original ne part pas.
       const reveal = request.nextUrl.searchParams.get('reveal') === '1';
-      const admin = isOwner ? null : await verifyAdmin();
       const viewer = isOwner
         ? null
         : await getDb().profile.findUnique({
@@ -129,7 +128,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         level: moderation.sensitivity,
         viewerThreshold: viewer?.photoSensitivityOptIn,
         isOwner,
-        isAdmin: !!admin,
         reveal,
       })) {
         servedKey = moderation.blurredKey;
