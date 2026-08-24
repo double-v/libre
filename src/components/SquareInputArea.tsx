@@ -142,10 +142,13 @@ export default function SquareInputArea({
 
   return (
     <div className="shrink-0 border-t border-hairline bg-surface p-4">
-      {error && (
-        <p className="mb-2 text-xs text-red-600 dark:text-red-400">{error}</p>
-      )}
-      {renderInput()}
+      {/* Le composeur s'aligne sur le fil, pas sur la fenêtre (#348). */}
+      <div className="mx-auto w-full max-w-reading">
+        {error && (
+          <p className="mb-2 text-xs text-red-600 dark:text-red-400">{error}</p>
+        )}
+        {renderInput()}
+      </div>
     </div>
   );
 }
