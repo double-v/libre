@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { SquareMessage } from '@/lib/square/store';
 import SquareReportModal from './SquareReportModal';
+import SquareReopenSeparator from './SquareReopenSeparator';
 
 const DISPLAY_REACTION_EMOJIS = ['❤️', '😂', '🔥', '👋'];
 
@@ -71,6 +72,10 @@ export default function SquareMessageList({
         {/* Colonne de lecture : un fil de discussion ne s'étire pas sur 1080px
             (#348). Le conteneur scrollable, lui, garde toute la largeur. */}
         <div className="mx-auto w-full max-w-reading">
+        {/* Le fil s'ouvre sur la coupure du jour (#358) — y compris quand rien
+            n'a encore été dit : c'est ce qui distingue « vide depuis la
+            réouverture » de « vide sans qu'on sache depuis quand ». */}
+        <SquareReopenSeparator />
         {messages.length === 0 && (
           <p className="text-center text-sm text-muted">La Place est calme pour le moment…</p>
         )}

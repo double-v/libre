@@ -44,6 +44,14 @@ export default function SquareChat({ userId }: { userId: string }) {
 
   const pseudonym = generatePseudonym(userId, theme?.pseudonymNames);
 
+  // Voix distinctes entendues depuis la réouverture (#358). Le fil est déjà
+  // purgé de la veille : ce qu'il contient date d'après la borne, donc le
+  // compte se dérive ici sans un appel de plus — et sans prétendre mesurer une
+  // présence que rien ne mesure (cf. `ligneDePresence` dans SquareThemeBanner).
+  const voices = new Set(
+    messages.filter((m) => !m.isSystem).map((m) => m.pseudonym),
+  ).size;
+
   // Fetch theme config on mount
   useEffect(() => {
     fetch('/api/square/theme')
@@ -271,8 +279,8 @@ export default function SquareChat({ userId }: { userId: string }) {
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <SquareThemeBanner theme={theme} pseudonym={pseudonym} />
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <SquareThemeBanner theme={theme} pseudonym={pseudonym} voices={voices} />
       {error && (
         <div className="px-4 py-1 text-xs text-red-600 dark:text-red-400">{error}</div>
       )}
