@@ -70,3 +70,9 @@ next-env.d.ts
 /record_tiktok_v2.py
 /gptprompt-tiktokcreatif.txt
 /chatgpt-legalbbrainstorm/
+
+# échafaudage des agents (worktrees jetables de ghwork, layout du dashboard) —
+# local à chaque machine, jamais du code projet. `.claude/` suit la même règle
+# mais via .git/info/exclude, donc ne voyage pas ; ces deux-là voyagent.
+/.worktrees/
+/.ghwork/
