@@ -72,7 +72,10 @@ export default function SquareThemeBanner({
       // Le bandeau tient toute la largeur du conteneur (#348) — c'est le fil,
       // en dessous, qui garde la colonne de lecture. Le rituel a droit à la
       // page ; les messages, eux, restent lisibles.
-      className="panel-glass relative shrink-0 overflow-hidden px-5 py-6 sm:px-8 sm:py-7"
+      // `panel-flush` : le panneau pose son propre rythme (mt-*/gap), donc il
+      // annule le `p { margin-bottom: 1.2em }` global. Un `mb-0` en utilitaire
+      // n'y suffit pas — la règle globale n'est pas layerisée et gagne (#358).
+      className="panel-glass panel-flush relative shrink-0 overflow-hidden px-5 py-6 sm:px-8 sm:py-7"
       aria-label="Le jour sur La Place"
     >
       {/* Halos d'ambiance — décor pur, retiré du flux d'accessibilité. */}
@@ -131,8 +134,12 @@ export default function SquareThemeBanner({
           </div>
         </div>
 
-        {/* L'encart qui fait du reset un rituel affiché, pas une disparition subie. */}
-        <div className="shrink-0 rounded-card border border-hairline bg-surface/50 px-5 py-5 text-center md:w-52">
+        {/* L'encart qui fait du reset un rituel affiché, pas une disparition
+            subie. Bande compacte sur mobile, colonne dédiée à partir de `md` :
+            l'artboard `MobileLaPlace.dc.html` réduit délibérément le rebours sur
+            petit écran, sinon le panneau mange tout le premier écran et le fil
+            passe sous la ligne de flottaison (583px mesurés sur 844). */}
+        <div className="flex shrink-0 items-center gap-4 rounded-card border border-hairline bg-surface/50 px-5 py-4 md:w-52 md:flex-col md:gap-0 md:py-5 md:text-center">
           <svg
             width="24"
             height="24"
@@ -142,17 +149,21 @@ export default function SquareThemeBanner({
             strokeWidth="1.6"
             strokeLinecap="round"
             aria-hidden="true"
-            className="mx-auto mb-2.5 text-gold"
+            // `block` et pas seulement `mx-auto` : un <svg> inline s'assied sur
+            // une ligne de base et traîne une descente fantôme sous lui.
+            className="block shrink-0 text-gold md:mx-auto md:mb-2.5"
           >
             <circle cx="12" cy="12" r="9" />
             <path d="M12 7v5l3 2" />
           </svg>
-          <p className="font-head text-3xl font-bold tracking-tight text-content tabular-nums">
-            {formatCountdown(countdown)}
-          </p>
-          <p className="mt-2 text-[0.8125rem] leading-relaxed text-muted">
-            avant que tout s&apos;efface et qu&apos;un nouveau thème arrive
-          </p>
+          <div className="min-w-0 md:contents">
+            <p className="font-head text-2xl font-bold tracking-tight text-content tabular-nums md:text-3xl">
+              {formatCountdown(countdown)}
+            </p>
+            <p className="mt-1 text-[0.8125rem] leading-relaxed text-muted md:mt-2">
+              avant que tout s&apos;efface et qu&apos;un nouveau thème arrive
+            </p>
+          </div>
         </div>
       </div>
     </section>

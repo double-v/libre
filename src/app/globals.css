@@ -637,6 +637,20 @@ input::placeholder, textarea::placeholder {
   box-shadow: var(--elev-pop);
 }
 
+/* Rythme de paragraphe neutralisé dans un panneau qui pose le sien (#358).
+
+   `p { margin-bottom: 1.2em }` plus bas est une règle **non layerisée** : en
+   Tailwind v4, elle bat les utilitaires (qui, eux, vivent dans une couche). Un
+   `mb-0` posé sur un <p> y est donc silencieusement ignoré — vérifié au
+   navigateur, 41px de vide sous le compte à rebours de La Place. Cette règle-ci
+   est non layerisée elle aussi, et plus spécifique : elle gagne.
+
+   À n'appliquer qu'à un conteneur qui gère son propre rythme par marges hautes
+   et gouttières de flex — jamais à de la prose. */
+.panel-flush p {
+  margin-bottom: 0;
+}
+
 /* Sans backdrop-filter (Firefox sans le flag, Safari ancien), le dégradé seul ne
    sépare plus assez du fond : on retombe sur une surface franche plutôt que sur
    un panneau illisible. */

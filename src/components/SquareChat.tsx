@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { SquareMessage, SquareReaction } from '@/lib/square/store';
 import type { ThemeInfo } from './SquareThemeBanner';
 import SquareThemeBanner from './SquareThemeBanner';
@@ -40,7 +40,6 @@ export default function SquareChat({ userId }: { userId: string }) {
   const [myReactions, setMyReactions] = useState<Record<string, Set<string>>>({});
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const pseudonym = generatePseudonym(userId, theme?.pseudonymNames);
 
@@ -210,11 +209,6 @@ export default function SquareChat({ userId }: { userId: string }) {
     };
   }, []);
 
-  // Auto-scroll to bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
   const handleSend = useCallback(
     async (content: string, type: string, gifUrl?: string) => {
       setSending(true);
@@ -289,9 +283,9 @@ export default function SquareChat({ userId }: { userId: string }) {
         reactions={reactions}
         myReactions={myReactions}
         onReactionUpdate={handleReactionUpdate}
+        autoScroll
       />
       <SquareInputArea theme={theme} onSend={handleSend} sending={sending} />
-      <div ref={messagesEndRef} />
     </div>
   );
 }

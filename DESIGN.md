@@ -189,6 +189,46 @@ l'avait été — c'est le précédent que suit tout ce lot.
 - `arcade` remplace la chaleur dorée par un voile neutre ; `retro` remplace le
   dégradé par des scanlines. Même token, trois caractères.
 
+#### `.panel-flush` — quand le panneau pose son propre rythme (#358)
+
+`globals.css` porte un rythme de prose global, `p { margin-bottom: 1.2em }`, écrit
+**hors de toute couche**. En Tailwind v4, une règle non layerisée bat les
+utilitaires (qui, eux, vivent dans une couche) : un `mb-0` posé sur un `<p>` y est
+donc **silencieusement ignoré**. Le symptôme est un espacement qu'aucune classe
+n'explique — 41px de vide sous le compte à rebours de La Place, mesurés au
+navigateur, invisibles pour les tests de classes.
+
+`.panel-flush` est l'opt-out : non layerisé lui aussi, donc à armes égales, et plus
+spécifique, donc gagnant. À poser sur un conteneur qui gère son espacement par
+marges hautes et gouttières de flex — **jamais sur de la prose**, dont le rythme
+global est précisément ce qu'on veut.
+
+> Le jour où le rythme global passera dans `@layer base`, cet opt-out deviendra
+> inutile — et les `mb-*` recommenceront à mordre partout ailleurs. C'est un
+> chantier à part : il déplacerait l'espacement de toutes les pages d'un coup.
+
+### Bandeau du jour de La Place (#358)
+
+Le reset quotidien est un **rituel annoncé**, pas une disparition constatée après
+coup. Le haut de `/square` porte donc un `.panel-glass` pleine largeur (le fil
+garde sa colonne de lecture en dessous, cf. #348) : thème du jour en `<h1>`,
+pseudonyme, voix entendues, et le compte à rebours dans son propre encart.
+
+- **L'heure affichée est celle que le serveur applique** (`lastResetBoundary`,
+  #13), lue dans le fuseau du lecteur — jamais une heure locale devinée. Le fil
+  s'ouvre sur le même jalon : « La Place a rouvert à 04:00 ».
+- **Le rebours tronque**, il n'arrondit pas : « 0 h 00 » à 59 s de la borne plutôt
+  qu'une minute promise qui n'existe plus.
+- **La ligne de présence compte ce qui est comptable** — les voix distinctes
+  depuis la réouverture, dérivées du fil. Aucune API ne mesure une présence : le
+  canvas dessine « 7 personnes sur la Place », le code ne sait pas le tenir.
+- **Mobile** : le rebours devient une bande compacte (artboard
+  `MobileLaPlace.dc.html`). En grand encart, le panneau mangeait tout le premier
+  écran et poussait le fil sous la ligne de flottaison.
+- Le fil se scrolle **lui-même** ; la page ne bouge pas. Une sentinelle posée hors
+  du conteneur scrollable faisait remonter `scrollIntoView` jusqu'au document et
+  glissait le bandeau sous la nav collante à chaque message.
+
 ### La landing « lobby »
 
 La home publique (`src/app/page.tsx`, épic #243) garde sa **mise en page lobby**
