@@ -1,4 +1,5 @@
 import VerificationBadge from '@/components/VerificationBadge';
+import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 
 interface CrossingCardProps {
@@ -41,6 +42,13 @@ function formatDistance(meters: number): string {
   return meters >= 1000 ? `${(meters / 1000).toFixed(1)} km` : `${Math.round(meters)} m`;
 }
 
+/**
+ * Carte de croisement — cellule de la grille « Croisements » (#348).
+ *
+ * Pas de média : un croisement n'a pas de photo à montrer, il a un moment et
+ * un lieu approximatif. La tête de carte porte donc l'instant, le corps la
+ * personne — la même silhouette que `ProfileCard` sans en mimer la photo.
+ */
 export default function CrossingCard({
   id,
   displayName,
@@ -55,51 +63,76 @@ export default function CrossingCard({
 }: CrossingCardProps) {
   const timeAgo = getTimeAgo(happenedAt);
 
+  // Liker ne doit pas ouvrir la fiche par-dessus l'action (cf. ProfileCard).
+  const withoutBubbling = (action: () => void) => (event: React.MouseEvent) => {
+    event.stopPropagation();
+    action();
+  };
+
   return (
     <Card
       as="article"
+      variant="media"
       interactive={!!onProfileClick}
       role="group"
       aria-label={`Croisement avec ${displayName}`}
       onClick={() => onProfileClick?.(id)}
+      className="flex h-full flex-col"
     >
-      <div className="flex items-start gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="truncate text-base font-semibold text-content">
-              {displayName}{age != null ? `, ${age}` : ''}
-            </h3>
-            <VerificationBadge isVerified={isVerified} />
-          </div>
-          <div className="mt-0.5 flex items-center gap-2 text-sm text-muted">
-            <span>{timeAgo}</span>
-            <span aria-hidden="true">&middot;</span>
-            <span>{formatDistance(distanceM)}</span>
+      <div className="bg-sunken p-5">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-surface/85 px-3 py-1.5 text-xs font-semibold text-coral-dark dark:text-coral-light">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 2" />
+          </svg>
+          {timeAgo}
+        </span>
+
+        <div className="mt-4 flex items-center gap-3">
+          <span
+            aria-hidden="true"
+            // Même raison que ProfileCard : sur `sunken`, un cercle `blush`
+            // serait invisible en clair.
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-surface text-xl font-semibold text-coral-dark dark:text-coral-light"
+          >
+            {displayName.charAt(0).toUpperCase()}
+          </span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="min-w-0 truncate text-lg font-semibold text-content">
+                {displayName}{age != null ? `, ${age}` : ''}
+              </h3>
+              <VerificationBadge isVerified={isVerified} />
+            </div>
+            <p className="mt-0.5 text-sm text-muted">à {formatDistance(distanceM)} de toi</p>
           </div>
         </div>
       </div>
 
-      {bio && (
-        <p className="mt-3 line-clamp-2 text-sm text-muted">{bio}</p>
-      )}
+      <div className="flex flex-1 flex-col p-4">
+        <p className="line-clamp-3 text-sm text-muted">
+          {bio || 'Profil sans description pour l’instant.'}
+        </p>
 
-      <div className="mt-4 flex gap-3">
-        <button
-          type="button"
-          onClick={onPass}
-          aria-label={`Passer ${displayName}`}
-          className="flex-1 rounded-full border border-hairline-strong py-2 text-sm font-medium text-muted transition-colors hover:bg-fill-subtle"
-        >
-          Passer
-        </button>
-        <button
-          type="button"
-          onClick={onLike}
-          aria-label={`Like ${displayName}`}
-          className="flex-1 rounded-full bg-terracotta py-2 text-sm font-medium text-white transition-colors hover:bg-coral-dark dark:bg-coral dark:hover:bg-terracotta"
-        >
-          Like
-        </button>
+        {/* `mt-auto` : deux cartes voisines de bios inégales alignent quand même leurs actions. */}
+        <div className="mt-auto flex gap-2 pt-4 [&>button]:flex-1">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={withoutBubbling(onPass)}
+            aria-label={`Passer ${displayName}`}
+          >
+            Passer
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={withoutBubbling(onLike)}
+            aria-label={`Like ${displayName}`}
+          >
+            Like
+          </Button>
+        </div>
       </div>
     </Card>
   );

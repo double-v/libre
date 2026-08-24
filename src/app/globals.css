@@ -1284,6 +1284,9 @@ input::placeholder, textarea::placeholder {
   *::before,
   *::after {
     animation-duration: 80ms !important;
+    /* Un délai inline (échelonnement des cartes) survivrait à la coupure des
+       animations : la carte resterait invisible le temps du stagger. */
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 80ms !important;
     scroll-behavior: auto !important;
