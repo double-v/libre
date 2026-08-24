@@ -300,12 +300,42 @@ Base unit: 4px.
 - Max content: `max-w-2xl` (672px) for marketing pages
 - Cards: `grid gap-4 sm:grid-cols-2 lg:grid-cols-3` — la grille de cartes de la
   home est `repeat(3, minmax(0, 1fr))` + `gap-grid` (20px), 1 colonne sous 720px.
+- **Écrans de liste de l'app connectée (#348)** : `grid gap-grid md:grid-cols-2
+  lg:grid-cols-3`. Un cran plus prudent que la home (`md` et non `sm`) parce que
+  #347 gèle le rendu sous `md` : la colonne unique et la tab bar ne bougent pas.
 
 ### Container Patterns
 
 - **Auth pages**: Centered column, `max-w-md`, logo above
 - **Main app**: colonne `content` (1080px) + sections dans `SiteNav` en desktop ; colonne unique + bottom tab bar sous `md` (#347)
+- **Écrans de liste** (Découvrir, Croisements) : grille de cartes dans la colonne
+  `content` — la carte remplit sa cellule, elle n'énonce aucune largeur (#348)
+- **Fils et états** (La Place, empty/error states) : `reading` (720px) **dans** la
+  colonne `content`. Le fond, la bordure et la zone scrollable gardent la largeur
+  du conteneur ; seul le contenu revient à la colonne de lecture (#348)
 - **Marketing**: Full-width bands alternating surfaces
+
+### Fin de grille — le vide est le cas nominal (#348)
+
+La base est petite (une douzaine de profils) : une grille 3 colonnes s'arrête donc
+presque toujours sur une rangée incomplète. Elle se referme par des cellules qui
+**disent** le vide au lieu de le laisser béer.
+
+| Cellule | Rôle | Règle |
+|---|---|---|
+| Vignette d'attente | complète la dernière rangée | pointillés, `aria-hidden`, jamais confondable avec une personne |
+| Carte de parrainage | referme la grille | **une seule**, toujours en dernier |
+
+- Le compte de vignettes est **borné par la géométrie** : `fillerCount()` complète
+  la rangée, carte de parrainage comprise, donc jamais plus de `colonnes - 1`
+  factices. C'est ce qui empêche le remplissage de mentir sur la taille de la base.
+- **Uniquement au bout du feed.** Tant qu'une page reste à charger, une « place
+  libre » mentirait sur ce qui vient après : la fin de grille attend l'absence de
+  curseur, et un libellé (« Tu as tout vu — N personnes ») dit où on en est.
+- Une cellule d'attente n'est **pas** annoncée au lecteur d'écran : la liste ne
+  compte que des personnes réelles (`PRODUCT.md`, humain d'abord).
+- Sur Croisements, la cellule restante porte la promesse de flou géoloc plutôt
+  qu'une vignette : c'est l'écran où la question se pose.
 
 ## Shell unifié (#273)
 
@@ -687,7 +717,7 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 |---|---|---|---|
 | `Button` | default, hover, focus, active, disabled, loading | primary, secondary, ghost, danger | Tous les `<button>` et les liens stylés CTA |
 | `Input` | default, hover, focus, error, disabled | text, email, password, search, textarea | Tous les `<input>` et `<textarea>` |
-| `Card` | default, hover (rare), interactive | profile, crossing, match, filter, modal | Tous les blocs `rounded-xl border` du site |
+| `Card` | default, hover (rare), interactive | profile, crossing, match, filter, modal, **media** (#348) | Tous les blocs `rounded-xl border` du site |
 | `Tag` | default, selected, hover, disabled | chip, badge | Tous les chips/badges dispersés |
 | `Avatar` | default, with-online-dot, with-badge, placeholder | sm, md, lg, xl | Tous les avatars inline |
 | `Modal` | open, closed | centered, bottom-sheet | Dialog, confirm, profile-modal |
