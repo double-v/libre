@@ -37,6 +37,16 @@ destinées à la galerie **claude.ai/design** (projet « Libre — Design System
 > Le prototype `templates/homepage-lobby/*` côté projet Claude Design est **rejeté**
 > (refs gamer, viole les anti-références `PRODUCT.md`) — à retirer/remplacer, cf. issue #238.
 
+## Contenu (`canvas/`)
+
+Canvas Claude Design — des **maquettes d'écran** validées sur pixels, pas des miroirs
+de composants. C'est le premier gate de `CLAUDE.md` (« prototype validé ») rendu
+consultable par l'agent qui code le ticket, au lieu de vivre dans un lien perdu.
+
+| Canvas | Portée | Lots |
+|---|---|---|
+| `canvas/mode-connecte/` | l'app connectée en desktop 1080 + preuve mobile inchangée | #347, #348, #349 (épic #273) |
+
 ## Conventions
 
 - **Tokens uniquement**, valeurs alignées sur le bloc `@theme` de

@@ -7,8 +7,8 @@ import DiscoverPage from '@/app/(main)/discover/page';
 vi.mock('@/components/ProfileCard', () => ({ default: () => <div data-testid="profile-card" /> }));
 vi.mock('@/components/ProfileModal', () => ({ default: () => null }));
 vi.mock('@/components/DiscoverFilters', () => ({ default: () => <div /> }));
-vi.mock('@/components/EmptyStateCards', () => ({
-  default: () => <div data-testid="empty-state" />,
+vi.mock('@/components/GridFillerCards', () => ({
+  default: () => <div data-testid="fin-de-grille" />,
 }));
 vi.mock('@/components/CrossingsView', () => ({ default: () => <div data-testid="crossings" /> }));
 vi.mock('@/components/ui/Button', () => ({
@@ -42,8 +42,9 @@ beforeEach(() => {
 describe('DiscoverPage — feed fetch (régression #179)', () => {
   it('fetche le feed une seule fois au montage, pas de double-fetch en cascade', async () => {
     render(<DiscoverPage />);
-    // L'empty-state ne s'affiche qu'une fois le fetch de montage résolu.
-    await screen.findByTestId('empty-state');
+    // La fin de grille ne se pose qu'une fois le fetch de montage résolu
+    // (feed vide, donc pas de curseur : on est bien au bout).
+    await screen.findByTestId('fin-de-grille');
     expect(discoverCalls()).toHaveLength(1);
     expect(String(discoverCalls()[0][0])).toContain('tab=all');
   });

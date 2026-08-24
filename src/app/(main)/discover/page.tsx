@@ -4,9 +4,10 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import ProfileCard from '@/components/ProfileCard';
 import ProfileModal from '@/components/ProfileModal';
 import SearchFilters, { EMPTY_SEARCH_FILTERS, hasActiveFilters, type SearchFiltersValue } from '@/components/SearchFilters';
-import EmptyStateCards from '@/components/EmptyStateCards';
+import GridFillerCards from '@/components/GridFillerCards';
 import CrossingsView from '@/components/CrossingsView';
 import Button from '@/components/ui/Button';
+import SiteShell from '@/components/ui/SiteShell';
 
 // Onglet unique de découverte : un seul écran, trois façons de rencontrer.
 // « Pour toi » = feed algorithmique, « À proximité » = rayon géoloc,
@@ -290,7 +291,7 @@ export default function DiscoverPage() {
   const visibleUsers = users.filter((u) => !passedIds.has(u.userId));
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
+    <SiteShell className="py-6 md:pb-section md:pt-11">
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-content">Découvrir</h1>
@@ -321,7 +322,7 @@ export default function DiscoverPage() {
             role="tab"
             aria-selected={segment === key}
             onClick={() => setSegment(key)}
-            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
+            className={`min-h-[44px] flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
               segment === key
                 ? 'bg-surface text-content shadow-sm'
                 : 'text-muted hover:text-muted'
@@ -365,7 +366,7 @@ export default function DiscoverPage() {
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-coral border-t-transparent" />
         </div>
       ) : errorKind !== 'none' && visibleUsers.length === 0 ? (
-        <div className="animate-fade-in rounded-xl border border-coral/20 bg-blush p-6 text-center dark:border-coral/20 dark:bg-coral/5">
+        <div className="animate-fade-in mx-auto max-w-reading rounded-xl border border-coral/20 bg-blush p-6 text-center dark:border-coral/20 dark:bg-coral/5">
           <p className="text-muted">
             {errorKind === 'rate'
               ? 'Doucement 🙂 tu vas un peu vite. Réessaie dans quelques secondes.'
@@ -378,7 +379,7 @@ export default function DiscoverPage() {
           </div>
         </div>
       ) : segment === 'nearby' && nearbyReason === 'geoloc_required' ? (
-        <div className="animate-fade-in rounded-xl border border-dashed border-coral/40 bg-blush p-6 text-center dark:border-coral/30 dark:bg-coral/5">
+        <div className="animate-fade-in mx-auto max-w-reading rounded-xl border border-dashed border-coral/40 bg-blush p-6 text-center dark:border-coral/30 dark:bg-coral/5">
           <p className="mb-4 text-muted">
             Active ta géoloc pour voir les célibataires près de toi
           </p>
@@ -392,50 +393,71 @@ export default function DiscoverPage() {
           )}
         </div>
       ) : nearbyReason === 'empty_feed' ? (
-        <div className="animate-fade-in rounded-xl border border-hairline bg-surface p-6 text-center">
+        <div className="animate-fade-in mx-auto max-w-reading rounded-xl border border-hairline bg-surface p-6 text-center">
           <p className="text-muted">
             {filters.distanceKm !== null
               ? `Personne dans un rayon de ${filters.distanceKm} km. Élargis ta distance ou reviens plus tard.`
               : 'Personne à découvrir pour le moment. Reviens plus tard.'}
           </p>
         </div>
-      ) : visibleUsers.length === 0 ? (
-        <EmptyStateCards context={segment === 'nearby' ? 'à proximité' : 'à découvrir'} />
       ) : (
-        <div className="space-y-4">
-          {visibleUsers.map((user) => (
-            <ProfileCard
-              key={user.userId}
-              id={user.userId}
-              displayName={user.displayName}
-              age={user.age ?? undefined}
-              bio={user.bio}
-              isVerified={user.isVerified}
-              online={user.online}
-              distanceKm={user.distanceKm}
-              distanceBucket={user.distanceBucket}
-              photos={user.photos}
-              veiledPhotos={user.veiledPhotos}
-              interests={user.interests}
-              practices={user.practices}
-              onLike={() => handleLike(user.userId)}
-              onPass={() => handlePass(user.userId)}
-              onProfileClick={(id) => setSelectedUserId(id)}
-            />
-          ))}
+        <>
+          {/* Dire où on en est du feed : sans ça, une rangée complétée par des
+              vignettes d'attente laisserait croire qu'il reste des profils. */}
+          {visibleUsers.length === 0 ? (
+            <p className="mb-4 text-center text-muted">
+              Personne {segment === 'nearby' ? 'à proximité' : 'à découvrir'} pour le moment
+            </p>
+          ) : !cursor ? (
+            <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
+              Tu as tout vu — {visibleUsers.length} personne{visibleUsers.length > 1 ? 's' : ''}
+            </p>
+          ) : null}
+
+          <div className="grid gap-grid md:grid-cols-2 lg:grid-cols-3">
+            {visibleUsers.map((user) => (
+              <ProfileCard
+                key={user.userId}
+                id={user.userId}
+                displayName={user.displayName}
+                age={user.age ?? undefined}
+                bio={user.bio}
+                isVerified={user.isVerified}
+                online={user.online}
+                distanceKm={user.distanceKm}
+                distanceBucket={user.distanceBucket}
+                photos={user.photos}
+                veiledPhotos={user.veiledPhotos}
+                interests={user.interests}
+                practices={user.practices}
+                onLike={() => handleLike(user.userId)}
+                onPass={() => handlePass(user.userId)}
+                onProfileClick={(id) => setSelectedUserId(id)}
+              />
+            ))}
+
+            {/* Fin de feed seulement : tant qu'une page reste à charger, une
+                « place libre » mentirait sur ce qui vient après. */}
+            {!cursor && <GridFillerCards realCount={visibleUsers.length} />}
+          </div>
 
           {cursor && (
-            <Button
-              type="button"
-              variant="secondary"
-              fullWidth
-              onClick={() => fetchPage(false)}
-              loading={loading}
-            >
-              {loading ? 'Chargement…' : 'Charger plus'}
-            </Button>
+            // En grille, un bouton pleine largeur barre la page : il se
+            // recentre dès que la grille a plus d'une colonne.
+            <div className="mt-6 flex justify-center">
+              <Button
+                type="button"
+                variant="secondary"
+                fullWidth
+                className="md:w-auto md:px-8"
+                onClick={() => fetchPage(false)}
+                loading={loading}
+              >
+                {loading ? 'Chargement…' : 'Charger plus'}
+              </Button>
+            </div>
           )}
-        </div>
+        </>
       )}
       <ProfileModal
         userId={selectedUserId ?? ''}
@@ -445,6 +467,6 @@ export default function DiscoverPage() {
         // que de refetcher tout le feed pour faire disparaître une carte.
         onBlocked={(id) => setPassedIds((prev) => new Set(prev).add(id))}
       />
-    </div>
+    </SiteShell>
   );
 }

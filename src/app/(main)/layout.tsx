@@ -6,19 +6,13 @@ import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import SiteNav from '@/components/ui/SiteNav';
+import { APP_SECTIONS, isSectionActive } from '@/components/ui/AppSections';
 
 const MatchDialog = dynamic(() => import('@/components/MatchDialog'), { ssr: false });
 const FeedbackButton = dynamic(() => import('@/components/FeedbackButton'), { ssr: false });
 const ToastHost = dynamic(() => import('@/components/ui/Toast'), { ssr: false });
 
 const BETA_DISMISSED_KEY = 'libre_beta_dismissed';
-
-const navItems = [
-  { href: '/discover', label: 'Découvrir' },
-  { href: '/messages', label: 'Messages' },
-  { href: '/square', label: 'La Place' },
-  { href: '/profile', label: 'Profil' },
-];
 
 function BetaBanner({ onFeedback }: { onFeedback: () => void }) {
   const [dismissed, setDismissed] = useState(true);
@@ -92,13 +86,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Shell unifié (#280, épic #273) : la nav du haut passe sur le SiteNav
-          partagé (variante connectée résolue via session), largeur « app »
-          (max-w-lg, mobile-first). La bannière bêta reste câblée dans le même
-          conteneur sticky (safe-area portée par SiteNav). La bottom tab bar
-          coexiste (décision DESIGN.md § Navigation, on ne fusionne pas). */}
+      {/* Shell unifié (#280, épic #273), amendé desktop par #347 : la nav du haut
+          est le SiteNav partagé (variante connectée résolue via session), en
+          largeur « content » — l'app connectée adopte la colonne de la home au
+          lieu de sa colonne mobile-first. Elle porte les sections à partir de
+          `md`, où la tab bar s'efface. La bannière bêta reste câblée dans le même
+          conteneur sticky (safe-area portée par SiteNav). */}
       <SiteNav
-        width="app"
+        width="content"
+        showSections
         banner={
           <BetaBanner onFeedback={() => window.dispatchEvent(new Event('open-feedback'))} />
         }
@@ -107,16 +103,17 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <main id="main-content" role="main" className="flex-1 pb-nav">{children}</main>
 
       {/* Label distinct de la nav du haut (SiteNav = « Navigation principale »)
-          pour ne pas dupliquer le landmark : la tab bar navigue entre sections. */}
-      <nav role="navigation" aria-label="Navigation des sections" className="fixed bottom-0 left-0 right-0 z-50 border-t border-hairline bg-surface pb-safe">
+          pour ne pas dupliquer le landmark : la tab bar navigue entre sections.
+          `md:hidden` (#347) : à partir de `md` les sections vivent dans SiteNav,
+          et un seul landmark de navigation subsiste par breakpoint. */}
+      <nav role="navigation" aria-label="Navigation des sections" className="fixed bottom-0 left-0 right-0 z-50 border-t border-hairline bg-surface pb-safe md:hidden">
         <div className="mx-auto flex min-h-14 max-w-lg items-center justify-around">
-          {navItems.map((item) => {
-            const isActive =
-              pathname === item.href || pathname.startsWith(item.href + '/');
+          {APP_SECTIONS.map(({ href, label, Icon }) => {
+            const isActive = isSectionActive(href, pathname);
             return (
               <Link
-                key={item.href}
-                href={item.href}
+                key={href}
+                href={href}
                 aria-current={isActive ? 'page' : undefined}
                 className={`flex flex-col items-center gap-0.5 px-3 py-2 text-xs font-medium transition-colors ${
                   isActive
@@ -124,23 +121,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                     : 'text-muted hover:text-content'
                 }`}
               >
-                {item.href === '/discover' && (
-                  isActive ? (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-                  ) : (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-                  )
-                )}
-                {item.href === '/messages' && (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                )}
-                {item.href === '/square' && (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-                )}
-                {item.href === '/profile' && (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                )}
-                {item.label}
+                <Icon active={isActive} width={20} height={20} />
+                {label}
               </Link>
             );
           })}

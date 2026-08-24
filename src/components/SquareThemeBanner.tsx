@@ -51,7 +51,7 @@ export default function SquareThemeBanner({
   if (!theme) {
     return (
       <div className="shrink-0 border-b border-hairline bg-blush px-4 py-2 dark:bg-coral/5">
-        <p className="text-sm text-muted">Chargement du thème…</p>
+        <p className="mx-auto w-full max-w-reading text-sm text-muted">Chargement du thème…</p>
       </div>
     );
   }
@@ -61,18 +61,22 @@ export default function SquareThemeBanner({
 
   return (
     <div className="shrink-0 border-b border-hairline bg-blush px-4 py-2 dark:bg-coral/5">
-      <p className="text-sm font-medium text-coral dark:text-coral-light">
-        🎭 {theme.label}
-      </p>
-      <p className="text-xs text-muted">{theme.description}</p>
-      <p className="text-xs text-muted">
-        Tu es : <span className="font-medium text-muted">{pseudonym}</span>
-      </p>
-      {showCountdown && (
-        <p className="text-xs text-muted">
-          🔄 Réinitialisation dans {formatCountdown(countdown)}
+      {/* Le bandeau tient la largeur de la Place, son texte reste à la colonne
+          de lecture du fil (#348) — sinon il court sur 1080px. */}
+      <div className="mx-auto w-full max-w-reading">
+        <p className="text-sm font-medium text-coral dark:text-coral-light">
+          🎭 {theme.label}
         </p>
-      )}
+        <p className="text-xs text-muted">{theme.description}</p>
+        <p className="text-xs text-muted">
+          Tu es : <span className="font-medium text-muted">{pseudonym}</span>
+        </p>
+        {showCountdown && (
+          <p className="text-xs text-muted">
+            🔄 Réinitialisation dans {formatCountdown(countdown)}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

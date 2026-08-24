@@ -68,6 +68,9 @@ export default function SquareMessageList({
         aria-relevant="additions"
         aria-label="Messages de la Place"
       >
+        {/* Colonne de lecture : un fil de discussion ne s'étire pas sur 1080px
+            (#348). Le conteneur scrollable, lui, garde toute la largeur. */}
+        <div className="mx-auto w-full max-w-reading">
         {messages.length === 0 && (
           <p className="text-center text-sm text-muted">La Place est calme pour le moment…</p>
         )}
@@ -156,6 +159,7 @@ export default function SquareMessageList({
             </div>
           );
         })}
+        </div>
       </div>
 
       {reportingMessageId && (

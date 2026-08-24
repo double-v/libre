@@ -41,6 +41,11 @@ function stripBorderSide(name: string): string {
 
 function isNativeToken(prefix: string, name: string): boolean {
   if (NATIVE_NON_COLOR_KEYWORDS.includes(name)) return true;
+  // Épaisseur de bord sur un côté (`border-t-2`) : une largeur, pas une
+  // couleur. `border-2` seul n'atteint jamais cette garde — la regex d'usage
+  // exige une lettre après le préfixe — mais `border-t-2` y arrive une fois le
+  // côté retiré, et se ferait lire comme un token de couleur nommé « 2 ».
+  if (prefix === 'border' && /^\d+$/.test(name)) return true;
   if (prefix === 'bg' && /^gradient-to-[trbl]{1,2}$/.test(name)) return true; // bg-gradient-to-br etc.
   if (prefix === 'shadow') return false; // no native shadow-<name> beyond the size scale above
   return isNativeColorName(name);

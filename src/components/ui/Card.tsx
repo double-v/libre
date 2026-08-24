@@ -2,7 +2,7 @@
 
 import type { HTMLAttributes, ReactNode } from 'react';
 
-export type CardVariant = 'profile' | 'modal' | 'filter' | 'empty';
+export type CardVariant = 'profile' | 'modal' | 'filter' | 'empty' | 'media';
 
 export type CardElement = 'div' | 'article' | 'section' | 'aside';
 
@@ -28,13 +28,18 @@ const variantClasses: Record<CardVariant, string> = {
     'bg-surface border border-hairline rounded-card p-4',
   empty:
     'bg-surface border border-hairline rounded-card p-8 text-center',
+  // Carte photo-first (#348) : le média touche les bords, donc aucun padding
+  // ici — c'est au corps de la carte de poser le sien. `overflow-hidden` fait
+  // suivre le rayon au média, sinon la photo déborde les coins arrondis.
+  media:
+    'bg-surface border border-hairline rounded-card shadow-soft overflow-hidden',
 };
 
 /**
  * Card — conteneur partagé pour absorber les patterns dupliqués
  * `rounded-xl border p-4` etc. (cf. .hermes/plans/spec-card.md).
  *
- * Variantes : profile (default), modal, filter, empty.
+ * Variantes : profile (default), modal, filter, empty, media.
  * Modificateur : interactive (hover + focus visible).
  * Sémantique : as='article' | 'section' | 'aside' pour la bonne balise.
  *

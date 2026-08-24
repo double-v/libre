@@ -20,6 +20,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { TrustBadge } from '@/components/TrustBadge';
 import type { TrustBand } from '@/lib/trust/compute-level';
+import SiteShell from '@/components/ui/SiteShell';
 
 type Tab = 'cercle' | 'niveau';
 
@@ -135,7 +136,7 @@ export default function TrustSettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
+    <SiteShell className="py-6 md:pb-section md:pt-11">
       <div className="mb-4 flex items-center gap-3">
         <button
           type="button"
@@ -201,7 +202,7 @@ export default function TrustSettingsPage() {
           }}
         />
       )}
-    </div>
+    </SiteShell>
   );
 }
 

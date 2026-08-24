@@ -300,12 +300,42 @@ Base unit: 4px.
 - Max content: `max-w-2xl` (672px) for marketing pages
 - Cards: `grid gap-4 sm:grid-cols-2 lg:grid-cols-3` — la grille de cartes de la
   home est `repeat(3, minmax(0, 1fr))` + `gap-grid` (20px), 1 colonne sous 720px.
+- **Écrans de liste de l'app connectée (#348)** : `grid gap-grid md:grid-cols-2
+  lg:grid-cols-3`. Un cran plus prudent que la home (`md` et non `sm`) parce que
+  #347 gèle le rendu sous `md` : la colonne unique et la tab bar ne bougent pas.
 
 ### Container Patterns
 
 - **Auth pages**: Centered column, `max-w-md`, logo above
-- **Main app**: Single panel with bottom tab nav, `max-w-lg`
+- **Main app**: colonne `content` (1080px) + sections dans `SiteNav` en desktop ; colonne unique + bottom tab bar sous `md` (#347)
+- **Écrans de liste** (Découvrir, Croisements) : grille de cartes dans la colonne
+  `content` — la carte remplit sa cellule, elle n'énonce aucune largeur (#348)
+- **Fils et états** (La Place, empty/error states) : `reading` (720px) **dans** la
+  colonne `content`. Le fond, la bordure et la zone scrollable gardent la largeur
+  du conteneur ; seul le contenu revient à la colonne de lecture (#348)
 - **Marketing**: Full-width bands alternating surfaces
+
+### Fin de grille — le vide est le cas nominal (#348)
+
+La base est petite (une douzaine de profils) : une grille 3 colonnes s'arrête donc
+presque toujours sur une rangée incomplète. Elle se referme par des cellules qui
+**disent** le vide au lieu de le laisser béer.
+
+| Cellule | Rôle | Règle |
+|---|---|---|
+| Vignette d'attente | complète la dernière rangée | pointillés, `aria-hidden`, jamais confondable avec une personne |
+| Carte de parrainage | referme la grille | **une seule**, toujours en dernier |
+
+- Le compte de vignettes est **borné par la géométrie** : `fillerCount()` complète
+  la rangée, carte de parrainage comprise, donc jamais plus de `colonnes - 1`
+  factices. C'est ce qui empêche le remplissage de mentir sur la taille de la base.
+- **Uniquement au bout du feed.** Tant qu'une page reste à charger, une « place
+  libre » mentirait sur ce qui vient après : la fin de grille attend l'absence de
+  curseur, et un libellé (« Tu as tout vu — N personnes ») dit où on en est.
+- Une cellule d'attente n'est **pas** annoncée au lecteur d'écran : la liste ne
+  compte que des personnes réelles (`PRODUCT.md`, humain d'abord).
+- Sur Croisements, la cellule restante porte la promesse de flou géoloc plutôt
+  qu'une vignette : c'est l'écran où la question se pose.
 
 ## Shell unifié (#273)
 
@@ -366,7 +396,7 @@ adossé aux tokens `--container-*` de `globals.css` (`@theme`) — en remplaceme
 | `wide` | `max-w-wide` | 1180px | hero — un cran plus large que le corps de page |
 | `content` | `max-w-content` | 1080px | **largeur contenu globale desktop** — pages contenu (home, manifesto, légal, sections marketing) |
 | `reading` | `max-w-reading` | 720px | texte long resserré — **option lisibilité** (non défaut ; réservé à un besoin explicite) |
-| `app` | `max-w-lg` | 512px | app connectée mobile-first (feed, messages, profil) |
+| `app` | `max-w-lg` | 512px | colonne resserrée **à l'intérieur** d'une page — n'est plus le plafond de page de `(main)` (#347) |
 
 Décision (#273, précisée #293 le 2026-07-13) : la **largeur de contenu globale
 (desktop) est `content` (~1080px)** = la largeur du container de la home ; les pages
@@ -375,6 +405,15 @@ contenu (home, manifesto, légal…) l'adoptent. `reading` (720) n'est **pas** l
 sur `reading` ; corrigé en #293). L'app garde `app` (mobile-first, UX cartes/swipe)
 **dans le même shell/nav/tokens**. Remplace la grille marketing `max-w-2xl` de la
 section **Layout** ci-dessus une fois migré.
+
+> **Amendement #347 (2026-08-23)** — « l'app garde `app` (mobile-first) » est
+> **renversé** : sur desktop, `(main)` adopte `content` (1080px) comme toutes les
+> autres zones. La colonne de 512px cesse d'être un plafond de page pour devenir
+> une largeur de **bloc** (un formulaire, un fil de conversation) à l'intérieur de
+> la colonne. Motif : c'était le dernier endroit où le shell unifié ne s'appliquait
+> pas, et une app centrée sur 512px au milieu d'un 27 pouces ne ressemblait plus au
+> site qu'elle prolonge. Une seule colonne — sidebar et master-detail explicitement
+> écartés. Maquettes de référence : `design-system/canvas/mode-connecte/`.
 
 **Largeur `content` — question ouverte tranchée (#277)** : une **seule valeur**
 `1080px` (pas d'échelle fine hero 1180 / sections 1080). Le hero de la home peut
@@ -457,11 +496,16 @@ se décide en #347, sur pixels — pas ici.
   - **connecté** : `ThemeToggle` + *Admin* (si `ADMIN`) + *Paramètres*.
   Sticky, translucide via les tokens `--nav-*` (`bg-nav-surface` ; always-dark sur
   la home via l'override `[data-lobby]`), porte la safe-area (`pt-safe`). Ne
-  remplace **pas** la bottom tab bar (nav principale mobile de l'app connectée) :
-  les deux coexistent. Cf. § dédié « SiteNav — nav unique » + Component Library.
-  La **home** est incluse : `LobbyNav` retiré, migrée sur `SiteNav` (#273).
+  Cf. § dédié « SiteNav — nav unique » + Component Library. La **home** est
+  incluse : `LobbyNav` retiré, migrée sur `SiteNav` (#273). En variante connectée,
+  la barre porte **les quatre sections à partir de `md`** (#347) : pastille pleine
+  (`bg-sunken`) à l'état actif, cible ≥ 44px, `aria-current="page"`.
 - **Bottom tab bar** (app connectée) : 4 onglets (Découvrir, Messages, La Place,
   Profil), `bg-surface border-t border-hairline`, icônes + labels, actif coral.
+  **Mobile-only depuis #347** (`md:hidden`) : au-delà, les sections vivent dans
+  `SiteNav` et `--nav-h` tombe à 0 pour que `.pb-nav` ne réserve plus rien. Les
+  deux surfaces ne coexistent plus — **un seul landmark de navigation par
+  breakpoint** — et lisent la même liste (`src/components/ui/AppSections.tsx`).
 - **`ThemeMenu`** (DS, `src/components/ui/ThemeMenu.tsx`) : popover mode×thème —
   **admin uniquement** (cf. § dédié plus bas ; auth/landing = aucun sélecteur).
 - **`ThemeToggle`** (DS, `src/components/ui/ThemeToggle.tsx`) : bascule **Mode seul**
@@ -673,7 +717,7 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 |---|---|---|---|
 | `Button` | default, hover, focus, active, disabled, loading | primary, secondary, ghost, danger | Tous les `<button>` et les liens stylés CTA |
 | `Input` | default, hover, focus, error, disabled | text, email, password, search, textarea | Tous les `<input>` et `<textarea>` |
-| `Card` | default, hover (rare), interactive | profile, crossing, match, filter, modal | Tous les blocs `rounded-xl border` du site |
+| `Card` | default, hover (rare), interactive | profile, crossing, match, filter, modal, **media** (#348) | Tous les blocs `rounded-xl border` du site |
 | `Tag` | default, selected, hover, disabled | chip, badge | Tous les chips/badges dispersés |
 | `Avatar` | default, with-online-dot, with-badge, placeholder | sm, md, lg, xl | Tous les avatars inline |
 | `Modal` | open, closed | centered, bottom-sheet | Dialog, confirm, profile-modal |
