@@ -134,37 +134,7 @@ jobs:
           else
             echo "Bascule pooler → direct pour la migration."
           fi
-
-          # `migrate deploy` prend un verrou consultatif de session
-          # (`pg_advisory_lock(72707369)`) avec un délai de 10 s non
-          # configurable, et la CI meurt dessus au hasard (#363).
-          #
-          # Le détenteur observé n'est PAS une migration concurrente : c'est une
-          # session arrivée **par le pooler**, `idle`, dont la dernière requête
-          # est du trafic applicatif ordinaire. Une migration passée par
-          # pgbouncer a pris le verrou, puis sa connexion serveur est retournée
-          # au pool **sans le relâcher** — le backend sert ensuite des requêtes
-          # normales en gardant le verrou de migration. Il se libère quand le
-          # pool recycle la connexion.
-          #
-          # Deux occurrences mesurées (2026-08-24 22:33, 2026-08-25 04:37) : le
-          # verrou a tenu plus de 4 minutes. La fenêtre d'attente est calée sur
-          # cette durée-là, pas sur celle d'une migration.
-          #
-          # C'est une ATTÉNUATION. La cause — qui migre encore par le pooler —
-          # reste ouverte dans #363, et une base par PR la supprimerait.
-          TENTATIVES=8
-          for tentative in $(seq 1 "$TENTATIVES"); do
-            if DATABASE_URL="$direct" npx prisma migrate deploy; then
-              exit 0
-            fi
-            if [ "$tentative" -lt "$TENTATIVES" ]; then
-              echo "::warning::Verrou de migration tenu (tentative $tentative/$TENTATIVES) — nouvel essai dans 30 s."
-              sleep 30
-            fi
-          done
-          echo "::error::Verrou de migration toujours tenu après $TENTATIVES tentatives (~5 min). Cf. #363."
-          exit 1
+          DATABASE_URL="$direct" npx prisma migrate deploy
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
