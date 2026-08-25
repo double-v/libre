@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { SquareMessage } from '@/lib/square/store';
 import SquareReportModal from './SquareReportModal';
+import SquareReopenSeparator from './SquareReopenSeparator';
 
 const DISPLAY_REACTION_EMOJIS = ['❤️', '😂', '🔥', '👋'];
 
@@ -20,13 +21,42 @@ export default function SquareMessageList({
   reactions,
   myReactions = {},
   onReactionUpdate,
+  autoScroll = false,
 }: {
   messages: SquareMessage[];
   reactions: Record<string, Record<string, number>>;
   myReactions?: MyReactions;
   onReactionUpdate?: (messageId: string, emoji: string, added: boolean, count: number) => void;
+  /** Suivre l'arrivée des messages en restant collé au bas du fil. */
+  autoScroll?: boolean;
 }) {
+  const filRef = useRef<HTMLDivElement>(null);
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
+
+  /**
+   * Le fil se scrolle lui-même — la page, jamais (#358).
+   *
+   * La sentinelle d'auto-scroll vivait après le composeur, donc hors du
+   * conteneur scrollable : `scrollIntoView` remontait jusqu'au document et
+   * poussait le bandeau du jour sous la nav collante à chaque message (145px
+   * mesurés au navigateur). Le haut de page appartient au rituel ; seul le fil
+   * bouge.
+   */
+  useEffect(() => {
+    if (!autoScroll) return;
+    const fil = filRef.current;
+    if (!fil) return;
+
+    const sansMouvement =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (typeof fil.scrollTo === 'function') {
+      fil.scrollTo({ top: fil.scrollHeight, behavior: sansMouvement ? 'auto' : 'smooth' });
+    } else {
+      fil.scrollTop = fil.scrollHeight;
+    }
+  }, [messages, autoScroll]);
   const [reportedMessages, setReportedMessages] = useState<Set<string>>(new Set());
 
   const handleReported = () => {
@@ -62,6 +92,7 @@ export default function SquareMessageList({
   return (
     <>
       <div
+        ref={filRef}
         className="flex-1 overflow-y-auto px-4 py-3"
         role="log"
         aria-live="polite"
@@ -71,6 +102,10 @@ export default function SquareMessageList({
         {/* Colonne de lecture : un fil de discussion ne s'étire pas sur 1080px
             (#348). Le conteneur scrollable, lui, garde toute la largeur. */}
         <div className="mx-auto w-full max-w-reading">
+        {/* Le fil s'ouvre sur la coupure du jour (#358) — y compris quand rien
+            n'a encore été dit : c'est ce qui distingue « vide depuis la
+            réouverture » de « vide sans qu'on sache depuis quand ». */}
+        <SquareReopenSeparator />
         {messages.length === 0 && (
           <p className="text-center text-sm text-muted">La Place est calme pour le moment…</p>
         )}

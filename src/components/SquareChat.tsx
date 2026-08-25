@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { SquareMessage, SquareReaction } from '@/lib/square/store';
 import type { ThemeInfo } from './SquareThemeBanner';
 import SquareThemeBanner from './SquareThemeBanner';
@@ -40,9 +40,16 @@ export default function SquareChat({ userId }: { userId: string }) {
   const [myReactions, setMyReactions] = useState<Record<string, Set<string>>>({});
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const pseudonym = generatePseudonym(userId, theme?.pseudonymNames);
+
+  // Voix distinctes entendues depuis la réouverture (#358). Le fil est déjà
+  // purgé de la veille : ce qu'il contient date d'après la borne, donc le
+  // compte se dérive ici sans un appel de plus — et sans prétendre mesurer une
+  // présence que rien ne mesure (cf. `ligneDePresence` dans SquareThemeBanner).
+  const voices = new Set(
+    messages.filter((m) => !m.isSystem).map((m) => m.pseudonym),
+  ).size;
 
   // Fetch theme config on mount
   useEffect(() => {
@@ -202,11 +209,6 @@ export default function SquareChat({ userId }: { userId: string }) {
     };
   }, []);
 
-  // Auto-scroll to bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
   const handleSend = useCallback(
     async (content: string, type: string, gifUrl?: string) => {
       setSending(true);
@@ -271,8 +273,8 @@ export default function SquareChat({ userId }: { userId: string }) {
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <SquareThemeBanner theme={theme} pseudonym={pseudonym} />
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <SquareThemeBanner theme={theme} pseudonym={pseudonym} voices={voices} />
       {error && (
         <div className="px-4 py-1 text-xs text-red-600 dark:text-red-400">{error}</div>
       )}
@@ -281,9 +283,9 @@ export default function SquareChat({ userId }: { userId: string }) {
         reactions={reactions}
         myReactions={myReactions}
         onReactionUpdate={handleReactionUpdate}
+        autoScroll
       />
       <SquareInputArea theme={theme} onSend={handleSend} sending={sending} />
-      <div ref={messagesEndRef} />
     </div>
   );
 }

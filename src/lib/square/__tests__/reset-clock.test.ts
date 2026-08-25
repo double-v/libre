@@ -11,6 +11,8 @@ import {
   lastResetBoundary,
   nextResetBoundary,
   msUntilNextReset,
+  formatCountdown,
+  formatReopenClock,
 } from '../reset-clock';
 
 describe('lastResetBoundary', () => {
@@ -59,5 +61,48 @@ describe('nextResetBoundary / msUntilNextReset', () => {
 
   it('expose l’heure déclarée dans vercel.json', () => {
     expect(SQUARE_RESET_HOUR_UTC).toBe(2);
+  });
+});
+
+describe('formatCountdown (#358)', () => {
+  it('rend le compte à rebours du canvas', () => {
+    // 4 h 12 — la forme dessinée dans LaPlace.dc.html.
+    expect(formatCountdown(4 * 3_600_000 + 12 * 60_000)).toBe('4 h 12');
+  });
+
+  it('garde les minutes sur deux chiffres', () => {
+    expect(formatCountdown(3 * 3_600_000 + 5 * 60_000)).toBe('3 h 05');
+  });
+
+  it('tronque plutôt que d’arrondir — le rebours ne doit jamais dépasser le réel', () => {
+    // 59,9 s restantes s'annoncent « 0 h 00 », pas « 0 h 01 » : un compte à
+    // rebours qui arrondit vers le haut promet du temps qui n'existe plus.
+    expect(formatCountdown(59_900)).toBe('0 h 00');
+  });
+
+  it('ne rend jamais de valeur négative une fois la borne franchie', () => {
+    expect(formatCountdown(-1)).toBe('0 h 00');
+  });
+});
+
+describe('formatReopenClock (#358)', () => {
+  it('rend l’heure serveur telle qu’elle est appliquée, pas une heure locale devinée', () => {
+    // Le fond du bug de #13 : 2h UTC affichées comme « minuit » ou « 3h ».
+    const midi = new Date('2026-08-24T12:00:00Z');
+    expect(formatReopenClock(midi, 'UTC')).toBe('02:00');
+    // Fin août, Paris est à UTC+2 : la même borne s'y lit 04:00.
+    expect(formatReopenClock(midi, 'Europe/Paris')).toBe('04:00');
+  });
+
+  it('suit la borne de la veille quand l’heure du jour n’est pas encore passée', () => {
+    const avant = new Date('2026-08-24T01:00:00Z');
+    expect(formatReopenClock(avant, 'UTC')).toBe('02:00');
+  });
+
+  it('reste juste au passage à l’heure d’hiver', () => {
+    // Le 25 octobre, Paris repasse à UTC+1 : la borne 2h UTC s'y lit 03:00,
+    // là où elle se lisait 04:00 la veille.
+    expect(formatReopenClock(new Date('2026-10-24T12:00:00Z'), 'Europe/Paris')).toBe('04:00');
+    expect(formatReopenClock(new Date('2026-10-26T12:00:00Z'), 'Europe/Paris')).toBe('03:00');
   });
 });

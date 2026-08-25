@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-import { msUntilNextReset } from '@/lib/square/reset-clock';
+import { formatCountdown, msUntilNextReset } from '@/lib/square/reset-clock';
 
 export interface ThemeInfo {
   themeId: string;
@@ -16,19 +16,47 @@ export interface ThemeInfo {
   pseudonymNames?: string[] | null;
 }
 
-function formatCountdown(ms: number): string {
-  const totalMinutes = Math.floor(ms / 60000);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return `${hours}h ${minutes.toString().padStart(2, '0')}min`;
+/**
+ * Ce qu'on sait réellement compter (#358).
+ *
+ * Le canvas dessine « 7 personnes sur la Place ». Aucune API ne mesure une
+ * présence : ni heartbeat, ni suivi des connexions SSE. Annoncer un nombre de
+ * présents serait une promesse d'interface que rien n'adosse — le mode d'échec
+ * de #328. On compte donc les voix distinctes entendues depuis la réouverture,
+ * ce que le fil déjà chargé permet de dériver sans un appel de plus.
+ */
+function ligneDePresence(voices: number): string {
+  if (voices <= 0) return "Personne n'a encore parlé";
+  return `${voices} voix depuis la réouverture`;
 }
 
+/**
+ * Bandeau du jour de La Place — le reset y est un rituel annoncé (#358).
+ *
+ * Avant : quatre lignes de 12-14px, dont un compte à rebours en dernière
+ * position. On ne voyait l'effacement qu'après coup, en revenant sur une Place
+ * vide. Le canvas `LaPlace.dc.html` renverse la page — thème du jour en titre,
+ * rebours dans son propre encart — pour que la disparition soit attendue plutôt
+ * que subie.
+ *
+ * Le panneau vitré passe par `.panel-glass` et les tokens sémantiques de #282,
+ * jamais par les classes `.lobby-*` : c'est le *langage* visuel de la home qui
+ * est partagé, pas son ambiance, qui reste confinée à la home
+ * (`lobby-confinement.test.ts`).
+ *
+ * Aucune animation ici, volontairement : les halos sont des dégradés statiques.
+ * Un panneau qui respire au-dessus d'un fil qu'on lit se paierait en
+ * `prefers-reduced-motion` pour rien.
+ */
 export default function SquareThemeBanner({
   theme,
   pseudonym,
+  voices = 0,
 }: {
   theme: ThemeInfo | null;
   pseudonym: string;
+  /** Voix distinctes entendues depuis la réouverture — cf. `ligneDePresence`. */
+  voices?: number;
 }) {
   const [countdown, setCountdown] = useState(() => msUntilNextReset());
 
@@ -39,35 +67,105 @@ export default function SquareThemeBanner({
     return () => clearInterval(interval);
   }, []);
 
-  if (!theme) {
-    return (
-      <div className="shrink-0 border-b border-hairline bg-blush px-4 py-2 dark:bg-coral/5">
-        <p className="mx-auto w-full max-w-reading text-sm text-muted">Chargement du thème…</p>
-      </div>
-    );
-  }
-
-  const hoursRemaining = countdown / 3600000;
-  const showCountdown = hoursRemaining < 23;
-
   return (
-    <div className="shrink-0 border-b border-hairline bg-blush px-4 py-2 dark:bg-coral/5">
-      {/* Le bandeau tient la largeur de la Place, son texte reste à la colonne
-          de lecture du fil (#348) — sinon il court sur 1080px. */}
-      <div className="mx-auto w-full max-w-reading">
-        <p className="text-sm font-medium text-coral dark:text-coral-light">
-          🎭 {theme.label}
-        </p>
-        <p className="text-xs text-muted">{theme.description}</p>
-        <p className="text-xs text-muted">
-          Tu es : <span className="font-medium text-muted">{pseudonym}</span>
-        </p>
-        {showCountdown && (
-          <p className="text-xs text-muted">
-            🔄 Réinitialisation dans {formatCountdown(countdown)}
-          </p>
-        )}
+    <section
+      // Le bandeau tient toute la largeur du conteneur (#348) — c'est le fil,
+      // en dessous, qui garde la colonne de lecture. Le rituel a droit à la
+      // page ; les messages, eux, restent lisibles.
+      // `panel-flush` : le panneau pose son propre rythme (mt-*/gap), donc il
+      // annule le `p { margin-bottom: 1.2em }` global. Un `mb-0` en utilitaire
+      // n'y suffit pas — la règle globale n'est pas layerisée et gagne (#358).
+      className="panel-glass panel-flush relative shrink-0 overflow-hidden px-5 py-6 sm:px-8 sm:py-7"
+      aria-label="Le jour sur La Place"
+    >
+      {/* Halos d'ambiance — décor pur, retiré du flux d'accessibilité. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-28 -right-20 h-72 w-72 rounded-full bg-coral/20 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-32 -left-16 h-72 w-72 rounded-full bg-gold/15 blur-3xl"
+      />
+
+      <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:gap-10">
+        <div className="min-w-0 flex-1">
+          <span className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-3 py-1.5 text-[0.625rem] font-semibold tracking-[0.06em] text-gold uppercase">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 7.7l5.4-.8z" />
+            </svg>
+            Thème du jour
+          </span>
+
+          {theme ? (
+            <>
+              <h1 className="mt-4 font-head text-3xl leading-tight font-bold tracking-tight text-content md:text-4xl">
+                {theme.label}
+              </h1>
+              <p className="mt-3 max-w-prose text-base leading-relaxed text-muted">
+                {theme.description}
+              </p>
+            </>
+          ) : (
+            <p className="mt-4 text-base text-muted">Chargement du thème…</p>
+          )}
+
+          <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-4">
+            <div className="flex items-center gap-3">
+              <span
+                aria-hidden="true"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-coral-light/40 bg-coral/15 font-head text-base font-semibold text-coral"
+              >
+                {pseudonym.slice(0, 1)}
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[0.625rem] tracking-[0.05em] text-muted uppercase">
+                  Tu es
+                </span>
+                <span className="block truncate font-head text-lg font-semibold text-content">
+                  {pseudonym}
+                </span>
+              </span>
+            </div>
+
+            <span aria-hidden="true" className="hidden h-10 w-px bg-hairline sm:block" />
+
+            <p className="text-sm text-muted">{ligneDePresence(voices)}</p>
+          </div>
+        </div>
+
+        {/* L'encart qui fait du reset un rituel affiché, pas une disparition
+            subie. Bande compacte sur mobile, colonne dédiée à partir de `md` :
+            l'artboard `MobileLaPlace.dc.html` réduit délibérément le rebours sur
+            petit écran, sinon le panneau mange tout le premier écran et le fil
+            passe sous la ligne de flottaison (583px mesurés sur 844). */}
+        <div className="flex shrink-0 items-center gap-4 rounded-card border border-hairline bg-surface/50 px-5 py-4 md:w-52 md:flex-col md:gap-0 md:py-5 md:text-center">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            aria-hidden="true"
+            // `block` et pas seulement `mx-auto` : un <svg> inline s'assied sur
+            // une ligne de base et traîne une descente fantôme sous lui.
+            className="block shrink-0 text-gold md:mx-auto md:mb-2.5"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 2" />
+          </svg>
+          <div className="min-w-0 md:contents">
+            <p className="font-head text-2xl font-bold tracking-tight text-content tabular-nums md:text-3xl">
+              {formatCountdown(countdown)}
+            </p>
+            <p className="mt-1 text-[0.8125rem] leading-relaxed text-muted md:mt-2">
+              avant que tout s&apos;efface et qu&apos;un nouveau thème arrive
+            </p>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
