@@ -40,3 +40,35 @@ export function nextResetBoundary(now: Date = new Date()): Date {
 export function msUntilNextReset(now: Date = new Date()): number {
   return nextResetBoundary(now).getTime() - now.getTime();
 }
+/**
+ * Compte à rebours lisible : « 4 h 12 » (#358).
+ *
+ * **Tronque, jamais n'arrondit** : à 59 s de la borne, annoncer « 0 h 01 »
+ * promet une minute qui n'existe déjà plus. Le rituel affiché ne vaut que s'il
+ * est en retard sur le réel plutôt qu'en avance.
+ */
+export function formatCountdown(ms: number): string {
+  const totalMinutes = Math.max(0, Math.floor(ms / 60000));
+  const heures = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${heures} h ${minutes.toString().padStart(2, '0')}`;
+}
+
+/**
+ * Heure de réouverture telle qu'elle s'est réellement produite, lue dans le
+ * fuseau du lecteur (#358).
+ *
+ * `timeZone` n'existe que pour les tests : en production on laisse `Intl`
+ * prendre le fuseau du navigateur. C'est le seul endroit où la borne UTC
+ * redevient une heure locale — et il est unique exprès, puisque c'est
+ * précisément la conversion faite au jugé qui avait produit le « minuit » du
+ * canvas et le « 3h » du bandeau d'avant #13.
+ */
+export function formatReopenClock(now: Date = new Date(), timeZone?: string): string {
+  return new Intl.DateTimeFormat('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone,
+  }).format(lastResetBoundary(now));
+}
