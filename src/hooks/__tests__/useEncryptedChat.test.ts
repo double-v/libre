@@ -93,7 +93,11 @@ describe('coffre garni — nettoyage de l’héritage', () => {
     localStorage.setItem('libre_private_key', 'CHIFFRE_LOCAL');
     localStorage.setItem('libre_device_key', 'CLE_APPAREIL');
     decryptPrivateKey.mockResolvedValue(PRIVEE);
-    fetchMock.mockResolvedValue(coffre({ publicKey: PUBLIQUE, privateKey: null }));
+    fetchMock.mockImplementation(async (url: string) =>
+      url.includes('/me')
+        ? coffre({ publicKey: PUBLIQUE, privateKey: null })
+        : coffre({ error: 'escrow_indisponible' }, 503),
+    );
 
     const { result } = renderHook(() => useEncryptedChat());
     await waitFor(() => expect(result.current.ready).toBe(true));
@@ -152,6 +156,42 @@ describe('coffre vide mais clé publique connue', () => {
     expect(result.current.privateKey).toBe(PRIVEE);
     expect(result.current.etat).toBe('pret');
     expect(generateKeyPair).not.toHaveBeenCalled();
+  });
+
+  it('verse la clé héritée puis purge le stockage après confirmation', async () => {
+    localStorage.setItem('libre_public_key', PUBLIQUE);
+    localStorage.setItem('libre_private_key', 'CHIFFRE_LOCAL');
+    localStorage.setItem('libre_device_key', 'CLE_APPAREIL');
+    decryptPrivateKey.mockResolvedValue(PRIVEE);
+    fetchMock.mockImplementation(async (url: string) =>
+      url.includes('/me') ? coffre({ publicKey: PUBLIQUE, privateKey: null }) : coffre({ success: true }),
+    );
+
+    const { result } = renderHook(() => useEncryptedChat());
+    await waitFor(() => expect(result.current.ready).toBe(true));
+
+    const depot = fetchMock.mock.calls.find(([url]) => !String(url).includes('/me'));
+    expect(depot).toBeDefined();
+    expect(JSON.parse(depot![1].body)).toEqual({ publicKey: PUBLIQUE, privateKey: PRIVEE });
+    expect(localStorage.getItem('libre_private_key')).toBeNull();
+    expect(localStorage.getItem('libre_public_key')).toBeNull();
+  });
+
+  it('garde la clé locale si le versement échoue', async () => {
+    localStorage.setItem('libre_public_key', PUBLIQUE);
+    localStorage.setItem('libre_private_key', 'CHIFFRE_LOCAL');
+    localStorage.setItem('libre_device_key', 'CLE_APPAREIL');
+    decryptPrivateKey.mockResolvedValue(PRIVEE);
+    fetchMock.mockImplementation(async (url: string) =>
+      url.includes('/me') ? coffre({ publicKey: PUBLIQUE, privateKey: null }) : coffre({ error: 'escrow_indisponible' }, 503),
+    );
+
+    const { result } = renderHook(() => useEncryptedChat());
+    await waitFor(() => expect(result.current.ready).toBe(true));
+
+    expect(result.current.privateKey).toBe(PRIVEE);
+    expect(localStorage.getItem('libre_private_key')).toBe('CHIFFRE_LOCAL');
+    expect(localStorage.getItem('libre_public_key')).toBe(PUBLIQUE);
   });
 
   it('SE DÉCLARE ILLISIBLE sans régénérer quand aucune clé locale ne correspond', async () => {

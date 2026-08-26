@@ -14,3 +14,10 @@ export const debugLog = (...args: unknown[]): void => {
     console.log(...args);
   }
 };
+
+export type ResultatMigrationEscrow = 'versee' | 'impossible' | 'echec_reseau';
+
+/** Journalise un résultat agrégé sans identifiant ni clé sensible. */
+export const logMigrationEscrow = (resultat: ResultatMigrationEscrow): void => {
+  console.info('escrow.migration', resultat);
+};
