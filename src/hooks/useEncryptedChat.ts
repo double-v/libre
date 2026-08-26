@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { generateKeyPair, decryptPrivateKey as decryptPK } from '@/lib/crypto';
+import { logMigrationEscrow } from '@/lib/logger';
 
 // Clés de l'ancien stockage local (#198). On ne les écrit plus : elles ne
 // servent qu'à retrouver une clé posée avant la mise en service de l'escrow,
@@ -45,6 +46,27 @@ async function cleLocaleHeritee(publicKeyDuCompte: string): Promise<string | nul
     return await decryptPK(priveeLocale, cleAppareil);
   } catch {
     return null;
+  }
+}
+
+/** Verse la clé héritée, sans supprimer l'unique copie avant un 200 confirmé. */
+async function migrerCleHeritee(publicKey: string, privateKey: string): Promise<void> {
+  try {
+    const reponse = await fetch('/api/users/keys', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ publicKey, privateKey }),
+    });
+
+    if (!reponse.ok) {
+      logMigrationEscrow('impossible');
+      return;
+    }
+
+    purgerCleHeritee();
+    logMigrationEscrow('versee');
+  } catch {
+    logMigrationEscrow('echec_reseau');
   }
 }
 
@@ -142,6 +164,9 @@ export function useEncryptedChat() {
       // Si cet appareil détient encore la clé correspondante, on s'en sert —
       // le versement au coffre viendra avec la migration douce (#336).
       const heritee = await cleLocaleHeritee(pub);
+      if (heritee) {
+        await migrerCleHeritee(pub, heritee);
+      }
       poser(pub, heritee, heritee ? 'pret' : 'illisible');
     })();
 
