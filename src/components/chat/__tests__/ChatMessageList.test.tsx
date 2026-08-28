@@ -71,6 +71,21 @@ describe('MessageRow', () => {
     fireEvent.click(screen.getByRole('menuitem', { name: 'Supprimer' }));
     expect(onDelete).toHaveBeenCalledWith('m1');
   });
+
+  it('rend un état « Message illisible » quand la clé est absente (#368)', () => {
+    renderRow({
+      msg: { ...base, content: '', isUnreadable: true },
+      isSent: false,
+    });
+    expect(screen.getByText('Message illisible')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Ce message ne peut pas être déchiffré depuis cet appareil/i),
+    ).toBeInTheDocument();
+    // Le contenu chiffré original ne fuit jamais.
+    expect(screen.queryByText('Salut, ça va ?')).toBeNull();
+    // Pas de menu sur un message illisible.
+    expect(screen.queryByRole('button', { name: 'Options du message' })).toBeNull();
+  });
 });
 
 describe('ChatMessageList — état vide', () => {

@@ -29,6 +29,7 @@ export interface ChatMessage {
   content: string;
   createdAt: string;
   deletedAt?: string | null;
+  isUnreadable?: boolean;
 }
 
 interface HeaderContext {
@@ -99,17 +100,37 @@ interface MessageRowProps {
   onDelete: (id: string) => void;
 }
 
-/** Une ligne de message : tombstone, badge de partage, ou bulle (+ menu si envoyé).
+/** Une ligne de message : tombstone, illisible, badge de partage, ou bulle.
  *  Exporté pour test unitaire (jsdom) : Virtuoso ne rend rien sans layout, donc la
  *  logique de rendu des lignes se teste ici, hors virtualisation. */
 export function MessageRow({ msg, isSent, otherUserName, menuOpen, onToggleMenu, onDelete }: MessageRowProps) {
-  // Message supprimé par son auteur → tombstone (prioritaire sur le badge partage).
+  // Message supprimé par son auteur → tombstone (prioritaire sur tout).
   if (msg.deletedAt) {
     return (
       <div className={`flex ${isSent ? 'justify-end' : 'justify-start'}`}>
         <div className="max-w-[80%] rounded-2xl bg-fill-subtle px-4 py-2">
           <p className="break-words text-sm italic text-muted">Message supprimé</p>
           <p className="mt-1 text-xs text-muted">{formatTime(msg.createdAt)}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Clé de déchiffrement absente : le message est illisible (changement d'appareil / cache vidé).
+  if (msg.isUnreadable) {
+    return (
+      <div className={`flex ${isSent ? 'justify-end' : 'justify-start'}`}>
+        <div className="max-w-[80%] rounded-2xl border border-dashed border-hairline-strong bg-surface px-4 py-2">
+          <p className="flex items-center gap-1.5 break-words text-sm italic text-muted">
+            <span aria-hidden="true" className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-warning text-[10px] font-bold text-warning">
+              !
+            </span>
+            Message illisible
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-muted">
+            Ce message ne peut pas être déchiffré depuis cet appareil. Cela arrive si tu changes d&apos;appareil ou vides le cache de ton navigateur. Les nouveaux messages continuent de fonctionner normalement.
+          </p>
+          <p className="mt-1 text-xs text-muted opacity-70">{formatTime(msg.createdAt)}</p>
         </div>
       </div>
     );

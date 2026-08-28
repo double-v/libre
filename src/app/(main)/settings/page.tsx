@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { toast } from '@/lib/toast';
 import AppearanceSettings from '@/components/AppearanceSettings';
+import { clearChatSecrets } from '@/lib/chat-secrets';
 
 interface Profile {
   userId: string;
@@ -89,6 +90,7 @@ export default function SettingsPage() {
       if (!res.ok) {
         throw new Error('Failed to delete account');
       }
+      clearChatSecrets();
       await signOut({ redirect: false });
       router.push('/');
     } catch {
@@ -98,6 +100,7 @@ export default function SettingsPage() {
   }
 
   async function handleSignOut() {
+    clearChatSecrets();
     await signOut({ redirect: false });
     router.push('/login');
   }

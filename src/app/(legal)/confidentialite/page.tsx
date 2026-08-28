@@ -66,7 +66,14 @@ export default function ConfidentialitePage() {
 
       <h3>2.4 Données de communication</h3>
       <ul>
-        <li>Messages envoyés dans les conversations (chiffrés de bout en bout — le serveur ne peut pas les lire)</li>
+        <li>
+          Messages envoyés dans les conversations (chiffrés de bout en bout par défaut —
+          le serveur ne peut pas les lire actuellement).
+          Un mécanisme de dépôt sécurisé (vault) pourrait être activé ultérieurement pour
+          permettre la portabilité des conversations et répondre à des obligations de modération
+          ou judiciaires. Il ne s&apos;appliquerait qu&apos;aux conversations créées après son activation
+          et ferait l&apos;objet d&apos;une notification préalable.
+        </li>
         <li>Messages publics dans le &quot;Carré&quot; (pseudonymes, contenu)</li>
       </ul>
 
@@ -165,8 +172,8 @@ export default function ConfidentialitePage() {
             <td>Jusqu&apos;à suppression du compte par l&apos;utilisateur</td>
           </tr>
           <tr>
-            <td>Messages (chiffrés E2E)</td>
-            <td>Jusqu&apos;à suppression du compte ou de la conversation</td>
+            <td>Messages (chiffrés E2E par défaut)</td>
+            <td>Jusqu&apos;à suppression du compte ou de la conversation ; purge effective après une fenêtre de conservation pour la modération si le vault est activé</td>
           </tr>
           <tr>
             <td>Logs de modération</td>
@@ -222,9 +229,10 @@ export default function ConfidentialitePage() {
       {/* ─── 8. Sécurité ─── */}
       <h2>8. Mesures de sécurité</h2>
       <ul>
-        <li><strong>Chiffrement de bout en bout (E2E)</strong> des messages : seuls l&apos;expéditeur et le destinataire peuvent les lire</li>
+        <li><strong>Chiffrement de bout en bout (E2E)</strong> des messages : seuls l&apos;expéditeur et le destinataire peuvent les lire. Le serveur ne peut pas les lire dans la configuration actuelle.</li>
         <li><strong>Chiffrement en transit</strong> : TLS 1.3 sur toutes les communications</li>
         <li><strong>Chiffrement au repos</strong> : base de données chiffrée sur le serveur</li>
+        <li><strong>Activation possible d&apos;un vault</strong> : si la modération ou une obligation légale l&apos;exige, un mécanisme de dépôt de clés pourrait être activé pour les conversations futures, avec notification préalable.</li>
         <li><strong>Hashage des mots de passe</strong> : bcrypt avec coût 12</li>
         <li><strong>Accès administrateur restreint</strong> : seuls les administrateurs vérifiés peuvent accéder aux données de modération</li>
         <li><strong>Authentification</strong> : JWT avec clé secrète, tokens à durée limitée</li>

@@ -28,6 +28,7 @@ interface Message {
   content: string;
   createdAt: string;
   deletedAt?: string | null;
+  isUnreadable?: boolean;
 }
 
 interface ConversationData {
@@ -97,31 +98,43 @@ export default function ChatConversationPage() {
 
   // ─── Decryption helpers ──────────────────────────────────────────
 
+  // Déchiffre un message. Retourne `null` si le déchiffrement échoue,
+  // afin de distinguer un ciphertext illisible d'un vrai message en clair.
   const tryDecrypt = useCallback(
-    async (content: string): Promise<string> => {
-      if (!privateKey || !otherPublicKey) return content;
-      if (!/^[A-Za-z0-9+/]+=*$/.test(content) || content.length < 30) return content;
+    async (content: string): Promise<string | null> => {
+      if (!privateKey || !otherPublicKey) return null;
+      if (!/^[A-Za-z0-9+/]+=*$/.test(content) || content.length < 30) return null;
       try {
         return await decryptMessage(content, otherPublicKey, privateKey);
       } catch {
-        return content;
+        return null;
       }
     },
     [privateKey, otherPublicKey],
   );
 
-  // Decrypt a batch of messages; cache results; update localStorage
+  // Déchiffre un lot de messages ; met en cache les clairs et marque
+  // les messages illisibles pour l'affichage. Ne retombe jamais silencieusement
+  // sur le ciphertext brut.
   const applyDecryption = useCallback(
     async (msgs: Message[]): Promise<Message[]> => {
-      if (!privateKey || !otherPublicKey) return msgs;
+      if (!privateKey || !otherPublicKey) {
+        return msgs.map((msg) =>
+          msg.deletedAt ? msg : { ...msg, content: '', isUnreadable: true },
+        );
+      }
       const cache = cacheRef.current;
       const decrypted = await Promise.all(
         msgs.map(async (msg) => {
+          if (msg.deletedAt) return msg;
           const cached = cache.get(msg.id);
           if (cached != null) return { ...msg, content: cached };
           const plain = await tryDecrypt(msg.content);
-          if (plain !== msg.content) cache.set(msg.id, plain);
-          return { ...msg, content: plain };
+          if (plain !== null) {
+            cache.set(msg.id, plain);
+            return { ...msg, content: plain };
+          }
+          return { ...msg, content: '', isUnreadable: true };
         }),
       );
       savePlaintextCache(conversationId, cache);
@@ -395,7 +408,25 @@ export default function ChatConversationPage() {
         </div>
       )}
 
-      {/* E2E status */}
+      {/* Bandeau E2E : posture actuelle du service, toujours affichée. */}
+      <div
+        role="status"
+        className="mx-4 mt-2 flex items-start gap-2 rounded-xl bg-blush p-3 text-xs text-secondary dark:bg-coral/10"
+      >
+        <span
+          aria-hidden="true"
+          className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-coral text-[10px] font-bold text-coral"
+        >
+          i
+        </span>
+        <p className="leading-relaxed">
+          <strong>Messagerie sécurisée.</strong> Vos messages sont chiffrés de bout en bout.
+          Libre ne peut pas les lire. Si tu changes d&apos;appareil ou vides le cache de ton
+          navigateur, les anciens messages peuvent devenir illisibles.
+        </p>
+      </div>
+
+      {/* État dégradé : l'autre personne n'a pas de clé ou les clés ne sont pas prêtes. */}
       {!e2eEnabled && (
         <div className="mx-4 mt-2 rounded-md bg-yellow-50 p-2 text-xs text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
           {!otherPublicKey

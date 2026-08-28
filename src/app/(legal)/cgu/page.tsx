@@ -35,7 +35,7 @@ export default function CGUPage() {
         <li>Création de profil personnel</li>
         <li>Découverte de célibataires par géolocalisation</li>
         <li>Système de &quot;like&quot; et de match mutuel</li>
-        <li>Messagerie chiffrée de bout en bout</li>
+        <li>Messagerie chiffrée de bout en bout par défaut ; un mécanisme de dépôt sécurisé (vault) peut être activé ultérieurement pour les seules conversations créées après activation, avec notification préalable</li>
         <li>Espace communautaire &quot;Le Carré&quot;</li>
         <li>Vérification d&apos;identité par selfie</li>
         <li>Signalement et modération</li>
