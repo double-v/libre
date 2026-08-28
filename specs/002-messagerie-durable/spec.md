@@ -1,368 +1,220 @@
-# Feature Specification: Messagerie privée durable — la clé survit, le fil reste lisible
+# Feature Specification: Messagerie privée — E2E par défaut, vault activable
 
 **Feature Branch**: `002-messagerie-durable`
 
 **Created**: 2026-08-17
 
-**Status**: Clarifié — prêt pour le plan
+**Revised**: 2026-08-28
 
-**Clarifications** : 2026-08-17, avec l'opérateur (3 décisions sur le lot rétention, cf. § Décisions tranchées)
+**Status**: Clarifié et revu — prêt pour le plan
 
 **Épic**: #197 — couvre #198 (escrow de clé), #199 (clé de conversation et historique), #202 (rétention et messages éphémères)
 
-**Input**: User description: « on va utiliser speckit pour le #198 afin de rendre durables et fonctionnels les MP » — périmètre étendu par l'opérateur à tout l'épic #197.
+**Input** : discussion opérateur du 2026-08-28 : la posture par défaut reste le E2E pur ; le vault centralisé est une capacité activable plus tard, avec reset des conversations, archives sécurisées et transparence totale.
+
+---
 
 ## Contexte
 
-Aujourd'hui, la clé privée qui déchiffre les messages n'existe **que** dans le
-navigateur qui l'a créée : `useEncryptedChat` la range dans `localStorage`
-(`libre_private_key`), chiffrée par une « clé d'appareil » rangée… dans le même
-`localStorage` (`libre_device_key`). Cette enveloppe ne protège donc de rien
-d'autre que d'un coup d'œil distrait, et surtout elle ne voyage pas.
+Aujourd'hui, la clé privée qui déchiffre les messages n'existe **que** dans le navigateur qui l'a créée : `useEncryptedChat` la range dans `localStorage` (`libre_private_key`), chiffrée par une « clé d'appareil » rangée… dans le même `localStorage` (`libre_device_key`). Cette enveloppe ne protège donc de rien d'autre que d'un coup d'œil distrait, et surtout elle ne voyage pas.
 
-Conséquence, vérifiable en trois clics : changer de téléphone, vider le cache,
-ouvrir une fenêtre privée ou simplement changer de navigateur suffit à **perdre
-définitivement l'intégralité de ses conversations**. Le code régénère une paire,
-pousse la nouvelle clé publique sur `POST /api/users/keys` — qui fait un `upsert`
-et **écrase** l'ancienne, sans en garder trace — et l'ancien fil devient un mur
-de caractères illisibles. Le pair est touché lui aussi : ce qu'il avait chiffré
-pour l'ancienne clé publique n'est plus déchiffrable par personne.
+Conséquence, vérifiable en trois clics : changer de téléphone, vider le cache, ouvrir une fenêtre privée ou simplement changer de navigateur suffit à **perdre définitivement l'intégralité de ses conversations**. Le code régénère une paire, pousse la nouvelle clé publique sur `POST /api/users/keys` — qui fait un `upsert` et **écrase** l'ancienne, sans en garder trace — et l'ancien fil devient un mur de caractères illisibles. Le pair est touché lui aussi.
 
-Le pire est le silence. Quand le déchiffrement échoue, le `catch` retombe en
-« pas de chiffrement » et l'application continue comme si de rien n'était. La
-personne ne sait pas qu'elle vient de perdre quelque chose, ni qu'il ne fallait
-pas vider ce cache.
+Le pire est le silence. Quand le déchiffrement échoue, le `catch` retombe en « pas de chiffrement » et l'application continue comme si de rien n'était. La personne ne sait pas qu'elle vient de perdre quelque chose.
 
-Sur une application dont la messagerie est l'aboutissement de tout le parcours —
-on se croise, on s'aime bien, **on se parle** — c'est une perte de données
-silencieuse au cœur du produit. Une conversation qui disparaît sans explication
-ne coûte pas une fonctionnalité : elle coûte la confiance.
+Sur une application dont la messagerie est l'aboutissement du parcours, c'est une perte de données silencieuse au cœur du produit.
 
-Trois lots pour en sortir : que la clé **survive** à l'appareil (#198), que le
-fil **reste lisible** même après une rotation de clé (#199), et que ce qui est
-conservé le soit pour une raison assumée et dicible (#202).
+### Posture retenue
 
-Hors périmètre, déjà livré : la pagination par curseur et le déchiffrement
-paresseux (#200, PR #254), la virtualisation de la liste (PR #303).
+Après discussion, la posture par défaut reste le **chiffrement de bout en bout pur** : le service ne peut pas lire les messages, et c'est assumé. En contrepartie, les messages ne sont pas portables au changement d'appareil.
+
+Un **vault centralisé** est toutefois prévu comme **capacité activable** si la modération au fil de l'eau devient impossible ou si une obligation légale l'impose. Son activation :
+- nécessite une action volontaire et documentée de l'administrateur,
+- **ne s'applique qu'aux conversations créées après l'activation** (pas de lecture rétroactive),
+- est **notifiée explicitement** aux utilisateurs via les CGU et un bandeau,
+- est **tracée et journalisée**.
+
+Cette approche préserve la confiance aujourd'hui tout en gardant un levier de sécurité et de conformité pour demain.
+
+---
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Changer de téléphone sans rien perdre (Priority: P1)
+### User Story 0 — Messagerie sûre et transparente en mode E2E (Priority: P1)
 
-Une personne change de téléphone, ou vide le cache de son navigateur, ou se
-reconnecte depuis son ordinateur. Elle ouvre Messages : ses conversations sont
-là, lisibles, exactement comme sur l'appareil précédent. Elle n'a rien eu à
-sauvegarder, rien à copier, aucune phrase secrète à retrouver.
+Aujourd'hui, les messages sont chiffrés de bout en bout. Le service ne peut techniquement pas les lire. L'utilisateur est informé clairement de cette posture et de ses conséquences : si l'appareil est perdu ou le cache vidé, les conversations ne sont pas récupérables.
 
-**Why this priority**: C'est le bloquant. Tout le reste de l'épic suppose une
-clé qui survit. Sans ce récit, la messagerie perd ses données par conception, et
-chaque nouvelle conversation est une perte future programmée.
+**Why this priority** : c'est la posture actuelle. Elle doit être dite, cohérente avec le code, et maintenue tant que le vault n'est pas activé.
 
-**Independent Test**: Se connecter depuis un second navigateur (ou après avoir
-vidé le stockage local), ouvrir une conversation existante : les messages
-s'affichent en clair. Testable et démontrable seul, y compris pour un compte
-Google/GitHub qui n'a pas de mot de passe.
+**Independent Test** : lire la page Confidentialité et confronter chaque phrase au comportement réel. Aucune phrase ne doit promettre plus que ce que le code garantit.
 
-**Acceptance Scenarios**:
+**Acceptance Scenarios** :
 
-1. **Given** un compte qui a déjà échangé des messages, **When** il se connecte
-   depuis un appareil qui n'a jamais servi, **Then** l'intégralité de son
-   historique s'affiche en clair, sans aucune action de sa part.
-2. **Given** un compte créé via Google ou GitHub (donc sans mot de passe),
-   **When** il se connecte depuis un second appareil, **Then** le résultat est
-   identique : rien ne distingue son parcours de celui d'un compte à mot de passe.
-3. **Given** une session ouverte, **When** la personne se déconnecte, **Then**
-   la clé privée ne subsiste pas en clair sur l'appareil quitté.
-4. **Given** une requête de restitution de clé sans session valide, **When**
-   elle est reçue, **Then** elle est refusée ; une session valide ne restitue
-   jamais que **sa propre** clé.
-5. **Given** un message que l'application ne parvient pas à déchiffrer, **When**
-   il s'affiche, **Then** il le dit explicitement à la personne au lieu de
-   passer en clair silencieusement.
+1. **Given** la page Confidentialité, **When** on la lit, **Then** elle indique sans ambiguïté que les messages sont chiffrés de bout en bout et que le service ne peut pas les lire actuellement.
+2. **Given** un utilisateur qui change d'appareil sans vault actif, **When** il ouvre ses conversations, **Then** elles apparaissent comme illisibles (et non pas en clair ou silencieusement perdues).
+3. **Given** un message que l'application ne parvient pas à déchiffrer, **When** il s'affiche, **Then** il est signalé comme illisible avec une explication.
 
 ---
 
-### User Story 2 - Les comptes déjà là ne perdent rien au passage (Priority: P2)
+### User Story 1 — Changer de téléphone sans rien perdre (Priority: P1, vault activé)
 
-Les personnes qui utilisent déjà Libre détiennent leur clé sur leur appareil.
-Au premier chargement après la mise en service, cette clé rejoint le coffre du
-service sans qu'elles s'en aperçoivent. Leurs anciens fils continuent de
-s'ouvrir, et deviennent du même coup portables.
+Une personne change de téléphone, ou vide le cache de son navigateur, ou se reconnecte depuis son ordinateur. Le vault est actif. Elle ouvre Messages : ses conversations sont là, lisibles, exactement comme sur l'appareil précédent. Elle n'a rien eu à sauvegarder.
 
-**Why this priority**: US1 sans ce récit ne sert que les nouveaux comptes et
-laisse les premiers utilisateurs — ceux qui ont fait confiance en premier —
-avec le défaut d'origine. C'est P2 et non P1 parce que la sécurité du cas est
-déjà portée par US1 (ne jamais régénérer une clé quand le compte en a une), mais
-la migration effective est un livrable distinct.
+**Why this priority** : c'est le cœur de la valeur du vault. Sans ce récit, le vault ne sert à rien.
 
-**Independent Test**: Depuis un navigateur portant une clé locale d'avant la
-mise en service, ouvrir l'application, puis se connecter ailleurs : les fils
-d'avant s'ouvrent sur le nouvel appareil.
+**Independent Test** : se connecter depuis un second navigateur après activation du vault, ouvrir une conversation existante : les messages s'affichent en clair.
 
-**Acceptance Scenarios**:
+**Acceptance Scenarios** :
 
-1. **Given** un compte dont la clé n'existe que localement, **When** il ouvre
-   l'application après la mise en service, **Then** sa clé rejoint le coffre et
-   ses conversations restent lisibles, sans écran ni question.
-2. **Given** un compte dont la clé publique est connue du service mais dont
-   aucune clé n'est encore au coffre, **When** il ouvre l'application depuis un
-   appareil **qui ne détient pas** la clé correspondante, **Then** le système ne
-   régénère **pas** de nouvelle paire : il signale que le fil est illisible
-   depuis cet appareil et invite à revenir sur l'appareil d'origine.
-3. **Given** la migration déjà faite, **When** la personne recharge, **Then**
-   elle n'est pas rejouée.
+1. **Given** un compte avec vault actif qui a déjà échangé des messages, **When** il se connecte depuis un appareil neuf, **Then** l'intégralité de son historique s'affiche en clair.
+2. **Given** une session ouverte, **When** la personne se déconnecte, **Then** la clé privée et le cache clair ne subsistent pas sur l'appareil.
+3. **Given** une requête de restitution de clé sans session valide, **When** elle est reçue, **Then** elle est refusée.
+4. **Given** une session valide, **When** elle demande sa clé, **Then** le service ne restitue que la clé de ce compte.
 
 ---
 
-### User Story 3 - Savoir ce que le service peut lire (Priority: P2)
+### User Story 2 — Activation du vault sans perte de confiance (Priority: P1)
 
-Une personne curieuse — ou méfiante — ouvre la page Confidentialité et y trouve
-une description exacte de ce qui se passe : ses messages sont chiffrés en
-transit et au repos, et **le service détient de quoi les déchiffrer**. C'est dit
-en français clair, sans jargon rassurant.
+L'administrateur décide d'activer le vault. Les utilisateurs sont informés. Les conversations créées avant l'activation restent en mode E2E pur (illisibles au changement d'appareil). Les nouvelles conversations bénéficient du vault.
 
-**Why this priority**: L'escrow échange délibérément le zéro-knowledge contre
-une messagerie qui marche. Cet arbitrage n'est acceptable que s'il est **dit**.
-La charte l'impose (principe III, corollaire acquis en #328 : une promesse
-affichée doit être adossée au code, sinon c'est un défaut de sécurité). Livrer
-US1 en laissant une page qui laisse croire au zéro-knowledge fabriquerait le
-défaut que #328 a corrigé ailleurs.
+**Why this priority** : activer le vault rétroactivement briserait la confiance. La frontière doit être claire et dicible.
 
-**Independent Test**: Lire la page Confidentialité et confronter chaque phrase
-au comportement réel du service. Aucune phrase ne doit promettre plus que ce que
-le code garantit.
+**Independent Test** : activer le vault sur un compte avec des conversations anciennes et nouvelles ; vider le stockage ; vérifier que seules les nouvelles restent lisibles.
 
-**Acceptance Scenarios**:
+**Acceptance Scenarios** :
 
-1. **Given** la page Confidentialité, **When** on la lit, **Then** elle indique
-   sans ambiguïté que le service peut techniquement accéder au contenu des
-   messages, et pour quelles raisons ce choix a été fait.
-2. **Given** une phrase de l'interface qui décrit une garantie de
-   confidentialité, **When** on cherche le code qui la tient, **Then** il existe
-   et un test de non-régression le couvre.
-3. **Given** un texte antérieur promettant un chiffrement « de bout en bout que
-   personne ne peut lire », **When** la fonctionnalité est livrée, **Then** ce
-   texte a disparu de l'interface, des CGU et de la documentation publique.
+1. **Given** une activation du vault, **When** elle se produit, **Then** un bandeau + e-mail informent les utilisateurs actifs.
+2. **Given** une conversation créée avant l'activation, **When** l'utilisateur change d'appareil, **Then** elle est marquée illisible (pas de portage rétroactif).
+3. **Given** une conversation créée après l'activation, **When** l'utilisateur change d'appareil, **Then** elle reste lisible.
+4. **Given** un compte créé après activation, **When** il échange des messages, **Then** sa clé privée est automatiquement versée au coffre.
 
 ---
 
-### User Story 4 - Un vieux fil reste lisible après une rotation de clé (Priority: P3)
+### User Story 3 — Les comptes déjà là ne perdent rien au passage (Priority: P2, vault activé)
 
-Une clé change — compte compromis, réinitialisation, incident. Les conversations
-d'avant continuent de s'ouvrir. La rotation protège la suite sans effacer le
-passé.
+Les personnes qui utilisent déjà Libre détiennent leur clé sur leur appareil. Si le vault est activé, leur clé locale rejoint le coffre au premier chargement, sans écran ni question. Leurs nouvelles conversations deviennent portables.
 
-**Why this priority**: Sans lui, il reste un chemin qui détruit l'historique, et
-la promesse d'US1 tient par chance plutôt que par conception. Mais US1 supprime
-déjà la cause quotidienne des rotations subies (changement d'appareil) : ce
-récit traite le cas résiduel, d'où P3. Correspond à #199, aujourd'hui bloqué
-par #198.
+**Acceptance Scenarios** :
 
-**Independent Test**: Provoquer une rotation de clé sur un compte, puis rouvrir
-une conversation antérieure : elle est lisible, et les nouveaux messages
-utilisent la nouvelle clé.
-
-**Acceptance Scenarios**:
-
-1. **Given** une conversation antérieure à une rotation, **When** on l'ouvre
-   après la rotation, **Then** les anciens messages sont lisibles par les deux
-   personnes.
-2. **Given** une rotation de clé, **When** un message est envoyé ensuite,
-   **Then** il est protégé par la nouvelle clé.
-3. **Given** une clé publique remplacée, **When** on consulte l'historique des
-   clés du compte, **Then** l'ancienne est conservée et datée, jamais écrasée.
+1. **Given** un compte dont la clé est locale et le vault vient d'être activé, **When** il ouvre l'application, **Then** sa clé rejoint le coffre et ses futures conversations sont portables.
+2. **Given** la migration déjà faite, **When** la personne recharge, **Then** elle n'est pas rejouée.
+3. **Given** un compte dont la clé publique est connue mais dont aucune clé n'est au coffre, **When** il ouvre l'application depuis un appareil qui ne détient pas la clé correspondante, **Then** le système ne régénère pas de nouvelle paire : il signale l'illisible.
 
 ---
 
-### User Story 5 - Effacer pour de bon (Priority: P3)
+### User Story 4 — Rotation de clé sans perdre l'historique (Priority: P3, vault activé)
 
-Une personne veut qu'un message cesse d'exister. Elle l'efface : il disparaît
-des deux côtés, ne laissant qu'une trace neutre « message supprimé ». Et quand
-un match se rompt, la conversation part avec lui — pour de bon, pas seulement à
-l'écran.
+Une clé change — compte compromis, réinitialisation, incident. Les conversations du vault d'avant continuent de s'ouvrir. La rotation protège la suite sans effacer le passé.
 
-**Why this priority**: C'est la contrepartie directe de l'escrow : si le service
-peut techniquement lire, alors le droit d'effacer doit être réel, et « effacer »
-doit vouloir dire effacé jusque dans les données. P3 parce que le geste existe
-déjà à l'écran (`deletedAt` produit une pierre tombale) : ce qui manque est la
-purge effective derrière, pas l'interface. Correspond à #202.
+**Acceptance Scenarios** :
 
-**Independent Test**: Effacer un message, recharger des deux côtés, vérifier la
-pierre tombale ; rompre un match de test, vérifier que le fil n'est restituable
-par aucun chemin.
-
-**Acceptance Scenarios**:
-
-1. **Given** un message effacé par son auteur, **When** le pair recharge,
-   **Then** il voit une trace neutre « message supprimé » et le contenu n'est
-   plus restituable, ni à l'écran ni par la réponse réseau.
-2. **Given** un match rompu, **When** la purge passe, **Then** la conversation
-   et ses messages ne sont plus restituables par aucun chemin, y compris par
-   l'administration.
-3. **Given** un compte supprimé, **When** on interroge l'export RGPD ou
-   l'administration, **Then** ni ses messages ni sa clé au coffre ne subsistent.
+1. **Given** une conversation antérieure à une rotation, **When** on l'ouvre après la rotation, **Then** les anciens messages sont lisibles.
+2. **Given** une rotation, **When** un message est envoyé ensuite, **Then** il est protégé par la nouvelle clé.
+3. **Given** une clé publique remplacée, **When** on consulte l'historique, **Then** l'ancienne est conservée et datée.
 
 ---
 
-### Edge Cases
+### User Story 5 — Effacer pour de bon (Priority: P3)
 
-- **Coffre indisponible** (panne du service de clés) : l'application NE DOIT PAS
-  régénérer une paire pour « débloquer » la situation — ce serait détruire
-  l'historique pour éviter un message d'erreur. Elle affiche un état dégradé
-  explicite et réessaie.
-- **Clé maître perdue ou remplacée** côté service : les messages deviennent
-  irrécupérables pour tout le monde. Ce risque est central et exige une
-  procédure de gestion de la clé maître écrite avant la mise en service.
-- **Personne présente sur deux appareils en même temps** : les deux sessions
-  partagent la même clé d'identité ; aucune ne doit invalider l'autre.
-- **Compte supprimé** : `DELETE /api/users/me` détruit le compte en cascade.
-  La clé au coffre doit disparaître avec, et le fil devenir illisible plutôt que
-  de subsister en clair côté pair.
-- **Message reçu pendant que la clé change** : il ne doit être ni perdu ni
-  définitivement illisible ; l'ordre des opérations doit garantir qu'une clé
-  n'est publiée qu'une fois utilisable.
-- **Fenêtre privée** : la clé restituée vit en mémoire de session et disparaît à
-  la fermeture — c'est le comportement attendu, pas un défaut.
-- **Export RGPD** (`/api/users/me/export`) : les messages doivent en sortir
-  lisibles, sinon l'export est une coquille vide. C'est une conséquence directe
-  de l'escrow, à assumer explicitement.
+Une personne veut qu'un message cesse d'exister. Elle l'efface : il disparaît des deux côtés, ne laissant qu'une trace neutre « message supprimé ». Quand un match se rompt, la conversation part avec lui — pour de bon.
+
+**Acceptance Scenarios** :
+
+1. **Given** un message effacé par son auteur, **When** le pair recharge, **Then** il voit une trace neutre et le contenu n'est plus restituable.
+2. **Given** un match rompu, **When** la purge passe, **Then** la conversation et ses messages ne sont plus restituables.
+3. **Given** un compte supprimé, **When** on interroge l'export RGPD ou l'administration, **Then** ni ses messages ni sa clé au coffre ne subsistent.
+
+---
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: Le système DOIT permettre à une personne de lire l'intégralité de
-  ses conversations depuis n'importe quel appareil où sa session est valide,
-  **sans aucune action de sauvegarde ou de restauration de sa part**.
-- **FR-002**: La restitution de la clé DOIT exiger une session authentifiée et
-  ne DOIT jamais restituer que la clé du compte de cette session.
-- **FR-003**: Le système NE DOIT JAMAIS conserver la clé privée en clair dans sa
-  base de données, ni exposer la clé maître au navigateur.
-- **FR-004**: Le parcours DOIT être identique pour les comptes à mot de passe et
-  pour les comptes créés via un fournisseur externe (aucun de ces derniers n'a de
-  mot de passe à dériver).
-- **FR-005**: Le système NE DOIT JAMAIS régénérer une paire de clés pour un
-  compte qui en possède déjà une. En cas d'impossibilité de récupérer la clé
-  existante, il DOIT échouer visiblement plutôt que d'écraser.
-- **FR-006**: Un échec de déchiffrement DOIT être **visible pour la personne**
-  (message inintelligible signalé comme tel, avec ce qu'elle peut faire), et
-  NE DOIT PAS être avalé par un repli silencieux en clair.
-- **FR-007**: Les comptes existants dont la clé n'est que locale DOIVENT la
-  verser au coffre au premier chargement suivant la mise en service, sans écran
-  d'accueil, sans question, et **sans perdre un seul fil**.
-- **FR-008**: Le remplacement d'une clé publique NE DOIT PAS écraser la
-  précédente : l'historique des clés est conservé et daté, afin qu'un message
-  ancien reste rattachable à la clé qui l'a protégé.
-- **FR-009**: Après une rotation de clé, les messages antérieurs DOIVENT rester
-  lisibles par les deux personnes de la conversation.
-- **FR-010**: Les pages Confidentialité et CGU DOIVENT décrire la posture réelle
-  — chiffrement en transit et au repos, **accès techniquement possible par le
-  service** — en français clair, et aucune formulation de l'interface NE DOIT
-  promettre davantage.
-- **FR-011**: Toute promesse de confidentialité affichée DOIT être adossée à un
-  test de non-régression sur la route qui la tient (corollaire #328).
-- **FR-012**: Les personnes DOIVENT pouvoir effacer un message ou une
-  conversation, avec un effet défini et tenu jusque dans les données du service.
-- **FR-013**: Les messages DOIVENT être conservés **tant que le match qui les
-  porte existe**. Aucune échéance de temps : rien ne disparaît par simple
-  ancienneté. La rupture du match et la suppression du compte DOIVENT en
-  revanche déclencher une purge effective, pas un simple masquage.
-- **FR-014**: L'effacement d'un message par son auteur DOIT valoir **pour les
-  deux personnes** et laisser une trace neutre (« message supprimé ») : le pair
-  sait qu'il y avait quelque chose, sans pouvoir savoir quoi. Le contenu effacé
-  NE DOIT plus figurer dans aucune réponse d'API. Sa destruction en base
-  intervient après une **fenêtre de conservation pour la modération** — le code
-  actuel garde délibérément le chiffré pour cet usage (#201), et l'escrow le rend
-  désormais lisible par le service : la durée de cette fenêtre reste à trancher
-  au moment du lot correspondant (cf. [plan.md](./plan.md), § Risques).
-- **FR-015**: La conservation annoncée DOIT être dicible en une phrase dans les
-  pages Confidentialité et FAQ : « tes messages vivent aussi longtemps que la
-  conversation ; quand elle s'arrête, ils s'effacent ». Les **fils éphémères
-  sont hors périmètre** de cette itération et restent une piste ouverte dans
-  #202, sans code à ce stade.
-- **FR-016**: L'accès administratif au contenu des messages, s'il existe, DOIT
-  être journalisé comme l'est déjà l'accès aux photos privées.
-- **FR-017**: Aucune écriture déjà actée NE DOIT être annulée par un effet de
-  bord ultérieur (notification, temps réel) ; ces effets restent en best-effort.
+- **FR-001** (E2E) : Par défaut, le service ne peut pas lire le contenu des messages. La page Confidentialité et les CGU reflètent cette posture.
+- **FR-002** (vault activable) : Le vault est activé uniquement si `CHAT_ESCROW_KEY` et `ENABLE_CHAT_ESCROW=1` sont définis.
+- **FR-003** (reset à l'activation) : L'activation du vault ne porte que sur les conversations créées après activation. Les conversations antérieures restent en E2E pur.
+- **FR-004** (notification) : L'activation du vault est notifiée aux utilisateurs actifs (bandeau + e-mail) et consignée dans les CGU.
+- **FR-005** (portabilité vault) : Une fois le vault actif, les conversations créées sous vault sont lisibles depuis n'importe quel appareil authentifié, sans action utilisateur.
+- **FR-006** (session) : La restitution de la clé exige une session authentifiée et ne restitue que la clé du compte de la session.
+- **FR-007** (clé privée jamais en clair) : La clé privée n'est jamais stockée en clair en base ; le navigateur ne reçoit jamais la clé maître.
+- **FR-008** (pas de régénération silencieuse) : Le système ne régénère jamais une paire de clés pour un compte qui en possède déjà une. En cas d'impossibilité, il échoue visiblement.
+- **FR-009** (message illisible visible) : Un échec de déchiffrement est signalé comme tel, jamais avalé silencieusement.
+- **FR-010** (migration douce) : Les comptes existants versent leur clé locale au coffre au premier chargement après activation du vault, sans perdre de fil.
+- **FR-011** (rotation) : Une rotation de clé ne rend illisible aucun message antérieur du vault.
+- **FR-012** (purge réelle) : La rupture d'un match et la suppression d'un compte détruisent effectivement la conversation, les messages, les clés de conversation et le coffre.
+- **FR-013** (rétention) : Les messages sont conservés tant que le match vit. Après rupture ou suppression de compte, ils sont purgés après une fenêtre de conservation pour la modération (durée à trancher juridiquement).
+- **FR-014** (transparence) : Les CGU et la page Confidentialité décrivent à tout moment la posture réelle du service (E2E ou vault actif).
+- **FR-015** (indicateurs de risque) : En mode E2E, le service dispose d'indicateurs de risque basés sur les métadonnées (volume, signalements, patterns) sans jamais lire le contenu.
+- **FR-016** (journalisation) : Tout accès administratif au contenu des messages, s'il existe, est journalisé.
+- **FR-017** (best-effort) : Aucune écriture déjà actée n'est annulée par un effet de bord ultérieur (notification, temps réel).
 
 ### Key Entities
 
-- **Clé d'identité d'un compte** : aujourd'hui `UserKey` ne porte que la clé
-  publique et sa date, en un seul exemplaire par compte (`upsert` = écrasement).
-  Cette feature lui ajoute la garde du secret correspondant, sous enveloppe, et
-  la notion d'historique — c'est le changement structurant.
-- **Coffre (escrow)** : l'enveloppe qui protège la clé privée au repos, ouverte
-  uniquement côté service, jamais transmise au navigateur.
-- **Clé de conversation** : la matière qui protège un fil donné, rattachée à une
-  génération de clé plutôt qu'à l'appareil courant. C'est elle qui permet à un
-  vieux message de rester lisible après rotation.
-- **Message** : porte déjà `deletedAt` (pierre tombale) et `readAt`. La rétention
-  y ajoute la notion d'échéance et de purge effective.
+- **Mode E2E** : posture par défaut. Clé privée uniquement dans le navigateur. Aucune portabilité.
+- **Mode vault** : posture activable. Clé privée chiffrée au coffre côté service. Portabilité des nouvelles conversations.
+- **Coffre (escrow)** : enveloppe `AES-256-GCM` protégée par la clé maître. Ouverte uniquement côté service.
+- **Clé de conversation** : clé symétrique d'un fil, enveloppée pour chaque participant. Permet la rotation sans ré-chiffrer les messages.
+- **Message** : porte `content` (ciphertext), `deletedAt`, `encScheme` (1 = E2E direct, 2 = clé de conversation).
+
+---
 
 ## Success Criteria *(mandatory)*
 
-### Measurable Outcomes
+- **SC-001** : En mode E2E, la page Confidentialité et les CGU ne promettent pas plus que ce que le code garantit (test de non-régression par route).
+- **SC-002** : Un message illisible est signalé comme tel dans 100 % des cas.
+- **SC-003** : Une activation du vault est notifiée et documentée, et ne rend pas rétroactivement lisibles les conversations antérieures.
+- **SC-004** : En mode vault, 100 % des conversations créées après activation restent lisibles au changement d'appareil.
+- **SC-005** : Une rotation de clé en mode vault ne rend illisible aucun message antérieur.
+- **SC-006** : Ce qu'une personne efface ou qui est purgé après rupture n'est restituable par aucun chemin.
+- **SC-007** : Les indicateurs de risque en mode E2E ne reposent jamais sur le contenu des messages.
 
-- **SC-001**: Zéro conversation perdue lors d'un changement d'appareil : sur un
-  compte de test à mot de passe **et** un compte via fournisseur externe, 100 %
-  des messages antérieurs restent lisibles depuis un appareil neuf.
-- **SC-002**: Aucune action utilisateur n'est nécessaire pour retrouver ses
-  messages — zéro écran supplémentaire, zéro phrase secrète, zéro export à
-  conserver.
-- **SC-003**: Aucun compte existant ne perd de fil à la mise en service, vérifié
-  avant/après sur un échantillon représentatif des comptes en production.
-- **SC-004**: Un message illisible est signalé comme tel dans 100 % des cas :
-  plus aucun repli silencieux en clair.
-- **SC-005**: Chaque phrase de l'interface décrivant la confidentialité des
-  messages correspond au comportement observable, et une relecture croisée
-  copie ↔ code ne trouve aucun écart.
-- **SC-006**: Une rotation de clé ne rend illisible aucun message antérieur.
-- **SC-007**: Ce qu'une personne efface n'est restituable par aucun chemin
-  après la purge — ni par l'interface, ni par l'export, ni par l'administration.
+---
 
 ## Assumptions
 
-- La décision d'architecture est **acquise et non rouverte** : escrow serveur
-  assumé, au prix du zéro-knowledge, arbitrage tranché par l'opérateur le
-  2026-07-08 dans #198. L'alternative « clé dérivée du mot de passe » est écartée
-  (inapplicable aux comptes sans mot de passe, et exigerait de manipuler le mot
-  de passe en clair au login).
-- Le volume actuel — premiers comptes en production — permet une migration en
-  une seule passe, sans fenêtre de maintenance ni traitement par lots.
-- Le modèle de session existant (NextAuth, JWT) est réutilisé tel quel ; cette
-  feature n'introduit pas de nouveau facteur d'authentification.
-- La confiance dans l'hébergeur de la base est déjà un prérequis du produit :
-  l'escrow déplace le curseur, il ne franchit pas une frontière que le reste de
-  l'application respecterait aujourd'hui.
-- La gestion de la clé maître (génération, stockage, rotation, sauvegarde) est
-  un prérequis d'exploitation, à écrire au moment du plan.
+- Le mode par défaut reste **E2E pur** tant que le vault n'est pas explicitement activé.
+- L'activation du vault est une **décision administrative documentée**, pas une bascule technique invisible.
+- Le volume actuel permet une migration en une seule passe ; à grande échelle, une migration progressive serait nécessaire.
+- La clé maître reste dans l'environnement Vercel (mode freetier). Une migration vers un KMS externe est prévue dans la feuille de route sécurité.
+- L'archive des messages et des clés se fait sur **R2** (déjà utilisé pour les photos), sous forme de ciphertexts chiffrés.
+- La durée de conservation post-rupture est un paramètre produit/juridique, pas technique.
+
+---
 
 ## Dépendances
 
-- **#198** — escrow de clé : socle d'US1, US2, US3.
-- **#199** — clé de conversation et historique de clés : socle d'US4, bloqué
-  par #198.
-- **#202** — rétention et messages éphémères : socle d'US5, `needs-design`.
-- **#200 / PR #254 / PR #303** — pagination par curseur, déchiffrement paresseux
-  et virtualisation : **déjà livrés**, à ne pas re-spécifier. Le déchiffrement
-  paresseux suppose une clé disponible : il devient fiable avec US1.
-- **#328** — patron « une promesse affichée est adossée à du code et testée par
-  route » : modèle direct de FR-010 et FR-011.
-- **#160** — suppression de compte : la clé au coffre doit être détruite avec le
-  compte.
+- **#198** — escrow de clé : socle du mode vault.
+- **#199** — clé de conversation et historique de clés : socle de la rotation.
+- **#202** — rétention et purge réelle.
+- **#200 / PR #254 / PR #303** — pagination, déchiffrement paresseux, virtualisation : déjà livrés.
+- **#328** — promesse affichée adossée à du code et testée par route.
+- **#160** — suppression de compte en cascade.
 
-## Décisions tranchées *(clarification du 2026-08-17)*
+---
 
-Ces trois questions portaient toutes sur le lot rétention (#202), seul lot non
-tranché produit. US1 à US4 étaient spécifiés sans ambiguïté dès l'écriture.
+## Décisions tranchées *(2026-08-28)*
 
 | # | Question | Décision | Ce qu'on écarte et pourquoi |
 |---|---|---|---|
-| 1 | Durée de conservation par défaut | **Indéfinie tant que le match vit** ; purge à la rupture du match et à la suppression du compte | Une purge après N mois efface des souvenirs que personne n'a demandé d'effacer, et oblige à prévenir avant. Un réglage par personne crée une asymétrie insoluble dans un fil à deux (qui gagne, le plus court ?) pour un besoin que rien n'atteste encore. |
-| 2 | « Effacer » : pour soi ou pour les deux ? | **Pour les deux**, avec pierre tombale « message supprimé » | L'effacement local seul laisse un message regretté chez le pair pour toujours — l'inverse du service rendu. Le double chemin (« pour moi » / « pour tout le monde ») ajoute un état, une boîte de dialogue et de la copie pour un gain marginal. C'est aussi ce que fait déjà `Message.deletedAt` : le confirmer évite de réécrire l'existant. |
-| 3 | Fils éphémères | **Hors périmètre** de cette itération ; la piste reste ouverte dans #202 | Bâtir l'éphémère maintenant, c'est trancher à l'aveugle l'accord unilatéral ou bilatéral, la rétroactivité et l'affichage du compte à rebours — pour un mécanisme dont aucun usage observé ne réclame l'existence. Le bloquant est ailleurs. |
+| 1 | Mode par défaut | **E2E pur** par défaut ; vault activable | Le vault par défaut briserait la promesse de confidentialité et exposerait juridiquement le service, pour un besoin de portabilité qui ne concerne pas tous les utilisateurs aujourd'hui. |
+| 2 | Activation du vault | **Action explicite + notification + pas de rétroactivité** | Une activation silencieuse ou rétroactive serait un défaut de confiance et un risque juridique. |
+| 3 | Stockage de la clé maître | **Vercel env par défaut**, migration KMS prévue | Freetier, seul aux manettes, 23 inscrits. AWS KMS ou matos perso sont hors budget/portée immédiate, mais documentés comme évolution. |
+| 4 | Archives | **R2, ciphertexts chiffrés**, rotation possible | Même fournisseur que les photos, 10 Go/mois free, pas de matos perso. Les archives restent du chiffré. |
+| 5 | Rétention post-rupture | **À trancher avec un juriste** ; placeholder 30 jours | Ni illimitée (risque RGPD), ni nulle (modération / réquisition). |
+| 6 | Indicateurs de risque E2E | **Métadonnées uniquement** : volume, signalements, patterns | Lire le contenu en E2E pur est techniquement impossible ; les indicateurs permettent quand même une modération proactive. |
+| 7 | Scan de contenu | **Jamais de scan automatique massif**, même en vault activé | Exemple type : l'envoi d'une clé de wallet BTC en message privé n'est détectable qu'après signalement ou avec vault activé + scan ciblé validé par un humain. Le scan massif serait disproportionné au regard du RGPD et faux-positif. |
+| 8 | Store-readiness | **À planifier** : positionnement bienveillant, flou photos, age gate, privacy policy, compte demo | Nécessaire pour un jour soumettre l'app sur Play Store / App Store, faisable en freetier. |
 
-**Conséquence pour la suite** : US5 se limite désormais à rendre l'effacement et
-la purge **réels** (le geste existe déjà à l'écran), sans nouvelle surface
-d'interface. La purge à la rupture du match s'appuie sur la cascade existante ;
-l'action « rompre un match » elle-même relève de #161, hors périmètre ici.
+---
+
+## Notes spécifiques au store-readiness
+
+Pour un jour publier Libre sur les stores, les points suivants doivent être tenus :
+
+1. **Positionnement bienveillant** : le marketing et la description de l'app doivent mettre en avant la rencontre respectueuse, pas le contenu adulte. Éviter les termes « hookup », « anonyme », « hot-or-not ».
+2. **Flou par défaut des photos sensibles** : maintenir le voile et la révélation explicite. Les photos explicites doivent être masquées par défaut et accessibles uniquement après action volontaire.
+3. **Age gate solide** : vérification 18+ à l'inscription, avec confirmation par date de naissance et éventuellement vérification d'identité (selfie). Interdiction stricte aux mineurs.
+4. **Politique de confidentialité à jour** : refléter le mode E2E par défaut, la possibilité d'activation du vault, les métadonnées collectées, les durées de conservation.
+5. **Compte demo pour le review** : compte fictif avec profils, matchs et conversations factices, accessible par Apple/Google lors du review.
+
+Ces points feront l'objet d'une planification dédiée et de tickets séparés.
