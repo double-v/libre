@@ -411,8 +411,27 @@ export default function ChatConversationPage() {
         </div>
       )}
 
+      {/* Bandeau permanent de transparence sur la messagerie (#368).
+           Rappelle la posture réelle : chiffrées, mais lisibles par le service
+           technique en cas de vault actif (ce qui est le cas par défaut dans
+           l'implémentation actuelle). */}
+      <div className="mx-4 mt-2 flex items-start gap-2 rounded-xl bg-blush p-3 text-xs text-secondary dark:bg-coral/10">
+        <span
+          aria-hidden="true"
+          className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-coral text-[10px] font-bold text-coral"
+        >
+          i
+        </span>
+        <p className="leading-relaxed">
+          <strong>Messagerie sécurisée.</strong> Vos messages sont chiffrés en transit
+          et au repos. Pour qu&apos;ils restent lisibles d&apos;un appareil à l&apos;autre, Libre conserve
+          la clé nécessaire dans un coffre sécurisé : l&apos;équipe technique peut donc
+          techniquement y accéder, uniquement dans les cas prévus par les CGU.
+        </p>
+      </div>
+
       {/* État du chiffrement du fil (#198) : un seul bandeau, qui parle du passé
-          ET du présent — sans clé, ce qu'on écrit maintenant part en clair. */}
+           ET du présent — sans clé, ce qu'on écrit maintenant part en clair. */}
       {avertissement && (
         <div className="mx-4 mt-2">
           <Alert variant={avertissement.ton}>{avertissement.texte}</Alert>
