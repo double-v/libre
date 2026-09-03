@@ -29,9 +29,7 @@
                                     └─► [Vercel env] : CHAT_ESCROW_KEY
 ```
 
-En mode freetier, la clé maître vit dans une variable d'environnement Vercel. Ce n'est pas l'idéal, mais c'est acceptable à très petite échelle avec des procédures strictes. L'évolution vers un KMS (AWS KMS, Google Cloud KMS) est documentée comme next step.
-
----
+Le vault est **activé par défaut** dans l'implémentation actuelle. La clé maître vit dans une variable d'environnement Vercel. Ce n'est pas l'idéal, mais c'est acceptable à petite échelle avec des procédures strictes. L'évolution vers un KMS (AWS KMS, Google Cloud KMS) est documentée comme next step.
 
 ## Modèles de données
 
