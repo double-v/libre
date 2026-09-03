@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { email, password, displayName, turnstileToken = undefined, deviceId = undefined, consentGiven = false } = parsed.data as typeof parsed.data & { consentGiven?: boolean };
+    const { email, password, displayName, birthDate, turnstileToken = undefined, deviceId = undefined, consentGiven = false } = parsed.data as typeof parsed.data & { consentGiven?: boolean };
 
     // RGPD: verify explicit consent was given
     if (!consentGiven) {
@@ -133,6 +133,11 @@ export async function POST(request: Request) {
         displayName: displayName.trim(),
         passwordHash,
         deviceId: deviceId || null,
+        profile: {
+          create: {
+            birthDate: new Date(birthDate),
+          },
+        },
       },
       select: {
         id: true,

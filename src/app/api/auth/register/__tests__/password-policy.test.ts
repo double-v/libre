@@ -81,6 +81,7 @@ const VALID_BODY = {
   email: 'test@example.com',
   password: 'ValidPass1!',
   displayName: 'TestUser',
+  birthDate: '1990-01-01',
   consentGiven: true,
 };
 
@@ -195,6 +196,16 @@ describe('Password policy — POST /api/auth/register (#145)', () => {
     expect(res.status).toBe(201);
     expect(fakeDb.user.create).toHaveBeenCalledOnce();
   });
+
+  it('rejects a birthDate under 18 years old with 400', async () => {
+    const tooYoung = new Date();
+    tooYoung.setFullYear(tooYoung.getFullYear() - 17);
+    const birthDate = tooYoung.toISOString().slice(0, 10);
+    const res = await POST(buildRequest({ birthDate }));
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toMatch(/18 ans/i);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -211,6 +222,15 @@ describe('Email normalization consistency — POST /api/auth/register (#145)', (
     // normalizeEmail('Foo@bar.com') === 'foo@bar.com'
     expect(data.email).toBe('foo@bar.com');
     expect(data.normalizedEmail).toBe('foo@bar.com');
+  });
+
+  it('creates a Profile with the provided birthDate', async () => {
+    await POST(buildRequest({ birthDate: '1995-06-15' }));
+
+    const createCall = fakeDb.user.create.mock.calls[0];
+    expect(createCall).toBeDefined();
+    const data = createCall![0].data;
+    expect(data.profile.create.birthDate).toEqual(new Date('1995-06-15'));
   });
 
   it('uses normalizedEmail for the verification token and email send', async () => {

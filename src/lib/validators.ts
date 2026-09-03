@@ -14,6 +14,13 @@ function isAtLeast18(birthDateStr: string): boolean {
   return birthDate <= minDate;
 }
 
+/** Accepte AAAA-MM-JJ (input type=date) et exige 18 ans. */
+const birthDateSchema = z
+  .string({ message: 'Veuillez entrer votre date de naissance' })
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'La date de naissance doit être au format AAAA-MM-JJ')
+  .refine((d) => !Number.isNaN(new Date(d).getTime()), 'Date de naissance invalide')
+  .refine(isAtLeast18, 'Vous devez être âgé de 18 ans ou plus');
+
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/;
 
 const VALID_GENDER_VALUES = GENDER_OPTIONS.map(g => g.value);
@@ -33,6 +40,7 @@ export const registerSchema = z.object({
     '8 caractères min, avec majuscule, minuscule, chiffre et caractère spécial',
   ),
   displayName: z.string({ message: 'Veuillez entrer un pseudo' }).min(1, 'Le pseudo est requis').max(50, 'Le pseudo ne peut pas dépasser 50 caractères').transform((s) => s.trim()),
+  birthDate: birthDateSchema,
   turnstileToken: z.string().nullable().optional(),
   deviceId: z.string().nullable().optional(),
   consentGiven: z.boolean().optional(),

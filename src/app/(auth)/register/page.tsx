@@ -18,6 +18,7 @@ export default function RegisterPage() {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -68,7 +69,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ displayName, email, password, turnstileToken: turnstileToken ?? undefined, deviceId, consentGiven }),
+        body: JSON.stringify({ displayName, email, password, birthDate, turnstileToken: turnstileToken ?? undefined, deviceId, consentGiven }),
       });
 
       const data = await res.json();
@@ -141,6 +142,17 @@ export default function RegisterPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Minimum 8 caractères"
+        />
+
+        <Input
+          id="birthDate"
+          type="date"
+          label="Date de naissance"
+          required
+          autoComplete="bday"
+          value={birthDate}
+          onChange={(e) => setBirthDate(e.target.value)}
+          hint="Le service est réservé aux 18 ans et plus"
         />
 
         {siteKey && (
