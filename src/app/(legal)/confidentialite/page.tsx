@@ -10,7 +10,7 @@ export default function ConfidentialitePage() {
     <article className="prose prose-gray dark:prose-invert max-w-none">
       <h1>Politique de confidentialité</h1>
       <p className="text-sm text-muted">
-        Dernière mise à jour : 1er juin 2026
+        Dernière mise à jour : 3 septembre 2026
       </p>
 
       <p>
@@ -204,7 +204,9 @@ export default function ConfidentialitePage() {
       </ul>
       <p>
         <strong>Aucune donnée n&apos;est transférée à des fins publicitaires ou commerciales.</strong>{' '}
-        Aucun sous-traitant n&apos;a les moyens de déchiffrer vos messages : la clé qui le permet ne quitte jamais nos serveurs.
+        Aucun sous-traitant n&apos;a les moyens de déchiffrer vos messages : la clé qui le permet reste
+        scellée sur nos serveurs. Seule l&apos;équipe d&apos;exploitation de Libre peut techniquement y accéder,
+        et uniquement dans les cas limitatifs décrits au §8.1.
       </p>
 
       {/* ─── 7. Transferts hors UE ─── */}

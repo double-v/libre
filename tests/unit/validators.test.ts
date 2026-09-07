@@ -17,8 +17,21 @@ describe('Validation schemas', () => {
         email: 'test@example.com',
         password: 'SecurePass123!',
         displayName: 'Alice',
+        birthDate: '1995-06-15',
       });
       expect(result.success).toBe(true);
+    });
+
+    it('rejects a registration under 18', () => {
+      const tooYoung = new Date();
+      tooYoung.setFullYear(tooYoung.getFullYear() - 17);
+      const result = registerSchema.safeParse({
+        email: 'test@example.com',
+        password: 'SecurePass123!',
+        displayName: 'Alice',
+        birthDate: tooYoung.toISOString().slice(0, 10),
+      });
+      expect(result.success).toBe(false);
     });
 
     it('rejects invalid email', () => {

@@ -70,6 +70,7 @@ const VALID_BODY = {
   email: 'test@example.com',
   password: 'ValidPass1!',
   displayName: 'TestUser',
+  birthDate: '1990-01-01',
   consentGiven: true,
 };
 

@@ -10,7 +10,7 @@ export default function CGUPage() {
     <article className="prose prose-gray dark:prose-invert max-w-none">
       <h1>Conditions générales d&apos;utilisation</h1>
       <p className="text-sm text-muted">
-        Dernière mise à jour : 1er juin 2026
+        Dernière mise à jour : 3 septembre 2026
       </p>
 
       {/* ─── 1. Objet ─── */}
@@ -35,7 +35,7 @@ export default function CGUPage() {
         <li>Création de profil personnel</li>
         <li>Découverte de célibataires par géolocalisation</li>
         <li>Système de &quot;like&quot; et de match mutuel</li>
-        <li>Messagerie chiffrée (portée exacte décrite au §8.1 de la politique de confidentialité)</li>
+        <li>Messagerie chiffrée (portée exacte décrite au §9.1 et au §8.1 de la politique de confidentialité)</li>
         <li>Espace communautaire &quot;Le Carré&quot;</li>
         <li>Vérification d&apos;identité par selfie</li>
         <li>Signalement et modération</li>
@@ -50,6 +50,7 @@ export default function CGUPage() {
       <p>L&apos;utilisation du Service est soumise aux conditions suivantes :</p>
       <ul>
         <li><strong>Être âgé de 18 ans ou plus</strong>. Toute inscription d&apos;un mineur est strictement interdite et entraîne la suppression immédiate du compte.</li>
+        <li>Fournir une date de naissance qui atteste un âge d&apos;au moins 18 ans.</li>
         <li>Fournir des informations exactes et à jour lors de l&apos;inscription.</li>
         <li>Disposer d&apos;une adresse e-mail valide.</li>
         <li>Ne pas avoir été précédemment banni du Service.</li>
@@ -63,7 +64,7 @@ export default function CGUPage() {
       <h2>4. Compte utilisateur</h2>
       <h3>4.1 Création</h3>
       <p>
-        La création de compte nécessite un pseudo, une adresse e-mail et un mot de passe.
+        La création de compte nécessite un pseudo, une adresse e-mail, un mot de passe et une date de naissance attestant un âge d&apos;au moins 18 ans.
         Vous pouvez également vous inscrire via GitHub ou Google (OAuth). Lors de l&apos;inscription,
         vous devez accepter les CGU et la politique de confidentialité.
       </p>
@@ -147,6 +148,32 @@ export default function CGUPage() {
       <p>
         Le traitement de vos données personnelles est détaillé dans notre
         <a href="/confidentialite">Politique de confidentialité</a>, conformément au RGPD.
+      </p>
+
+      {/* ─── 9.1 Messagerie et chiffrement ─── */}
+      <h3>9.1 Messagerie et chiffrement</h3>
+      <p>
+        Les messages échangés via la messagerie privée sont chiffrés sur votre appareil avant
+        d&apos;être transmis (ECDH P-256 + AES-256-GCM) et restent chiffrés dans notre base de données.
+        Ils sont protégés contre une interception réseau ou un simple accès à la base.
+      </p>
+      <p>
+        Pour permettre la portabilité de vos conversations d&apos;un appareil à l&apos;autre, Libre conserve
+        votre clé privée de messagerie <strong>chiffrée côté service</strong>, scellée par une clé
+        maître interne. Techniquement, l&apos;équipe d&apos;exploitation dispose ainsi de la capacité de
+        déchiffrer vos messages. Nous ne le faisons pas en cours normal de service.
+      </p>
+      <p>Cette capacité n&apos;est utilisée que dans les cas limitatifs suivants :</p>
+      <ul>
+        <li>signalement d&apos;un contenu ou comportement grave,</li>
+        <li>obligation légale ou réquisition judiciaire,</li>
+        <li>modération ciblée et documentée, après validation par un humain.</li>
+      </ul>
+      <p>
+        Tout accès au contenu d&apos;un message par l&apos;équipe d&apos;exploitation est journalisé. Les messages
+        effacés par leur auteur, ainsi que les conversations liées à un match rompu ou à une suppression
+        de compte, sont purgés conformément au §5 des présentes CGU et à la
+        <a href="/confidentialite">Politique de confidentialité</a>.
       </p>
 
       {/* ─── 10. Modifications ─── */}

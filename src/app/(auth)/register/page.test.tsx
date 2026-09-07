@@ -64,6 +64,7 @@ describe('RegisterPage', () => {
     await user.type(screen.getByLabelText(/pseudo/i), 'Tester');
     await user.type(screen.getByLabelText(/email/i), 'tester@example.com');
     await user.type(screen.getByLabelText(/mot de passe/i), 'Passw0rd');
+    await user.type(screen.getByLabelText(/date de naissance/i), '1990-01-01');
     await user.click(screen.getByLabelText(/j'accepte/i));
     await user.click(screen.getByRole('button', { name: /créer/i }));
 
@@ -71,5 +72,29 @@ describe('RegisterPage', () => {
     const [, init] = fetchMock.mock.calls[0];
     const body = JSON.parse(init.body);
     expect(body.consentGiven).toBe(true);
+  });
+
+  it('sends birthDate in /api/auth/register body', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({ user: { id: 'u1', email: 'x@y.z', displayName: 'x' } }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const user = userEvent.setup();
+    render(<RegisterPage />);
+
+    await user.type(screen.getByLabelText(/pseudo/i), 'Tester');
+    await user.type(screen.getByLabelText(/email/i), 'tester@example.com');
+    await user.type(screen.getByLabelText(/mot de passe/i), 'Passw0rd');
+    await user.type(screen.getByLabelText(/date de naissance/i), '1990-01-01');
+    await user.click(screen.getByLabelText(/j'accepte/i));
+    await user.click(screen.getByRole('button', { name: /créer/i }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const [, init] = fetchMock.mock.calls[0];
+    const body = JSON.parse(init.body);
+    expect(body.birthDate).toBe('1990-01-01');
   });
 });
