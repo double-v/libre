@@ -32,6 +32,11 @@ const fakeDb = {
     update: vi.fn(),
     delete: vi.fn(),
   },
+  profile: {
+    count: vi.fn(),
+    groupBy: vi.fn(),
+    findMany: vi.fn(),
+  },
   report: {
     findMany: vi.fn(),
     count: vi.fn(),
@@ -45,11 +50,28 @@ const fakeDb = {
   moderationLog: {
     findMany: vi.fn(),
     count: vi.fn(),
+    groupBy: vi.fn(),
+  },
+  photoModeration: {
+    count: vi.fn(),
+  },
+  message: {
+    count: vi.fn(),
+  },
+  like: {
+    count: vi.fn(),
+  },
+  match: {
+    count: vi.fn(),
+  },
+  encounter: {
+    count: vi.fn(),
   },
   siteConfig: {
     findUnique: vi.fn(),
     upsert: vi.fn(),
   },
+  $queryRaw: vi.fn(),
 };
 vi.mock('@/lib/db', () => ({
   __esModule: true,
@@ -146,6 +168,18 @@ describe('Admin access control — canonical requireAdmin() routes', () => {
         fakeDb.moderationLog.findMany.mockResolvedValue([]);
         fakeDb.moderationLog.count.mockResolvedValue(0);
         fakeDb.report.findMany.mockResolvedValue([]);
+
+        // Mocks pour la partie analytics enrichie de /api/admin/stats.
+        fakeDb.profile.count.mockResolvedValue(0);
+        fakeDb.profile.groupBy.mockResolvedValue([]);
+        fakeDb.profile.findMany.mockResolvedValue([]);
+        fakeDb.message.count.mockResolvedValue(0);
+        fakeDb.like.count.mockResolvedValue(0);
+        fakeDb.match.count.mockResolvedValue(0);
+        fakeDb.encounter.count.mockResolvedValue(0);
+        fakeDb.moderationLog.groupBy.mockResolvedValue([]);
+        fakeDb.photoModeration.count.mockResolvedValue(0);
+        fakeDb.$queryRaw.mockResolvedValue([{ avg: 0 }]);
 
         const res = await route.run();
         expect(res.status).toBe(200);
