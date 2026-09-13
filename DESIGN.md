@@ -756,7 +756,7 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 | Composant | États obligatoires | Variantes | Remplace |
 |---|---|---|---|
 | `Button` | default, hover, focus, active, disabled, loading | primary, secondary, ghost, danger | Tous les `<button>` et les liens stylés CTA |
-| `Input` | default, hover, focus, error, disabled | text, email, password, search, textarea | Tous les `<input>` et `<textarea>` |
+| `Input` | default, hover, focus, error, disabled | text, email, password (œil de révélation), search, textarea | Tous les `<input>` et `<textarea>` |
 | `Card` | default, hover (rare), interactive | profile, crossing, match, filter, modal, **media** (#348) | Tous les blocs `rounded-xl border` du site |
 | `Tag` | default, selected, hover, disabled | chip, badge | Tous les chips/badges dispersés |
 | `Avatar` | default, with-online-dot, with-badge, placeholder | sm, md, lg, xl | Tous les avatars inline |
@@ -776,6 +776,12 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 - Tous ont un équivalent dark mode.
 - Tous ont des props ARIA cohérentes (cf. section Accessibility de `PRODUCT.md`).
 - Aucun n'utilise `bg-gray-*` Tailwind brut : on passe par les tokens coral/blush/sand/abricot/miel/rose-poudré.
+- **Un champ `type="password"` porte l'œil de révélation par défaut** (`Input`,
+  prop `revealable`, activée d'office). C'est le geste attendu partout sur le
+  web, et la saisie à l'aveugle sur mobile est la première cause d'échec de
+  connexion. L'œil est un vrai `<button>` de 44 px, `aria-pressed` + libellé qui
+  annonce l'action à venir (« Voir le mot de passe » / « Masquer le mot de
+  passe ») — à ne retirer (`revealable={false}`) que pour une raison explicite.
 
 ### SiteNav (`src/components/ui/SiteNav.tsx`)
 

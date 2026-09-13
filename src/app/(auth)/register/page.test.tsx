@@ -19,7 +19,7 @@ describe('RegisterPage', () => {
   it('renders registration form', () => {
     render(<RegisterPage />);
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/mot de passe/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Mot de passe/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /créer/i })).toBeInTheDocument();
   });
 
@@ -63,7 +63,7 @@ describe('RegisterPage', () => {
 
     await user.type(screen.getByLabelText(/pseudo/i), 'Tester');
     await user.type(screen.getByLabelText(/email/i), 'tester@example.com');
-    await user.type(screen.getByLabelText(/mot de passe/i), 'Passw0rd');
+    await user.type(screen.getByLabelText(/^Mot de passe/), 'Passw0rd');
     await user.type(screen.getByLabelText(/date de naissance/i), '1990-01-01');
     await user.click(screen.getByLabelText(/j'accepte/i));
     await user.click(screen.getByRole('button', { name: /créer/i }));
@@ -87,7 +87,7 @@ describe('RegisterPage', () => {
 
     await user.type(screen.getByLabelText(/pseudo/i), 'Tester');
     await user.type(screen.getByLabelText(/email/i), 'tester@example.com');
-    await user.type(screen.getByLabelText(/mot de passe/i), 'Passw0rd');
+    await user.type(screen.getByLabelText(/^Mot de passe/), 'Passw0rd');
     await user.type(screen.getByLabelText(/date de naissance/i), '1990-01-01');
     await user.click(screen.getByLabelText(/j'accepte/i));
     await user.click(screen.getByRole('button', { name: /créer/i }));

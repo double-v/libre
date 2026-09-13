@@ -7,6 +7,7 @@ import { purgerSecretsLocaux } from '@/lib/session-cleanup';
 import { toast } from '@/lib/toast';
 import AppearanceSettings from '@/components/AppearanceSettings';
 import SiteShell from '@/components/ui/SiteShell';
+import Input from '@/components/ui/Input';
 
 interface Profile {
   userId: string;
@@ -21,6 +22,11 @@ export default function SettingsPage() {
   const [invisibleToggling, setInvisibleToggling] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  // null tant qu'on ne sait pas : on n'affiche le champ mot de passe qu'une fois
+  // la réponse arrivée, pour ne pas le demander à un compte OAuth qui n'en a pas.
+  const [hasPassword, setHasPassword] = useState<boolean | null>(null);
   const [error, setError] = useState('');
 
   const fetchProfile = useCallback(async () => {
@@ -43,13 +49,26 @@ export default function SettingsPage() {
     }
   }, [router]);
 
+  const fetchAccount = useCallback(async () => {
+    try {
+      const res = await fetch('/api/users/me');
+      if (!res.ok) return;
+      const data = await res.json();
+      setHasPassword(Boolean(data.hasPassword));
+    } catch {
+      // Sans cette info, le formulaire de suppression demandera le mot de passe :
+      // c'est le cas majoritaire, et le serveur reste l'arbitre.
+      setHasPassword(true);
+    }
+  }, []);
+
   useEffect(() => {
     // IIFE async → pas de setState synchrone dans le corps de l'effet
     // (react-hooks/set-state-in-effect, cf. #179/#193).
     void (async () => {
-      await fetchProfile();
+      await Promise.all([fetchProfile(), fetchAccount()]);
     })();
-  }, [fetchProfile]);
+  }, [fetchProfile, fetchAccount]);
 
   async function handleToggleInvisible() {
     if (!profile || invisibleToggling) return;
@@ -82,22 +101,42 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleDeleteAccount() {
+  async function handleDeleteAccount(event: React.FormEvent) {
+    event.preventDefault();
+    if (deleting) return;
     setDeleting(true);
+    setDeleteError('');
     setError('');
 
     try {
-      const res = await fetch('/api/users/me', { method: 'DELETE' });
+      // Le corps est obligatoire : la route confirme le mot de passe avant de
+      // détruire le compte. Sans lui, elle répondait 400 et la suppression
+      // échouait en silence derrière un « Erreur lors de la suppression ».
+      const res = await fetch('/api/users/me', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmPassword: deletePassword }),
+      });
+
       if (!res.ok) {
-        throw new Error('Failed to delete account');
+        const result = await res.json().catch(() => ({}));
+        setDeleteError(result.error || 'Erreur lors de la suppression du compte');
+        setDeleting(false);
+        return;
       }
       purgerSecretsLocaux();
       await signOut({ redirect: false });
       router.push('/');
     } catch {
-      setError('Erreur lors de la suppression du compte');
+      setDeleteError('Erreur lors de la suppression du compte');
       setDeleting(false);
     }
+  }
+
+  function cancelDelete() {
+    setShowDeleteConfirm(false);
+    setDeletePassword('');
+    setDeleteError('');
   }
 
   async function handleSignOut() {
@@ -214,29 +253,46 @@ export default function SettingsPage() {
               Supprimer mon compte
             </button>
           ) : (
-            <div className="space-y-3">
+            <form onSubmit={handleDeleteAccount} className="space-y-3">
               <p className="text-sm font-medium text-red-700 dark:text-red-400">
-                Etes-vous sûr ? Cette action est irréversible.
+                Êtes-vous sûr ? Cette action est irréversible.
               </p>
+              {hasPassword !== false && (
+                <Input
+                  id="delete-confirm-password"
+                  type="password"
+                  label="Confirmez avec votre mot de passe"
+                  required
+                  autoComplete="current-password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  error={deleteError}
+                  placeholder="Votre mot de passe"
+                />
+              )}
+              {hasPassword === false && deleteError && (
+                <p role="alert" className="text-sm text-error">
+                  {deleteError}
+                </p>
+              )}
               <div className="flex gap-2">
                 <button
-                  type="button"
+                  type="submit"
                   disabled={deleting}
-                  onClick={handleDeleteAccount}
                   className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
                 >
                   {deleting ? 'Suppression...' : 'Oui, supprimer'}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowDeleteConfirm(false)}
+                  onClick={cancelDelete}
                   disabled={deleting}
                   className="rounded-md border border-hairline-strong bg-surface px-4 py-2 text-sm font-medium text-muted hover:bg-fill-subtle"
                 >
                   Annuler
                 </button>
               </div>
-            </div>
+            </form>
           )}
         </section>
 
