@@ -25,12 +25,16 @@ test.describe('Settings page', () => {
     const deleteBtn = page.getByText('Supprimer mon compte');
     await deleteBtn.click();
 
-    await expect(page.getByText('Etes-vous sûr')).toBeVisible();
+    await expect(page.getByText('Êtes-vous sûr')).toBeVisible();
     await expect(page.getByText('Oui, supprimer')).toBeVisible();
     await expect(page.getByText('Annuler')).toBeVisible();
 
+    // La confirmation par mot de passe est obligatoire côté serveur : si le
+    // champ disparaît de l'UI, la suppression repart en 400 silencieux.
+    await expect(page.locator('input[id="delete-confirm-password"]')).toBeVisible();
+
     // Cancel — don't actually delete
     await page.getByText('Annuler').click();
-    await expect(page.getByText('Etes-vous sûr')).not.toBeVisible();
+    await expect(page.getByText('Êtes-vous sûr')).not.toBeVisible();
   });
 });
