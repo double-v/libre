@@ -153,13 +153,13 @@ DESIGN.md                                          # + NotificationDot, CountChi
 
 ## Découpage en issues (une par user story)
 
-| Lot | Story | Issue à créer | Contenu | Migration | Gate visuel |
+| Lot | Story | Issue | Contenu | Migration | Gate visuel |
 |---|---|---|---|---|---|
-| 1 | US1 | `feat: pastille de messages non lus (tab bar + liste)` | DESIGN.md (NotificationDot, CountChip), `chat-unread.ts`, `GET /api/chat/unread`, trigger `private-user`, `pusher-client.ts`, `useUnread`, tab bar, liste Messages, tests | non | oui |
-| 1 | US2 | `feat: badge d'icône de l'app installée` | `app-badge.ts`, branchement dans `useUnread`, `logout.ts` (clear), tests | non | manuel Android/iOS |
-| 1 | US3 | `feat(admin): pastille d'accès et compteurs de files` | `GET /api/admin/queues`, `useAdminQueues`, `SiteNav`, `(admin)/layout.tsx` avec `CountChip`, tests | non | oui |
-| 2 | US4 | `feat: être prévenu hors de l'app (Web Push opt-in)` | migration `push_subscriptions`, `web-push`, VAPID env, `push/server.ts`, `push/client.ts`, `push/platform.ts`, `sw.js`, `PushSettings`, envois message + match, règle « déjà non lu », `logout.ts` (unsubscribe), Confidentialité, tests | **oui** | oui (Paramètres) + manuel |
-| 2 | US5 | `feat(admin): push signalement et retour` | envois dans `moderation/report` et `feedback`, `sendPushToAdmins`, tests | non | non |
+| 1 | US1 | #389 | DESIGN.md (NotificationDot, CountChip), `chat-unread.ts`, `GET /api/chat/unread`, trigger `private-user`, `pusher-client.ts`, `useUnread`, tab bar, liste Messages, tests | non | oui |
+| 1 | US2 | #390 | `app-badge.ts`, branchement dans `useUnread`, `logout.ts` (clear), tests | non | manuel Android/iOS |
+| 1 | US3 | #391 | `GET /api/admin/queues`, `useAdminQueues`, `SiteNav`, `(admin)/layout.tsx` avec `CountChip`, tests | non | oui |
+| 2 | US4 | #392 | migration `push_subscriptions`, `web-push`, VAPID env, `push/server.ts`, `push/client.ts`, `push/platform.ts`, `sw.js`, `PushSettings`, envois message + match, règle « déjà non lu », `logout.ts` (unsubscribe), Confidentialité, tests | **oui** | oui (Paramètres) + manuel |
+| 2 | US5 | #393 | envois dans `moderation/report` et `feedback`, `sendPushToAdmins`, tests | non | non |
 
 Dépendances : US2 et US3 dépendent de US1 (composants DS, `pusher-client`) ; US5 dépend de US4. US1 → US2 → US3 peuvent être trois PR successives du lot 1 ; US4 puis US5 ferment le lot 2 et #158.
 

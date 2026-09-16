@@ -51,7 +51,7 @@ Tests d'abord (gates de la constitution). `[P]` = parallélisable (fichiers disj
 - [ ] T023 [US1] Émettre `window.dispatchEvent(new Event('libre:unread-changed'))` dans `src/app/(main)/chat/[conversationId]/page.tsx` après le `GET messages` initial (qui marque lu), et mettre à jour son test
 - [ ] T024 [US1] Test de garde `src/components/__tests__/no-unread-count.test.tsx` : aucun fichier de `src/app/(main)` ni `src/components` ne rend `conversationIds.length` ou un libellé « non lu(s) » suivi d'un nombre — FR-006 adossé à un test (constitution III, corollaire #328)
 - [ ] T025 [US1] Gate visuel sur l'app servie : captures Playwright tab bar et liste avec/sans pastille, clair/sombre, `libre`/`retro`, échantillonnage de plusieurs points de la pastille (jamais son seul centre) ; joindre les captures à la PR
-- [ ] T026 [US1] Ouvrir la PR en brouillon dès le premier push, corps avec `Closes #<issue US1>`, passer en `ready` seulement après les quatre gates locaux
+- [ ] T026 [US1] Ouvrir la PR en brouillon dès le premier push, corps avec `Closes #389`, passer en `ready` seulement après les quatre gates locaux
 
 ---
 
@@ -63,7 +63,7 @@ Tests d'abord (gates de la constitution). `[P]` = parallélisable (fichiers disj
 - [ ] T028 [US2] Brancher `setBadge` / `clearBadge` dans `src/hooks/useUnread.ts` (effet sur `conversationIds.length > 0`)
 - [ ] T029 [US2] Vérifier que `logout()` (T007) est bien appelé avant toute redirection dans `settings/page.tsx` et `profile/page.tsx` ; test de non-régression dans `src/app/(main)/settings/__tests__/page.test.tsx` (ou équivalent existant)
 - [ ] T030 [US2] Validation manuelle Android (Chrome) + iOS installée (16.4+) selon quickstart § US2 ; consigner les captures d'icône dans la PR ; noter dans la PR que le rendu iOS sans nombre est « minimal, accepté » (Q4)
-- [ ] T031 [US2] PR brouillon → `ready` avec `Closes #<issue US2>`
+- [ ] T031 [US2] PR brouillon → `ready` avec `Closes #390`
 
 ---
 
@@ -78,7 +78,7 @@ Tests d'abord (gates de la constitution). `[P]` = parallélisable (fichiers disj
 - [ ] T036 [US3] Dans `src/components/ui/SiteNav.tsx`, appeler `useAdminQueues({ enabled: isAdmin })` et poser `<NotificationDot aria-label="Éléments en attente" />` sur le lien Administration ; étendre `src/components/ui/__tests__/SiteNav.test.tsx` : pastille présente/absente, **aucun fetch** pour un non-admin (FR-013)
 - [ ] T037 [US3] Dans `src/app/(admin)/layout.tsx`, faire les trois `count` côté serveur et rendre `<CountChip>` à côté de Signalements, Vérifications, Retours ; test dans `src/app/(admin)/__tests__/layout.test.tsx` (chips à 0 non rendus)
 - [ ] T038 [US3] Gate visuel : `SiteNav` avec pastille à 400 px et 1080 px, sidebar admin avec chips, clair/sombre ; captures dans la PR
-- [ ] T039 [US3] PR brouillon → `ready` avec `Closes #<issue US3>`
+- [ ] T039 [US3] PR brouillon → `ready` avec `Closes #391`
 
 **Checkpoint lot 1** : livrable et utile sans le lot 2.
 
@@ -122,7 +122,7 @@ Tests d'abord (gates de la constitution). `[P]` = parallélisable (fichiers disj
 - [ ] T063 [US4] Ajouter le paragraphe notifications à `src/app/(legal)/confidentialite/page.tsx` (ce qui est conservé : adresse d'envoi de l'appareil et ses clés ; ce qui ne l'est jamais : contenu, historique ; suppression au désabonnement, à la déconnexion, avec le compte) et l'adosser à un test de copie ↔ code dans `src/app/(legal)/__tests__/confidentialite-push.test.tsx` (FR-027, corollaire #328)
 - [ ] T064 [US4] Gate visuel : section Paramètres dans ses quatre états, clair/sombre, 400 px ; captures dans la PR
 - [ ] T065 [US4] Validation manuelle quickstart § US4 (Android, iOS installée, rafale, premier plan, désactivation, refus, déconnexion, abonnement mort, clé absente) ; consigner les résultats dans la PR
-- [ ] T066 [US4] PR brouillon → `ready` avec `Closes #<issue US4>` ; mentionner la migration dans le corps
+- [ ] T066 [US4] PR brouillon → `ready` avec `Closes #392` ; mentionner la migration dans le corps
 
 ---
 
@@ -135,7 +135,7 @@ Tests d'abord (gates de la constitution). `[P]` = parallélisable (fichiers disj
 - [ ] T069 [P] [US5] Écrire/étendre les tests de `src/app/api/feedback/__tests__/route.test.ts` : idem avec `admin-feedback`, sans `message` ni `url`
 - [ ] T070 [US5] Brancher `after(() => sendPushToAdmins(...))` dans `src/app/api/moderation/report/route.ts` et `src/app/api/feedback/route.ts`
 - [ ] T071 [US5] Validation manuelle quickstart § US5 ; captures dans la PR
-- [ ] T072 [US5] PR brouillon → `ready` avec `Closes #<issue US5>` **et** `Closes #158` (recadrage acté : son et toast nominatif abandonnés, cf. spec § Assumptions)
+- [ ] T072 [US5] PR brouillon → `ready` avec `Closes #393` **et** `Closes #158` (recadrage acté : son et toast nominatif abandonnés, cf. spec § Assumptions)
 
 ---
 

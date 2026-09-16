@@ -6,7 +6,7 @@
 
 **Status**: Clarifié (session 2026-09-16) — prêt pour le plan
 
-**Issues** : recadre #158 (push + badge + son) ; exclut #161 / #195 (match « nouveau », `needs-design`)
+**Issues** : #389 (US1) · #390 (US2) · #391 (US3) · #392 (US4) · #393 (US5) — recadre #158 (fermée par #393) ; exclut #161 / #195 (match « nouveau », `needs-design`)
 
 **Input** : discussion opérateur du 2026-09-16 : « voir ce qui existe et ce qu'on peut ajouter pour des badges ou notifs en cas de like, match et nouveaux messages ; et un badge pour mon compte admin ». Périmètre retenu : pastille de messages non lus (in-app + icône de l'app installée), Web Push opt-in (match, message, file admin), badges de file de travail pour l'admin. Pas de likes reçus, pas de compteur-appât, push désactivé par défaut.
 
