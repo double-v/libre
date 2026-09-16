@@ -39,6 +39,6 @@
 - Aucun marqueur de clarification : le périmètre a été discuté et validé par
   l'opérateur avant la rédaction (pastille sans chiffre, chiffres admin
   seulement, push opt-in, likes exclus, #161/#195 exclus).
-- Un `/speckit-clarify` reste utile pour figer : la fenêtre de regroupement,
-  le sort exact des messages « par appareil vs global », et la forme de
-  l'astuce iOS.
+- Session `/speckit-clarify` du 2026-09-16 : 4 questions, toutes intégrées (regroupement
+  par conversation, silence au premier plan, rafraîchissement admin par
+  navigation, badge icône sans nombre). Re-validation : 16/16.

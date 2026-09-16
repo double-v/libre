@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-16
 
-**Status**: Draft — à clarifier puis planifier
+**Status**: Clarifié (session 2026-09-16) — prêt pour le plan
 
 **Issues** : recadre #158 (push + badge + son) ; exclut #161 / #195 (match « nouveau », `needs-design`)
 
@@ -47,6 +47,17 @@ Deux conséquences techniques assumées : la notification d'un message **ne cont
 
 ---
 
+## Clarifications
+
+### Session 2026-09-16
+
+- Q: Quand plusieurs messages arrivent dans une même conversation alors que l'app est fermée, comment limite-t-on les notifications système ? → A: une seule notification par conversation tant que ses messages non lus n'ont pas été lus ; la suivante ne part qu'après une lecture (pas de minuteur, pas d'état à stocker).
+- Q: Si Libre est ouverte et au premier plan mais sur une autre page que la conversation, un message reçu déclenche-t-il quand même une notification système ? → A: non — aucune notification système tant qu'une fenêtre de Libre est au premier plan, quelle que soit la page ; la pastille in-app suffit.
+- Q: Comment la pastille d'accès admin et les compteurs de la navigation admin restent-ils à jour ? → A: recalcul à chaque navigation et à chaque retour au premier plan ; pas de canal temps réel, pas de minuterie.
+- Q: Le badge sur l'icône de l'app installée porte-t-il un nombre ? → A: non — badge sans nombre sur toutes les plateformes, rendu minimal accepté sur iOS.
+
+---
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 — Voir qu'on m'a écrit, d'où que je sois dans l'app (Priority: P1)
@@ -78,7 +89,7 @@ Camille a ajouté Libre à l'écran d'accueil de son téléphone. Quand elle a u
 
 **Acceptance Scenarios** :
 
-1. **Given** l'app installée et au moins un message non lu, **When** Camille revient à l'écran d'accueil, **Then** l'icône porte un badge.
+1. **Given** l'app installée et au moins un message non lu, **When** Camille revient à l'écran d'accueil, **Then** l'icône porte un badge sans nombre.
 2. **Given** l'app installée et le badge visible, **When** Camille lit tous ses messages non lus, **Then** le badge disparaît sans qu'elle ait à fermer l'app.
 3. **Given** un navigateur ou une plateforme qui ne prend pas en charge le badge d'icône, **When** l'app tente de le poser, **Then** rien ne casse et l'expérience in-app (story 1) reste intacte.
 4. **Given** Camille qui se déconnecte, **When** la déconnexion est effective, **Then** le badge est retiré.
@@ -87,7 +98,7 @@ Camille a ajouté Libre à l'écran d'accueil de son téléphone. Quand elle a u
 
 ### User Story 3 — L'admin voit ses files se remplir sans aller les chercher (Priority: P2)
 
-L'administrateur est connecté comme n'importe quel membre. Dès qu'un signalement, une demande de vérification ou un retour est en attente, l'accès à l'administration dans la barre du site porte une pastille. Dans l'administration, chaque entrée de navigation concernée (Signalements, Vérifications, Retours) affiche le nombre d'éléments en attente. Les compteurs se mettent à jour quand un élément est traité.
+L'administrateur est connecté comme n'importe quel membre. Dès qu'un signalement, une demande de vérification ou un retour est en attente, l'accès à l'administration dans la barre du site porte une pastille. Dans l'administration, chaque entrée de navigation concernée (Signalements, Vérifications, Retours) affiche le nombre d'éléments en attente. Les compteurs sont recalculés à chaque changement de page et quand l'admin revient sur l'app.
 
 **Why this priority** : un signalement qui attend est un risque pour une personne. Le compteur existe déjà en base et dans l'API ; il ne manque qu'à le porter là où l'admin passe. Sans migration.
 
@@ -121,7 +132,7 @@ Dans ses paramètres, Camille trouve une option « Me prévenir hors de l'app »
 7. **Given** un iPhone où Libre est ouverte dans le navigateur et non installée, **When** Camille regarde l'option, **Then** l'app lui explique qu'il faut d'abord ajouter Libre à l'écran d'accueil, et comment.
 8. **Given** un appareil dont l'abonnement n'est plus valide (app désinstallée, autorisation retirée), **When** une notification lui est destinée, **Then** l'envoi échoue sans effet visible pour personne et l'abonnement est retiré.
 9. **Given** Camille qui se déconnecte de cet appareil, **When** la déconnexion est effective, **Then** l'appareil ne reçoit plus de notification pour ce compte.
-10. **Given** l'app ouverte au premier plan sur la conversation concernée, **When** un message y arrive, **Then** aucune notification système ne double l'affichage in-app.
+10. **Given** l'app ouverte au premier plan, sur n'importe quelle page, **When** un message ou un match arrive, **Then** aucune notification système ne s'affiche : la pastille (ou la célébration de match) fait le travail.
 
 ---
 
@@ -148,7 +159,7 @@ L'administrateur active la même option dans ses paramètres. Quand un membre si
 - **Message supprimé par son auteur avant lecture** : il ne compte plus comme non lu.
 - **Conversation avec une personne bloquée ou bannie** : ses messages ne créent pas de pastille et n'envoient pas de notification.
 - **Plusieurs onglets ouverts** : la lecture dans un onglet fait disparaître la pastille dans les autres au plus tard à leur prochain rafraîchissement.
-- **Rafale de messages** (dix messages en dix secondes) : au plus une notification système par conversation sur une courte fenêtre — pas dix.
+- **Rafale de messages** (dix messages en dix secondes) : une seule notification système pour la conversation — celle du premier message non lu ; les suivants n'en produisent pas tant que la conversation n'a pas été rouverte.
 - **Autorisation accordée puis révoquée dans les réglages du téléphone** : l'app le constate et remet l'option en désactivé, avec l'explication du scénario 4.6.
 - **Perte de la couche temps réel ou de la couche notification** (quota, panne du fournisseur) : l'envoi du message, du like ou du signalement **réussit quand même** ; seul l'avertissement est perdu, et il est journalisé.
 - **Compte supprimé** : ses abonnements de notification disparaissent avec lui.
@@ -172,14 +183,14 @@ L'administrateur active la même option dans ses paramètres. Quand un membre si
 
 **Badge d'icône (story 2)**
 
-- **FR-008** : Quand l'app est installée et que la plateforme le permet, l'icône DOIT porter un badge tant qu'il existe au moins un message non lu, et le perdre dès qu'il n'en reste plus ou à la déconnexion.
+- **FR-008** : Quand l'app est installée et que la plateforme le permet, l'icône DOIT porter un badge **sans nombre** tant qu'il existe au moins un message non lu, et le perdre dès qu'il n'en reste plus ou à la déconnexion. Le rendu minimal d'un badge sans valeur sur iOS est accepté ; on ne bascule pas sur un chiffre pour le rendre plus visible.
 - **FR-009** : L'absence de prise en charge du badge d'icône NE DOIT produire ni erreur visible ni dégradation de l'expérience in-app.
 
 **Files admin (story 3)**
 
 - **FR-010** : Pour un compte admin, l'accès à l'administration depuis l'app membre DOIT porter une pastille si au moins un signalement, une vérification ou un retour est en attente.
 - **FR-011** : La navigation de l'administration DOIT afficher, à côté de Signalements, Vérifications et Retours, le nombre d'éléments en attente, et rien pour une file vide.
-- **FR-012** : Ces compteurs DOIVENT refléter l'état en base à chaque affichage de l'administration et après chaque traitement d'un élément.
+- **FR-012** : Pastille d'accès admin et compteurs DOIVENT être recalculés à chaque navigation et à chaque retour au premier plan, à partir de l'état en base ; aucun canal temps réel ni rafraîchissement périodique n'est attendu pour eux.
 - **FR-013** : Aucune information d'administration (pastille, compteur, appel réseau associé) NE DOIT être exposée à un compte sans rôle admin.
 
 **Notifications hors de l'app (stories 4 et 5)**
@@ -190,8 +201,8 @@ L'administrateur active la même option dans ses paramètres. Quand un membre si
 - **FR-017** : Quand l'option est active, un nouveau match DOIT produire une notification « Nouveau match » qui ouvre Messages.
 - **FR-018** : Pour un compte admin dont l'option est active, un nouveau signalement ou un nouveau retour DOIT produire une notification générique qui ouvre la file concernée ; aucun membre non admin ne reçoit ces notifications.
 - **FR-019** : Aucune notification NE DOIT être envoyée pour un like reçu, un croisement, une inactivité ou tout autre événement non listé ici.
-- **FR-020** : Aucune notification système NE DOIT doubler un événement déjà affiché au premier plan sur la surface concernée.
-- **FR-021** : Les notifications d'une même conversation DOIVENT être regroupées : au plus une par conversation sur une courte fenêtre.
+- **FR-020** : Aucune notification système NE DOIT s'afficher tant qu'une fenêtre de Libre est au premier plan, quelle que soit la page : la notification système ne sert qu'à qui n'a pas l'app sous les yeux.
+- **FR-021** : Une conversation NE DOIT produire qu'une seule notification système tant qu'elle contient des messages non lus : un nouveau message n'en déclenche une que s'il n'existait aucun message non lu avant lui dans cette conversation. La lecture réarme la conversation.
 - **FR-022** : La désactivation de l'option, la déconnexion et la suppression du compte DOIVENT retirer l'abonnement de l'appareil concerné (ou de tous, pour la suppression).
 - **FR-023** : Un abonnement que la plateforme déclare invalide DOIT être retiré automatiquement lors de la tentative d'envoi.
 - **FR-024** : Sur une plateforme qui exige l'installation de l'app (iOS), l'option DOIT expliquer la marche à suivre au lieu d'échouer en silence ; sur un appareil où l'autorisation est refusée, elle DOIT le dire sans réinsister.
@@ -220,9 +231,9 @@ L'administrateur active la même option dans ses paramètres. Quand un membre si
 - **SC-004** : Sur un compte neuf, aucune demande d'autorisation de notification n'apparaît avant que la personne n'active elle-même l'option.
 - **SC-005** : Une personne ayant activé l'option reçoit la notification d'un message dans la minute qui suit son envoi, app fermée, sur Android et sur iOS (app installée) ; la toucher ouvre la bonne conversation.
 - **SC-006** : Le texte d'une notification ne contient jamais de contenu de message, de nom d'expéditeur, ni — pour l'admin — de nom de signalé ou de motif.
-- **SC-007** : L'admin voit le compteur de signalements passer de 0 à 1 dans la minute qui suit un signalement, et la pastille d'accès admin apparaître sans avoir ouvert l'administration.
+- **SC-007** : Après un signalement, l'admin voit la pastille d'accès admin dès son prochain changement de page ou retour au premier plan dans l'app membre, sans avoir ouvert l'administration ; le compteur Signalements affiche `1` à l'ouverture de l'administration.
 - **SC-008** : Une panne simulée de la couche temps réel ou de notification n'empêche aucun envoi de message, like ou signalement d'aboutir (taux de succès inchangé).
-- **SC-009** : Une rafale de dix messages dans une même conversation produit au plus une notification système sur la fenêtre de regroupement.
+- **SC-009** : Une rafale de dix messages dans une même conversation produit exactement une notification système ; après lecture, le message suivant en produit une nouvelle.
 
 ---
 
@@ -232,9 +243,8 @@ L'administrateur active la même option dans ses paramètres. Quand un membre si
 - **Découpage en lots** : lot 1 = stories 1, 2, 3 (aucune migration de base) ; lot 2 = stories 4, 5 (une migration additive pour les abonnements). Une issue par story ; le lot 1 peut être livré et utile sans le lot 2.
 - **Aucune migration pour le lot 1** : le non-lu est dérivé de la date de lecture existante des messages ; les compteurs admin viennent de l'endpoint de statistiques existant.
 - **Abonnements par appareil** : l'option se règle appareil par appareil (c'est ainsi que fonctionnent les autorisations système) ; il n'y a pas de réglage global « tous mes appareils ». Un appareil = un abonnement.
-- **Fenêtre de regroupement** des notifications de message : de l'ordre de la minute par conversation ; valeur exacte fixée au plan.
 - **Standard Web Push** (VAPID) via le service worker existant, sans fournisseur tiers supplémentaire ; les clés d'envoi sont des secrets d'environnement. Le contrat spec ne dépend pas de ce choix, mais il conditionne le plan.
-- **Plateformes** : Android (Chrome, Firefox, Samsung) reçoit les notifications depuis le navigateur ou l'app installée ; iOS 16.4+ uniquement depuis l'app installée. Le badge d'icône n'est garanti que sur l'app installée.
+- **Plateformes** : Android (Chrome, Firefox, Samsung) reçoit les notifications depuis le navigateur ou l'app installée ; iOS 16.4+ uniquement depuis l'app installée. Le badge d'icône n'est garanti que sur l'app installée ; sans nombre, son rendu iOS est minimal — accepté.
 - **Événement temps réel de message étendu au destinataire** : aujourd'hui seul le canal de la conversation est notifié ; la story 1 suppose qu'un événement (métadonnées seules, jamais le contenu) atteigne aussi le canal privé du destinataire.
 - **Notifications admin** : vont à tous les comptes admin abonnés, sans distribution ni astreinte.
 - **Rétention** : un abonnement vit tant que l'appareil répond ; il est supprimé à la première réponse « invalide » de la plateforme, à la désactivation, à la déconnexion et avec le compte.
