@@ -226,6 +226,24 @@ Règles d'exposition :
 - Headers CSP, HSTS, X-Frame-Options, Permissions-Policy.
 - Age gate 18+ à l'inscription via `birthDate` (validation côté client et serveur).
 
+## Notifications (spec 003, #389–#393)
+
+- **Jamais de nombre côté membre** : `NotificationDot` (présence), pas de compteur.
+  `CountChip` est réservé aux surfaces admin. Garde : `src/__tests__/no-unread-count.test.ts`.
+- **Le non-lu est dérivé de `readAt`**, jamais stocké ; le temps réel ne fait que
+  déclencher un rechargement (`useUnread`).
+- **Charge utile push sans contenu ni nom** : `buildPayload` (`src/lib/push/server.ts`)
+  est une whitelist — ni texte de message, ni `displayName`, ni motif de signalement.
+  Test : la charge sérialisée ne contient aucun champ sensible.
+- **Push opt-in, par appareil** : abonnement dans `push_subscriptions`, activé
+  uniquement sur un clic dans Paramètres (`PushSettings`), retiré au désabonnement,
+  à la déconnexion (`logout()`) et avec le compte (cascade). Une notification par
+  conversation jusqu'à lecture (`hadUnreadBefore`).
+- **Effets `after()` best-effort** : tout envoi push (message, match, signalement,
+  retour) est planifié après la réponse et ne change jamais son statut ; sans
+  `VAPID_PRIVATE_KEY`, no-op journalisé. Journaux sans PII (`push.send.failed`
+  avec kind + statut, jamais d'endpoint ni d'identifiant).
+
 ## Base de données
 
 - Prisma 7 avec adapter natif PostgreSQL (`@prisma/adapter-pg`).
