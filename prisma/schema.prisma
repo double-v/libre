@@ -57,6 +57,7 @@ model User {
   safetyCheckins     SafetyCheckin[]
   squareReactions    SquareReaction[]  @relation("SquareReactionsMade")
   photoModerations   PhotoModeration[] @relation("PhotoModerationOwner")
+  pushSubscriptions  PushSubscription[] @relation("PushSubscriptions")
 
   @@index([isBanned, lastActive])
   @@map("users")
@@ -560,4 +561,25 @@ model PhotoModeration {
 
   @@index([ownerId])
   @@map("photo_moderation")
+}
+
+/// Abonnement Web Push d'UN appareil (#392, spec 003). La table ne sert qu'à
+/// savoir OÙ envoyer : ni contenu, ni historique, ni compteur. Cascade sur la
+/// suppression du compte (FR-022). Pas de @map de colonne, comme le reste du
+/// schéma (leçon siteconfig-map-drift).
+model PushSubscription {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  endpoint   String    @unique
+  p256dh     String
+  auth       String
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+  /// Dernier envoi réussi — best-effort, pour un futur ménage.
+  lastUsedAt DateTime?
+
+  user User @relation("PushSubscriptions", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }
