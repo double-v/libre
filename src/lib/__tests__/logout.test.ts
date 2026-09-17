@@ -14,12 +14,29 @@ vi.mock('next-auth/react', () => ({ __esModule: true, signOut: mockSignOut }));
 const mockClearBadge = vi.fn().mockResolvedValue(undefined);
 vi.mock('@/lib/app-badge', () => ({ __esModule: true, clearBadge: mockClearBadge }));
 
+const mockDisablePush = vi.fn().mockResolvedValue('off');
+vi.mock('@/lib/push/client', () => ({ __esModule: true, disablePush: mockDisablePush }));
+
 const { logout } = await import('../logout');
 
 describe('logout', () => {
   beforeEach(() => {
     mockSignOut.mockClear();
     mockClearBadge.mockClear();
+    mockDisablePush.mockClear();
+  });
+
+  // #392 (R13) : désabonnement push AVANT signOut — le DELETE a besoin de la session.
+  it("désabonne l'appareil du push avant de terminer la session", async () => {
+    await logout();
+    expect(mockDisablePush).toHaveBeenCalledTimes(1);
+    expect(mockDisablePush.mock.invocationCallOrder[0]).toBeLessThan(mockSignOut.mock.invocationCallOrder[0]);
+  });
+
+  it("un échec du désabonnement push n'empêche pas signOut", async () => {
+    mockDisablePush.mockRejectedValueOnce(new Error('sw'));
+    await expect(logout()).resolves.toBeUndefined();
+    expect(mockSignOut).toHaveBeenCalledTimes(1);
   });
 
   it('retire le badge puis termine la session sans redirection', async () => {

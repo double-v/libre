@@ -37,7 +37,7 @@ describe('SettingsPage — toast de confirmation mode invisible (#139)', () => {
 
   it('émet un toast rassurant quand on active le mode invisible', async () => {
     render(<SettingsPage />);
-    const toggle = await screen.findByRole('switch');
+    const toggle = await screen.findByRole('switch', { name: 'Mode invisible' });
     expect(toggle).toHaveAttribute('aria-checked', 'false');
 
     fireEvent.click(toggle);

@@ -56,6 +56,28 @@ vi.mock('@/lib/rate-limit', () => ({
   limits: { message: { limit: 30, windowMs: 60_000 } },
 }));
 
+// #392 : push hors de l'app, planifié APRÈS la réponse via `after()`. Ici on
+// exécute la tâche immédiatement pour pouvoir l'observer.
+const mockSendPushToUser = vi.fn();
+vi.mock('@/lib/push/server', () => ({
+  __esModule: true,
+  sendPushToUser: (...a: unknown[]) => mockSendPushToUser(...a),
+  buildPayload: (kind: string, ctx: { conversationId?: string }) => ({ kind, url: `/chat/${ctx.conversationId}`, tag: `conv-${ctx.conversationId}` }),
+}));
+const mockHadUnreadBefore = vi.fn();
+vi.mock('@/lib/chat-unread', () => ({
+  __esModule: true,
+  hadUnreadBefore: (...a: unknown[]) => mockHadUnreadBefore(...a),
+}));
+// Les tâches after() sont collectées : un test peut exiger qu'elles résolvent
+// (une rejection y serait, côté Next, une « unhandled rejection » silencieuse).
+let afterTasks: Promise<unknown>[] = [];
+const mockAfter = vi.fn((task: () => unknown) => { afterTasks.push(Promise.resolve().then(task)); });
+vi.mock('next/server', async (importOriginal) => {
+  const orig = await importOriginal<typeof import('next/server')>();
+  return { ...orig, after: (task: () => unknown) => mockAfter(task) };
+});
+
 // Import après les mocks
 const { GET, POST } = await import('../route');
 
@@ -78,6 +100,7 @@ function postRequest(body: unknown, raw = false): NextRequest {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  afterTasks = [];
   // Défauts « chemin heureux » — chaque test surcharge au besoin.
   mockGetServerSession.mockResolvedValue({ user: { id: ME_ID } });
   mockRateLimit.mockResolvedValue({ success: true, remaining: 29, resetAt: Date.now() + 60_000 });
@@ -89,6 +112,8 @@ beforeEach(() => {
     ...data,
   }));
   mockTrigger.mockResolvedValue({ status: 200 });
+  mockHadUnreadBefore.mockResolvedValue(false);
+  mockSendPushToUser.mockResolvedValue(undefined);
 });
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -155,6 +180,38 @@ describe('POST /api/chat/[conversationId]/messages', () => {
     });
     await POST(postRequest({ content: 'ciphertext' }), makeParams());
     expect(order).toEqual(['create', 'trigger', 'trigger']); // conversation + canal destinataire (#389)
+  });
+
+  // #392 (R10) : une notification hors de l'app par conversation, jusqu'à
+  // lecture. Le push est planifié après la réponse (`after`), jamais bloquant.
+  it('planifie un push vers le destinataire, après la réponse, si rien n’attendait déjà', async () => {
+    const res = await POST(postRequest({ content: 'ciphertext' }), makeParams());
+    expect(res.status).toBe(201);
+    expect(mockAfter).toHaveBeenCalledTimes(1);
+    expect(mockHadUnreadBefore).toHaveBeenCalledWith(CONVO_ID, OTHER_ID, expect.objectContaining({ id: 'msg-generated-id', createdAt: expect.any(Date) }));
+    await vi.waitFor(() => expect(mockSendPushToUser).toHaveBeenCalledTimes(1));
+    expect(mockSendPushToUser).toHaveBeenCalledWith(OTHER_ID, expect.objectContaining({ kind: 'message', url: `/chat/${CONVO_ID}` }));
+    // Jamais vers l'expéditeur
+    expect(mockSendPushToUser).not.toHaveBeenCalledWith(ME_ID, expect.anything());
+  });
+
+  it('ne pousse PAS si un message non lu attendait déjà dans la conversation', async () => {
+    mockHadUnreadBefore.mockResolvedValue(true);
+    const res = await POST(postRequest({ content: 'ciphertext' }), makeParams());
+    expect(res.status).toBe(201);
+    await vi.waitFor(() => expect(mockHadUnreadBefore).toHaveBeenCalled());
+    await new Promise((r) => setTimeout(r, 0));
+    expect(mockSendPushToUser).not.toHaveBeenCalled();
+    // La pastille in-app, elle, est toujours rafraîchie (#389)
+    expect(mockTrigger).toHaveBeenCalledWith(`private-user-${OTHER_ID}`, 'new-message', { conversationId: CONVO_ID });
+  });
+
+  it('une exception du push laisse la réponse à 201, et la tâche after ne rejette pas', async () => {
+    mockHadUnreadBefore.mockRejectedValue(new Error('db'));
+    mockSendPushToUser.mockRejectedValue(new Error('vapid'));
+    const res = await POST(postRequest({ content: 'ciphertext' }), makeParams());
+    expect(res.status).toBe(201);
+    await expect(Promise.all(afterTasks)).resolves.toBeDefined();
   });
 
   it('accepte un contenu chiffré long (> 1000 chars) — cap ciphertext', async () => {

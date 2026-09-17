@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { logout } from '@/lib/logout';
 import { purgerSecretsLocaux } from '@/lib/session-cleanup';
 import { toast } from '@/lib/toast';
+import PushSettings from '@/components/PushSettings';
 import AppearanceSettings from '@/components/AppearanceSettings';
 import SiteShell from '@/components/ui/SiteShell';
 import Input from '@/components/ui/Input';
@@ -178,6 +179,7 @@ export default function SettingsPage() {
             <button
               type="button"
               role="switch"
+              aria-label="Mode invisible"
               aria-checked={profile?.invisibleMode ?? false}
               disabled={invisibleToggling || !profile}
               onClick={handleToggleInvisible}
@@ -194,6 +196,9 @@ export default function SettingsPage() {
             </button>
           </div>
         </section>
+
+        {/* Notifications hors de l'app (#392) — réglage par appareil */}
+        <PushSettings />
 
         {/* Verification status */}
         <section className="rounded-xl border border-hairline bg-surface p-4 sm:p-5">

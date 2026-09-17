@@ -1,9 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { likeSchema } from '@/lib/validators';
 import { pusher, getUserChannel } from '@/lib/pusher';
+import { sendPushToUser, buildPayload } from '@/lib/push/server';
 
 const DAILY_LIKE_LIMIT = 50;
 
@@ -139,6 +140,17 @@ export async function POST(request: Request) {
       } catch (pusherError) {
         console.error('Pusher match notification error:', pusherError);
       }
+
+      // #392 : les deux appareils sont prévenus hors de l'app, après la
+      // réponse. Charge utile `match` sans nom ni photo (SC-006) — la
+      // célébration in-app, elle, a le profil via Pusher. Best-effort.
+      after(async () => {
+        const payload = buildPayload('match', {});
+        await Promise.all([
+          sendPushToUser(likedId, payload).catch(() => {}),
+          sendPushToUser(likerId, payload).catch(() => {}),
+        ]);
+      });
     }
 
     return NextResponse.json(
