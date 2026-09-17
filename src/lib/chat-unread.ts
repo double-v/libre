@@ -44,3 +44,27 @@ export async function unreadConversationIds(me: string): Promise<string[]> {
 
   return rows.map((r) => r.conversationId);
 }
+
+/**
+ * Règle « une notification par conversation jusqu'à lecture » (#392, R10) :
+ * avant de pousser un message hors de l'app, y avait-il DÉJÀ quelque chose
+ * de non lu pour le destinataire dans cette conversation, en dehors du
+ * message qu'on vient d'écrire ? Si oui, la personne a déjà été prévenue ;
+ * la lecture (qui pose `readAt`) réarme naturellement. Aucun état à stocker.
+ */
+export async function hadUnreadBefore(
+  conversationId: string,
+  recipientId: string,
+  excludeMessageId: string,
+): Promise<boolean> {
+  const n = await getDb().message.count({
+    where: {
+      conversationId,
+      readAt: null,
+      deletedAt: null,
+      senderId: { not: recipientId },
+      id: { not: excludeMessageId },
+    },
+  });
+  return n > 0;
+}

@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { z } from 'zod';
+import { sendPushToAdmins, buildPayload } from '@/lib/push/server';
 import { rateLimit } from '@/lib/rate-limit';
 
 const FEEDBACK_LIMIT = 5;
@@ -54,6 +55,11 @@ export async function POST(request: Request) {
         userAgent,
       },
     });
+
+    // #393 : prévenir les admins hors de l'app, après la réponse. Charge utile
+    // sans motif ni identité (SC-006) — « quelque chose attend », c'est tout.
+    // Best-effort : ne change jamais le statut de la réponse.
+    after(() => sendPushToAdmins(buildPayload('admin-feedback', {})).catch(() => {}));
 
     return NextResponse.json({ id: feedback.id }, { status: 201 });
   } catch (error) {

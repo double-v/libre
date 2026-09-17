@@ -11,11 +11,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const fakeDb = {
   block: { findMany: vi.fn() },
-  message: { groupBy: vi.fn() },
+  message: { groupBy: vi.fn(), count: vi.fn() },
 };
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => fakeDb }));
 
-const { unreadConversationIds } = await import('../chat-unread');
+const { unreadConversationIds, hadUnreadBefore } = await import('../chat-unread');
 
 const ME = 'me-uuid';
 
@@ -65,5 +65,37 @@ describe('unreadConversationIds', () => {
     await unreadConversationIds(ME);
     const where = fakeDb.message.groupBy.mock.calls[0][0].where;
     expect(where.senderId).toEqual({ not: ME });
+  });
+});
+
+/**
+ * R10 — le push d'un message ne part que si rien n'attendait déjà. Le filtre
+ * est ce qui compte : le nouveau message exclu, les supprimés exclus, seuls
+ * les messages ADRESSÉS au destinataire (pas les siens) dans CETTE conversation.
+ */
+describe('hadUnreadBefore', () => {
+  beforeEach(() => fakeDb.message.count.mockReset());
+
+  it('false quand aucun autre message non lu', async () => {
+    fakeDb.message.count.mockResolvedValue(0);
+    await expect(hadUnreadBefore('c1', 'dest', 'new-msg')).resolves.toBe(false);
+  });
+
+  it('true dès qu’un autre message non lu attend', async () => {
+    fakeDb.message.count.mockResolvedValue(1);
+    await expect(hadUnreadBefore('c1', 'dest', 'new-msg')).resolves.toBe(true);
+  });
+
+  it('exclut le nouveau message, les supprimés, les messages du destinataire, et reste dans la conversation', async () => {
+    fakeDb.message.count.mockResolvedValue(0);
+    await hadUnreadBefore('c1', 'dest', 'new-msg');
+    const where = fakeDb.message.count.mock.calls[0][0].where;
+    expect(where).toEqual({
+      conversationId: 'c1',
+      readAt: null,
+      deletedAt: null,
+      senderId: { not: 'dest' },
+      id: { not: 'new-msg' },
+    });
   });
 });

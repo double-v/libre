@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from 'next/server';
+import { NextResponse, after, type NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
@@ -6,6 +6,8 @@ import { messageSchema } from '@/lib/validators';
 import { pusher, getPusherChannel, getUserChannel } from '@/lib/pusher';
 import { rateLimit, limits } from '@/lib/rate-limit';
 import { verifyParticipant } from '@/lib/chat-access';
+import { hadUnreadBefore } from '@/lib/chat-unread';
+import { sendPushToUser, buildPayload } from '@/lib/push/server';
 
 // Pagination par curseur (#200) — évite de charger/déchiffrer tout le fil.
 const DEFAULT_PAGE_SIZE = 50;
@@ -166,6 +168,19 @@ export async function POST(
     } catch (pusherError) {
       console.error('Pusher new-message (user channel) notification error:', pusherError);
     }
+
+    // #392 : prévenir hors de l'app, après la réponse (`after`), et une seule
+    // fois par conversation jusqu'à lecture (R10) — si un message non lu
+    // attendait déjà, la personne a déjà été prévenue. Best-effort de bout en
+    // bout : `sendPushToUser` ne lève jamais, et on couvre aussi le comptage.
+    after(async () => {
+      try {
+        if (await hadUnreadBefore(conversationId, recipientId, message.id)) return;
+        await sendPushToUser(recipientId, buildPayload('message', { conversationId }));
+      } catch (err) {
+        console.error('push.message.skipped', { reason: (err as Error)?.message?.slice(0, 80) });
+      }
+    });
 
     return NextResponse.json({ message }, { status: 201 });
   } catch (error) {
