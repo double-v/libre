@@ -122,6 +122,27 @@ describe('POST /api/chat/[conversationId]/messages', () => {
     expect(json.message.id).toBe('msg-generated-id');
   });
 
+  // #389 : le destinataire doit voir la pastille où qu'il soit dans l'app,
+  // pas seulement s'il a la conversation ouverte → second événement sur SON
+  // canal utilisateur, métadonnées seules (jamais le contenu, jamais l'expéditeur).
+  it('notifie AUSSI le canal utilisateur du destinataire, avec le seul conversationId', async () => {
+    const res = await POST(postRequest({ content: 'ciphertext' }), makeParams());
+    expect(res.status).toBe(201);
+    expect(mockTrigger).toHaveBeenCalledWith(`private-user-${OTHER_ID}`, 'new-message', { conversationId: CONVO_ID });
+    // Jamais vers l'expéditeur lui-même
+    expect(mockTrigger).not.toHaveBeenCalledWith(`private-user-${ME_ID}`, expect.anything(), expect.anything());
+  });
+
+  it("renvoie 201 même si seul le trigger destinataire jette", async () => {
+    mockTrigger.mockImplementation(async (channel: string) => {
+      if (channel.startsWith('private-user-')) throw new Error('quota');
+      return { status: 200 };
+    });
+    const res = await POST(postRequest({ content: 'ciphertext' }), makeParams());
+    expect(res.status).toBe(201);
+    expect(mockTrigger).toHaveBeenCalledTimes(2);
+  });
+
   it('ne notifie Pusher qu’APRÈS avoir persisté le message', async () => {
     const order: string[] = [];
     fakeDb.message.create.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => {
@@ -133,7 +154,7 @@ describe('POST /api/chat/[conversationId]/messages', () => {
       return { status: 200 };
     });
     await POST(postRequest({ content: 'ciphertext' }), makeParams());
-    expect(order).toEqual(['create', 'trigger']);
+    expect(order).toEqual(['create', 'trigger', 'trigger']); // conversation + canal destinataire (#389)
   });
 
   it('accepte un contenu chiffré long (> 1000 chars) — cap ciphertext', async () => {
