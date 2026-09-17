@@ -41,12 +41,12 @@ const EMPTY: UnreadState = {
 
 const UnreadContext = createContext<UnreadState | null>(null);
 
-export function UnreadProvider({ userId, children }: { userId: string; children: ReactNode }) {
+export function UnreadProvider({ userId, children }: { userId?: string; children: ReactNode }) {
   const [ids, setIds] = useState<readonly string[]>([]);
   const inFlight = useRef(false);
 
   const refresh = useCallback(() => {
-    if (inFlight.current) return;
+    if (!userId || inFlight.current) return;
     inFlight.current = true;
     fetch('/api/chat/unread', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
@@ -59,10 +59,11 @@ export function UnreadProvider({ userId, children }: { userId: string; children:
       .finally(() => {
         inFlight.current = false;
       });
-  }, []);
+  }, [userId]);
 
   // Chargement initial + resync sur retour au premier plan et marquage lu.
   useEffect(() => {
+    if (!userId) return;
     refresh();
     const onVisible = () => {
       if (document.visibilityState === 'visible') refresh();
@@ -73,11 +74,12 @@ export function UnreadProvider({ userId, children }: { userId: string; children:
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener(UNREAD_CHANGED_EVENT, refresh);
     };
-  }, [refresh]);
+  }, [userId, refresh]);
 
   // Temps réel : un message pour moi → recharger (pas de mutation locale, la
   // base tranche — un message d'une personne bloquée, par exemple, n'y sera pas).
   useEffect(() => {
+    if (!userId) return;
     const handle = subscribeUserChannel(userId);
     if (!handle) return;
     const onNewMessage = () => refresh();
@@ -89,14 +91,17 @@ export function UnreadProvider({ userId, children }: { userId: string; children:
   }, [userId, refresh]);
 
   const value = useMemo<UnreadState>(() => {
-    const set = new Set(ids);
+    // Sans session (déconnexion dans le même arbre), l'état est vide quoi
+    // qu'ait chargé la session précédente — dérivé, pas remis à zéro par effet.
+    const current = userId ? ids : [];
+    const set = new Set(current);
     return {
-      conversationIds: ids,
-      hasUnread: ids.length > 0,
+      conversationIds: current,
+      hasUnread: current.length > 0,
       isUnread: (id) => set.has(id),
       refresh,
     };
-  }, [ids, refresh]);
+  }, [userId, ids, refresh]);
 
   return <UnreadContext.Provider value={value}>{children}</UnreadContext.Provider>;
 }

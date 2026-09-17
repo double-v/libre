@@ -88,6 +88,15 @@ describe('useUnread', () => {
     expect(release).toHaveBeenCalledTimes(1);
   });
 
+  it('provider sans userId (session en cours de chargement) : inerte', () => {
+    const { result } = renderHook(() => useUnread(), {
+      wrapper: ({ children }) => <UnreadProvider userId={undefined}>{children}</UnreadProvider>,
+    });
+    expect(result.current.hasUnread).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(mockSubscribeUserChannel).not.toHaveBeenCalled();
+  });
+
   it("hors provider : état vide, aucun fetch, aucun abonnement", () => {
     const { result } = renderHook(() => useUnread());
     expect(result.current.hasUnread).toBe(false);

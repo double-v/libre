@@ -61,14 +61,13 @@ function BetaBanner({ onFeedback }: { onFeedback: () => void }) {
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
-  const userId = session?.user?.id;
 
   // #389 : l'état « non lu » est chargé une fois ici et partagé (tab bar,
-  // SiteNav, liste Messages) — sans session, pas de provider, donc ni fetch
-  // ni abonnement (le hook rend alors un état vide).
-  if (!userId) return <MainShell>{children}</MainShell>;
+  // SiteNav, liste Messages). Le provider est TOUJOURS monté — inerte sans
+  // session (ni fetch ni abonnement) — pour que l'arrivée de la session ne
+  // change pas la forme de l'arbre : sinon chaque page se remonterait.
   return (
-    <UnreadProvider userId={userId}>
+    <UnreadProvider userId={session?.user?.id}>
       <MainShell>{children}</MainShell>
     </UnreadProvider>
   );
