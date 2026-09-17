@@ -20,6 +20,13 @@ vi.mock('next-auth/react', () => ({
   signOut: (...args: unknown[]) => mockSignOut(...args),
 }));
 
+const mockClearBadge = vi.fn().mockResolvedValue(undefined);
+vi.mock('@/lib/app-badge', () => ({
+  __esModule: true,
+  setBadge: vi.fn().mockResolvedValue(undefined),
+  clearBadge: () => mockClearBadge(),
+}));
+
 vi.mock('@/components/AppearanceSettings', () => ({
   __esModule: true,
   default: () => null,
@@ -117,5 +124,40 @@ describe('<SettingsPage /> — suppression de compte', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Oui, supprimer' }));
     await waitFor(() => expect(deleteCall).not.toBeNull());
+  });
+});
+
+/**
+ * Non-régression #390 (T029) : le badge d'icône est retiré AVANT la
+ * redirection. Après `router.push`, la page est démontée et la session finie —
+ * plus personne pour le faire. Un `signOut` direct, sans passer par `logout()`,
+ * laisserait un badge fantôme sur l'icône de l'app installée.
+ */
+describe('<SettingsPage /> — déconnexion', () => {
+  it('retire le badge d’icône puis termine la session avant de rediriger', async () => {
+    stubFetch();
+    render(<SettingsPage />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Se déconnecter' }));
+
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/login'));
+    expect(mockClearBadge).toHaveBeenCalledTimes(1);
+    expect(mockSignOut).toHaveBeenCalledWith({ redirect: false });
+    const [badge, signOut, push] = [mockClearBadge, mockSignOut, mockPush].map(
+      (m) => m.mock.invocationCallOrder[0],
+    );
+    expect(badge).toBeLessThan(signOut);
+    expect(signOut).toBeLessThan(push);
+  });
+
+  it('retire aussi le badge après la suppression du compte', async () => {
+    stubFetch();
+    await openDeleteForm();
+    fireEvent.change(await screen.findByLabelText(/Confirmez avec votre mot de passe/), {
+      target: { value: 'Motdepasse1' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Oui, supprimer' }));
+
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'));
+    expect(mockClearBadge.mock.invocationCallOrder[0]).toBeLessThan(mockPush.mock.invocationCallOrder[0]);
   });
 });

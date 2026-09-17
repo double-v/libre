@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { subscribeUserChannel } from '@/lib/pusher-client';
+import { clearBadge, setBadge } from '@/lib/app-badge';
 
 /**
  * useUnread — présence de messages non lus, partagée par toute l'app connectée (#389).
@@ -17,6 +18,12 @@ import { subscribeUserChannel } from '@/lib/pusher-client';
  *
  * On expose des identifiants et un booléen, jamais un compte : la charte
  * interdit tout nombre de non-lus côté membre (spec 003, FR-006).
+ *
+ * Le badge d'icône de l'app installée (#390) suit le même booléen : posé
+ * quand des non-lus apparaissent, retiré quand tout est lu. Il vit ici et non
+ * dans un composant parce qu'il doit refléter l'état même sur un écran qui ne
+ * montre aucune pastille (Découvrir, La Place). À la déconnexion, c'est
+ * `logout()` qui le retire, avant la fin de session.
  *
  * Hors provider (landing, admin, tests), le hook rend un état vide : `SiteNav`
  * y est monté aussi et ne doit ni fetcher ni s'abonner.
@@ -42,7 +49,9 @@ const EMPTY: UnreadState = {
 const UnreadContext = createContext<UnreadState | null>(null);
 
 export function UnreadProvider({ userId, children }: { userId?: string; children: ReactNode }) {
-  const [ids, setIds] = useState<readonly string[]>([]);
+  // `null` tant que la base n'a pas répondu : on ne sait rien, on ne touche
+  // pas au badge — un `[]` initial le retirerait à chaque montage.
+  const [ids, setIds] = useState<readonly string[] | null>(null);
   const inFlight = useRef(false);
 
   const refresh = useCallback(() => {
@@ -90,10 +99,19 @@ export function UnreadProvider({ userId, children }: { userId?: string; children
     };
   }, [userId, refresh]);
 
+  // Badge d'icône : dépend de la présence seule, pas de la liste — deux
+  // resyncs qui confirment le même état ne rappellent pas l'API Badging.
+  const loaded = ids !== null;
+  const hasUnread = loaded && ids.length > 0;
+  useEffect(() => {
+    if (!userId || !loaded) return;
+    void (hasUnread ? setBadge() : clearBadge());
+  }, [userId, loaded, hasUnread]);
+
   const value = useMemo<UnreadState>(() => {
     // Sans session (déconnexion dans le même arbre), l'état est vide quoi
     // qu'ait chargé la session précédente — dérivé, pas remis à zéro par effet.
-    const current = userId ? ids : [];
+    const current = userId && ids ? ids : [];
     const set = new Set(current);
     return {
       conversationIds: current,

@@ -7,6 +7,10 @@
  * `libre:unread-changed` émis par la page de conversation après marquage lu.
  * Hors provider (landing, admin), le hook rend un état vide sans lever : le
  * SiteNav y est monté aussi.
+ *
+ * Badge d'icône (#390, spec 003 US2) : même information, une surface de plus.
+ * Le provider pose ou retire le badge quand la présence de non-lus change —
+ * jamais avant le premier chargement (on ne sait rien), jamais en double.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
@@ -22,6 +26,14 @@ const mockSubscribeUserChannel = vi.fn((_userId: string) => ({ channel: fakeChan
 vi.mock('@/lib/pusher-client', () => ({
   __esModule: true,
   subscribeUserChannel: (id: string) => mockSubscribeUserChannel(id),
+}));
+
+const mockSetBadge = vi.fn().mockResolvedValue(undefined);
+const mockClearBadge = vi.fn().mockResolvedValue(undefined);
+vi.mock('@/lib/app-badge', () => ({
+  __esModule: true,
+  setBadge: () => mockSetBadge(),
+  clearBadge: () => mockClearBadge(),
 }));
 
 const { UnreadProvider, useUnread } = await import('../useUnread');
@@ -112,5 +124,49 @@ describe('useUnread', () => {
     act(() => { window.dispatchEvent(new Event('libre:unread-changed')); });
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
     expect(result.current.hasUnread).toBe(true);
+  });
+
+  describe('badge d’icône (#390)', () => {
+    it('pose le badge quand des non-lus arrivent, sans le poser en double', async () => {
+      const { result } = renderHook(() => useUnread(), { wrapper });
+      await waitFor(() => expect(result.current.hasUnread).toBe(true));
+      expect(mockSetBadge).toHaveBeenCalledTimes(1);
+      expect(mockClearBadge).not.toHaveBeenCalled();
+      // Un second non-lu ne change pas la présence : le badge est déjà posé.
+      fetchMock.mockImplementation(() => respond(['c1', 'c2']));
+      act(() => bound['new-message']?.({ conversationId: 'c2' }));
+      await waitFor(() => expect(result.current.isUnread('c2')).toBe(true));
+      expect(mockSetBadge).toHaveBeenCalledTimes(1);
+    });
+
+    it('retire le badge quand tout est lu, une seule fois', async () => {
+      const { result } = renderHook(() => useUnread(), { wrapper });
+      await waitFor(() => expect(result.current.hasUnread).toBe(true));
+      fetchMock.mockImplementation(() => respond([]));
+      act(() => { window.dispatchEvent(new Event('libre:unread-changed')); });
+      await waitFor(() => expect(result.current.hasUnread).toBe(false));
+      expect(mockClearBadge).toHaveBeenCalledTimes(1);
+      // Une resync qui confirme « rien à lire » ne retire pas le badge à nouveau.
+      act(() => { window.dispatchEvent(new Event('libre:unread-changed')); });
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+      expect(mockClearBadge).toHaveBeenCalledTimes(1);
+      expect(mockSetBadge).toHaveBeenCalledTimes(1);
+    });
+
+    it('ne touche pas au badge avant le premier chargement ni sans session', async () => {
+      fetchMock.mockImplementation(() => respond([]));
+      const { result } = renderHook(() => useUnread(), { wrapper });
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(mockClearBadge).toHaveBeenCalledTimes(1));
+      expect(result.current.hasUnread).toBe(false);
+      expect(mockSetBadge).not.toHaveBeenCalled();
+
+      mockClearBadge.mockClear();
+      renderHook(() => useUnread(), {
+        wrapper: ({ children }) => <UnreadProvider userId={undefined}>{children}</UnreadProvider>,
+      });
+      expect(mockSetBadge).not.toHaveBeenCalled();
+      expect(mockClearBadge).not.toHaveBeenCalled();
+    });
   });
 });
