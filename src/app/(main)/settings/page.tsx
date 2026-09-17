@@ -179,6 +179,7 @@ export default function SettingsPage() {
             <button
               type="button"
               role="switch"
+              aria-label="Mode invisible"
               aria-checked={profile?.invisibleMode ?? false}
               disabled={invisibleToggling || !profile}
               onClick={handleToggleInvisible}

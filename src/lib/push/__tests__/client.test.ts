@@ -53,7 +53,17 @@ describe('getPushState', () => {
     expect(await getPushState()).toBe('ios-not-installed');
     mockSupport.mockReturnValue({ supported: true, iosNotInstalled: false, permission: 'denied' });
     expect(await getPushState()).toBe('denied');
-    expect(pushManager.getSubscription).toHaveBeenCalledTimes(1); // seulement le cas denied (supporté)
+    // Aucun des trois n'interroge le service worker : l'état est connu d'avance.
+    expect(pushManager.getSubscription).not.toHaveBeenCalled();
+  });
+
+  it('un service worker jamais prêt ne bloque pas : off après le délai', async () => {
+    vi.useFakeTimers();
+    Object.defineProperty(navigator, 'serviceWorker', { value: { ready: new Promise(() => {}) }, configurable: true });
+    const pending = getPushState();
+    await vi.advanceTimersByTimeAsync(3100);
+    expect(await pending).toBe('off');
+    vi.useRealTimers();
   });
 });
 

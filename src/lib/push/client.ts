@@ -18,10 +18,17 @@ function applicationServerKey(): string | undefined {
   return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || undefined;
 }
 
+/** `serviceWorker.ready` ne résout que quand un SW est ACTIF — jamais, sur une page
+ *  où l'enregistrement a échoué. On borne l'attente : l'UI ne doit pas rester muette. */
+const READY_TIMEOUT_MS = 3000;
+
 async function registration(): Promise<ServiceWorkerRegistration | null> {
   if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return null;
   try {
-    return await navigator.serviceWorker.ready;
+    return await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), READY_TIMEOUT_MS)),
+    ]);
   } catch {
     return null;
   }
@@ -48,7 +55,8 @@ function stateFrom(permission: PushPermission, subscribed: boolean): PushState {
 /** État courant, sans rien demander (FR-015). */
 export async function getPushState(): Promise<PushState> {
   const support = getPushSupport();
-  if (!support.supported) return stateFrom(support.permission, false);
+  // Non supporté ou refusé : l'état est connu sans interroger le service worker.
+  if (!support.supported || support.permission === 'denied') return stateFrom(support.permission, false);
   const sub = await getDeviceSubscription();
   return stateFrom(support.permission, sub !== null);
 }
