@@ -23,7 +23,10 @@ vi.mock('@/lib/push/server', () => ({
   sendPushToAdmins: (...a: unknown[]) => mockSendPushToAdmins(...a),
   buildPayload: (kind: string) => ({ kind, title: 'Nouveau retour', body: 'Un retour attend.', url: '/admin/feedback', tag: 'admin-feedback' }),
 }));
-const mockAfter = vi.fn((task: () => unknown) => { void task(); });
+// Les tâches after() sont collectées : un test peut exiger qu'elles résolvent
+// (une rejection y serait, côté Next, une « unhandled rejection » silencieuse).
+let afterTasks: Promise<unknown>[] = [];
+const mockAfter = vi.fn((task: () => unknown) => { afterTasks.push(Promise.resolve().then(task)); });
 vi.mock('next/server', async (importOriginal) => {
   const orig = await importOriginal<typeof import('next/server')>();
   return { ...orig, after: (task: () => unknown) => mockAfter(task) };
@@ -41,6 +44,7 @@ function req(body: unknown) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  afterTasks = [];
   mockGetServerSession.mockResolvedValue({ user: { id: 'me' } });
   mockRateLimit.mockResolvedValue({ success: true });
   fakeDb.feedback.create.mockResolvedValue({ id: 'f1' });
@@ -66,9 +70,10 @@ describe('POST /api/feedback — push admin', () => {
     await vi.waitFor(() => expect(mockSendPushToAdmins).toHaveBeenCalledTimes(1));
   });
 
-  it('une panne du push ne change pas le 201', async () => {
+  it('une panne du push ne change pas le 201, et la tâche after ne rejette pas', async () => {
     mockSendPushToAdmins.mockRejectedValue(new Error('vapid'));
     expect((await POST(req({ message: 'ça plante parfois' }))).status).toBe(201);
+    await expect(Promise.all(afterTasks)).resolves.toBeDefined();
   });
 
   it('rien de planifié sous rate limit (429)', async () => {

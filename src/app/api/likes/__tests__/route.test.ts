@@ -34,7 +34,10 @@ vi.mock('@/lib/push/server', () => ({
   sendPushToUser: (...a: unknown[]) => mockSendPushToUser(...a),
   buildPayload: (kind: string) => ({ kind, title: 'Nouveau match', url: '/messages', tag: 'match' }),
 }));
-const mockAfter = vi.fn((task: () => unknown) => { void task(); });
+// Les tâches after() sont collectées : un test peut exiger qu'elles résolvent
+// (une rejection y serait, côté Next, une « unhandled rejection » silencieuse).
+let afterTasks: Promise<unknown>[] = [];
+const mockAfter = vi.fn((task: () => unknown) => { afterTasks.push(Promise.resolve().then(task)); });
 vi.mock('next/server', async (importOriginal) => {
   const orig = await importOriginal<typeof import('next/server')>();
   return { ...orig, after: (task: () => unknown) => mockAfter(task) };
@@ -58,6 +61,7 @@ function req(likedId = OTHER) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  afterTasks = [];
   mockGetServerSession.mockResolvedValue({ user: { id: ME } });
   fakeDb.block.findFirst.mockResolvedValue(null);
   fakeDb.like.count.mockResolvedValue(0);
@@ -94,11 +98,14 @@ describe('POST /api/likes — push sur match', () => {
     }
   });
 
-  it('une panne du push laisse le 201 et le Pusher in-app intact', async () => {
+  it('une panne du push laisse le 201, le Pusher in-app intact, et la tâche after ne rejette pas', async () => {
     reciprocal();
     mockSendPushToUser.mockRejectedValue(new Error('vapid'));
     const res = await POST(req());
     expect(res.status).toBe(201);
     expect(mockTrigger).toHaveBeenCalledTimes(2);
+    // Une tâche after() qui rejette finirait en « unhandled rejection » côté Next :
+    // le contrat, c'est que la panne est avalée DANS la tâche.
+    await expect(Promise.all(afterTasks)).resolves.toBeDefined();
   });
 });

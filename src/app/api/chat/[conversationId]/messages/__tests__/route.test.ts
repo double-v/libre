@@ -69,7 +69,10 @@ vi.mock('@/lib/chat-unread', () => ({
   __esModule: true,
   hadUnreadBefore: (...a: unknown[]) => mockHadUnreadBefore(...a),
 }));
-const mockAfter = vi.fn((task: () => unknown) => { void task(); });
+// Les tâches after() sont collectées : un test peut exiger qu'elles résolvent
+// (une rejection y serait, côté Next, une « unhandled rejection » silencieuse).
+let afterTasks: Promise<unknown>[] = [];
+const mockAfter = vi.fn((task: () => unknown) => { afterTasks.push(Promise.resolve().then(task)); });
 vi.mock('next/server', async (importOriginal) => {
   const orig = await importOriginal<typeof import('next/server')>();
   return { ...orig, after: (task: () => unknown) => mockAfter(task) };
@@ -97,6 +100,7 @@ function postRequest(body: unknown, raw = false): NextRequest {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  afterTasks = [];
   // Défauts « chemin heureux » — chaque test surcharge au besoin.
   mockGetServerSession.mockResolvedValue({ user: { id: ME_ID } });
   mockRateLimit.mockResolvedValue({ success: true, remaining: 29, resetAt: Date.now() + 60_000 });
@@ -202,11 +206,12 @@ describe('POST /api/chat/[conversationId]/messages', () => {
     expect(mockTrigger).toHaveBeenCalledWith(`private-user-${OTHER_ID}`, 'new-message', { conversationId: CONVO_ID });
   });
 
-  it('une exception du push laisse la réponse à 201', async () => {
+  it('une exception du push laisse la réponse à 201, et la tâche after ne rejette pas', async () => {
     mockHadUnreadBefore.mockRejectedValue(new Error('db'));
     mockSendPushToUser.mockRejectedValue(new Error('vapid'));
     const res = await POST(postRequest({ content: 'ciphertext' }), makeParams());
     expect(res.status).toBe(201);
+    await expect(Promise.all(afterTasks)).resolves.toBeDefined();
   });
 
   it('accepte un contenu chiffré long (> 1000 chars) — cap ciphertext', async () => {

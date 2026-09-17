@@ -27,7 +27,10 @@ vi.mock('@/lib/push/server', () => ({
   sendPushToAdmins: (...a: unknown[]) => mockSendPushToAdmins(...a),
   buildPayload: (kind: string) => ({ kind, title: 'Nouveau signalement', body: 'Un signalement attend.', url: '/admin/reports', tag: 'admin-reports' }),
 }));
-const mockAfter = vi.fn((task: () => unknown) => { void task(); });
+// Les tâches after() sont collectées : un test peut exiger qu'elles résolvent
+// (une rejection y serait, côté Next, une « unhandled rejection » silencieuse).
+let afterTasks: Promise<unknown>[] = [];
+const mockAfter = vi.fn((task: () => unknown) => { afterTasks.push(Promise.resolve().then(task)); });
 vi.mock('next/server', async (importOriginal) => {
   const orig = await importOriginal<typeof import('next/server')>();
   return { ...orig, after: (task: () => unknown) => mockAfter(task) };
@@ -44,6 +47,7 @@ function req(body: unknown) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  afterTasks = [];
   mockGetServerSession.mockResolvedValue({ user: { id: ME } });
   mockRateLimit.mockResolvedValue({ success: true });
   fakeDb.report.create.mockResolvedValue({ id: 'r1', reporterId: ME, reportedId: REPORTED, reason: 'harassment', status: 'pending' });
@@ -63,10 +67,11 @@ describe('POST /api/moderation/report — push admin', () => {
     expect(fakeDb.report.create.mock.invocationCallOrder[0]).toBeLessThan(mockAfter.mock.invocationCallOrder[0]);
   });
 
-  it('une panne du push ne change pas le 201', async () => {
+  it('une panne du push ne change pas le 201, et la tâche after ne rejette pas', async () => {
     mockSendPushToAdmins.mockRejectedValue(new Error('vapid'));
     const res = await POST(req({ reportedId: REPORTED, reason: 'spam' }));
     expect(res.status).toBe(201);
+    await expect(Promise.all(afterTasks)).resolves.toBeDefined();
   });
 
   it('rien de planifié si le signalement n’est pas persisté (400)', async () => {
