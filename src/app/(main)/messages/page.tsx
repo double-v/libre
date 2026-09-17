@@ -3,7 +3,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import Pusher from 'pusher-js';
+import { useSession } from 'next-auth/react';
+import { subscribeUserChannel } from '@/lib/pusher-client';
+import NotificationDot from '@/components/ui/NotificationDot';
+import { useUnread } from '@/hooks/useUnread';
 import OnlineIndicator from '@/components/OnlineIndicator';
 import ProfileModal from '@/components/ProfileModal';
 import { formatLastSeen, isOnline } from '@/lib/time';
@@ -66,6 +69,9 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
+  const { isUnread } = useUnread();
 
   const fetchMatches = useCallback(async () => {
     try {
@@ -95,29 +101,20 @@ export default function MessagesPage() {
     })();
   }, [fetchMatches]);
 
-  // Auto-refresh on new match via Pusher
+  // Rafraîchir sur nouveau match — via le client Pusher partagé (#389) : plus
+  // de socket dédié ni de fetch de session, le canal utilisateur est déjà celui
+  // de MatchDialog et de la pastille de non-lus.
   useEffect(() => {
-    const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
-    if (!pusherKey) return;
-
-    let client: Pusher | null = null;
-
-    fetch('/api/auth/session').then((r) => r.json()).then((session) => {
-      if (!session?.user?.id) return;
-      client = new Pusher(pusherKey, {
-        cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'eu',
-        channelAuthorization: { endpoint: '/api/pusher/auth', transport: 'ajax' },
-      });
-      const channel = client.subscribe(`private-user-${session.user.id}`);
-      channel.bind('new-match', () => {
-        fetchMatches();
-      });
-    });
-
+    if (!userId) return;
+    const handle = subscribeUserChannel(userId);
+    if (!handle) return;
+    const onMatch = () => fetchMatches();
+    handle.channel.bind('new-match', onMatch);
     return () => {
-      if (client) client.disconnect();
+      handle.channel.unbind('new-match', onMatch);
+      handle.release();
     };
-  }, [fetchMatches]);
+  }, [userId, fetchMatches]);
 
   const newMatches = matches.filter((m) => !m.conversationId);
   const conversations = matches.filter((m) => m.conversationId);
@@ -218,6 +215,9 @@ export default function MessagesPage() {
                     {formatLastSeen(new Date(match.user.lastActive))}
                   </p>
                 </div>
+                {match.conversationId && isUnread(match.conversationId) && (
+                  <NotificationDot inline aria-label="Nouveaux messages" className="mr-1" />
+                )}
               </Link>
             ))}
           </div>

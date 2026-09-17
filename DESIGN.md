@@ -600,6 +600,8 @@ se décide en #347, sur pixels — pas ici.
 | online-dot | 10px circle, `bg-green-500`, positioned bottom-right of avatar | User is online |
 | last-seen | `text-gray-600 text-sm`, French relative time | "Vu il y a 3 min" |
 | loading | `text-gray-600`, "Chargement..." | Data fetching |
+| notification-dot | 8px circle, `bg-coral`, haut-droite de l'icône parente (ou inline), **statique** | Présence de non-lu — jamais un nombre (#389) |
+| count-chip | pill `bg-coral text-white text-xs font-medium`, min-width 20px, masqué à 0 | Files de travail **admin uniquement** (#391) |
 
 ### Messages système du chat
 
@@ -768,6 +770,8 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 | `SiteShell` | — | content, reading, app | Les `mx-auto max-w-* px-*` ad hoc dispersés (448/512/672/768/1080) |
 | `SiteNav` | guest, connecté | guest, authed (× width) | `LobbyNav`, `TopNav`, nav ad hoc de `/manifesto` |
 | `HeartMark` | — | glyphe seul (taille via className/props) | Les deux glyphes de marque en double (cœur lobby + cœur-soleil à rayons) |
+| `NotificationDot` | visible, masqué | absolute (sur icône), inline (liste) | Toute pastille de non-lu ad hoc (#389) |
+| `CountChip` | n > 0, n = 0 (rendu nul) | — | Tout compteur de file admin ad hoc (#391) |
 
 ### Règles
 
@@ -1012,6 +1016,45 @@ le `ThemeMenu` complet ne subsiste qu'en admin ; les contextes invités (landing
   `ThemeMenu` / `AppearanceSettings` : `localStorage['libre-theme']` + classe `.dark`
   sur `<html>`, `auto` suit l'OS).
 - **Cohérence** : n'expose **jamais** le thème (skin) — un seul geste, un seul axe.
+
+### NotificationDot (`src/components/ui/NotificationDot.tsx`)
+
+Pastille de **présence** : « il y a quelque chose de nouveau ici », sans dire
+combien. C'est la seule forme de badge autorisée côté membre — `PRODUCT.md`
+bannit « le badge qui clignote » et « tu as 3 likes non lus » comme appât ; la
+spec `specs/003-notifications-badges/` en fait un invariant testé (FR-006 :
+aucun nombre de non-lus sur aucune surface membre).
+
+- **Forme** : cercle **8 px** `bg-coral`, `rounded-full`, aucune bordure — sur
+  fond coral (onglet actif) il reste lisible parce qu'il est posé sur l'**icône**,
+  pas sur le libellé. Aucune ombre, aucune animation : `animate-*` y est interdit,
+  et il n'y a donc rien à clamper sous `prefers-reduced-motion`.
+- **Variantes** : `absolute` (défaut) — `absolute -top-0.5 -right-0.5` sur un
+  parent `relative` (icône de tab bar, icône Admin du `SiteNav`) ; `inline` —
+  `inline-block` aligné au texte, pour la liste des conversations (`/messages`).
+- **A11y** : `<span role="status">` avec `aria-label` **obligatoire** (prop
+  typée non optionnelle) : « Nouveaux messages », « Éléments en attente ». Ne
+  porte jamais de texte visible. Masqué = non rendu (`null`), pas `hidden`.
+- **Où** : onglet Messages de la tab bar et conversations de `/messages` (#389),
+  icône Administration du `SiteNav` (#391). Nulle part ailleurs sans amendement.
+- **Jamais** : un nombre à côté, un halo, une pulsation, une couleur « alerte ».
+
+### CountChip (`src/components/ui/CountChip.tsx`)
+
+Compteur de **file de travail**, réservé aux surfaces **admin** (sidebar
+`(admin)/layout.tsx` : Signalements, Vérifications, Retours). Là, le chiffre est
+légitime : c'est une charge à traiter, pas une mécanique de rétention. Il ne
+doit **jamais** apparaître sur une surface membre — c'est `NotificationDot` qui y
+tient ce rôle.
+
+- **Forme** : pill `rounded-full bg-coral text-white text-xs font-medium`,
+  `min-w-5 px-1.5`, hauteur 20 px, centré. Tokens seulement.
+- **État** : `n = 0` → rendu **nul** (pas de « 0 », pas de pill vide).
+  `n ≥ 100` → « 99+ ».
+- **A11y** : `aria-label` = « {n} en attente » ; le chiffre visible reste dans le
+  DOM pour les lecteurs qui ignorent `aria-label`.
+- **Jamais** : d'animation, de couleur par seuil (pas de rouge à 10) — la sidebar
+  n'est pas un tableau de bord d'alerte.
 
 ## Responsive
 

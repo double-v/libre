@@ -7,6 +7,8 @@ import { useSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import SiteNav from '@/components/ui/SiteNav';
 import { APP_SECTIONS, isSectionActive } from '@/components/ui/AppSections';
+import NotificationDot from '@/components/ui/NotificationDot';
+import { UnreadProvider, useUnread } from '@/hooks/useUnread';
 
 const MatchDialog = dynamic(() => import('@/components/MatchDialog'), { ssr: false });
 const FeedbackButton = dynamic(() => import('@/components/FeedbackButton'), { ssr: false });
@@ -58,10 +60,23 @@ function BetaBanner({ onFeedback }: { onFeedback: () => void }) {
 }
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
+  const { data: session } = useSession();
+
+  // #389 : l'état « non lu » est chargé une fois ici et partagé (tab bar,
+  // SiteNav, liste Messages). Le provider est TOUJOURS monté — inerte sans
+  // session (ni fetch ni abonnement) — pour que l'arrivée de la session ne
+  // change pas la forme de l'arbre : sinon chaque page se remonterait.
+  return (
+    <UnreadProvider userId={session?.user?.id}>
+      <MainShell>{children}</MainShell>
+    </UnreadProvider>
+  );
+}
+
+function MainShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
-  const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'eu';
+  const { hasUnread } = useUnread();
 
   // Sync cross-appareils du skin (cf. #224) : si aucun choix local n'existe
   // encore sur cet appareil, on adopte celui enregistré sur le compte. Une
@@ -121,7 +136,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                     : 'text-muted hover:text-content'
                 }`}
               >
-                <Icon active={isActive} width={20} height={20} />
+                <span className="relative">
+                  <Icon active={isActive} width={20} height={20} />
+                  {href === '/messages' && hasUnread && (
+                    <NotificationDot aria-label="Nouveaux messages" />
+                  )}
+                </span>
                 {label}
               </Link>
             );
@@ -129,13 +149,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
       </nav>
 
-      {session?.user?.id && pusherKey && (
-        <MatchDialog
-          userId={session.user.id}
-          pusherKey={pusherKey}
-          pusherCluster={pusherCluster}
-        />
-      )}
+      {session?.user?.id && <MatchDialog userId={session.user.id} />}
 
       <FeedbackButton />
       <ToastHost />

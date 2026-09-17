@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import Pusher from 'pusher-js';
+import { subscribeUserChannel } from '@/lib/pusher-client';
 import { photoUrl } from '@/lib/photos';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 
@@ -19,11 +19,9 @@ interface MatchEvent {
 
 interface MatchDialogProps {
   userId: string;
-  pusherKey: string;
-  pusherCluster: string;
 }
 
-export default function MatchDialog({ userId, pusherKey, pusherCluster }: MatchDialogProps) {
+export default function MatchDialog({ userId }: MatchDialogProps) {
   const [match, setMatch] = useState<MatchEvent | null>(null);
   const seenIds = useRef<Set<string>>(new Set());
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -41,27 +39,19 @@ export default function MatchDialog({ userId, pusherKey, pusherCluster }: MatchD
     };
     window.addEventListener('libre:instant-match', handleInstantMatch);
 
-    // Listen for Pusher real-time matches (other user liked us back)
-    let client: Pusher | null = null;
-    if (pusherKey) {
-      client = new Pusher(pusherKey, {
-        cluster: pusherCluster,
-        channelAuthorization: { endpoint: '/api/pusher/auth', transport: 'ajax' },
-      });
-      const channel = client.subscribe(`private-user-${userId}`);
-      channel.bind('new-match', (data: MatchEvent) => {
-        handleMatch(data);
-      });
-    }
+    // Matchs temps réel (l'autre nous a liké en retour) — via le client Pusher
+    // partagé (#389) : le canal utilisateur est aussi celui de la pastille de
+    // non-lus, on ne l'ouvre qu'une fois.
+    const handle = subscribeUserChannel(userId);
+    const onMatch = (data: MatchEvent) => handleMatch(data);
+    handle?.channel.bind('new-match', onMatch);
 
     return () => {
       window.removeEventListener('libre:instant-match', handleInstantMatch);
-      if (client) {
-        client.unsubscribe(`private-user-${userId}`);
-        client.disconnect();
-      }
+      handle?.channel.unbind('new-match', onMatch);
+      handle?.release();
     };
-  }, [userId, pusherKey, pusherCluster]);
+  }, [userId]);
 
   // Close on Escape
   useEffect(() => {

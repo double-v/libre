@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { signOut } from 'next-auth/react';
+import { logout } from '@/lib/logout';
 import { purgerSecretsLocaux } from '@/lib/session-cleanup';
 import TagButton from '@/components/TagButton';
 import TagSelector from '@/components/TagSelector';
@@ -248,7 +248,7 @@ export default function ProfilePage() {
       const res = await fetch('/api/users/me', { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed');
       purgerSecretsLocaux();
-      await signOut({ redirect: false });
+      await logout();
       router.push('/');
     } catch {
       setError('Erreur lors de la suppression');
@@ -269,7 +269,7 @@ export default function ProfilePage() {
         <h1 className="text-2xl font-bold text-content">Profil</h1>
         <button
           type="button"
-          onClick={() => { purgerSecretsLocaux(); signOut({ redirect: false }); router.push('/login'); }}
+          onClick={() => { purgerSecretsLocaux(); void logout().then(() => router.push('/login')); }}
           className="rounded-full border border-hairline-strong px-3 py-1 text-xs font-medium text-muted hover:bg-fill-subtle hover:text-content"
         >
           Déconnexion

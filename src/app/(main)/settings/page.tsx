@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { signOut } from 'next-auth/react';
+import { logout } from '@/lib/logout';
 import { purgerSecretsLocaux } from '@/lib/session-cleanup';
 import { toast } from '@/lib/toast';
 import AppearanceSettings from '@/components/AppearanceSettings';
@@ -125,7 +125,7 @@ export default function SettingsPage() {
         return;
       }
       purgerSecretsLocaux();
-      await signOut({ redirect: false });
+      await logout();
       router.push('/');
     } catch {
       setDeleteError('Erreur lors de la suppression du compte');
@@ -141,7 +141,7 @@ export default function SettingsPage() {
 
   async function handleSignOut() {
     purgerSecretsLocaux();
-    await signOut({ redirect: false });
+    await logout();
     router.push('/login');
   }
 

@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { messageSchema } from '@/lib/validators';
-import { pusher, getPusherChannel } from '@/lib/pusher';
+import { pusher, getPusherChannel, getUserChannel } from '@/lib/pusher';
 import { rateLimit, limits } from '@/lib/rate-limit';
 import { verifyParticipant } from '@/lib/chat-access';
 
@@ -152,6 +152,19 @@ export async function POST(
       });
     } catch (pusherError) {
       console.error('Pusher new-message notification error:', pusherError);
+    }
+
+    // #389 : le destinataire doit voir la pastille de non-lu où qu'il soit dans
+    // l'app, pas seulement conversation ouverte → second événement sur SON canal
+    // utilisateur. Métadonnées minimales : l'identifiant de conversation suffit à
+    // rafraîchir la pastille, ni contenu ni expéditeur ne circulent. Même
+    // best-effort, dans son propre try : l'échec de l'un n'annule pas l'autre.
+    const { conversation } = result;
+    const recipientId = conversation.userA === userId ? conversation.userB : conversation.userA;
+    try {
+      await pusher.trigger(getUserChannel(recipientId), 'new-message', { conversationId });
+    } catch (pusherError) {
+      console.error('Pusher new-message (user channel) notification error:', pusherError);
     }
 
     return NextResponse.json({ message }, { status: 201 });

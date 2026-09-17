@@ -6,14 +6,18 @@ import { debugLog } from '@/lib/logger';
 import Link from 'next/link';
 import ThemeMenu from '@/components/ui/ThemeMenu';
 import HeartMark from '@/components/ui/HeartMark';
+import CountChip from '@/components/ui/CountChip';
+import { countAdminQueues, type AdminQueues } from '@/lib/admin-queues';
 
-const adminNavItems = [
+// `queue` relie l'entrée à sa file de travail (#391) : le layout compte et
+// pose un `CountChip` à côté — le chiffre est légitime ici, surface admin.
+const adminNavItems: Array<{ href: string; label: string; icon: string; queue?: keyof AdminQueues }> = [
   { href: '/admin', label: 'Tableau de bord', icon: 'dashboard' },
   { href: '/admin/users', label: 'Utilisateurs', icon: 'users' },
-  { href: '/admin/reports', label: 'Signalements', icon: 'reports' },
-  { href: '/admin/feedback', label: 'Retours', icon: 'feedback' },
+  { href: '/admin/reports', label: 'Signalements', icon: 'reports', queue: 'reports' },
+  { href: '/admin/feedback', label: 'Retours', icon: 'feedback', queue: 'feedback' },
   { href: '/admin/circle/alerts', label: 'Alertes Cercle', icon: 'alert' },
-  { href: '/admin/verifications', label: 'Vérifications', icon: 'verifications' },
+  { href: '/admin/verifications', label: 'Vérifications', icon: 'verifications', queue: 'verifications' },
   { href: '/admin/appearance', label: 'Apparence', icon: 'palette' },
   { href: '/admin/logs', label: 'Logs', icon: 'logs' },
   { href: '/admin/square', label: 'La Place', icon: 'square' },
@@ -128,6 +132,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     );
   }
 
+  // Files de travail (R7) : comptées ici, en serveur, sans HTTP. Un échec de
+  // comptage ne ferme pas l'administration (`countAdminQueues` le confine à sa file).
+  const queues = await countAdminQueues(getDb());
+
   return (
     <div className="flex min-h-screen">
       <aside className="hidden w-56 shrink-0 border-r border-hairline bg-fill-subtle md:block">
@@ -149,6 +157,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             >
               <SidebarIcon icon={item.icon} />
               {item.label}
+              {item.queue && <CountChip count={queues[item.queue]} className="ml-auto" />}
             </Link>
           ))}
         </nav>
@@ -159,8 +168,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </aside>
 
-      {/* Mobile header */}
-      <div className="flex flex-1 flex-col md:hidden">
+      {/* Mobile header — `min-w-0` : sans lui, la nav `overflow-x-auto` élargit
+          la colonne au lieu de défiler, et ThemeMenu/Retour sortent du viewport. */}
+      <div className="flex min-w-0 flex-1 flex-col md:hidden">
         <header className="border-b border-hairline bg-surface p-4">
           <div className="flex items-center justify-between gap-2">
             <Link href="/admin" className="inline-flex items-center gap-2 text-lg font-bold text-coral dark:text-coral-light">
@@ -179,9 +189,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <Link
                 key={item.href}
                 href={item.href}
-                className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium text-muted hover:bg-fill-subtle"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-muted hover:bg-fill-subtle"
               >
                 {item.label}
+                {item.queue && <CountChip count={queues[item.queue]} />}
               </Link>
             ))}
           </nav>
