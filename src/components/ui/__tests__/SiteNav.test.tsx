@@ -211,3 +211,19 @@ describe('<SiteNavView /> — sections de l’app (#347)', () => {
     expect(discover).toHaveClass('min-h-[44px]');
   });
 });
+
+describe('<SiteNavView /> — pastille de non-lus sur Messages (#389)', () => {
+  it('pose la pastille sur la section Messages, et seulement là, quand hasUnreadMessages', () => {
+    render(<SiteNavView variant="authed" showSections hasUnreadMessages pathname="/discover" />);
+    const dots = screen.getAllByRole('status', { name: 'Nouveaux messages' });
+    expect(dots).toHaveLength(1);
+    expect(screen.getByRole('link', { name: /Messages/ })).toContainElement(dots[0]);
+    // Une présence, jamais un nombre
+    expect(screen.getByRole('link', { name: /Messages/ }).textContent).toBe('Messages');
+  });
+
+  it("aucune pastille sans non-lu", () => {
+    render(<SiteNavView variant="authed" showSections pathname="/discover" />);
+    expect(screen.queryByRole('status', { name: 'Nouveaux messages' })).toBeNull();
+  });
+});

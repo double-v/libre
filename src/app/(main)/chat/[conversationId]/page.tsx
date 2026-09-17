@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Pusher from 'pusher-js';
+import { subscribeChannel } from '@/lib/pusher-client';
+import { UNREAD_CHANGED_EVENT } from '@/hooks/useUnread';
 import { encryptMessage, decryptMessage } from '@/lib/crypto';
 import Image from 'next/image';
 import { photoUrl } from '@/lib/photos';
@@ -165,6 +166,9 @@ export default function ChatConversationPage() {
       if (!msgRes.ok) throw new Error('Failed to fetch messages');
       const msgData = await msgRes.json();
       const base: Message[] = msgData.messages || [];
+      // Ce GET vient de marquer lus les messages reçus : la pastille de non-lus
+      // (tab bar, SiteNav, liste) doit s'éteindre sans attendre un rechargement (#389).
+      window.dispatchEvent(new Event(UNREAD_CHANGED_EVENT));
       setNextCursor(msgData.nextCursor ?? null);
       setFirstItemIndex(VIRTUOSO_START_INDEX); // reset l'ancre pour un fil neuf
 
@@ -218,19 +222,10 @@ export default function ChatConversationPage() {
   // ─── Pusher realtime ─────────────────────────────────────────────
 
   useEffect(() => {
-    const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
-    if (!pusherKey) return;
-
-    const pusher = new Pusher(pusherKey, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'eu',
-      channelAuthorization: {
-        endpoint: '/api/pusher/auth',
-        transport: 'ajax',
-      },
-    });
-
-    const channelName = `private-chat-${conversationId}`;
-    const channel = pusher.subscribe(channelName);
+    // Client Pusher partagé (#389) : une seule connexion par onglet.
+    const handle = subscribeChannel(`private-chat-${conversationId}`);
+    if (!handle) return;
+    const { channel } = handle;
 
     // Re-fetch + déchiffrement, partagé par new-message et message-deleted.
     // Sous pagination (#200) on ne recharge que la page la plus récente et on la
@@ -242,6 +237,9 @@ export default function ChatConversationPage() {
         .then(async (msgData) => {
           if (msgData.messages) {
             const base: Message[] = msgData.messages;
+            // Conversation ouverte : le GET a marqué lu le message qui vient
+            // d'arriver, la pastille ne doit pas s'allumer pour lui (#389).
+            window.dispatchEvent(new Event(UNREAD_CHANGED_EVENT));
             const decrypted = await applyDecryption(base);
             setMessages((prev) => mergeMessages(prev, decrypted));
           }
@@ -255,8 +253,9 @@ export default function ChatConversationPage() {
     channel.bind('message-deleted', refetch);
 
     return () => {
-      pusher.unsubscribe(channelName);
-      pusher.disconnect();
+      channel.unbind('new-message', refetch);
+      channel.unbind('message-deleted', refetch);
+      handle.release();
     };
   }, [conversationId, applyDecryption]);
 

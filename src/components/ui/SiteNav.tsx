@@ -8,6 +8,8 @@ import ThemeToggle from './ThemeToggle';
 import SiteShell, { type ShellWidth } from './SiteShell';
 import HeartMark from './HeartMark';
 import { APP_SECTIONS, isSectionActive } from './AppSections';
+import NotificationDot from './NotificationDot';
+import { useUnread } from '@/hooks/useUnread';
 
 /**
  * SiteNav — nav unique du shell unifié (#276, épic #273).
@@ -48,6 +50,8 @@ export interface SiteNavViewProps {
    * cette page n'est pas l'app et n'a pas de tab bar à remplacer.
    */
   showSections?: boolean;
+  /** Pastille sur la section Messages (#389) — résolue par le wrapper via `useUnread`. */
+  hasUnreadMessages?: boolean;
   /** Route courante, pour l'état actif des sections (résolue par `SiteNav`). */
   pathname?: string;
 }
@@ -83,6 +87,7 @@ export function SiteNavView({
   width = 'content',
   banner,
   showSections = false,
+  hasUnreadMessages = false,
   pathname = '',
 }: SiteNavViewProps) {
   const authed = variant === 'authed';
@@ -115,7 +120,12 @@ export function SiteNavView({
                             : 'font-medium text-nav-text-dim hover:bg-fill-subtle hover:text-nav-text'
                         }`}
                       >
-                        <Icon active={active} width={18} height={18} />
+                        <span className="relative">
+                          <Icon active={active} width={18} height={18} />
+                          {href === '/messages' && hasUnreadMessages && (
+                            <NotificationDot aria-label="Nouveaux messages" />
+                          )}
+                        </span>
                         {label}
                       </span>
                     </Link>
@@ -173,6 +183,7 @@ export default function SiteNav({
 }: Partial<SiteNavViewProps> = {}) {
   const { data: session, status } = useSession();
   const currentPath = usePathname();
+  const { hasUnread } = useUnread();
   const resolvedVariant: SiteNavVariant = variant ?? (status === 'authenticated' ? 'authed' : 'guest');
   const resolvedIsAdmin = isAdmin ?? session?.user?.role?.toUpperCase() === 'ADMIN';
 
@@ -183,6 +194,7 @@ export default function SiteNav({
       width={width}
       banner={banner}
       showSections={showSections}
+      hasUnreadMessages={hasUnread}
       pathname={pathname ?? currentPath ?? ''}
     />
   );
