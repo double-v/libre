@@ -53,21 +53,39 @@ export function UnreadProvider({ userId, children }: { userId?: string; children
   // pas au badge — un `[]` initial le retirerait à chaque montage.
   const [ids, setIds] = useState<readonly string[] | null>(null);
   const inFlight = useRef(false);
+  // Un signal reçu pendant un chargement n'est pas perdu mais rejoué après :
+  // la réponse en vol peut être antérieure au marquage lu qui a déclenché le
+  // signal (GET unread parti sur `new-message` avant que `GET messages` ait
+  // posé `readAt`). Sans rejeu, une pastille s'allumerait sur la conversation
+  // qu'on est en train de lire, et rien ne l'éteindrait avant un retour au
+  // premier plan.
+  const pendingAgain = useRef(false);
 
   const refresh = useCallback(() => {
-    if (!userId || inFlight.current) return;
-    inFlight.current = true;
-    fetch('/api/chat/unread', { cache: 'no-store' })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (d && Array.isArray(d.conversationIds)) setIds(d.conversationIds);
-      })
-      .catch(() => {
-        // Réseau : on garde l'état précédent, la prochaine resync corrigera.
-      })
-      .finally(() => {
-        inFlight.current = false;
-      });
+    if (!userId) return;
+    const run = (): void => {
+      inFlight.current = true;
+      fetch('/api/chat/unread', { cache: 'no-store' })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (d && Array.isArray(d.conversationIds)) setIds(d.conversationIds);
+        })
+        .catch(() => {
+          // Réseau : on garde l'état précédent, la prochaine resync corrigera.
+        })
+        .finally(() => {
+          inFlight.current = false;
+          if (pendingAgain.current) {
+            pendingAgain.current = false;
+            run();
+          }
+        });
+    };
+    if (inFlight.current) {
+      pendingAgain.current = true;
+      return;
+    }
+    run();
   }, [userId]);
 
   // Chargement initial + resync sur retour au premier plan et marquage lu.

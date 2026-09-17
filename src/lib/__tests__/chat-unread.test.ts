@@ -11,7 +11,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const fakeDb = {
   block: { findMany: vi.fn() },
-  message: { findMany: vi.fn() },
+  message: { groupBy: vi.fn() },
 };
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => fakeDb }));
 
@@ -22,7 +22,7 @@ const ME = 'me-uuid';
 describe('unreadConversationIds', () => {
   beforeEach(() => {
     fakeDb.block.findMany.mockReset().mockResolvedValue([]);
-    fakeDb.message.findMany.mockReset().mockResolvedValue([]);
+    fakeDb.message.groupBy.mockReset().mockResolvedValue([]);
   });
 
   it('liste vide sans message non lu', async () => {
@@ -30,16 +30,16 @@ describe('unreadConversationIds', () => {
   });
 
   it('renvoie les identifiants de conversation, un seul par conversation', async () => {
-    fakeDb.message.findMany.mockResolvedValue([{ conversationId: 'c1' }, { conversationId: 'c2' }]);
+    fakeDb.message.groupBy.mockResolvedValue([{ conversationId: 'c1' }, { conversationId: 'c2' }]);
     await expect(unreadConversationIds(ME)).resolves.toEqual(['c1', 'c2']);
-    const args = fakeDb.message.findMany.mock.calls[0][0];
-    expect(args.distinct).toEqual(['conversationId']);
-    expect(args.select).toEqual({ conversationId: true });
+    // DISTINCT côté SQL : un groupBy, pas un findMany dédoublonné en mémoire.
+    const args = fakeDb.message.groupBy.mock.calls[0][0];
+    expect(args.by).toEqual(['conversationId']);
   });
 
   it("ne compte que les messages reçus, non lus, non supprimés, d'un expéditeur non banni, dans mes conversations", async () => {
     await unreadConversationIds(ME);
-    const where = fakeDb.message.findMany.mock.calls[0][0].where;
+    const where = fakeDb.message.groupBy.mock.calls[0][0].where;
     expect(where.readAt).toBeNull();
     expect(where.deletedAt).toBeNull();
     expect(where.senderId).toEqual(expect.objectContaining({ not: ME }));
@@ -56,14 +56,14 @@ describe('unreadConversationIds', () => {
     expect(fakeDb.block.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { OR: [{ blockerId: ME }, { blockedId: ME }] } }),
     );
-    const where = fakeDb.message.findMany.mock.calls[0][0].where;
+    const where = fakeDb.message.groupBy.mock.calls[0][0].where;
     expect(where.senderId.notIn).toEqual(expect.arrayContaining(['x', 'y']));
     expect(where.senderId.notIn).toHaveLength(2);
   });
 
   it("sans blocage, ne pose pas de notIn vide qui pourrait être mal interprété", async () => {
     await unreadConversationIds(ME);
-    const where = fakeDb.message.findMany.mock.calls[0][0].where;
+    const where = fakeDb.message.groupBy.mock.calls[0][0].where;
     expect(where.senderId).toEqual({ not: ME });
   });
 });

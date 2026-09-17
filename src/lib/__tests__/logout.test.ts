@@ -34,4 +34,11 @@ describe('logout', () => {
     await expect(logout()).resolves.toBeUndefined();
     expect(mockSignOut).toHaveBeenCalledTimes(1);
   });
+
+  it("un échec de signOut ne lève pas non plus : l'appelant redirige quand même", async () => {
+    // Profil : `void logout().then(() => router.push('/login'))` — une rejection
+    // laisserait la personne sur la page, secrets locaux déjà purgés.
+    mockSignOut.mockRejectedValueOnce(new Error('réseau'));
+    await expect(logout()).resolves.toBeUndefined();
+  });
 });

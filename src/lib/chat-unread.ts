@@ -27,7 +27,12 @@ export async function unreadConversationIds(me: string): Promise<string[]> {
     excluded.add(b.blockerId === me ? b.blockedId : b.blockerId);
   }
 
-  const rows = await db.message.findMany({
+  // `groupBy`, pas `findMany({ distinct })` : Prisma dédoublonne `distinct` en
+  // mémoire après avoir rapatrié chaque ligne non lue. C'est le chemin chaud
+  // de la feature (chaque message reçu, chaque retour au premier plan) ; le
+  // résultat doit rester borné par le nombre de conversations, pas de messages.
+  const rows = await db.message.groupBy({
+    by: ['conversationId'],
     where: {
       readAt: null,
       deletedAt: null,
@@ -35,8 +40,6 @@ export async function unreadConversationIds(me: string): Promise<string[]> {
       sender: { isBanned: false },
       conversation: { OR: [{ userA: me }, { userB: me }] },
     },
-    distinct: ['conversationId'],
-    select: { conversationId: true },
   });
 
   return rows.map((r) => r.conversationId);

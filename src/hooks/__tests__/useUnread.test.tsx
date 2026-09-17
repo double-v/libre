@@ -117,6 +117,30 @@ describe('useUnread', () => {
     expect(mockSubscribeUserChannel).not.toHaveBeenCalled();
   });
 
+  it('un signal reçu pendant un chargement est rejoué après, pas perdu', async () => {
+    // Scénario : conversation ouverte, un message arrive. `new-message` lance
+    // un GET unread qui peut lire AVANT que `GET messages` ait posé readAt ;
+    // puis la page émet `libre:unread-changed` pendant que ce GET est en vol.
+    // Sans rejeu, la réponse périmée allume une pastille sur la conversation
+    // qu'on est en train de lire, sans rien pour l'éteindre.
+    let resolveFirst: (v: unknown) => void = () => {};
+    const { result } = renderHook(() => useUnread(), { wrapper });
+    await waitFor(() => expect(result.current.hasUnread).toBe(true));
+
+    fetchMock.mockImplementationOnce(() => new Promise((r) => { resolveFirst = r; }));
+    act(() => bound['new-message']?.({ conversationId: 'c1' }));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    // Pendant le vol : la page a marqué lu.
+    fetchMock.mockImplementation(() => respond([]));
+    act(() => { window.dispatchEvent(new Event('libre:unread-changed')); });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    // La réponse périmée arrive : elle dit « c1 non lu ».
+    await act(async () => { resolveFirst({ ok: true, json: () => Promise.resolve({ conversationIds: ['c1'] }) }); });
+    // Le signal reçu en vol est rejoué et corrige l'état.
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    await waitFor(() => expect(result.current.hasUnread).toBe(false));
+  });
+
   it('une réponse en erreur laisse l’état précédent, sans lever', async () => {
     const { result } = renderHook(() => useUnread(), { wrapper });
     await waitFor(() => expect(result.current.hasUnread).toBe(true));
