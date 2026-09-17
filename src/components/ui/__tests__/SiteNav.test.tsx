@@ -24,6 +24,12 @@ import SiteNav, { SiteNavView } from '../SiteNav';
 vi.mock('next-auth/react', () => ({ useSession: vi.fn() }));
 const mockSession = vi.mocked(useSession);
 
+// Files admin (#391) : le wrapper appelle le hook, la vue reçoit un booléen.
+const mockUseAdminQueues = vi.fn<(opts: { enabled: boolean }) => { hasPending: boolean }>(() => ({ hasPending: false }));
+vi.mock('@/hooks/useAdminQueues', () => ({
+  useAdminQueues: (opts: { enabled: boolean }) => mockUseAdminQueues(opts),
+}));
+
 describe('<SiteNavView /> — variante guest', () => {
   it('exposes brand → /, public links and the register CTA, no ThemeToggle', () => {
     render(<SiteNavView variant="guest" />);
@@ -225,5 +231,67 @@ describe('<SiteNavView /> — pastille de non-lus sur Messages (#389)', () => {
   it("aucune pastille sans non-lu", () => {
     render(<SiteNavView variant="authed" showSections pathname="/discover" />);
     expect(screen.queryByRole('status', { name: 'Nouveaux messages' })).toBeNull();
+  });
+});
+
+/**
+ * Pastille d'accès admin (#391, spec 003 US3). FR-013 : pour un non-admin, rien
+ * de visible NI de chargé — le hook est appelé avec `enabled=false`, et c'est
+ * lui qui garantit l'absence de fetch (cf. useAdminQueues.test.tsx). Ici on
+ * vérifie le contrat entre le wrapper et le hook, et le rendu de la vue.
+ */
+describe('<SiteNavView /> — pastille d’accès admin (#391)', () => {
+  it('pose la pastille sur le lien Administration quand hasAdminPending', () => {
+    render(<SiteNavView variant="authed" isAdmin hasAdminPending />);
+    const dot = screen.getByRole('status', { name: 'Éléments en attente' });
+    expect(screen.getByRole('link', { name: 'Administration' })).toContainElement(dot);
+    // Une présence, jamais un nombre côté app membre.
+    expect(screen.getByRole('link', { name: 'Administration' }).textContent).toBe('');
+  });
+
+  it('aucune pastille sans élément en attente', () => {
+    render(<SiteNavView variant="authed" isAdmin />);
+    expect(screen.queryByRole('status', { name: 'Éléments en attente' })).toBeNull();
+  });
+
+  it('ignore hasAdminPending pour un non-admin (pas de lien, pas de pastille)', () => {
+    render(<SiteNavView variant="authed" hasAdminPending />);
+    expect(screen.queryByRole('link', { name: 'Administration' })).toBeNull();
+    expect(screen.queryByRole('status', { name: 'Éléments en attente' })).toBeNull();
+  });
+});
+
+describe('<SiteNav /> — files admin depuis la session (#391)', () => {
+  beforeEach(() => {
+    mockSession.mockReset();
+    mockUseAdminQueues.mockReset();
+    mockUseAdminQueues.mockReturnValue({ hasPending: false });
+  });
+
+  it("n'active le hook que pour un rôle ADMIN", () => {
+    mockSession.mockReturnValue({ data: { user: { role: 'ADMIN' } }, status: 'authenticated' } as never);
+    render(<SiteNav />);
+    expect(mockUseAdminQueues).toHaveBeenCalledWith({ enabled: true });
+  });
+
+  it('laisse le hook désactivé pour un membre et pour un invité', () => {
+    mockSession.mockReturnValue({ data: { user: { role: 'USER' } }, status: 'authenticated' } as never);
+    render(<SiteNav />);
+    expect(mockUseAdminQueues).toHaveBeenCalledWith({ enabled: false });
+
+    mockUseAdminQueues.mockClear();
+    mockSession.mockReturnValue({ data: null, status: 'unauthenticated' } as never);
+    render(<SiteNav />);
+    expect(mockUseAdminQueues).toHaveBeenCalledWith({ enabled: false });
+    expect(mockUseAdminQueues).not.toHaveBeenCalledWith({ enabled: true });
+  });
+
+  it('porte la pastille quand le hook signale des éléments en attente', () => {
+    mockSession.mockReturnValue({ data: { user: { role: 'ADMIN' } }, status: 'authenticated' } as never);
+    mockUseAdminQueues.mockReturnValue({ hasPending: true });
+    render(<SiteNav />);
+    expect(screen.getByRole('link', { name: 'Administration' })).toContainElement(
+      screen.getByRole('status', { name: 'Éléments en attente' }),
+    );
   });
 });

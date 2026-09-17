@@ -10,6 +10,7 @@ import HeartMark from './HeartMark';
 import { APP_SECTIONS, isSectionActive } from './AppSections';
 import NotificationDot from './NotificationDot';
 import { useUnread } from '@/hooks/useUnread';
+import { useAdminQueues } from '@/hooks/useAdminQueues';
 
 /**
  * SiteNav — nav unique du shell unifié (#276, épic #273).
@@ -52,6 +53,8 @@ export interface SiteNavViewProps {
   showSections?: boolean;
   /** Pastille sur la section Messages (#389) — résolue par le wrapper via `useUnread`. */
   hasUnreadMessages?: boolean;
+  /** Pastille sur l'accès Administration (#391) — résolue par le wrapper via `useAdminQueues`. Sans effet si `!isAdmin`. */
+  hasAdminPending?: boolean;
   /** Route courante, pour l'état actif des sections (résolue par `SiteNav`). */
   pathname?: string;
 }
@@ -88,6 +91,7 @@ export function SiteNavView({
   banner,
   showSections = false,
   hasUnreadMessages = false,
+  hasAdminPending = false,
   pathname = '',
 }: SiteNavViewProps) {
   const authed = variant === 'authed';
@@ -141,7 +145,10 @@ export function SiteNavView({
                 <ThemeToggle />
                 {isAdmin && (
                   <Link href="/admin" aria-label="Administration" title="Administration" className={iconLinkClass}>
-                    <ShieldIcon />
+                    <span className="relative">
+                      <ShieldIcon />
+                      {hasAdminPending && <NotificationDot aria-label="Éléments en attente" />}
+                    </span>
                   </Link>
                 )}
                 <Link href="/settings" aria-label="Paramètres" title="Paramètres" className={iconLinkClass}>
@@ -186,6 +193,8 @@ export default function SiteNav({
   const { hasUnread } = useUnread();
   const resolvedVariant: SiteNavVariant = variant ?? (status === 'authenticated' ? 'authed' : 'guest');
   const resolvedIsAdmin = isAdmin ?? session?.user?.role?.toUpperCase() === 'ADMIN';
+  // FR-013 : un non-admin ne charge rien — c'est `enabled` qui le garantit, pas le rendu.
+  const { hasPending: hasAdminPending } = useAdminQueues({ enabled: resolvedIsAdmin });
 
   return (
     <SiteNavView
@@ -195,6 +204,7 @@ export default function SiteNav({
       banner={banner}
       showSections={showSections}
       hasUnreadMessages={hasUnread}
+      hasAdminPending={hasAdminPending}
       pathname={pathname ?? currentPath ?? ''}
     />
   );
