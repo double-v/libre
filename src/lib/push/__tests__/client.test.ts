@@ -46,6 +46,17 @@ describe('getPushState', () => {
     expect(await getPushState()).toBe('on');
   });
 
+  it('un abonnement local est ré-enregistré au passage (compte changé sans logout)', async () => {
+    pushManager.getSubscription.mockResolvedValue(fakeSub);
+    await getPushState();
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/push/subscriptions', expect.objectContaining({ method: 'POST' })));
+  });
+
+  it('sans abonnement local : aucun POST', async () => {
+    await getPushState();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('états sans abonnement : unsupported, ios-not-installed, denied — sans lire le SW', async () => {
     mockSupport.mockReturnValue({ supported: false, iosNotInstalled: false, permission: 'default' });
     expect(await getPushState()).toBe('unsupported');
@@ -105,9 +116,30 @@ describe('enablePush', () => {
     expect(requestPermission).not.toHaveBeenCalled();
   });
 
-  it('POST en échec → off (l’appareil n’est pas considéré abonné)', async () => {
+  it('POST en échec → off ET abonnement navigateur retiré (sinon « on » mensonger au prochain montage)', async () => {
     fetchMock.mockResolvedValue({ ok: false });
     expect(await enablePush()).toBe('off');
+    expect(fakeSub.unsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it('abonnement pris sous une autre clé VAPID (rotation) : se désabonne puis se réabonne', async () => {
+    mockSupport.mockReturnValue({ supported: true, iosNotInstalled: false, permission: 'granted' });
+    const stale = { ...fakeSub, unsubscribe: vi.fn().mockResolvedValue(true), options: { applicationServerKey: new Uint8Array([1, 2, 3]).buffer } };
+    pushManager.getSubscription.mockResolvedValue(stale);
+    expect(await enablePush()).toBe('on');
+    expect(stale.unsubscribe).toHaveBeenCalledTimes(1);
+    expect(pushManager.subscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it('abonnement sous la clé courante : conservé', async () => {
+    mockSupport.mockReturnValue({ supported: true, iosNotInstalled: false, permission: 'granted' });
+    // 'VAPIDPUB' en base64url → octets ; l'abonnement porte exactement ces octets.
+    const bytes = Uint8Array.from(atob('VAPIDPUB'), (c) => c.charCodeAt(0));
+    const fresh = { ...fakeSub, unsubscribe: vi.fn(), options: { applicationServerKey: bytes.buffer } };
+    pushManager.getSubscription.mockResolvedValue(fresh);
+    expect(await enablePush()).toBe('on');
+    expect(fresh.unsubscribe).not.toHaveBeenCalled();
+    expect(pushManager.subscribe).not.toHaveBeenCalled();
   });
 });
 

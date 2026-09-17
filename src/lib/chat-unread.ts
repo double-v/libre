@@ -51,11 +51,15 @@ export async function unreadConversationIds(me: string): Promise<string[]> {
  * de non lu pour le destinataire dans cette conversation, en dehors du
  * message qu'on vient d'écrire ? Si oui, la personne a déjà été prévenue ;
  * la lecture (qui pose `readAt`) réarme naturellement. Aucun état à stocker.
+ *
+ * « Avant » au sens de `createdAt`, pas « tous sauf moi » : deux envois
+ * quasi simultanés se verraient mutuellement comme « déjà en attente » et
+ * aucun ne pousserait. Avec l'ordre de création, exactement le premier pousse.
  */
 export async function hadUnreadBefore(
   conversationId: string,
   recipientId: string,
-  excludeMessageId: string,
+  message: { id: string; createdAt: Date },
 ): Promise<boolean> {
   const n = await getDb().message.count({
     where: {
@@ -63,7 +67,8 @@ export async function hadUnreadBefore(
       readAt: null,
       deletedAt: null,
       senderId: { not: recipientId },
-      id: { not: excludeMessageId },
+      id: { not: message.id },
+      createdAt: { lt: message.createdAt },
     },
   });
   return n > 0;

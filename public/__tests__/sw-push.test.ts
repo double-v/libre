@@ -118,6 +118,14 @@ describe('sw.js — notificationclick', () => {
     expect(sw.openWindow).not.toHaveBeenCalled();
   });
 
+  it('fenêtre non contrôlée (navigate rejette) : ouvre une fenêtre plutôt que rien', async () => {
+    const win = { focus: vi.fn().mockResolvedValue(undefined), navigate: vi.fn().mockRejectedValue(new TypeError('not controlled')) };
+    sw.matchAll.mockResolvedValue([win]);
+    const { settle } = click('/chat/c1');
+    await settle();
+    expect(sw.openWindow).toHaveBeenCalledWith('/chat/c1');
+  });
+
   it('ouvre une fenêtre sinon', async () => {
     const { settle } = click('/messages');
     await settle();

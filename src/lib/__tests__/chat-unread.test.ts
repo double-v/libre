@@ -73,22 +73,24 @@ describe('unreadConversationIds', () => {
  * est ce qui compte : le nouveau message exclu, les supprimés exclus, seuls
  * les messages ADRESSÉS au destinataire (pas les siens) dans CETTE conversation.
  */
+const NEW = { id: 'new-msg', createdAt: new Date('2026-09-17T10:00:00Z') };
+
 describe('hadUnreadBefore', () => {
   beforeEach(() => fakeDb.message.count.mockReset());
 
   it('false quand aucun autre message non lu', async () => {
     fakeDb.message.count.mockResolvedValue(0);
-    await expect(hadUnreadBefore('c1', 'dest', 'new-msg')).resolves.toBe(false);
+    await expect(hadUnreadBefore('c1', 'dest', NEW)).resolves.toBe(false);
   });
 
   it('true dès qu’un autre message non lu attend', async () => {
     fakeDb.message.count.mockResolvedValue(1);
-    await expect(hadUnreadBefore('c1', 'dest', 'new-msg')).resolves.toBe(true);
+    await expect(hadUnreadBefore('c1', 'dest', NEW)).resolves.toBe(true);
   });
 
   it('exclut le nouveau message, les supprimés, les messages du destinataire, et reste dans la conversation', async () => {
     fakeDb.message.count.mockResolvedValue(0);
-    await hadUnreadBefore('c1', 'dest', 'new-msg');
+    await hadUnreadBefore('c1', 'dest', NEW);
     const where = fakeDb.message.count.mock.calls[0][0].where;
     expect(where).toEqual({
       conversationId: 'c1',
@@ -96,6 +98,15 @@ describe('hadUnreadBefore', () => {
       deletedAt: null,
       senderId: { not: 'dest' },
       id: { not: 'new-msg' },
+      createdAt: { lt: NEW.createdAt },
     });
+  });
+
+  it('« avant » = créé avant, pas « tous les autres » : deux envois simultanés ne s’annulent pas', async () => {
+    // Sans la borne createdAt, A verrait B « déjà en attente » et B verrait A :
+    // aucun push. Avec elle, seul le premier créé compte comme « avant ».
+    fakeDb.message.count.mockResolvedValue(0);
+    await hadUnreadBefore('c1', 'dest', NEW);
+    expect(fakeDb.message.count.mock.calls[0][0].where.createdAt).toEqual({ lt: NEW.createdAt });
   });
 });

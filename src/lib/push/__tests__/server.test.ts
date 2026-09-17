@@ -160,6 +160,14 @@ describe('sendPushToUser', () => {
     expect(console.info).toHaveBeenCalledWith(expect.stringContaining('push.disabled'), expect.anything());
   });
 
+  it('VAPID mal configurée (setVapidDetails lève) : journalisé, no-op, ne lève pas', async () => {
+    mockSetVapidDetails.mockImplementationOnce(() => { throw new Error('Vapid subject is not a valid URL'); });
+    fakeDb.pushSubscription.findMany.mockResolvedValue([sub('s1')]);
+    await expect(sendPushToUser('u1', buildPayload('match', {}))).resolves.toBeUndefined();
+    expect(mockSendNotification).not.toHaveBeenCalled();
+    expect(console.error).toHaveBeenCalledWith('push.send.failed', expect.objectContaining({ status: 'vapid_config' }));
+  });
+
   it('sans abonnement : rien envoyé, rien journalisé en erreur', async () => {
     await sendPushToUser('u1', buildPayload('match', {}));
     expect(mockSendNotification).not.toHaveBeenCalled();
@@ -171,8 +179,10 @@ describe('sendPushToAdmins (#393)', () => {
   it("cible uniquement les abonnements des comptes ADMIN", async () => {
     fakeDb.pushSubscription.findMany.mockResolvedValue([sub('a1', 'admin-1'), sub('a2', 'admin-2')]);
     await sendPushToAdmins(buildPayload('admin-report', {}));
+    // Insensible à la casse, comme auth.ts / admin.ts : un rôle « admin » stocké
+    // en minuscules est admin partout ailleurs, il doit l'être ici aussi.
     expect(fakeDb.pushSubscription.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { user: { role: 'ADMIN' } } }),
+      expect.objectContaining({ where: { user: { role: { equals: 'ADMIN', mode: 'insensitive' } } } }),
     );
     expect(mockSendNotification).toHaveBeenCalledTimes(2);
   });

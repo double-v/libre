@@ -69,7 +69,14 @@ function configured(): boolean {
     console.info('push.disabled', { reason: 'vapid_missing' });
     return false;
   }
-  webPush.setVapidDetails(subject, pub, priv);
+  try {
+    webPush.setVapidDetails(subject, pub, priv);
+  } catch (err) {
+    // Sujet sans mailto:, clé de mauvaise longueur… — une faute de saisie sur
+    // Vercel doit se voir dans les journaux, pas disparaître dans un .catch().
+    console.error('push.send.failed', { status: 'vapid_config', message: (err as Error)?.message?.slice(0, 80) });
+    return false;
+  }
   return true;
 }
 
@@ -116,5 +123,6 @@ export function sendPushToUser(userId: string, payload: PushPayload): Promise<vo
 
 /** Tous les appareils abonnés de tous les comptes ADMIN (#393). */
 export function sendPushToAdmins(payload: PushPayload): Promise<void> {
-  return sendWhere({ user: { role: 'ADMIN' } }, payload);
+  // Insensible à la casse, comme `auth.ts` et `admin.ts` (`toUpperCase() === 'ADMIN'`).
+  return sendWhere({ user: { role: { equals: 'ADMIN', mode: 'insensitive' } } }, payload);
 }

@@ -188,7 +188,7 @@ describe('POST /api/chat/[conversationId]/messages', () => {
     const res = await POST(postRequest({ content: 'ciphertext' }), makeParams());
     expect(res.status).toBe(201);
     expect(mockAfter).toHaveBeenCalledTimes(1);
-    expect(mockHadUnreadBefore).toHaveBeenCalledWith(CONVO_ID, OTHER_ID, 'msg-generated-id');
+    expect(mockHadUnreadBefore).toHaveBeenCalledWith(CONVO_ID, OTHER_ID, expect.objectContaining({ id: 'msg-generated-id', createdAt: expect.any(Date) }));
     await vi.waitFor(() => expect(mockSendPushToUser).toHaveBeenCalledTimes(1));
     expect(mockSendPushToUser).toHaveBeenCalledWith(OTHER_ID, expect.objectContaining({ kind: 'message', url: `/chat/${CONVO_ID}` }));
     // Jamais vers l'expéditeur

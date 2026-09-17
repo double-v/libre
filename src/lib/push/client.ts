@@ -52,13 +52,40 @@ function stateFrom(permission: PushPermission, subscribed: boolean): PushState {
   return subscribed ? 'on' : 'off';
 }
 
-/** État courant, sans rien demander (FR-015). */
+/**
+ * État courant, sans rien demander (FR-015). Un abonnement local est
+ * ré-enregistré au passage (upsert, best-effort) : si la session précédente
+ * s'est terminée sans `logout()` (JWT expiré, cookies vidés), l'endpoint est
+ * encore rattaché à l'ancien compte — et l'appareil recevrait SES messages.
+ */
 export async function getPushState(): Promise<PushState> {
   const support = getPushSupport();
   // Non supporté ou refusé : l'état est connu sans interroger le service worker.
   if (!support.supported || support.permission === 'denied') return stateFrom(support.permission, false);
   const sub = await getDeviceSubscription();
+  if (sub) void register(sub);
   return stateFrom(support.permission, sub !== null);
+}
+
+/** Décode la clé VAPID publique (base64url) pour la comparer à celle de l'abonnement. */
+function decodeKey(b64url: string): Uint8Array {
+  const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(b64url.length / 4) * 4, '=');
+  const bin = atob(b64);
+  return Uint8Array.from(bin, (c) => c.charCodeAt(0));
+}
+
+/**
+ * Un abonnement pris sous une autre clé VAPID (rotation) ne recevra plus rien :
+ * chaque envoi ferait 401/403, jamais 404/410, donc jamais nettoyé côté
+ * serveur. On le détecte ici pour se réabonner.
+ */
+function boundToCurrentKey(sub: PushSubscription): boolean {
+  const key = applicationServerKey();
+  const bound = sub.options?.applicationServerKey;
+  if (!key || !bound) return true; // rien à comparer : on ne casse pas un abonnement valide
+  const a = new Uint8Array(bound);
+  const b = decodeKey(key);
+  return a.length === b.length && a.every((x, i) => x === b[i]);
 }
 
 async function register(sub: PushSubscription): Promise<boolean> {
@@ -95,17 +122,32 @@ export async function enablePush(): Promise<PushState> {
   if (!reg) return 'off';
   let sub: PushSubscription | null = null;
   try {
-    sub = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({
+    sub = await reg.pushManager.getSubscription();
+    if (sub && !boundToCurrentKey(sub)) {
+      await sub.unsubscribe();
+      sub = null;
+    }
+    sub ??= await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: applicationServerKey(),
-    }));
+    });
   } catch {
     return 'off';
   }
   // Le serveur peut ignorer un abonnement local (compte changé sur ce
   // navigateur) : on le (ré)enregistre toujours — c'est un upsert.
   const ok = await register(sub);
-  return ok ? 'on' : 'off';
+  if (!ok) {
+    // Sans ligne côté serveur, un abonnement navigateur serait un mensonge :
+    // « on » à l'écran, rien qui arrive jamais. On le retire.
+    try {
+      await sub.unsubscribe();
+    } catch {
+      // best-effort
+    }
+    return 'off';
+  }
+  return 'on';
 }
 
 /** Désabonne l'appareil : le serveur d'abord (il faut la session), puis le navigateur. */

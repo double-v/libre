@@ -114,11 +114,13 @@ self.addEventListener('notificationclick', (event) => {
     self.clients
       .matchAll({ type: 'window', includeUncontrolled: true })
       .then((wins) => {
-        const win = wins[0];
+        // Une fenêtre non contrôlée par ce SW (rechargement forcé, premier
+        // chargement avant claim) refuse navigate() : on ouvre alors une fenêtre.
+        const win = wins.find((c) => c.frameType !== 'nested') || wins[0];
         if (win) {
-          return Promise.resolve(win.focus()).then(() =>
-            typeof win.navigate === 'function' ? win.navigate(url) : undefined
-          );
+          return Promise.resolve(win.focus())
+            .then(() => (typeof win.navigate === 'function' ? win.navigate(url) : Promise.reject(new Error('no navigate'))))
+            .catch(() => self.clients.openWindow(url));
         }
         return self.clients.openWindow(url);
       })

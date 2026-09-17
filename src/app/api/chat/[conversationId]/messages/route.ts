@@ -175,7 +175,7 @@ export async function POST(
     // bout : `sendPushToUser` ne lève jamais, et on couvre aussi le comptage.
     after(async () => {
       try {
-        if (await hadUnreadBefore(conversationId, recipientId, message.id)) return;
+        if (await hadUnreadBefore(conversationId, recipientId, message)) return;
         await sendPushToUser(recipientId, buildPayload('message', { conversationId }));
       } catch (err) {
         console.error('push.message.skipped', { reason: (err as Error)?.message?.slice(0, 80) });
