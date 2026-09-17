@@ -28,6 +28,7 @@ const FORBIDDEN: Array<{ re: RegExp; why: string }> = [
   { re: /conversationIds\.length\s*[^>=!]/, why: 'rend le nombre de conversations non lues' },
   { re: /\{\s*unread(?:Count|Total|s)?\s*\}/i, why: 'interpole un compteur de non-lus dans du JSX' },
   { re: /\d+\s+non[- ]lus?/i, why: 'libellé « N non lu(s) »' },
+  { re: /(?:\$\{[^}]+\}|\{[^}]+\})\s+non[- ]lus?/i, why: 'libellé « N non lu(s) » avec compteur interpolé' },
   { re: /\{[^}]*\bunread[^}]*\.length\s*\}/i, why: 'interpole une longueur de non-lus dans du JSX' },
 ];
 
@@ -36,6 +37,25 @@ describe('charte — aucun nombre de non-lus côté membre', () => {
 
   it('parcourt bien les surfaces membre', () => {
     expect(files.length).toBeGreaterThan(20);
+  });
+
+  // Une garde qui ne mord sur rien passe toujours : on vérifie qu'elle attrape
+  // chaque forme interdite, et qu'elle laisse passer la présence (booléen, `> 0`).
+  it('mord sur chaque forme interdite, pas sur la présence', () => {
+    const violations = [
+      '<span>{conversationIds.length}</span>',
+      '<Badge>{unreadCount}</Badge>',
+      "aria-label={`${n} non lus`}",
+      '<b>3 non lu</b>',
+      '<span>{unread.length}</span>',
+    ];
+    for (const v of violations) {
+      expect(FORBIDDEN.some(({ re }) => re.test(v)), v).toBe(true);
+    }
+    const allowed = ['hasUnread: current.length > 0', 'if (ids.length === 0) return', '{hasUnread && <NotificationDot />}'];
+    for (const a of allowed) {
+      expect(FORBIDDEN.some(({ re }) => re.test(a)), a).toBe(false);
+    }
   });
 
   for (const file of files) {

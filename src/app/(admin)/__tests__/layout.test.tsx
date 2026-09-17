@@ -52,9 +52,10 @@ describe('AdminLayout — compteurs de files', () => {
     await renderLayout();
 
     const nav = sidebar();
-    expect(nav.getByRole('link', { name: /Signalements/ })).toHaveTextContent('2');
-    expect(nav.getByRole('link', { name: /Vérifications/ })).toHaveTextContent('7');
-    expect(nav.getByRole('link', { name: /Retours/ })).toHaveTextContent('1');
+    // Ancré : « 7 » seul, pas « 17 » ni « 70 ».
+    expect(nav.getByRole('link', { name: /Signalements/ })).toHaveTextContent(/^Signalements2$/);
+    expect(nav.getByRole('link', { name: /Vérifications/ })).toHaveTextContent(/^Vérifications7$/);
+    expect(nav.getByRole('link', { name: /Retours/ })).toHaveTextContent(/^Retours1$/);
     expect(fakeDb.report.count).toHaveBeenCalledWith({ where: { status: 'pending' } });
     expect(fakeDb.verificationRequest.count).toHaveBeenCalledWith({ where: { status: 'pending' } });
     expect(fakeDb.feedback.count).toHaveBeenCalledWith({ where: { status: 'open' } });
@@ -69,7 +70,7 @@ describe('AdminLayout — compteurs de files', () => {
     const nav = sidebar();
     expect(nav.getByRole('link', { name: /Signalements/ })).toHaveTextContent(/^Signalements$/);
     expect(nav.getByRole('link', { name: /Retours/ })).toHaveTextContent(/^Retours$/);
-    expect(nav.getByRole('link', { name: /Vérifications/ })).toHaveTextContent('3');
+    expect(nav.getByRole('link', { name: /Vérifications/ })).toHaveTextContent(/^Vérifications3$/);
     // Les entrées sans file (Utilisateurs, Logs…) ne portent jamais de chip.
     expect(nav.getByRole('link', { name: /Utilisateurs/ })).toHaveTextContent(/^Utilisateurs$/);
   });
@@ -82,5 +83,7 @@ describe('AdminLayout — compteurs de files', () => {
     // Le contenu est rendu deux fois (main mobile + main desktop).
     expect(screen.getAllByText('contenu').length).toBeGreaterThan(0);
     expect(sidebar().getByRole('link', { name: /Signalements/ })).toHaveTextContent(/^Signalements$/);
+    // Les autres files, elles, gardent leur compte : l'échec est isolé, pas global.
+    expect(sidebar().getByRole('link', { name: /Vérifications/ })).toHaveTextContent(/^Vérifications3$/);
   });
 });

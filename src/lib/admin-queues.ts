@@ -23,12 +23,22 @@ export interface QueueCounter {
   feedback: { count(args: { where: { status: string } }): Promise<number> };
 }
 
+/**
+ * Un comptage qui échoue vaut 0 pour SA file seulement : les deux autres
+ * restent justes. Avec `Promise.all`, un seul échec effaçait les trois — et
+ * l'admin ne voyait plus rien précisément quand quelque chose cloche.
+ */
 export async function countAdminQueues(db: QueueCounter): Promise<AdminQueues> {
-  const [reports, verifications, feedback] = await Promise.all([
+  const settled = await Promise.allSettled([
     db.report.count({ where: { status: 'pending' } }),
     db.verificationRequest.count({ where: { status: 'pending' } }),
     db.feedback.count({ where: { status: 'open' } }),
   ]);
+  const [reports, verifications, feedback] = settled.map((r, i) => {
+    if (r.status === 'fulfilled') return r.value;
+    console.error(`[admin-queues] comptage ${['reports', 'verifications', 'feedback'][i]} échoué :`, r.reason);
+    return 0;
+  });
   return { reports, verifications, feedback };
 }
 

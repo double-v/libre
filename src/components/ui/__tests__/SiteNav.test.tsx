@@ -278,6 +278,7 @@ describe('<SiteNav /> — files admin depuis la session (#391)', () => {
     mockSession.mockReturnValue({ data: { user: { role: 'USER' } }, status: 'authenticated' } as never);
     render(<SiteNav />);
     expect(mockUseAdminQueues).toHaveBeenCalledWith({ enabled: false });
+    expect(mockUseAdminQueues).not.toHaveBeenCalledWith({ enabled: true });
 
     mockUseAdminQueues.mockClear();
     mockSession.mockReturnValue({ data: null, status: 'unauthenticated' } as never);

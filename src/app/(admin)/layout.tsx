@@ -132,14 +132,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     );
   }
 
-  // Files de travail (R7) : comptées ici, en serveur, sans HTTP. Un échec ne
-  // doit pas fermer l'administration — c'est précisément là qu'on va réparer.
-  let queues: AdminQueues = { reports: 0, verifications: 0, feedback: 0 };
-  try {
-    queues = await countAdminQueues(getDb());
-  } catch (err) {
-    console.error('[admin/layout] queues count failed:', err);
-  }
+  // Files de travail (R7) : comptées ici, en serveur, sans HTTP. Un échec de
+  // comptage ne ferme pas l'administration (`countAdminQueues` le confine à sa file).
+  const queues = await countAdminQueues(getDb());
 
   return (
     <div className="flex min-h-screen">
