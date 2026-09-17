@@ -1,4 +1,5 @@
-const CACHE_NAME = 'libre-v2';
+// v3 : handlers push / notificationclick (#392) — nouveau SW à déployer.
+const CACHE_NAME = 'libre-v3';
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',
@@ -71,4 +72,55 @@ self.addEventListener('fetch', (event) => {
     );
   }
   // Anything else: default network handling (no respondWith).
+});
+
+// ─── Web Push (#392, spec 003 R11, contracts/events.md) ────────────────────
+//
+// La charge utile vient de src/lib/push/server.ts : { title, body, url, tag },
+// jamais de contenu ni de nom. Si une fenêtre de Libre est visible ET au
+// premier plan, on ne montre rien : la pastille in-app fait le travail (Q2).
+// Le `tag` remplace une notification précédente du même sujet plutôt que
+// d'empiler. Aucun setAppBadge ici : le badge d'icône est piloté par l'app.
+self.addEventListener('push', (event) => {
+  let data = null;
+  try {
+    data = event.data ? event.data.json() : null;
+  } catch {
+    return; // charge illisible : on ne montre rien
+  }
+  if (!data || typeof data.title !== 'string' || !data.title) return;
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((wins) => {
+        if (wins.some((c) => c.visibilityState === 'visible' && c.focused)) return;
+        return self.registration.showNotification(data.title, {
+          body: typeof data.body === 'string' ? data.body : '',
+          icon: '/icon-192.png',
+          badge: '/icon-96.png',
+          tag: typeof data.tag === 'string' ? data.tag : undefined,
+          renotify: false,
+          data: { url: typeof data.url === 'string' ? data.url : '/' },
+        });
+      })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || '/';
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((wins) => {
+        const win = wins[0];
+        if (win) {
+          return Promise.resolve(win.focus()).then(() =>
+            typeof win.navigate === 'function' ? win.navigate(url) : undefined
+          );
+        }
+        return self.clients.openWindow(url);
+      })
+  );
 });
