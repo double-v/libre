@@ -1,5 +1,6 @@
 import { signOut } from 'next-auth/react';
 import { clearBadge } from '@/lib/app-badge';
+import { disablePush } from '@/lib/push/client';
 
 /**
  * Déconnexion centralisée (#389/#390, étendue en #392 au désabonnement push).
@@ -15,6 +16,14 @@ import { clearBadge } from '@/lib/app-badge';
 export async function logout(): Promise<void> {
   try {
     await clearBadge();
+  } catch {
+    // best-effort
+  }
+  // #392 (R13) : l'abonnement push est celui de l'appareil, pas du compte —
+  // un autre compte sur ce navigateur ne doit pas recevoir les notifications
+  // du précédent. Le DELETE serveur exige la session : d'où AVANT signOut.
+  try {
+    await disablePush();
   } catch {
     // best-effort
   }

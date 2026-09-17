@@ -78,7 +78,20 @@ export default function ConfidentialitePage() {
         <li>Adresses IP (traitées par Cloudflare et Vercel, pas stockées par Libre)</li>
       </ul>
 
-      <h3>2.6 Données de modération</h3>
+      <h3>2.6 Notifications hors de l&apos;application</h3>
+      <p>
+        Si vous activez « Me prévenir hors de l&apos;app » dans les paramètres, votre navigateur
+        crée un abonnement de notification propre à cet appareil. Nous conservons alors
+        l&apos;adresse d&apos;envoi fournie par votre navigateur et ses clés d&apos;abonnement, ainsi que le
+        type d&apos;appareil, pour savoir où envoyer. Nous ne conservons jamais le contenu des
+        notifications envoyées ni leur historique : elles ne transportent d&apos;ailleurs ni le
+        texte d&apos;un message, ni le nom de la personne qui vous écrit — seulement « nouveau
+        message » ou « nouveau match ». Cet abonnement est supprimé quand vous désactivez le
+        réglage, quand vous vous déconnectez sur cet appareil, et avec votre compte.
+        Cette option est désactivée par défaut.
+      </p>
+
+      <h3>2.7 Données de modération</h3>
       <ul>
         <li>Signalements (raison, description)</li>
         <li>Demandes de vérification (selfie, statut)</li>
