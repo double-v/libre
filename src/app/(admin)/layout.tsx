@@ -173,8 +173,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </aside>
 
-      {/* Mobile header */}
-      <div className="flex flex-1 flex-col md:hidden">
+      {/* Mobile header — `min-w-0` : sans lui, la nav `overflow-x-auto` élargit
+          la colonne au lieu de défiler, et ThemeMenu/Retour sortent du viewport. */}
+      <div className="flex min-w-0 flex-1 flex-col md:hidden">
         <header className="border-b border-hairline bg-surface p-4">
           <div className="flex items-center justify-between gap-2">
             <Link href="/admin" className="inline-flex items-center gap-2 text-lg font-bold text-coral dark:text-coral-light">
