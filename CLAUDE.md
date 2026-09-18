@@ -39,7 +39,7 @@ projets : vos modifications seraient écrasées au prochain sync.
 ## GitHub — on n'écrit que chez soi
 
 - **Toute écriture GitHub vise un dépôt de `double-v`.** Un verrou l'impose au
-  moment de la commande (`claude-skills/guards/`), sur tous les harnais : shim
+  moment de la commande (`skwillz/guards/`), sur tous les harnais : shim
   `gh`/`git` en tête de PATH, hook Claude Code, refus opencode.
 - **Dans un checkout qui porte un remote étranger, `gh` ne devine pas juste.**
   Le 2026-08-27, `gh issue create` tapé dans le fork `hublot` a ouvert l'issue
@@ -103,6 +103,31 @@ pas d'une issue improvisée :
 - La maille d'issue est la **user story**. Une issue = un ticket = une PR = un
   checkpoint opérateur. Une issue par tâche `T0NN` inonde le backlog.
 - Le vault Obsidian indexe et commente ; il ne duplique pas les specs.
+
+## Hygiène de contexte — programme l'analyse, ne la lis pas
+
+Chaque octet rendu par un outil entre dans la fenêtre de contexte et y reste
+jusqu'à la fin de la session. Les trois règles ci-dessous s'appliquent sur tous
+les harnais (Claude Code, opencode), avec les outils natifs — aucun plugin.
+
+- **Pour compter, filtrer, agréger : écris le calcul, n'affiche que le
+  résultat.** `grep -c`, `wc -l`, `awk`, `jq`, un script Python — jamais un
+  `cat` de 800 lignes pour raisonner dessus. Un `head -1` ne vaut pas mieux :
+  il jette l'information au lieu de la traiter.
+- **Toute sortie longue va dans un fichier, puis se lit au `grep`.** Logs,
+  `npm test`, `next build`, `pytest -v`, `gh api` paginé : redirige vers le
+  scratchpad (`> "$SCRATCH/build.log" 2>&1`), puis ne remonte que les lignes
+  utiles (`grep -nE 'error|FAIL' …`, `tail -20`). Seuil indicatif : ~200 lignes.
+- **`Read` sert à éditer, pas à comprendre.** `Edit` a besoin des octets exacts,
+  donc lire un fichier qu'on va modifier est justifié. Pour comprendre une base
+  de code, extraire une valeur ou résumer : `grep -n` ciblé, `sed -n 'a,bp'`,
+  ou un sous-agent d'exploration qui garde ses lectures hors du contexte
+  principal.
+
+Ce qui reste correct en direct : une sortie courte et fixe (`git status` sur un
+arbre propre, `pwd`, `ls` d'un petit dossier) et toute commande qui **mute**
+l'état (git, mv, mkdir). Ces règles gouvernent où vont les données, pas la forme
+des réponses : la concision de la prose est un autre sujet.
 
 ## État opérateur
 
