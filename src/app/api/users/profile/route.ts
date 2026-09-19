@@ -4,6 +4,7 @@ import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { profileUpdateSchema } from '@/lib/validators';
 import { photoSensitivityMap } from '@/lib/photo-veil';
+import { formatCityLabel } from '@/lib/geocoding';
 
 export async function GET() {
   try {
@@ -87,6 +88,24 @@ export async function PUT(request: Request) {
     // `null` porte du sens ici (« partout ») : seul `undefined` veut dire
     // « champ non fourni, n'y touche pas » (#327).
     if (data.searchDistanceKm !== undefined) { updateData.searchDistanceKm = data.searchDistanceKm; createData.searchDistanceKm = data.searchDistanceKm; }
+
+    // Ville saisie à la main (#405) : même position que la géoloc automatique
+    // (arrondi 2 décimales, cf. /api/geoloc/update), plus la source et le
+    // libellé privés. Pas de throttle ni de brouillage : ce n'est pas un
+    // appareil bavard mais un choix explicite. `null` retire tout.
+    if (data.city !== undefined) {
+      const position = data.city
+        ? {
+            lastKnownLat: Math.round(data.city.lat * 100) / 100,
+            lastKnownLng: Math.round(data.city.lng * 100) / 100,
+            lastGeolocAt: new Date(),
+            positionSource: 'city',
+            cityLabel: formatCityLabel(data.city),
+          }
+        : { lastKnownLat: 0, lastKnownLng: 0, lastGeolocAt: null, positionSource: null, cityLabel: null };
+      Object.assign(updateData, position);
+      Object.assign(createData, position);
+    }
 
     const profile = await getDb().profile.upsert({
       where: { userId: session.user.id },

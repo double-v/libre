@@ -163,6 +163,22 @@ describe('POST /api/geoloc/update — privacy (issue #153)', () => {
     expect(fakeDb.profile.upsert).toHaveBeenCalledTimes(1);
   });
 
+  it('une position acceptée marque la source « device » et efface la ville (#402)', async () => {
+    fakeDb.profile.findUnique.mockResolvedValue({
+      invisibleMode: false,
+      lastGeolocAt: null,
+      lastKnownLat: 48.94,
+      lastKnownLng: 2.36,
+      positionSource: 'city',
+      cityLabel: 'Saint-Denis (93)',
+    });
+
+    await POST(makeRequest({ latitude: 45.76, longitude: 4.83 }));
+    const { update, create } = fakeDb.profile.upsert.mock.calls[0][0];
+    expect(update).toMatchObject({ positionSource: 'device', cityLabel: null });
+    expect(create).toMatchObject({ positionSource: 'device', cityLabel: null });
+  });
+
   it('does not store geoloc when invisibleMode is true', async () => {
     fakeDb.profile.findUnique.mockResolvedValue({
       invisibleMode: true,

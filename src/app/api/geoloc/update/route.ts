@@ -60,12 +60,16 @@ export async function POST(request: Request) {
 
     await getDb().profile.upsert({
       where: { userId },
-      update: { lastKnownLat: safeLat, lastKnownLng: safeLng, lastGeolocAt: new Date() },
+      // « La dernière source qui parle » (spec 004) : l'appareil reprend la
+      // main sur une ville saisie à la main, et le libellé privé s'efface.
+      update: { lastKnownLat: safeLat, lastKnownLng: safeLng, lastGeolocAt: new Date(), positionSource: 'device', cityLabel: null },
       create: {
         userId,
         lastKnownLat: safeLat,
         lastKnownLng: safeLng,
         lastGeolocAt: new Date(),
+        positionSource: 'device',
+        cityLabel: null,
       },
     });
 
