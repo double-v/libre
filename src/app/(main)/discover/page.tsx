@@ -8,7 +8,7 @@ import GridFillerCards from '@/components/GridFillerCards';
 import CrossingsView from '@/components/CrossingsView';
 import Button from '@/components/ui/Button';
 import SiteShell from '@/components/ui/SiteShell';
-import { classifyGeolocError, geolocFailureMessage, geolocUpdateMessage } from '@/lib/geoloc-client';
+import { classifyGeolocError, fuzzedPosition, geolocFailureMessage, geolocUpdateMessage } from '@/lib/geoloc-client';
 
 // Onglet unique de découverte : un seul écran, trois façons de rencontrer.
 // « Pour toi » = feed algorithmique, « À proximité » = rayon géoloc,
@@ -226,10 +226,7 @@ export default function DiscoverPage() {
           const res = await fetch('/api/geoloc/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-            }),
+            body: JSON.stringify(fuzzedPosition(position.coords)),
           });
           if (!res.ok) throw new Error();
           // Un 200 peut ne rien avoir enregistré (mode invisible) : le dire,
