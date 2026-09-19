@@ -46,8 +46,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ throttled: true, invisible: true });
     }
 
-    // Throttle: don't update geoloc more than once per 10 minutes (#153)
-    const lastGeolocAt = existingProfile?.lastGeolocAt ?? existingProfile?.updatedAt;
+    // Throttle: don't update geoloc more than once per 10 minutes (#153).
+    // Uniquement sur lastGeolocAt : retomber sur updatedAt jetait en silence
+    // la toute première position d'un profil édité < 10 min avant (onboarding,
+    // filtres de Découvrir), avec un 200 que le client ne distinguait pas (#400).
+    const lastGeolocAt = existingProfile?.lastGeolocAt;
     if (lastGeolocAt) {
       const sinceLastUpdate = Date.now() - new Date(lastGeolocAt).getTime();
       if (sinceLastUpdate < 10 * 60 * 1000) {
