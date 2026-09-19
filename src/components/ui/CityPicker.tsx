@@ -149,7 +149,8 @@ export default function CityPicker({
     <div className="relative">
       <Input
         label={label}
-        hint={message ? undefined : hint}
+        // La liste se pose sous le champ : l'aide s'efface le temps du choix.
+        hint={message || open ? undefined : hint}
         placeholder={placeholder}
         value={query}
         onChange={(e) => onChange(e.target.value)}
@@ -199,12 +200,12 @@ export default function CityPicker({
         </ul>
       )}
       {message && (
-        <p
+        <div
           role="status"
           className="mt-1.5 rounded-control border border-dashed border-hairline-strong p-3 text-xs text-muted"
         >
           {message}
-        </p>
+        </div>
       )}
     </div>
   );

@@ -106,7 +106,7 @@ export default function ProfilePositionCard({
     <ProfileSection sectionId="position" title={POSITION_COPY.title} surface="blush" complete={source !== null}>
       <p className="mt-1 text-xs text-muted">{POSITION_COPY.hint}</p>
 
-      <div className="mt-3 flex items-start gap-3">
+      <div className="panel-flush mt-3 flex items-start gap-3">
         <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full border border-hairline bg-surface text-coral dark:text-coral-light">
           <PinIcon filled={source !== null && !invisibleMode} />
         </span>
