@@ -101,6 +101,12 @@ model Profile {
   lastKnownLat          Float     @default(0) @map("last_known_lat")
   lastKnownLng          Float     @default(0) @map("last_known_lng")
   lastGeolocAt          DateTime? @map("last_geoloc_at")
+  // Repli « ville saisie à la main » (#402). Privés : lus par la membre seule,
+  // jamais sélectionnés dans une réponse destinée à autrui (garde
+  // `city-label-never-leaks.test.ts`). `positionSource` : 'device' | 'city' |
+  // null ; un profil d'avant la feature avec une position se lit 'device'.
+  positionSource        String?   @map("position_source")
+  cityLabel             String?   @map("city_label")
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 

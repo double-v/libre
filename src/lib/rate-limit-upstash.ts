@@ -187,6 +187,9 @@ export const limits: Record<string, RateLimitPreset> = {
   auth: { limit: 20, windowMs: 60_000 },
   message: { limit: 30, windowMs: 60_000 },
   geoloc: { limit: 12, windowMs: 60_000 },
+  // Propositions de villes (#402) : une frappe débouncée à 300 ms, jamais
+  // plus d'une trentaine de requêtes par minute pour une saisie humaine.
+  cities: { limit: 30, windowMs: 60_000 },
   discover: { limit: 30, windowMs: 60_000 },
   like: { limit: 50, windowMs: 86_400_000 },
   report: { limit: 5, windowMs: 3_600_000 },
