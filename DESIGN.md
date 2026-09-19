@@ -583,6 +583,32 @@ se décide en #347, sur pixels — pas ici.
 | text-area | white | 1px gray-300 | md | auto | Bio, feedback |
 | select | white | 1px gray-300 | md | 36px | Gender, dropdowns |
 
+### CityPicker — ville saisie à la main (spec 004)
+
+Champ `Input` (label « Ta ville » / « Indique ta ville », 44 px, focus ring
+coral) + liste `role="listbox"` en `bg-surface` / `border-hairline` /
+`shadow-pop` / `rounded-control`, une option par ligne (≥ 44 px), **label à
+gauche, qualificatif à droite en `text-xs text-muted`** : département pour la
+France (« 93, Seine-Saint-Denis »), « région, pays » ailleurs. L'option active
+est en `bg-sunken`. Clavier : ↑ ↓ ⏎ ⎋. Spinner dans le slot `trailingIcon`,
+`motion-reduce:animate-none`.
+
+Règles de copie : jamais de choix silencieux entre homonymes ; « Aucune ville
+ne correspond — essaie avec le code postal ou le pays » ; « Le service de
+villes ne répond pas. Réessaie dans un instant ». Les messages d'état sont un
+bloc `border-dashed border-hairline-strong` sous le champ (`role="status"`).
+
+**Carte « Ta position »** (`ProfilePositionCard`, section profil en surface
+`blush`) : pastille ronde `bg-surface border-hairline text-coral` avec pin
+(pleine = position connue, vide = aucune / invisible), titre = source courante
+(« Ta ville : X » / « Position de ton appareil » / « Aucune position »),
+sous-titre explicatif, actions `secondary sm` (« Changer de ville » /
+« Indiquer une ville à la place ») et `ghost sm` (« Retirer », ville seulement).
+Sur Découvrir, l'invite suit le message d'échec géoloc : séparateur « ou »
+(`text-xs uppercase tracking-wider text-muted`, filets `bg-hairline`) puis le
+`CityPicker` — second choix, jamais au-dessus du bouton « Activer ma
+géolocalisation ».
+
 ### Tags & Badges
 
 | Component | Background | Text | Radius | Use |
@@ -767,6 +793,7 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 | `Toast` | enter, visible, exit (auto-dismiss) | success, info, error | Confirmations fugaces d'action (signalement, check-in validé, sauvegarde) |
 | `ThemeMenu` | closed, open, focus-trap | popover (desktop), bottom-sheet (mobile) | `LobbyThemeSwitcher`, radios d'apparence en double |
 | `ThemeToggle` | light, dark, auto | icon-button (cycle Mode) | boutons Mode ad hoc dans les headers |
+| `CityPicker` | idle, typing (< 3 lettres, sans recherche), loading, open (listbox, option active), empty, unavailable, rate-limited | — | Toute saisie de ville (profil, invite Découvrir) — spec 004 |
 | `SiteShell` | — | content, reading, app | Les `mx-auto max-w-* px-*` ad hoc dispersés (448/512/672/768/1080) |
 | `SiteNav` | guest, connecté | guest, authed (× width) | `LobbyNav`, `TopNav`, nav ad hoc de `/manifesto` |
 | `HeartMark` | — | glyphe seul (taille via className/props) | Les deux glyphes de marque en double (cœur lobby + cœur-soleil à rayons) |
