@@ -10,6 +10,7 @@ import {
   geolocFailureMessage,
   geolocUpdateMessage,
   fuzzedPosition,
+  geolocFallbackPrompt,
 } from '@/lib/geoloc-client';
 
 describe('classifyGeolocError', () => {
@@ -76,5 +77,17 @@ describe('fuzzedPosition (#401)', () => {
       const d = haversineDistance(raw.latitude, raw.longitude, sent.latitude, sent.longitude);
       expect(d).toBeLessThanOrEqual(100.5);
     }
+  });
+});
+
+describe('geolocFallbackPrompt (#406, spec 004)', () => {
+  it('propose la ville sur les quatre échecs de géolocalisation', () => {
+    for (const kind of ['denied', 'unavailable', 'timeout', 'unsupported'] as const) {
+      expect(geolocFallbackPrompt(kind)).toMatch(/ville/i);
+    }
+  });
+
+  it('ne propose rien en mode invisible : la ville n’y changerait rien', () => {
+    expect(geolocFallbackPrompt('invisible')).toBeNull();
   });
 });

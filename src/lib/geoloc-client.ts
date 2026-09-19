@@ -67,3 +67,14 @@ export function fuzzedPosition(coords: { latitude: number; longitude: number }):
   const { lat, lng } = fuzzLocation(coords.latitude, coords.longitude);
   return { latitude: lat, longitude: lng };
 }
+
+/**
+ * Repli « ville » sur Découvrir (#406, spec 004) : chaque échec de
+ * géolocalisation est suivi d'une proposition de saisir sa ville, au moment
+ * exact où le besoin apparaît. En mode invisible, la ville n'aiderait pas
+ * (la position n'est pas exploitée) : on ne la propose pas.
+ */
+export function geolocFallbackPrompt(kind: GeolocFailure | 'invisible'): string | null {
+  if (kind === 'invisible') return null;
+  return 'Ou indique ta ville';
+}
