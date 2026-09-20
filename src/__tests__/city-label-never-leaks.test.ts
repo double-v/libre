@@ -94,9 +94,11 @@ function profileOf(userId: string, user: Record<string, unknown>) {
     lastKnownLat: 48.86,
     lastKnownLng: 2.35,
     lastGeolocAt: new Date(),
-    // Les deux champs privés, sur TOUS les profils.
+    // Les champs privés, sur TOUS les profils : ville (#402) et avancement du
+    // parcours d'accueil (spec 005).
     positionSource: 'city',
     cityLabel: SENTINEL,
+    onboardingStep: 1,
     user,
   };
 }
@@ -164,7 +166,7 @@ async function bodyText(res: Response): Promise<string> {
   return res.text();
 }
 
-describe('cityLabel / positionSource ne sortent jamais vers autrui (#402)', () => {
+describe('cityLabel / positionSource / onboardingStep ne sortent jamais vers autrui (#402, spec 005)', () => {
   it('GET /api/users/[id]', async () => {
     const { GET } = await import('@/app/api/users/[id]/route');
     const text = await bodyText(
@@ -173,6 +175,7 @@ describe('cityLabel / positionSource ne sortent jamais vers autrui (#402)', () =
     expect(text).toContain('Camille');
     expect(text).not.toContain(SENTINEL);
     expect(text).not.toContain('positionSource');
+    expect(text).not.toContain('onboardingStep');
   });
 
   it('GET /api/discover (tab all, nearby, et filtre de distance)', async () => {
@@ -182,6 +185,7 @@ describe('cityLabel / positionSource ne sortent jamais vers autrui (#402)', () =
       expect(text, q).toContain('Camille');
       expect(text, q).not.toContain(SENTINEL);
       expect(text, q).not.toContain('positionSource');
+      expect(text, q).not.toContain('onboardingStep');
     }
   });
 
@@ -191,6 +195,7 @@ describe('cityLabel / positionSource ne sortent jamais vers autrui (#402)', () =
     expect(text).toContain('Camille');
     expect(text).not.toContain(SENTINEL);
     expect(text).not.toContain('positionSource');
+    expect(text).not.toContain('onboardingStep');
   });
 
   it('GET /api/geoloc/crossings', async () => {
@@ -199,6 +204,7 @@ describe('cityLabel / positionSource ne sortent jamais vers autrui (#402)', () =
     expect(text).toContain('Camille');
     expect(text).not.toContain(SENTINEL);
     expect(text).not.toContain('positionSource');
+    expect(text).not.toContain('onboardingStep');
   });
 
   it('GET /api/matches', async () => {
@@ -207,5 +213,6 @@ describe('cityLabel / positionSource ne sortent jamais vers autrui (#402)', () =
     expect(text).toContain('Camille');
     expect(text).not.toContain(SENTINEL);
     expect(text).not.toContain('positionSource');
+    expect(text).not.toContain('onboardingStep');
   });
 });

@@ -92,6 +92,11 @@ model Profile {
   searchOrientations    String[]  @default([])
   searchInterests       String[]  @default([])
   searchRelationshipTypes String[] @default([])
+  // Parcours d'accueil (spec 005) : prochaine étape à montrer — 0 photo,
+  // 1 ce que je cherche, 2 où, 3 terminé ou entièrement passé. Monotone :
+  // le serveur garde le max. Privé : lu par la membre seule, jamais sérialisé
+  // vers autrui (garde `onboarding-step-never-leaks.test.ts`).
+  onboardingStep        Int       @default(0)
   // Filtre de distance du feed (#327). NULL = « partout » : volontairement
   // distinct de `maxDistanceKm` (rayon historique du segment « À proximité »,
   // qui vaut 50 chez tout le monde par défaut). Réutiliser `maxDistanceKm`
