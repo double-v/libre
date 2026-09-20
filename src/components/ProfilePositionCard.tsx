@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { PinIcon as SectionPinIcon } from '@/components/ui/SectionIcons';
 import ProfileSection from '@/components/ProfileSection';
 import Button from '@/components/ui/Button';
 import CityPicker from '@/components/ui/CityPicker';
@@ -103,7 +104,16 @@ export default function ProfilePositionCard({
         : POSITION_COPY.noneSub;
 
   return (
-    <ProfileSection sectionId="position" title={POSITION_COPY.title} surface="blush" complete={source !== null}>
+    <ProfileSection
+      sectionId="position"
+      title={POSITION_COPY.title}
+      icon={<SectionPinIcon className="h-5 w-5" />}
+      surface="blush"
+      complete={source !== null}
+      // #413 : sans position, la section dit qu'elle attend quelque chose.
+      status={source === null ? 'todo' : undefined}
+      todoLabel="À indiquer"
+    >
       <p className="mt-1 text-xs text-muted">{POSITION_COPY.hint}</p>
 
       <div className="panel-flush mt-3 flex items-start gap-3">

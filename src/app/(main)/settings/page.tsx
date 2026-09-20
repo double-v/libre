@@ -242,7 +242,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Delete account */}
-        <section className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20 sm:p-5">
+        <section id="zone-dangereuse" className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20 sm:p-5">
           <h2 className="mb-2 text-lg font-semibold text-red-700 dark:text-red-400">
             Zone dangereuse
           </h2>

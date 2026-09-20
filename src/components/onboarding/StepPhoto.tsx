@@ -1,9 +1,9 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import OnboardingShell from './OnboardingShell';
-import Button from '@/components/ui/Button';
+import PhotoDropZone from '@/components/PhotoDropZone';
 import { photoUrl } from '@/lib/photos';
 import { uploadPhoto, type UploadPhotoResult } from '@/lib/photos-client';
 
@@ -20,7 +20,6 @@ export interface StepPhotoProps {
 }
 
 export default function StepPhoto({ displayName, onDone, upload = uploadPhoto }: StepPhotoProps) {
-  const inputId = useId();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [added, setAdded] = useState<string | null>(null);
@@ -57,36 +56,7 @@ export default function StepPhoto({ displayName, onDone, upload = uploadPhoto }:
           </span>
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-3.5 rounded-card border border-dashed border-coral-light bg-sunken px-4 py-7 text-center">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-surface text-4xl font-semibold text-coral-dark shadow-soft dark:text-coral-light">
-            {initial}
-          </div>
-          <p className="text-sm leading-snug text-muted">
-            JPG, PNG ou WebP · 10 Mo max
-            <br />
-            Visible par les membres, jamais en dehors de Libre.
-          </p>
-          <input
-            id={inputId}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="sr-only"
-            aria-label="Ajouter une photo"
-            disabled={busy}
-            onChange={(e) => {
-              void onFile(e.target.files?.[0]);
-              e.target.value = '';
-            }}
-          />
-          <Button type="button" variant="primary" loading={busy} onClick={() => document.getElementById(inputId)?.click()}>
-            {error ? 'Réessayer' : 'Ajouter une photo'}
-          </Button>
-          {error && (
-            <p role="alert" className="text-sm text-error">
-              {error}
-            </p>
-          )}
-        </div>
+        <PhotoDropZone initial={initial} busy={busy} error={error} onFile={(f) => void onFile(f)} />
       )}
     </OnboardingShell>
   );

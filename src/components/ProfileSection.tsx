@@ -2,11 +2,25 @@
 
 import { useState, useEffect } from 'react';
 
+export type SectionStatus = 'todo' | 'set' | 'optional';
+
 interface ProfileSectionProps {
   title: string;
+  /** Pictogramme du titre (#413) : lire la page d'un coup d'œil. */
+  icon?: React.ReactNode;
+  /**
+   * Badge d'état (#413) : `todo` (coral, « À compléter »), `set` (« Réglé »),
+   * `optional` (« Facultatif »). Absent = pas de badge. `todo` teinte aussi la
+   * bordure : ce qui manque se voit sans lire.
+   */
+  status?: SectionStatus;
+  /** Libellé du badge `todo`, quand « À compléter » ne convient pas. */
+  todoLabel?: string;
+  /** Une ligne montrée quand la section est repliée : ce qui est réglé, sans ouvrir. */
+  summary?: React.ReactNode;
   onEdit?: () => void;
   editing?: boolean;
-  surface?: 'white' | 'blush' | 'sand';
+  surface?: 'white' | 'blush' | 'sand' | 'danger';
   complete?: boolean;
   defaultOpen?: boolean;
   /**
@@ -22,6 +36,13 @@ const surfaceClasses: Record<string, string> = {
   white: 'bg-surface',
   blush: 'bg-blush dark:bg-coral/10',
   sand: 'bg-sand dark:bg-coral-dark/20',
+  danger: 'bg-surface border-error/30',
+};
+
+const STATUS_LABELS: Record<SectionStatus, string> = {
+  todo: 'À compléter',
+  set: 'Réglé',
+  optional: 'Facultatif',
 };
 
 const STORAGE_PREFIX = 'libre-profile-section-';
@@ -50,6 +71,10 @@ function writePersisted(sectionId: string, open: boolean): void {
 
 export default function ProfileSection({
   title,
+  icon,
+  status,
+  todoLabel,
+  summary,
   onEdit,
   editing,
   surface = 'white',
@@ -89,20 +114,33 @@ export default function ProfileSection({
     });
   };
 
+  const contentId = `profile-section-${sectionId ?? title}-content`;
+
   return (
     <section
-      className={`${surfaceClasses[surface]} rounded-xl border border-hairline p-4 sm:p-5`}
+      // L'ancre porte sur la section, pas sur son contenu : un lien
+      // `/profile#profile-section-photos` doit arriver même repliée.
+      id={`profile-section-${sectionId ?? title}`}
+      data-status={status}
+      className={`${surfaceClasses[surface]} rounded-xl border p-4 sm:p-5 ${
+        status === 'todo' ? 'border-coral/45' : surface === 'danger' ? '' : 'border-hairline'
+      }`}
     >
       <div className="flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={toggle}
           aria-expanded={isOpen}
-          aria-controls={`profile-section-${sectionId ?? title}`}
-          className="flex flex-1 items-center gap-2 rounded text-left transition-colors hover:text-coral focus:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-1 disabled:cursor-default"
+          aria-controls={contentId}
+          className="flex min-w-0 flex-1 items-center gap-2 rounded text-left transition-colors hover:text-coral focus:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-1 disabled:cursor-default"
           disabled={forceOpen}
         >
-          <h3 className="text-lg font-semibold text-content">
+          {icon && (
+            <span className={`h-5 w-5 shrink-0 ${surface === 'danger' ? 'text-error' : 'text-coral'}`}>
+              {icon}
+            </span>
+          )}
+          <h3 className="min-w-0 truncate text-lg font-semibold text-content">
             {title}
           </h3>
           {complete && (
@@ -123,6 +161,16 @@ export default function ProfileSection({
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
+            </span>
+          )}
+          {status && (
+            <span
+              data-testid="section-status"
+              className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                status === 'todo' ? 'bg-coral text-white' : 'bg-fill-subtle text-muted'
+              }`}
+            >
+              {status === 'todo' && todoLabel ? todoLabel : STATUS_LABELS[status]}
             </span>
           )}
           {!forceOpen && (
@@ -161,8 +209,11 @@ export default function ProfileSection({
           </button>
         )}
       </div>
+      {!isOpen && summary && (
+        <p className="mt-1.5 text-[13px] text-muted">{summary}</p>
+      )}
       {isOpen && (
-        <div id={`profile-section-${sectionId ?? title}`}>
+        <div id={contentId}>
           {children}
         </div>
       )}
