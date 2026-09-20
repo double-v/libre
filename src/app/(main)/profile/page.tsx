@@ -9,7 +9,6 @@ import TagButton from '@/components/TagButton';
 import TagSelector from '@/components/TagSelector';
 import PrivacyTip from '@/components/PrivacyTip';
 import { SENSITIVITY_LABELS, SENSITIVITY_THRESHOLDS, THRESHOLD_LABELS } from '@/lib/photo-sensitivity';
-import ProfilePhotoHero from '@/components/ProfilePhotoHero';
 import ProfileGlance from '@/components/ProfileGlance';
 import PhotoDropZone from '@/components/PhotoDropZone';
 import { CameraIcon, HeartIcon, LinesIcon, IdCardIcon, SparkIcon, LoupeIcon, EyeIcon, EyeOffIcon, LinkIcon, ShieldIcon, WarnIcon } from '@/components/ui/SectionIcons';
@@ -144,6 +143,13 @@ export default function ProfilePage() {
     // de l'effet (react-hooks/set-state-in-effect, cf. #179/#193).
     void (async () => { await fetchProfile(); })();
   }, [fetchProfile]);
+
+  useEffect(() => {
+    if (!showPreview) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowPreview(false); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [showPreview]);
 
   useEffect(() => {
     // Date.now() dans une IIFE async → hors du corps synchrone de l'effet
@@ -355,7 +361,6 @@ export default function ProfilePage() {
           aria-label="Ton profil vu par les autres"
           className="fixed inset-0 z-50 overflow-y-auto bg-ink/60 p-4 backdrop-blur-sm"
           onClick={() => setShowPreview(false)}
-          onKeyDown={(e) => { if (e.key === 'Escape') setShowPreview(false); }}
         >
           <div className="mx-auto max-w-lg" onClick={(e) => e.stopPropagation()}>
             <div className="mb-2 flex justify-end">
@@ -503,7 +508,28 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="mt-2 space-y-2">
-                <ProfilePhotoHero photos={profile.photos} onAddClick={() => startEdit('photos')} />
+                {/* Grille de vignettes (proto #413) : la première est la
+                    principale, une case « + Ajouter » tant qu'il reste de la
+                    place. Le grand hero vivait ici et faisait 900 px en desktop. */}
+                <div className="grid grid-cols-3 gap-2" aria-label="Mes photos">
+                  {profile.photos.map((key, i) => (
+                    <div key={key} className="relative aspect-[4/5] overflow-hidden rounded-lg bg-fill-subtle">
+                      <Image src={photoUrl(key)} alt={i === 0 ? 'Photo principale' : `Photo ${i + 1}`} fill sizes="240px" className="object-cover" unoptimized />
+                      {i === 0 && (
+                        <span className="absolute bottom-1.5 left-1.5 rounded-full bg-ink/60 px-2 py-0.5 text-[10px] font-semibold text-white">Principale</span>
+                      )}
+                    </div>
+                  ))}
+                  {profile.photos.length < 6 && (
+                    <button
+                      type="button"
+                      onClick={() => startEdit('photos')}
+                      className="flex aspect-[4/5] items-center justify-center rounded-lg border border-dashed border-coral-light bg-sunken text-xs font-medium text-coral hover:border-coral"
+                    >
+                      + Ajouter
+                    </button>
+                  )}
+                </div>
                 <PrivacyTip tip="La première est ta photo principale. Évite les détails identifiables (lieux, plaques, etc.)." />
               </div>
             )}

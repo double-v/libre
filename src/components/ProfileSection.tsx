@@ -86,7 +86,9 @@ export default function ProfileSection({
   // When editing, the user MUST see the form. We force open and disable the toggle.
   // Sections marked complete are also always open — collapsing them would hide
   // good content and re-open them later for no reason, so we lock them open.
-  const forceOpen = !!editing || complete;
+  // #413 : une section « À compléter » reste ouverte aussi — ce qui manque
+  // doit se voir, et la tuile du haut y mène.
+  const forceOpen = !!editing || complete || status === 'todo';
 
   // Initial value: persisted > defaultOpen. We seed with defaultOpen and
   // let the effect below read the storage value on mount to avoid SSR
@@ -140,7 +142,7 @@ export default function ProfileSection({
               {icon}
             </span>
           )}
-          <h3 className="min-w-0 truncate text-lg font-semibold text-content">
+          <h3 className="min-w-0 text-base font-semibold leading-tight text-content sm:text-lg">
             {title}
           </h3>
           {complete && (

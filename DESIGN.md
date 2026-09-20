@@ -1117,6 +1117,35 @@ Prototype validé le 2026-09-20 :
 - **Jamais** : de compteur, de mention des autres membres, d'étape bloquante,
   de nouvelle DA.
 
+### Page profil — lire d'un coup d'œil (#413)
+
+Prototype validé le 2026-09-20 :
+`http://192.168.1.116:8101/getlibre/feat-413-profil-invitant/profil-v2.html`.
+Largeur `reading` (720 px). Rien de la page n'a été retiré ; tout est
+réordonné pour qu'on comprenne en une seconde ce qu'il reste à faire.
+
+- **Tuiles « Ce qui permet d'être choisi·e »** (`ProfileGlance`) : trois
+  tuiles (photo · ce que je cherche · où je suis) = les trois critères de
+  `deriveMissing`. **Coral = à faire** (`border-coral bg-sunken`), **vert ✓ =
+  fait**. Chacune est un lien vers l'ancre de sa section. Aucun chiffre.
+- **Ordre par impact, en trois groupes** : *Ce que les autres voient*
+  (Photos, Ce que je cherche, Bio, Identité, Intérêts) · *Où et qui je
+  cherche* (Position, Préférences de recherche) · *Intimité et
+  confidentialité* (Pratiques, Photos sensibles, Liens, Conseils, Supprimer).
+- **`ProfileSection`** porte un **picto** (`SectionIcons`, trait 1.5 comme la
+  tab bar), un **badge d'état** (`todo` coral « À compléter » — bordure coral,
+  section forcée ouverte ; `set` « Réglé » ; `optional` « Facultatif ») et un
+  **résumé** d'une ligne quand elle est repliée (« Aucune pratique · visibles
+  par mes matches seulement »). L'ancre `#profile-section-<id>` est sur la
+  section, pas sur son contenu : un lien y arrive même repliée.
+- **Sans photo** : la section Photos ouvre sur `PhotoDropZone` — la même
+  invitation que le parcours d'accueil. **Avec photo** : en-tête compact
+  (rond 64 px, nom, ville) et grille de vignettes 3 colonnes (« Principale »,
+  « + Ajouter »). L'aperçu public s'ouvre à la demande (« Voir comme les
+  autres », dialogue, Échap ferme).
+- **Jamais** : de pourcentage ou de « 5/6 », d'aperçu vide en tête de page,
+  de section de réglage avant la photo.
+
 ### Carte de relance (`src/components/ProfileNudgeCard.tsx`) — spec 005
 
 Première cellule de la grille « Pour toi » quand il manque au profil une
