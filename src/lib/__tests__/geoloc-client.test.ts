@@ -3,11 +3,13 @@
  * vérité. Avant, tout error.code affichait « refusée » et un 200 {invisible}
  * ne disait rien du tout.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { haversineDistance } from '@/lib/geoloc';
 import {
   classifyGeolocError,
   geolocFailureMessage,
   geolocUpdateMessage,
+  fuzzedPosition,
 } from '@/lib/geoloc-client';
 
 describe('classifyGeolocError', () => {
@@ -44,5 +46,35 @@ describe('geolocUpdateMessage', () => {
   it('reste muet quand la position est enregistrée ou déjà fraîche', () => {
     expect(geolocUpdateMessage({ crossings: [] })).toBeNull();
     expect(geolocUpdateMessage({ throttled: true })).toBeNull();
+  });
+});
+
+describe('fuzzedPosition (#401)', () => {
+  // Promesse de GeolocPromiseCard : « ta position est brouillée sur ton
+  // appareil avant d'être envoyée ». Le serveur ne doit jamais voir la
+  // position brute, même à 2 décimales près il la reçoit d'abord en clair.
+  const raw = { latitude: 48.8566123, longitude: 2.3522154 };
+
+  it("envoie autre chose que les coordonnées brutes", () => {
+    // Octets fixés : angle 45° et distance max → les deux axes bougent, déterministe.
+    const spy = vi.spyOn(globalThis.crypto, 'getRandomValues').mockImplementation((arr) => {
+      (arr as Uint8Array).set([32, 255]);
+      return arr;
+    });
+    try {
+      const sent = fuzzedPosition(raw);
+      expect(sent.latitude).not.toBe(raw.latitude);
+      expect(sent.longitude).not.toBe(raw.longitude);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('reste dans un rayon de 100 m (sans effet sur les croisements à 500 m)', () => {
+    for (let i = 0; i < 50; i++) {
+      const sent = fuzzedPosition(raw);
+      const d = haversineDistance(raw.latitude, raw.longitude, sent.latitude, sent.longitude);
+      expect(d).toBeLessThanOrEqual(100.5);
+    }
   });
 });

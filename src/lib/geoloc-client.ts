@@ -6,6 +6,8 @@
  * `TIMEOUT` présenté comme « refusée » envoie vérifier un réglage déjà bon.
  */
 
+import { fuzzLocation } from '@/lib/geoloc';
+
 export type GeolocFailure = 'denied' | 'unavailable' | 'timeout' | 'unsupported';
 
 // Codes de GeolocationPositionError (constantes de la spec, stables).
@@ -50,4 +52,18 @@ export function geolocUpdateMessage(body: GeolocUpdateBody): string | null {
     return 'Ton mode invisible est activé : ta position n’est pas enregistrée. Désactive-le dans tes paramètres pour voir les célibataires à proximité.';
   }
   return null;
+}
+
+/**
+ * Charge utile envoyée à `/api/geoloc/update` : jamais la position brute.
+ * `GeolocPromiseCard` promet un brouillage sur l'appareil avant envoi ;
+ * `fuzzLocation` existait mais n'était appelée nulle part (#401). Rayon 100 m :
+ * invisible pour les croisements (500 m) et l'arrondi serveur (~1 km).
+ */
+export function fuzzedPosition(coords: { latitude: number; longitude: number }): {
+  latitude: number;
+  longitude: number;
+} {
+  const { lat, lng } = fuzzLocation(coords.latitude, coords.longitude);
+  return { latitude: lat, longitude: lng };
 }
