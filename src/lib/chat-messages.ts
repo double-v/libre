@@ -80,6 +80,8 @@ export interface AvertissementChiffrement {
   /** `warning` quand quelque chose est cassé, `info` quand c'est juste en cours. */
   ton: 'warning' | 'info';
   texte: string;
+  /** Une porte de sortie, seulement quand elle répare quelque chose (#340). */
+  action?: { href: string; label: string };
 }
 
 export function avertissementChiffrement(ctx: {
@@ -94,6 +96,9 @@ export function avertissementChiffrement(ctx: {
       texte:
         'Les messages de ce fil ne peuvent pas être déchiffrés sur cet appareil. Si tu écrivais avant depuis un autre téléphone ou navigateur, reconnecte-toi depuis celui-là : ils y sont toujours lisibles. Sinon, ils sont perdus pour toi — la personne en face, elle, continue de les voir.' +
         enClair,
+      // Sans appareil d'origine, la seule réparation est vers l'avant : une
+      // nouvelle clé, avec ses conséquences dites en face (Paramètres).
+      action: { href: '/settings#cle-messagerie', label: 'Réinitialiser ma clé de messagerie' },
     };
   }
   if (ctx.etatCle === 'indisponible') {

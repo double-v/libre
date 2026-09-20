@@ -6,6 +6,7 @@ import { logout } from '@/lib/logout';
 import { purgerSecretsLocaux } from '@/lib/session-cleanup';
 import { toast } from '@/lib/toast';
 import PushSettings from '@/components/PushSettings';
+import KeySettings from '@/components/KeySettings';
 import AppearanceSettings from '@/components/AppearanceSettings';
 import SiteShell from '@/components/ui/SiteShell';
 import Input from '@/components/ui/Input';
@@ -207,6 +208,9 @@ export default function SettingsPage() {
 
         {/* Notifications hors de l'app (#392) — réglage par appareil */}
         <PushSettings />
+
+        {/* Clé de messagerie (#340) — la porte de sortie d'un fil illisible */}
+        <KeySettings />
 
         {/* Verification status */}
         <section className="rounded-xl border border-hairline bg-surface p-4 sm:p-5">

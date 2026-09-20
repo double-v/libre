@@ -111,6 +111,7 @@ function userOf(id: string, name: string) {
     isBanned: false,
     lastActive: new Date(),
     userKey: null,
+    userKeyHistory: [],
   };
   user.profile = profileOf(id, user);
   return user;

@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { subscribeChannel } from '@/lib/pusher-client';
 import { UNREAD_CHANGED_EVENT } from '@/hooks/useUnread';
-import { encryptMessage, decryptMessage } from '@/lib/crypto';
+import { encryptMessage, decryptMessageAvecHistorique } from '@/lib/crypto';
 import Image from 'next/image';
 import { photoUrl } from '@/lib/photos';
 import { useEncryptedChat } from '@/hooks/useEncryptedChat';
@@ -48,6 +49,8 @@ interface ProfileData {
   id: string;
   displayName: string;
   publicKey?: string;
+  /** Clés remplacées par une réinitialisation (#340), la plus récente d'abord. */
+  previousPublicKeys?: string[];
   isVerified?: boolean;
 }
 
@@ -85,6 +88,7 @@ export default function ChatConversationPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [otherUser, setOtherUser] = useState<ConversationData['otherUser'] | null>(null);
   const [otherPublicKey, setOtherPublicKey] = useState<string | null>(null);
+  const [otherPreviousKeys, setOtherPreviousKeys] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [inputText, setInputText] = useState('');
@@ -116,12 +120,15 @@ export default function ChatConversationPage() {
       if (etat === 'clair') return { texte: content, illisible: false };
       if (etat === 'illisible') return { texte: content, illisible: true };
       try {
-        return { texte: await decryptMessage(content, otherPublicKey!, privateKey!), illisible: false };
+        // Courante d'abord, puis les clés que le pair a remplacées (#340) :
+        // ce que j'ai chiffré pour son ancienne clé reste lisible chez moi.
+        const cles = [otherPublicKey!, ...otherPreviousKeys];
+        return { texte: await decryptMessageAvecHistorique(content, cles, privateKey!), illisible: false };
       } catch {
         return { texte: content, illisible: true };
       }
     },
-    [ready, privateKey, otherPublicKey],
+    [ready, privateKey, otherPublicKey, otherPreviousKeys],
   );
 
   // Decrypt a batch of messages; cache results; update localStorage
@@ -158,6 +165,7 @@ export default function ChatConversationPage() {
       if (profileRes.ok) {
         const profileData: ProfileData = await profileRes.json();
         setOtherPublicKey(profileData.publicKey ?? null);
+        setOtherPreviousKeys(profileData.previousPublicKeys ?? []);
       }
 
       // Page initiale : uniquement les ~50 plus récents (#200). On ne déchiffre
@@ -414,7 +422,14 @@ export default function ChatConversationPage() {
           ET du présent — sans clé, ce qu'on écrit maintenant part en clair. */}
       {avertissement && (
         <div className="mx-4 mt-2">
-          <Alert variant={avertissement.ton}>{avertissement.texte}</Alert>
+          <Alert variant={avertissement.ton}>
+            {avertissement.texte}
+            {avertissement.action && (
+              <Link href={avertissement.action.href} className="mt-2 block font-medium underline underline-offset-2">
+                {avertissement.action.label}
+              </Link>
+            )}
+          </Alert>
         </div>
       )}
 

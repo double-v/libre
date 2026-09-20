@@ -89,6 +89,18 @@ describe('avertissementChiffrement (#198)', () => {
     expect(a.texte).toMatch(/continue de les voir/i); // l'asymétrie est dite
   });
 
+  it('ouvre une porte vers la réinitialisation quand notre clé est perdue (#340)', () => {
+    const a = avertissementChiffrement({ etatCle: 'illisible', clePair: true })!;
+    expect(a.action).toEqual({ href: '/settings#cle-messagerie', label: expect.stringMatching(/réinitialiser/i) });
+  });
+
+  it('ne propose pas de réinitialiser quand rien n’est perdu', () => {
+    // Une panne passagère ou un pair sans clé ne se règlent pas en jetant sa
+    // propre clé : la porte n'apparaît que là où elle répare quelque chose.
+    expect(avertissementChiffrement({ etatCle: 'indisponible', clePair: true })!.action).toBeUndefined();
+    expect(avertissementChiffrement({ etatCle: 'pret', clePair: false })!.action).toBeUndefined();
+  });
+
   it('prévient aussi quand c’est le pair qui n’a pas de clé', () => {
     const a = avertissementChiffrement({ etatCle: 'pret', clePair: false })!;
     expect(a.ton).toBe('info');
