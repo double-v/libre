@@ -62,6 +62,10 @@ describe('buildPayload — rien qui identifie ou révèle (SC-006)', () => {
     reportedName: 'Noor',
     message: 'le site bug',
     url: 'https://libre.example/profile/123',
+    // Ville saisie à la main (#402) : privée, même pour la membre elle-même
+    // dans une notification qui transite par un tiers.
+    cityLabel: 'Saint-Denis (93)',
+    positionSource: 'city',
   };
   const cases = [
     ['message', buildPayload('message', { conversationId: 'c1', ...secrets })],

@@ -250,6 +250,11 @@ Règles d'exposition :
 - Whitelist champs modifiables (pas de mass assignment).
 - Headers CSP, HSTS, X-Frame-Options, Permissions-Policy.
 - Age gate 18+ à l'inscription via `birthDate` (validation côté client et serveur).
+- Ville saisie à la main (spec 004) : `Profile.positionSource` / `cityLabel` sont
+  **privés** — jamais dans une réponse lue par autrui ni dans une charge utile
+  push. Garde : `src/__tests__/city-label-never-leaks.test.ts` (base factice qui
+  honore `select`). Géocodage serveur sans clé (IGN Géoplateforme + Photon),
+  `src/lib/geocoding.ts`.
 
 ## Notifications (spec 003, #389–#393)
 

@@ -52,6 +52,10 @@ export async function GET() {
           ageMin: true,
           ageMax: true,
           invisibleMode: true,
+          // Ville saisie à la main (#402) : privée pour les autres, mais c'est
+          // à la membre — donc dans son export (art. 20).
+          positionSource: true,
+          cityLabel: true,
           createdAt: true,
           updatedAt: true,
         },

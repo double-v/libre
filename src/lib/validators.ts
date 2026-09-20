@@ -69,6 +69,16 @@ export const profileUpdateSchema = z.object({
   // `null` est une valeur métier ici (« partout »), pas une absence : il doit
   // traverser la validation pour pouvoir effacer un filtre déjà posé (#327).
   searchDistanceKm: z.number().int().min(1).max(500).nullable().optional(),
+  // Ville saisie à la main (#405, spec 004) : un candidat de /api/geoloc/cities.
+  // `null` retire la ville ; absent = on n'y touche pas. Bornes du contrat
+  // specs/004-ville-manuelle/contracts/profile-city.md.
+  city: z.object({
+    label: z.string().trim().min(1).max(80),
+    qualifier: z.string().trim().max(80),
+    country: z.string().trim().min(1).max(60),
+    lat: z.number().min(-90).max(90),
+    lng: z.number().min(-180).max(180),
+  }).nullable().optional(),
 }).refine((data) => {
   if (data.ageMin !== undefined && data.ageMax !== undefined) {
     return data.ageMin <= data.ageMax;

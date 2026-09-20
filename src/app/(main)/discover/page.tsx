@@ -8,7 +8,9 @@ import GridFillerCards from '@/components/GridFillerCards';
 import CrossingsView from '@/components/CrossingsView';
 import Button from '@/components/ui/Button';
 import SiteShell from '@/components/ui/SiteShell';
-import { classifyGeolocError, fuzzedPosition, geolocFailureMessage, geolocUpdateMessage } from '@/lib/geoloc-client';
+import { classifyGeolocError, fuzzedPosition, geolocFailureMessage, geolocFallbackPrompt, geolocUpdateMessage } from '@/lib/geoloc-client';
+import CityPicker from '@/components/ui/CityPicker';
+import { defaultSaveCity } from '@/components/ProfilePositionCard';
 
 // Onglet unique de découverte : un seul écran, trois façons de rencontrer.
 // « Pour toi » = feed algorithmique, « À proximité » = rayon géoloc,
@@ -74,6 +76,16 @@ export default function DiscoverPage() {
   const [nearbyReason, setNearbyReason] = useState<NearbyReason | null>(null);
   const [geoRequesting, setGeoRequesting] = useState(false);
   const [geoError, setGeoError] = useState('');
+  // Repli « ville » (spec 004, #406) : libellé de l'invite, ou null tant que la
+  // géoloc n'a pas échoué. Un appareil sans géolocalisation l'affiche d'emblée.
+  const [geoFallback, setGeoFallback] = useState<string | null>(null);
+  useEffect(() => {
+    void (async () => {
+      if (typeof navigator !== 'undefined' && !navigator.geolocation) {
+        setGeoFallback(geolocFallbackPrompt('unsupported'));
+      }
+    })();
+  }, []);
   const [activeFeedKey, setActiveFeedKey] = useState('');
   const fetchIdRef = useRef(0);
   const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -217,6 +229,7 @@ export default function DiscoverPage() {
     setGeoError('');
     if (!navigator.geolocation) {
       setGeoError(geolocFailureMessage('unsupported'));
+      setGeoFallback(geolocFallbackPrompt('unsupported'));
       return;
     }
     setGeoRequesting(true);
@@ -235,8 +248,10 @@ export default function DiscoverPage() {
           const message = geolocUpdateMessage(await res.json());
           if (message) {
             setGeoError(message);
+            setGeoFallback(geolocFallbackPrompt('invisible'));
             return;
           }
+          setGeoFallback(null);
           await fetchPage(true);
         } catch {
           setGeoError('Impossible d\'enregistrer ta position, réessaie plus tard.');
@@ -245,12 +260,36 @@ export default function DiscoverPage() {
         }
       },
       (error) => {
-        setGeoError(geolocFailureMessage(classifyGeolocError(error)));
+        const kind = classifyGeolocError(error);
+        setGeoError(geolocFailureMessage(kind));
+        setGeoFallback(geolocFallbackPrompt(kind));
         setGeoRequesting(false);
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
     );
   }
+
+  // Ville choisie depuis l'invite : même écriture que le profil, puis le feed
+  // repart avec la distance. L'erreur reste dans le bloc géoloc, comme les autres.
+  async function handleCityFallback(city: Parameters<typeof defaultSaveCity>[0]) {
+    try {
+      await defaultSaveCity(city);
+      setGeoError('');
+      setGeoFallback(null);
+      await fetchPage(true);
+    } catch {
+      setGeoError('Impossible d’enregistrer ta ville, réessaie plus tard.');
+    }
+  }
+
+  const geoFallbackBlock = geoFallback && (
+    <div className="mt-3 text-left">
+      <div className="mb-1.5 flex items-center gap-2.5 text-xs uppercase tracking-wider text-muted before:h-px before:flex-1 before:bg-hairline after:h-px after:flex-1 after:bg-hairline">
+        ou
+      </div>
+      <CityPicker label="Indique ta ville" onSelect={handleCityFallback} hint="" />
+    </div>
+  );
 
   const handleFilterChange = (newFilters: SearchFiltersValue) => {
     setFilters(newFilters);
@@ -359,6 +398,7 @@ export default function DiscoverPage() {
               {geoError}
             </p>
           )}
+          {geoFallbackBlock}
         </div>
       )}
 
@@ -395,6 +435,7 @@ export default function DiscoverPage() {
               {geoError}
             </p>
           )}
+          {geoFallbackBlock}
         </div>
       ) : nearbyReason === 'empty_feed' ? (
         <div className="animate-fade-in mx-auto max-w-reading rounded-xl border border-hairline bg-surface p-6 text-center">

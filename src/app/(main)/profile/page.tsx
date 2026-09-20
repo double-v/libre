@@ -19,6 +19,7 @@ import { toast } from '@/lib/toast';
 import Image from 'next/image';
 import { INTEREST_CATEGORIES, PRACTICE_CATEGORIES, GENDER_OPTIONS } from '@/lib/taxonomy';
 import SiteShell from '@/components/ui/SiteShell';
+import ProfilePositionCard from '@/components/ProfilePositionCard';
 
 interface ProfileData {
   userId: string;
@@ -43,6 +44,9 @@ interface ProfileData {
   practicesVisibility: string;
   photoSensitivityOptIn: string;
   invisibleMode: boolean;
+  // Ville saisie à la main (spec 004) — privés, renvoyés à la membre seule.
+  positionSource?: 'device' | 'city' | null;
+  cityLabel?: string | null;
 }
 
 const ORIENTATION_OPTIONS = ['hétéro', 'homo', 'bi', 'pan', 'ace', 'autre'];
@@ -605,6 +609,14 @@ export default function ProfilePage() {
               </div>
             )}
           </ProfileSection>
+
+          {/* Ta position — ville saisie à la main en repli de la géoloc (spec 004) */}
+          <ProfilePositionCard
+            positionSource={profile.positionSource ?? null}
+            cityLabel={profile.cityLabel ?? null}
+            invisibleMode={profile.invisibleMode}
+            onChanged={fetchProfile}
+          />
 
           {/* Préférences de recherche — même composant que /discover (#235) */}
           <ProfileSection sectionId="search" title="Préférences de recherche" surface="blush" onEdit={() => startEdit('search')} editing={editingSection === 'search'} complete>
