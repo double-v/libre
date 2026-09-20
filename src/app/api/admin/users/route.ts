@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
+import { masquerEmail } from '@/lib/masquer-email';
 
 export async function GET(request: NextRequest) {
   const adminResult = await requireAdmin();
@@ -42,8 +43,11 @@ export async function GET(request: NextRequest) {
   ]);
 
   return NextResponse.json({
-    users: users.map((u) => ({
+    // L'adresse complète ne quitte pas le serveur pour une liste (#423) ; la
+    // recherche, elle, s'est faite en base sur l'adresse entière.
+    users: users.map(({ email, ...u }) => ({
       ...u,
+      emailMasque: masquerEmail(email),
       photoCount: (u.profile?.photos as string[] | undefined)?.length ?? 0,
       profile: undefined,
     })),

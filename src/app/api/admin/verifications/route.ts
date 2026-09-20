@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
+import { masquerEmail } from '@/lib/masquer-email';
 
 export async function GET(request: NextRequest) {
   const adminResult = await requireAdmin();
@@ -17,5 +18,12 @@ export async function GET(request: NextRequest) {
     orderBy: { createdAt: 'asc' },
   });
 
-  return NextResponse.json({ verifications });
+  // Même minimisation que la liste des membres (#423) : la file de
+  // vérification est une liste, l'adresse entière n'y a pas sa place.
+  return NextResponse.json({
+    verifications: verifications.map(({ user: { email, ...user }, ...v }) => ({
+      ...v,
+      user: { ...user, emailMasque: masquerEmail(email) },
+    })),
+  });
 }

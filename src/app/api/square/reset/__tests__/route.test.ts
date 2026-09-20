@@ -16,6 +16,14 @@ vi.mock('@/lib/square/reset', () => ({
   ensureSquareFresh: (...args: unknown[]) => ensureSquareFresh(...args),
 }));
 
+// L'interrupteur (#418) est testé dans features-gardes ; ici on le tient
+// ouvert, sinon le test lit la vraie base et casse dès que l'opérateur coupe
+// La Place en prod (#423).
+vi.mock('@/lib/features-server', () => ({
+  __esModule: true,
+  gardeFeature: async () => null,
+}));
+
 const { GET } = await import('@/app/api/square/reset/route');
 
 function appel(secret?: string) {

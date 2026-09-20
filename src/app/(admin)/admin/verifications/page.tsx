@@ -8,7 +8,7 @@ interface VerificationRow {
   selfieUrl: string;
   status: string;
   createdAt: string;
-  user: { id: string; displayName: string; email: string };
+  user: { id: string; displayName: string; emailMasque: string };
 }
 
 export default function AdminVerificationsPage() {
@@ -88,7 +88,7 @@ export default function AdminVerificationsPage() {
                 <img src={v.selfieUrl} alt="Selfie de vérification" className="h-24 w-24 rounded-lg object-cover" />
                 <div className="flex-1">
                   <p className="font-medium text-content">{v.user.displayName}</p>
-                  <p className="text-sm text-muted">{v.user.email}</p>
+                  <p className="text-sm text-muted">{v.user.emailMasque}</p>
                   <p className="mt-1 text-xs text-muted">{new Date(v.createdAt).toLocaleDateString('fr-FR')}</p>
                   <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                     v.status === 'pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
