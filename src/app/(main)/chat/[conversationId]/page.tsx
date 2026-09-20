@@ -88,7 +88,13 @@ export default function ChatConversationPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [otherUser, setOtherUser] = useState<ConversationData['otherUser'] | null>(null);
   const [otherPublicKey, setOtherPublicKey] = useState<string | null>(null);
-  const [otherPreviousKeys, setOtherPreviousKeys] = useState<string[]>([]);
+  // Les clés du pair sont lues par le déchiffrement via cette ref, pas via
+  // l'état : `loadConversation` les pose puis déchiffre dans la foulée, et une
+  // fermeture sur l'état verrait encore `null`. Les passer en dépendance
+  // recréait la chaîne tryDecrypt → applyDecryption → loadConversation, donc
+  // relançait le chargement : deux fois avant (#200), à l'infini dès qu'une
+  // dépendance était un tableau neuf (#419, le fil qui clignote).
+  const clesPairRef = useRef<{ courante: string | null; anciennes: string[] }>({ courante: null, anciennes: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [inputText, setInputText] = useState('');
@@ -112,23 +118,23 @@ export default function ChatConversationPage() {
   // « on ne sait pas encore » de « on sait qu'on ne sait pas lire ».
   const tryDecrypt = useCallback(
     async (content: string): Promise<{ texte: string; illisible: boolean }> => {
+      const { courante, anciennes } = clesPairRef.current;
       const etat = etatDeLecture(content, {
         pret: ready,
         maCle: Boolean(privateKey),
-        clePair: Boolean(otherPublicKey),
+        clePair: Boolean(courante),
       });
       if (etat === 'clair') return { texte: content, illisible: false };
       if (etat === 'illisible') return { texte: content, illisible: true };
       try {
         // Courante d'abord, puis les clés que le pair a remplacées (#340) :
         // ce que j'ai chiffré pour son ancienne clé reste lisible chez moi.
-        const cles = [otherPublicKey!, ...otherPreviousKeys];
-        return { texte: await decryptMessageAvecHistorique(content, cles, privateKey!), illisible: false };
+        return { texte: await decryptMessageAvecHistorique(content, [courante!, ...anciennes], privateKey!), illisible: false };
       } catch {
         return { texte: content, illisible: true };
       }
     },
-    [ready, privateKey, otherPublicKey, otherPreviousKeys],
+    [ready, privateKey],
   );
 
   // Decrypt a batch of messages; cache results; update localStorage
@@ -154,19 +160,31 @@ export default function ChatConversationPage() {
   // (Le scroll — départ en bas, stick-to-bottom, prepend sans saut — est porté
   //  par `ChatMessageList`/Virtuoso : plus de gestion manuelle de scrollTop ici.)
 
+  // Relit la clé courante du pair (et celles qu'il a remplacées). Appelée à
+  // l'ouverture ET avant chaque envoi : si le pair réinitialise sa clé (#340)
+  // pendant que ce fil est ouvert, chiffrer avec la clé lue à l'ouverture
+  // produirait un message qu'il ne lira jamais — et personne ne le saurait.
+  const chargerClesPair = useCallback(async (pairId: string): Promise<string | null> => {
+    try {
+      const res = await fetch(`/api/users/${pairId}`);
+      if (!res.ok) return clesPairRef.current.courante;
+      const profil: ProfileData = await res.json();
+      const courante = profil.publicKey ?? null;
+      clesPairRef.current = { courante, anciennes: profil.previousPublicKeys ?? [] };
+      setOtherPublicKey(courante);
+      return courante;
+    } catch {
+      return clesPairRef.current.courante;
+    }
+  }, []);
+
   const loadConversation = useCallback(async () => {
     try {
       const convoRes = await fetch(`/api/chat/${conversationId}`);
       if (!convoRes.ok) throw new Error('Failed to fetch conversation');
       const convoData: ConversationData = await convoRes.json();
       setOtherUser(convoData.otherUser);
-
-      const profileRes = await fetch(`/api/users/${convoData.otherUser.id}`);
-      if (profileRes.ok) {
-        const profileData: ProfileData = await profileRes.json();
-        setOtherPublicKey(profileData.publicKey ?? null);
-        setOtherPreviousKeys(profileData.previousPublicKeys ?? []);
-      }
+      await chargerClesPair(convoData.otherUser.id);
 
       // Page initiale : uniquement les ~50 plus récents (#200). On ne déchiffre
       // que cette tranche ; les plus anciens se chargent au scroll-up.
@@ -189,7 +207,7 @@ export default function ChatConversationPage() {
     } finally {
       setLoading(false);
     }
-  }, [conversationId, applyDecryption]);
+  }, [conversationId, applyDecryption, chargerClesPair]);
 
   // ─── Charger les messages plus anciens (scroll-up paginé, #200) ──────────
 
@@ -220,12 +238,16 @@ export default function ChatConversationPage() {
   }, [nextCursor, loadingOlder, conversationId, applyDecryption]);
 
   useEffect(() => {
+    // On attend que la clé locale soit résolue (`ready`, dans tous les états,
+    // y compris « indisponible ») : charger avant, c'était déchiffrer sans clé
+    // puis recharger. Une seule passe, avec tout ce qu'il faut.
+    if (!ready) return;
     // IIFE async → pas de setState synchrone dans le corps de l'effet
     // (react-hooks/set-state-in-effect, cf. #179/#193).
     void (async () => {
       await loadConversation();
     })();
-  }, [loadConversation]);
+  }, [ready, loadConversation]);
 
   // ─── Pusher realtime ─────────────────────────────────────────────
 
@@ -278,8 +300,10 @@ export default function ChatConversationPage() {
     setError('');
     try {
       let content = text;
-      if (otherPublicKey && privateKey) {
-        content = await encryptMessage(text, otherPublicKey, privateKey);
+      // Clé du pair relue à l'instant de l'envoi, jamais celle de l'ouverture.
+      const clePair = otherUser ? await chargerClesPair(otherUser.id) : otherPublicKey;
+      if (clePair && privateKey) {
+        content = await encryptMessage(text, clePair, privateKey);
       }
 
       const res = await fetch(`/api/chat/${conversationId}/messages`, {
