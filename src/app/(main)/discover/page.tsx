@@ -14,6 +14,7 @@ import CityPicker from '@/components/ui/CityPicker';
 import { defaultSaveCity } from '@/components/ProfilePositionCard';
 import { deriveMissing, isNudgeDismissed, mustOnboard, writeStoredDate, NUDGE_DISMISS_KEY, type MissingKind } from '@/lib/onboarding';
 import ProfileNudgeCard from '@/components/ProfileNudgeCard';
+import { useFeatures } from '@/hooks/useFeatures';
 
 // Onglet unique de découverte : un seul écran, trois façons de rencontrer.
 // « Pour toi » = feed algorithmique, « À proximité » = rayon géoloc,
@@ -65,6 +66,7 @@ function buildUrl(tab: FeedTab, cursor?: string, filters?: SearchFiltersValue): 
 
 export default function DiscoverPage() {
   const [segment, setSegment] = useState<Segment>('pourtoi');
+  const features = useFeatures();
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<SearchFiltersValue>(EMPTY_SEARCH_FILTERS);
   // Les filtres persistés (Profile) sont chargés au montage : tant qu'ils ne le
@@ -384,7 +386,7 @@ export default function DiscoverPage() {
 
       {/* Sélecteur segmenté — le cœur de la navigation de découverte */}
       <div className="mb-4 flex rounded-xl bg-fill-subtle p-1" role="tablist">
-        {SEGMENTS.map(({ key, label }) => (
+        {SEGMENTS.filter(({ key }) => key !== 'crossings' || features.crossings).map(({ key, label }) => (
           <button
             key={key}
             role="tab"

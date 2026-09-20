@@ -1,10 +1,14 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getMessages, addConnection } from '@/lib/square/store';
+import { gardeFeature } from '@/lib/features-server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  // Interrupteur admin (#418)
+  const refus = await gardeFeature('square');
+  if (refus) return refus;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return new Response('Unauthorized', { status: 401 });

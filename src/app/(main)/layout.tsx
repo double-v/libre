@@ -6,7 +6,8 @@ import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import SiteNav from '@/components/ui/SiteNav';
-import { APP_SECTIONS, isSectionActive } from '@/components/ui/AppSections';
+import { sectionsVisibles, isSectionActive } from '@/components/ui/AppSections';
+import { useFeatures } from '@/hooks/useFeatures';
 import NotificationDot from '@/components/ui/NotificationDot';
 import { UnreadProvider, useUnread } from '@/hooks/useUnread';
 
@@ -77,6 +78,7 @@ function MainShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const { hasUnread } = useUnread();
+  const features = useFeatures();
 
   // Sync cross-appareils du skin (cf. #224) : si aucun choix local n'existe
   // encore sur cet appareil, on adopte celui enregistré sur le compte. Une
@@ -126,7 +128,7 @@ function MainShell({ children }: { children: React.ReactNode }) {
       {!pathname.startsWith('/bienvenue') && (
       <nav role="navigation" aria-label="Navigation des sections" className="fixed bottom-0 left-0 right-0 z-50 border-t border-hairline bg-surface pb-safe md:hidden">
         <div className="mx-auto flex min-h-14 max-w-lg items-center justify-around">
-          {APP_SECTIONS.map(({ href, label, Icon }) => {
+          {sectionsVisibles(features).map(({ href, label, Icon }) => {
             const isActive = isSectionActive(href, pathname);
             return (
               <Link

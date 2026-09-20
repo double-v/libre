@@ -2,8 +2,12 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
+import { gardeFeature } from '@/lib/features-server';
 
 export async function GET() {
+  // Interrupteur admin (#418)
+  const refus = await gardeFeature('crossings');
+  if (refus) return refus;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

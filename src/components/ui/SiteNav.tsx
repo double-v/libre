@@ -7,7 +7,9 @@ import { useSession } from 'next-auth/react';
 import ThemeToggle from './ThemeToggle';
 import SiteShell, { type ShellWidth } from './SiteShell';
 import HeartMark from './HeartMark';
-import { APP_SECTIONS, isSectionActive } from './AppSections';
+import { sectionsVisibles, isSectionActive } from './AppSections';
+import { useFeatures } from '@/hooks/useFeatures';
+import { TOUTES_ACTIVEES, type Features } from '@/lib/features';
 import NotificationDot from './NotificationDot';
 import { useUnread } from '@/hooks/useUnread';
 import { useAdminQueues } from '@/hooks/useAdminQueues';
@@ -53,6 +55,8 @@ export interface SiteNavViewProps {
   showSections?: boolean;
   /** Pastille sur la section Messages (#389) — résolue par le wrapper via `useUnread`. */
   hasUnreadMessages?: boolean;
+  /** Interrupteurs admin (#418) — résolus par le wrapper via `useFeatures`. Défaut : tout activé. */
+  features?: Features;
   /** Pastille sur l'accès Administration (#391) — résolue par le wrapper via `useAdminQueues`. Sans effet si `!isAdmin`. */
   hasAdminPending?: boolean;
   /** Route courante, pour l'état actif des sections (résolue par `SiteNav`). */
@@ -93,6 +97,7 @@ export function SiteNavView({
   hasUnreadMessages = false,
   hasAdminPending = false,
   pathname = '',
+  features = TOUTES_ACTIVEES,
 }: SiteNavViewProps) {
   const authed = variant === 'authed';
 
@@ -108,7 +113,7 @@ export function SiteNavView({
                 bottom tab bar prend le relais. */}
             {authed && showSections && (
               <div className="hidden items-center gap-0.5 md:flex">
-                {APP_SECTIONS.map(({ href, label, Icon }) => {
+                {sectionsVisibles(features).map(({ href, label, Icon }) => {
                   const active = isSectionActive(href, pathname);
                   return (
                     <Link
@@ -191,6 +196,7 @@ export default function SiteNav({
   const { data: session, status } = useSession();
   const currentPath = usePathname();
   const { hasUnread } = useUnread();
+  const features = useFeatures();
   const resolvedVariant: SiteNavVariant = variant ?? (status === 'authenticated' ? 'authed' : 'guest');
   const resolvedIsAdmin = isAdmin ?? session?.user?.role?.toUpperCase() === 'ADMIN';
   // FR-013 : un non-admin ne charge rien — c'est `enabled` qui le garantit, pas le rendu.
@@ -204,6 +210,7 @@ export default function SiteNav({
       banner={banner}
       showSections={showSections}
       hasUnreadMessages={hasUnread}
+      features={features}
       hasAdminPending={hasAdminPending}
       pathname={pathname ?? currentPath ?? ''}
     />

@@ -6,6 +6,7 @@ import { rateLimit, limits } from '@/lib/rate-limit';
 import { broadcastReaction } from '@/lib/square/store';
 import { squareReactionSchema } from '@/lib/square/validators';
 import type { SquareReaction } from '@/lib/square/store';
+import { gardeFeature } from '@/lib/features-server';
 
 const ALLOWED_REACTION_EMOJIS = ['❤️', '😂', '🔥', '👋', '💯', '✨', '🤔', '😢'] as const;
 
@@ -28,6 +29,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  // Interrupteur admin (#418)
+  const refus = await gardeFeature('square');
+  if (refus) return refus;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });

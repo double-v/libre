@@ -4,11 +4,15 @@ import { authOptions } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { rateLimit, limits } from '@/lib/rate-limit';
 import { squareReportSchema } from '@/lib/square/validators';
+import { gardeFeature } from '@/lib/features-server';
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  // Interrupteur admin (#418)
+  const refus = await gardeFeature('square');
+  if (refus) return refus;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

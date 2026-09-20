@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { addSystemMessage } from '@/lib/square/store';
+import { gardeFeature } from '@/lib/features-server';
 
 export async function GET(request: NextRequest) {
+  // Interrupteur admin (#418)
+  const refus = await gardeFeature('square');
+  if (refus) return refus;
   // Verify CRON_SECRET from Authorization header
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
