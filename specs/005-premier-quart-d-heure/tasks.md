@@ -164,7 +164,7 @@ l'ordre photo > cherche > position, écartable 7 jours, sans nombre. Ferme **#34
 - [x] T039 [P] Mettre à jour `CLAUDE.md` (Sécurité : « `onboardingStep` privé, garde `onboarding-step-never-leaks` » ; Notifications : « la proposition push en fin de parcours est la même opt-in par appareil ») et fermer la boucle dans `PRODUCT.md` si la section onboarding y manque
 - [x] T040 [P] Vérifier `src/app/api/users/me/export/route.ts` : l'export RGPD inclut `onboardingStep` (c'est à la membre) — ajouter un `it` si un test d'export existe
 - [x] T041 Gates locaux complets : `npx vitest run`, `npx tsc --noEmit`, `npx eslint .` ; base locale `libre_local_005` (clone + `migrate deploy` local) ; rejouer quickstart S1–S8 ; captures Playwright (chromium en cache) des 4 écrans et de la grille en 420 px et 1080 px, clair et sombre, échantillonnées en plusieurs points, jointes à la PR
-- [ ] T042 Ouvrir la PR `feat/005-premier-quart-d-heure` **en brouillon** dès le premier push, base `main`, corps avec `Closes #342`, `Closes #135`, `Closes #411`, `Closes #343` + lien spec + captures ; passer `ready` seulement après T041 ; le merge reste le checkpoint opérateur
+- [x] T042 Ouvrir la PR `feat/005-premier-quart-d-heure` **en brouillon** dès le premier push, base `main`, corps avec `Closes #342`, `Closes #135`, `Closes #411`, `Closes #343` + lien spec + captures ; passer `ready` seulement après T041 ; le merge reste le checkpoint opérateur
 - [ ] T043 Après merge et déploiement : relever la baseline admin (T038) le jour J, noter dans la mémoire projet la date pour la lecture à J+21 (SC-001…SC-007)
 
 ---
