@@ -6,7 +6,7 @@ import Link from 'next/link';
 interface UserRow {
   id: string;
   displayName: string;
-  email: string;
+  emailMasque: string;
   role: string;
   isBanned: boolean;
   isVerified: boolean;
@@ -77,7 +77,7 @@ export default function AdminUsersPage() {
                     <td className="px-3 py-2">
                       <Link href={`/admin/users/${u.id}`} className="text-coral hover:underline">{u.displayName}</Link>
                     </td>
-                    <td className="px-3 py-2 text-muted">{u.email}</td>
+                    <td className="px-3 py-2 text-muted">{u.emailMasque}</td>
                     <td className="px-3 py-2">
                       <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-fill-subtle text-muted'}`}>
                         {u.role}
