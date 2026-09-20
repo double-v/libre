@@ -82,8 +82,11 @@ export default function KeySettings() {
     }
   }, [busy]);
 
+  // Cible d'ancre depuis le fil (#340) : le bloc sticky du haut (bandeau bêta
+  // + SiteNav) mesure ~106 px sur mobile, la marge de défilement doit le
+  // dépasser, sinon le titre arrive dessous.
   return (
-    <section id="cle-messagerie" className="scroll-mt-4 rounded-xl border border-hairline bg-surface p-4 sm:p-5">
+    <section id="cle-messagerie" className="scroll-mt-32 rounded-xl border border-hairline bg-surface p-4 sm:p-5">
       <h2 className="text-lg font-semibold text-content">Clé de messagerie</h2>
       <p className="mt-1 text-sm text-muted" aria-live="polite">
         {etat === 'chargement' ? '' : COPY[etat]}

@@ -425,12 +425,9 @@ export default function ChatConversationPage() {
           <Alert variant={avertissement.ton}>
             {avertissement.texte}
             {avertissement.action && (
-              <>
-                {' '}
-                <Link href={avertissement.action.href} className="font-medium underline underline-offset-2">
-                  {avertissement.action.label}
-                </Link>
-              </>
+              <Link href={avertissement.action.href} className="mt-2 block font-medium underline underline-offset-2">
+                {avertissement.action.label}
+              </Link>
             )}
           </Alert>
         </div>
