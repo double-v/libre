@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { getDb } from '@/lib/db';
+import { getFeatures } from '@/lib/features-server';
+import type { Feature } from '@/lib/features';
 import {
   PREVIEW_COOKIE_NAME,
   buildPreviewCookieHeader,
@@ -57,6 +59,11 @@ function isProtectedPath(pathname: string): boolean {
 // Fail-safe : on ne met en cache QUE les résultats DB aboutis (y compris `null`
 // = user confirmé absent). Les erreurs DB ne sont pas mises en cache et sont
 // gérées comme avant (on laisse passer, cf. bloc catch).
+const FEATURE_PAR_PAGE: readonly [string, Feature][] = [
+  ['/square', 'square'],
+  ['/crossings', 'crossings'],
+];
+
 const USER_CHECK_TTL_MS = 30_000;
 // Borne mémoire : ce cache tourne dans un middleware sur CHAQUE navigation. On
 // plafonne le nombre d'entrées (éviction FIFO de la plus ancienne) pour qu'une
@@ -217,6 +224,19 @@ export async function proxy(request: NextRequest) {
     // its own error. We don't want to block everyone on a transient DB hiccup.
     // Log error type only — do NOT include the userId (PII in Vercel logs).
     console.error('[proxy] DB check failed:', err instanceof Error ? err.message : 'unknown error');
+  }
+
+  // Interrupteurs admin (#418) : une page dont la fonctionnalité est coupée
+  // renvoie vers « en pause » — jamais une 404 ni une page vide. Les API
+  // correspondantes se gardent elles-mêmes (le proxy ne voit pas /api).
+  const feature = FEATURE_PAR_PAGE.find(([prefixe]) => pathname === prefixe || pathname.startsWith(prefixe + '/'))?.[1];
+  if (feature) {
+    const features = await getFeatures();
+    if (!features[feature]) {
+      const url = new URL('/en-pause', request.url);
+      url.searchParams.set('f', feature);
+      return NextResponse.redirect(url);
+    }
   }
 
   return NextResponse.next();

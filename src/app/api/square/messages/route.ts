@@ -9,8 +9,12 @@ import { getMessages, addMessage, getReactionsForMessages } from '@/lib/square/s
 import { ensureSquareFresh } from '@/lib/square/reset';
 import { squareMessageSchema } from '@/lib/square/validators';
 import type { SquareMessage } from '@/lib/square/store';
+import { gardeFeature } from '@/lib/features-server';
 
 export async function GET() {
+  // Interrupteur admin (#418)
+  const refus = await gardeFeature('square');
+  if (refus) return refus;
   // Le reset quotidien s'exécute ici, avant la lecture : sans cron qui marche,
   // c'est le premier arrivant après l'heure qui tourne la page (#13). Ne jette
   // jamais — au pire la Place reste sur la veille une lecture de plus.
@@ -31,6 +35,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  // Interrupteur admin (#418)
+  const refus = await gardeFeature('square');
+  if (refus) return refus;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

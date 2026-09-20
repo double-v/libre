@@ -133,6 +133,10 @@ model SiteConfig {
   // interroger des colonnes inexistantes → feature « thème de site » cassée
   // en prod, masquée par les fallbacks try/catch. Colonne = nom du champ.
   currentTheme  String   @default("default")
+  // Fonctionnalités coupées depuis l'admin (#418) : `checkin`, `crossings`,
+  // `square`. Vide = tout activé. Liste de ce qui est coupé, pas de ce qui est
+  // actif : une fonctionnalité future est active sans migration de données.
+  featuresDisabled String[] @default([])
   updatedAt     DateTime @updatedAt
   updatedBy     String?  @db.Uuid
   updatedByUser User?    @relation("SiteConfigUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)

@@ -296,6 +296,20 @@ Règles d'exposition :
   chemins, en mémoire, avec le curseur composite de « À proximité ».
 - Mesure : bloc `onboarding` de `GET /api/admin/stats` (surface admin seulement).
 
+## Interrupteurs de fonctionnalités (#418)
+
+- `SiteConfig.featuresDisabled` (liste de ce qui est **coupé** : `checkin`,
+  `crossings`, `square`) ; vide = tout activé. Pas de `@map` sur `SiteConfig`.
+- Admin : `/admin/features` (`FeatureSwitches`) → `PUT /api/admin/features`,
+  journalisé `SET_FEATURES`. App : `GET /api/features` + hook `useFeatures`
+  (optimiste « tout activé », réponse normalisée : seul un `false` coupe).
+- **Toute route API d'une fonctionnalité coupable commence par**
+  `const refus = await gardeFeature('…'); if (refus) return refus;`
+  (`src/lib/features-server.ts`, cache 15 s). Garde :
+  `src/__tests__/features-gardes.test.ts` — y ajouter toute nouvelle route.
+- Pages : le proxy renvoie `/square` et `/crossings` vers `/en-pause` ; la
+  copie membre est unique (`COPY_EN_PAUSE`), jamais « désactivé par l'admin ».
+
 ## Base de données
 
 - Prisma 7 avec adapter natif PostgreSQL (`@prisma/adapter-pg`).

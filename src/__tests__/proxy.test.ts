@@ -16,6 +16,8 @@ vi.mock('next-auth/jwt', () => ({ __esModule: true, getToken: mockGetToken }));
 
 const findUnique = vi.fn();
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => ({ user: { findUnique } }) }));
+const mockGetFeatures = vi.fn(async () => ({ checkin: true, crossings: true, square: true }));
+vi.mock('@/lib/features-server', () => ({ __esModule: true, getFeatures: () => mockGetFeatures() }));
 
 // Aucune preview dans ces tests : on neutralise le module.
 vi.mock('@/lib/site-theme-preview', () => ({
@@ -110,5 +112,21 @@ describe('proxy — pas de régression sécurité (#146)', () => {
     const r = await proxy(req());
     expect(r.headers.get('location')).toContain('error=session_expiree');
     expect(findUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe('proxy — pages des fonctionnalités coupées (#418)', () => {
+  it('renvoie /square vers /en-pause?f=square quand La Place est coupée', async () => {
+    mockGetFeatures.mockResolvedValue({ checkin: true, crossings: true, square: false });
+    const res = await proxy(req('/square'));
+    expect(res.status).toBe(307);
+    expect(new URL(res.headers.get('location')!).pathname + new URL(res.headers.get('location')!).search).toBe('/en-pause?f=square');
+  });
+
+  it('laisse passer /crossings quand tout est actif, et ne lit pas les interrupteurs ailleurs', async () => {
+    expect((await proxy(req('/crossings'))).status).toBe(200);
+    mockGetFeatures.mockClear();
+    await proxy(req('/discover'));
+    expect(mockGetFeatures).not.toHaveBeenCalled();
   });
 });

@@ -16,6 +16,7 @@ import { CheckinButton } from '@/components/CheckinButton';
 import ChatMessageList from '@/components/chat/ChatMessageList';
 import Alert from '@/components/ui/Alert';
 import ActionMenu from '@/components/ui/ActionMenu';
+import { useFeatures } from '@/hooks/useFeatures';
 
 // Taille de page (miroir du défaut serveur, #200). On ne charge/déchiffre que
 // cette tranche au départ ; le scroll-up charge les plus anciennes.
@@ -89,6 +90,7 @@ export default function ChatConversationPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [otherUser, setOtherUser] = useState<ConversationData['otherUser'] | null>(null);
   const [otherPublicKey, setOtherPublicKey] = useState<string | null>(null);
+  const features = useFeatures();
   const [checkinModal, setCheckinModal] = useState(false);
   const [checkinActif, setCheckinActif] = useState(false);
   // Les clés du pair sont lues par le déchiffrement via cette ref, pas via
@@ -444,7 +446,7 @@ export default function ChatConversationPage() {
                   presentation="menu"
                   onDone={fermer}
                 />
-                {!checkinActif && (
+                {features.checkin && !checkinActif && (
                   <button
                     type="button"
                     role="menuitem"

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ensureSquareFresh } from '@/lib/square/reset';
+import { gardeFeature } from '@/lib/features-server';
 
 /**
  * Reset de La Place déclenché par le cron Vercel.
@@ -16,6 +17,9 @@ import { ensureSquareFresh } from '@/lib/square/reset';
  * qui arrive le premier fait le travail ; l'autre repart sans rien casser.
  */
 export async function GET(request: NextRequest) {
+  // Interrupteur admin (#418)
+  const refus = await gardeFeature('square');
+  if (refus) return refus;
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 

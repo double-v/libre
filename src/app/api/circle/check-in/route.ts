@@ -32,8 +32,12 @@ import { authOptions } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { startCheckinSchema } from '@/lib/trust/checkin-validators';
 import { expireOverdueCheckins } from '@/lib/trust/expire';
+import { gardeFeature } from '@/lib/features-server';
 
 export async function POST(request: NextRequest) {
+  // Interrupteur admin (#418)
+  const refus = await gardeFeature('checkin');
+  if (refus) return refus;
   try {
     // 1. Auth
     const session = await getServerSession(authOptions);

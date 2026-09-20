@@ -1,4 +1,5 @@
 import type { SVGProps } from 'react';
+import type { Feature, Features } from '@/lib/features';
 
 /**
  * AppSections — les quatre sections de l'app connectée, source unique (#347, épic #273).
@@ -17,6 +18,8 @@ export interface AppSection {
   href: string;
   label: string;
   Icon: (props: { active?: boolean } & SVGProps<SVGSVGElement>) => React.ReactElement;
+  /** Interrupteur admin dont dépend la section (#418) ; absent = toujours là. */
+  feature?: Feature;
 }
 
 function HeartSection({ active = false, ...props }: { active?: boolean } & SVGProps<SVGSVGElement>) {
@@ -58,9 +61,14 @@ function PersonSection(props: SVGProps<SVGSVGElement>) {
 export const APP_SECTIONS: readonly AppSection[] = [
   { href: '/discover', label: 'Découvrir', Icon: HeartSection },
   { href: '/messages', label: 'Messages', Icon: ChatSection },
-  { href: '/square', label: 'La Place', Icon: PeopleSection },
+  { href: '/square', label: 'La Place', Icon: PeopleSection, feature: 'square' },
   { href: '/profile', label: 'Profil', Icon: PersonSection },
 ];
+
+/** Les sections à montrer, une fois les interrupteurs appliqués (#418). */
+export function sectionsVisibles(features: Features): readonly AppSection[] {
+  return APP_SECTIONS.filter((s) => !s.feature || features[s.feature]);
+}
 
 /**
  * Une section est active sur sa propre route et sur ses sous-routes
