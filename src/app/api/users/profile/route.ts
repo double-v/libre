@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { nextStep } from '@/lib/onboarding';
 import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
@@ -86,6 +87,19 @@ export async function PUT(request: Request) {
     if (data.searchOrientations !== undefined) { updateData.searchOrientations = data.searchOrientations; createData.searchOrientations = data.searchOrientations; }
     if (data.searchInterests !== undefined) { updateData.searchInterests = data.searchInterests; createData.searchInterests = data.searchInterests; }
     if (data.searchRelationshipTypes !== undefined) { updateData.searchRelationshipTypes = data.searchRelationshipTypes; createData.searchRelationshipTypes = data.searchRelationshipTypes; }
+    // Parcours d'accueil (spec 005) : l'avancement ne recule jamais — deux
+    // onglets ouverts, ou une requête en retard, ne doivent pas ramener la
+    // personne à une étape qu'elle a déjà passée. Une lecture de plus, mais
+    // seulement sur les écritures du parcours.
+    if (data.onboardingStep !== undefined) {
+      const current = await getDb().profile.findUnique({
+        where: { userId: session.user.id },
+        select: { onboardingStep: true },
+      });
+      const step = nextStep(current?.onboardingStep ?? 0, data.onboardingStep);
+      updateData.onboardingStep = step;
+      createData.onboardingStep = step;
+    }
     // `null` porte du sens ici (« partout ») : seul `undefined` veut dire
     // « champ non fourni, n'y touche pas » (#327).
     if (data.searchDistanceKm !== undefined) { updateData.searchDistanceKm = data.searchDistanceKm; createData.searchDistanceKm = data.searchDistanceKm; }

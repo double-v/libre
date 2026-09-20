@@ -71,6 +71,7 @@ const fakeDb = {
     findUnique: vi.fn(),
     upsert: vi.fn(),
   },
+  pushSubscription: { count: vi.fn().mockResolvedValue(0) },
   $queryRaw: vi.fn(),
 };
 vi.mock('@/lib/db', () => ({

@@ -47,6 +47,9 @@ const fakeStats = {
       active7d: 18,
       active30d: 28,
     },
+    onboarding: {
+      signups30d: 40, withPhoto: 24, withPosition: 20, withRelationshipType: 25, onboardingDone: 30, returnedAfterDay1: 9, pushDevices: 12,
+    },
     moderation: {
       bansLast30d: 1,
       unbansLast30d: 0,
@@ -86,6 +89,10 @@ describe('AdminDashboard', () => {
     expect(await screen.findByText('État des profils')).toBeInTheDocument();
     expect(screen.getByText('Démographie')).toBeInTheDocument();
     expect(screen.getByText('Engagement & rétention (30 jours)')).toBeInTheDocument();
+    // Le premier quart d'heure (spec 005) : pourcentages des critères de succès.
+    expect(screen.getByText("Premier quart d'heure (inscrits des 30 derniers jours)")).toBeInTheDocument();
+    expect(screen.getByText('24 · objectif 60 %')).toBeInTheDocument(); // avec photo
+    expect(screen.getByText('9 · objectif 20 %')).toBeInTheDocument(); // revenus après J+1
     expect(screen.getByText('Modération (30 jours)')).toBeInTheDocument();
   });
 

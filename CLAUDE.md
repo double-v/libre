@@ -255,6 +255,8 @@ Règles d'exposition :
   push. Garde : `src/__tests__/city-label-never-leaks.test.ts` (base factice qui
   honore `select`). Géocodage serveur sans clé (IGN Géoplateforme + Photon),
   `src/lib/geocoding.ts`.
+- Parcours d'accueil (spec 005) : `Profile.onboardingStep` est **privé** lui
+  aussi — même garde de non-fuite. Le serveur garde le max (jamais de recul).
 
 ## Notifications (spec 003, #389–#393)
 
@@ -266,13 +268,33 @@ Règles d'exposition :
   est une whitelist — ni texte de message, ni `displayName`, ni motif de signalement.
   Test : la charge sérialisée ne contient aucun champ sensible.
 - **Push opt-in, par appareil** : abonnement dans `push_subscriptions`, activé
-  uniquement sur un clic dans Paramètres (`PushSettings`), retiré au désabonnement,
+  uniquement sur un clic dans Paramètres (`PushSettings`) ou, une fois par
+  appareil, sur la proposition en fin de parcours d'accueil (`StepPush`,
+  spec 005 — même `enablePush()`, refus mémorisé en `localStorage`), retiré au désabonnement,
   à la déconnexion (`logout()`) et avec le compte (cascade). Une notification par
   conversation jusqu'à lecture (`hadUnreadBefore`).
 - **Effets `after()` best-effort** : tout envoi push (message, match, signalement,
   retour) est planifié après la réponse et ne change jamais son statut ; sans
   `VAPID_PRIVATE_KEY`, no-op journalisé. Journaux sans PII (`push.send.failed`
   avec kind + statut, jamais d'endpoint ni d'identifiant).
+
+## Parcours d'accueil (spec 005, #135/#342/#343/#411)
+
+- `/bienvenue` : trois étapes **passables** (photo · ce que je cherche · où),
+  puis la proposition push. Aucune API nouvelle : chaque étape passe par les
+  routes du profil, des photos et de la géoloc. « Plus tard » n'est jamais
+  désactivé.
+- Entrée par la **garde de Découvrir** (`mustOnboard`) — l'inscription ne
+  connecte pas (vérification e-mail), Découvrir lit déjà le profil.
+- **Règle sur l'existant appliquée une fois, en SQL** (migration
+  `onboarding_step`) : un profil qui avait déjà photo, type ou position est
+  réputé « terminé ». Ne pas rejouer cette règle côté client.
+- **Carte de relance** (`ProfileNudgeCard`) : première cellule de « Pour toi »,
+  copie dans `NUDGE_COPY` gardée sans chiffre ni référence aux autres (test).
+  Écartée 7 jours par appareil (`libre:nudge-dismissed`).
+- **« Pour toi » trie les visages d'abord** (photo, puis activité) sur les deux
+  chemins, en mémoire, avec le curseur composite de « À proximité ».
+- Mesure : bloc `onboarding` de `GET /api/admin/stats` (surface admin seulement).
 
 ## Base de données
 

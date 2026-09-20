@@ -1083,6 +1083,57 @@ tient ce rôle.
 - **Jamais** : d'animation, de couleur par seuil (pas de rouge à 10) — la sidebar
   n'est pas un tableau de bord d'alerte.
 
+### Parcours d'accueil (`src/components/onboarding/`, route `/bienvenue`) — spec 005
+
+Le premier quart d'heure d'un compte : trois étapes (photo · ce que tu
+cherches · où) puis la proposition push, chacune **passable** d'un geste.
+Prototype validé le 2026-09-20 :
+`http://192.168.1.116:8101/getlibre/feat-005-premier-quart-d-heure/bienvenue.html`.
+
+- **Cadre** (`OnboardingShell`) : `SiteShell` largeur `app` (512 px),
+  `py-6`. Progression en **trois segments fins** (`h-[3px] rounded-full`,
+  `bg-fill-subtle` / `bg-coral-light` fait / `bg-coral` courant), `aria-hidden`
+  — pas de « Étape 1 sur 3 » : la progression se sent, elle ne se compte pas.
+  Eyebrow optionnel (« Bienvenue, {prénom} », `text-xs uppercase tracking-wider
+  text-muted`), `h1` `text-2xl font-bold`, lead `text-muted`.
+- **Actions** : empilées, pleine largeur : `Button primary` (Continuer /
+  action de l'étape) puis `Button ghost` « Plus tard » — **toujours visible,
+  jamais `disabled`, jamais conditionné**.
+- **Étape photo** : zone `bg-sunken rounded-card border border-dashed
+  border-coral-light`, avatar initiale 96 px, contraintes en `text-muted` ;
+  après ajout, aperçu `aspect-[4/5] rounded-card` avec pill « Ajoutée ».
+- **Étape ce que tu cherches** : `Card` plate, trois groupes de `TagButton`
+  (type de relation ; « Qui veux-tu voir ? · facultatif » ; « Orientation ·
+  facultatif »). Même taxonomie que le profil.
+- **Étape où** : deux cartes d'option (`rounded-2xl border-hairline-strong`,
+  pictogramme dans un carré `bg-sunken rounded-xl`), `CityPicker` déplié sous
+  la seconde ; rappel de confidentialité avec cadenas (« une tranche, jamais
+  un point sur une carte »).
+- **Proposition push** : hero `bg-sunken rounded-card` avec `HeartMark` coral
+  52 px ; copie qui dit ce qu'on ne fera **pas** ; « Oui, sur cet appareil » /
+  « Plus tard » ; renvoi vers Paramètres en `text-xs text-muted`.
+- **Shell** : `SiteNav` conservée (déconnexion possible), **tab bar masquée**
+  sur `/bienvenue` — tunnel court, une seule issue latérale : « Plus tard ».
+- **Jamais** : de compteur, de mention des autres membres, d'étape bloquante,
+  de nouvelle DA.
+
+### Carte de relance (`src/components/ProfileNudgeCard.tsx`) — spec 005
+
+Première cellule de la grille « Pour toi » quand il manque au profil une
+photo, un type de relation ou une position (dans cet ordre). Même précédent
+que la carte de parrainage : une cellule non-profil dans la grille.
+
+- **Forme** : silhouette de `ProfileCard` (`rounded-card border-hairline
+  shadow-soft overflow-hidden`), zone haute `bg-sunken` sans photo avec un
+  cœur coral 36 px, puis eyebrow « Ton profil », titre `text-lg font-semibold`,
+  texte `text-sm text-muted`, rangée `Button primary` (lien vers la section
+  du profil) + `Button ghost` « Plus tard ».
+- **Copie** : parle du profil de la personne, et d'elle seule. **Aucun
+  chiffre, aucune référence aux autres** (test : la copie ne matche pas `/\d/`).
+- **Écartement** : par appareil (`localStorage`), 7 jours ; disparaît d'elle-même
+  dès que l'élément manquant est renseigné.
+- **Où** : `tab === 'all'`, page 1, avant les profils. Nulle part ailleurs.
+
 ## Responsive
 
 | Breakpoint | Width | Key Changes |

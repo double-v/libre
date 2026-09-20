@@ -16,7 +16,8 @@ import { render, screen, within } from '@testing-library/react';
 import { useSession } from 'next-auth/react';
 import MainLayout from '../layout';
 
-vi.mock('next/navigation', () => ({ usePathname: () => '/discover' }));
+const nav = vi.hoisted(() => ({ pathname: '/discover' }));
+vi.mock('next/navigation', () => ({ usePathname: () => nav.pathname }));
 vi.mock('next-auth/react', () => ({ useSession: vi.fn() }));
 vi.mock('next/dynamic', () => ({ default: () => () => null }));
 
@@ -34,6 +35,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  nav.pathname = '/discover';
   vi.unstubAllGlobals();
   vi.clearAllMocks();
 });
@@ -156,5 +158,17 @@ describe('MainLayout — fondations desktop (#347)', () => {
     expect(tabBar).toHaveClass('md:hidden');
     // Sous md rien ne change : la barre reste fixée en bas, avec sa safe-area.
     expect(tabBar).toHaveClass('fixed', 'bottom-0', 'pb-safe');
+  });
+
+  it('masque la tab bar sur /bienvenue — le parcours d’accueil est un tunnel court (spec 005)', () => {
+    nav.pathname = '/bienvenue';
+    render(
+      <MainLayout>
+        <p>Contenu app</p>
+      </MainLayout>,
+    );
+    expect(screen.queryByRole('navigation', { name: 'Navigation des sections' })).toBeNull();
+    // SiteNav reste : on peut toujours se déconnecter.
+    expect(screen.getByRole('navigation', { name: 'Navigation principale' })).toBeInTheDocument();
   });
 });

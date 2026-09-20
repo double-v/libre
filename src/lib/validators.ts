@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ONBOARDING_DONE } from '@/lib/onboarding';
 import { GENDER_OPTIONS } from '@/lib/taxonomy';
 import { PRACTICES_VISIBILITY_VALUES } from '@/lib/profile-visibility';
 import { SENSITIVITY_LEVELS, SENSITIVITY_THRESHOLDS } from '@/lib/photo-sensitivity';
@@ -67,6 +68,8 @@ export const profileUpdateSchema = z.object({
   searchOrientations: z.array(z.string().max(30)).max(10).optional(),
   searchInterests: z.array(z.string().max(30)).max(20).optional(),
   searchRelationshipTypes: z.array(z.string().max(30)).max(10).optional(),
+  // Parcours d'accueil (spec 005) : 0..3, le serveur garde le max.
+  onboardingStep: z.number().int().min(0).max(ONBOARDING_DONE).optional(),
   // `null` est une valeur métier ici (« partout »), pas une absence : il doit
   // traverser la validation pour pouvoir effacer un filtre déjà posé (#327).
   searchDistanceKm: z.number().int().min(1).max(500).nullable().optional(),

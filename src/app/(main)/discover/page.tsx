@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import ProfileCard from '@/components/ProfileCard';
 import ProfileModal from '@/components/ProfileModal';
 import SearchFilters, { EMPTY_SEARCH_FILTERS, hasActiveFilters, type SearchFiltersValue } from '@/components/SearchFilters';
@@ -11,6 +12,8 @@ import SiteShell from '@/components/ui/SiteShell';
 import { classifyGeolocError, fuzzedPosition, geolocFailureMessage, geolocFallbackPrompt, geolocUpdateMessage } from '@/lib/geoloc-client';
 import CityPicker from '@/components/ui/CityPicker';
 import { defaultSaveCity } from '@/components/ProfilePositionCard';
+import { deriveMissing, isNudgeDismissed, mustOnboard, writeStoredDate, NUDGE_DISMISS_KEY, type MissingKind } from '@/lib/onboarding';
+import ProfileNudgeCard from '@/components/ProfileNudgeCard';
 
 // Onglet unique de découverte : un seul écran, trois façons de rencontrer.
 // « Pour toi » = feed algorithmique, « À proximité » = rayon géoloc,
@@ -68,6 +71,11 @@ export default function DiscoverPage() {
   // sont pas, on ne lance pas le feed, pour éviter un flash de profils non
   // filtrés puis un re-fetch (#235).
   const [filtersReady, setFiltersReady] = useState(false);
+  const router = useRouter();
+  // Carte de relance (spec 005) : ce qui manque au profil pour être choisi,
+  // ou null. Décidé une fois au chargement du profil, écartable 7 jours par
+  // appareil.
+  const [nudgeKind, setNudgeKind] = useState<MissingKind | null>(null);
   const [users, setUsers] = useState<DiscoveredUser[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -182,7 +190,18 @@ export default function DiscoverPage() {
         if (res.ok) {
           const data = await res.json();
           const p = data.profile;
+          // Parcours d'accueil (spec 005) : tant qu'il n'est pas terminé, on y
+          // envoie avant de charger le feed — c'est la seule porte d'entrée
+          // fiable, l'inscription ne connectant pas (vérification e-mail).
+          // Un profil absent vaut « rien commencé ».
+          if (mustOnboard(p)) {
+            router.replace('/bienvenue');
+            return; // filtersReady reste faux : le feed ne part pas
+          }
           if (p) {
+            if (!isNudgeDismissed()) {
+              setNudgeKind(deriveMissing({ ...p, photos: p.photos ?? [], relationshipType: p.relationshipType ?? [] }));
+            }
             setFilters({
               genders: p.searchGenders ?? [],
               orientations: p.searchOrientations ?? [],
@@ -194,12 +213,15 @@ export default function DiscoverPage() {
             });
           }
         }
+        setFiltersReady(true);
       } catch {
         // garde les valeurs par défaut
-      } finally {
         setFiltersReady(true);
       }
     })();
+    // Une seule lecture au montage (comme avant la garde) ; le router est
+    // stable côté Next, on ne relance pas le chargement sur lui.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Persistance best-effort des filtres (debounce) : le slider d'âge émet
@@ -463,6 +485,17 @@ export default function DiscoverPage() {
           ) : null}
 
           <div className="grid gap-grid md:grid-cols-2 lg:grid-cols-3">
+            {/* Relance de complétion (spec 005) : première cellule de « Pour
+                toi », avant les profils — là où la personne regarde. */}
+            {segment === 'pourtoi' && nudgeKind && (
+              <ProfileNudgeCard
+                kind={nudgeKind}
+                onDismiss={() => {
+                  writeStoredDate(NUDGE_DISMISS_KEY);
+                  setNudgeKind(null);
+                }}
+              />
+            )}
             {visibleUsers.map((user) => (
               <ProfileCard
                 key={user.userId}
@@ -486,7 +519,7 @@ export default function DiscoverPage() {
 
             {/* Fin de feed seulement : tant qu'une page reste à charger, une
                 « place libre » mentirait sur ce qui vient après. */}
-            {!cursor && <GridFillerCards realCount={visibleUsers.length} />}
+            {!cursor && <GridFillerCards realCount={visibleUsers.length + (segment === 'pourtoi' && nudgeKind ? 1 : 0)} />}
           </div>
 
           {cursor && (

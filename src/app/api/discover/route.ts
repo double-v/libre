@@ -325,48 +325,47 @@ export async function GET(request: NextRequest) {
       const page = paginateSorted(withDistance, 'asc');
       inMemoryPagination = { nextCursor: page.nextCursor };
       profiles = page.items.map(({ profile: p, distanceKm }) => toFeedUser(p, distanceKm));
-    } else if (distanceFilterKm !== null && hasGeoloc) {
-      // tab === 'all', filtré par distance (#327).
+    } else {
+      // tab === 'all' — « Pour toi », avec ou sans filtre de distance.
       //
-      // On quitte la pagination par curseur Prisma : la distance n'existe pas
-      // en base, elle se calcule. On charge donc les candidats de la bbox, on
-      // affine, on trie par activité récente (l'ordre du feed « Pour toi ») et
-      // on pagine avec le curseur composite (lastActive, userId). La bbox borne
-      // le volume chargé ; un filtrage post-fetch, lui, rendrait des pages
-      // creuses (#147).
+      // Les visages d'abord (spec 005, FR-022) : un profil avec photo passe
+      // avant un profil sans, puis l'activité récente départage. Personne
+      // n'est masqué. Prisma ne trie pas sur la longueur d'un tableau, et la
+      // distance n'existe pas en base : on charge donc les candidats du
+      // `where` (bornés par la bbox quand il y a un filtre), on trie en
+      // mémoire et on pagine avec le curseur composite (sortValue, userId)
+      // déjà utilisé par « À proximité » (#180, #327). Un filtrage post-fetch
+      // rendrait des pages creuses (#147) ; ici la page est découpée après le
+      // tri complet.
+      //
+      // Limite connue : au-delà de quelques milliers de profils, remplacer par
+      // une colonne `hasPhoto` maintenue par les routes photos et un
+      // `orderBy` Prisma.
+      const withDistance = distanceFilterKm !== null && hasGeoloc;
       const candidates = await getDb().profile.findMany({
-        where: { ...baseWhere, ...geoWhere(distanceFilterKm) },
+        where: withDistance ? { ...baseWhere, ...geoWhere(distanceFilterKm) } : baseWhere,
         include: profileInclude,
       });
 
-      const withDistance = candidates
-        .map((p) => ({ profile: p, distanceKm: distanceKmTo(p) ?? Infinity }))
-        .filter(({ distanceKm }) => distanceKm <= distanceFilterKm)
-        .sort((a, b) =>
-          b.profile.user.lastActive.getTime() - a.profile.user.lastActive.getTime() ||
-          (a.profile.userId < b.profile.userId ? -1 : a.profile.userId > b.profile.userId ? 1 : 0),
-        )
+      // sortValue reste un nombre pour que le curseur composite fonctionne
+      // tel quel : la photo pèse plus que n'importe quelle date.
+      const PHOTO_WEIGHT = 2 ** 53;
+      const sorted = candidates
+        .map((p) => ({ profile: p, distanceKm: withDistance ? (distanceKmTo(p) ?? Infinity) : 0 }))
+        .filter(({ distanceKm }) => !withDistance || distanceKm <= distanceFilterKm)
         .map((item) => ({
           ...item,
-          sortValue: item.profile.user.lastActive.getTime(),
+          sortValue: (item.profile.photos.length > 0 ? PHOTO_WEIGHT : 0) + item.profile.user.lastActive.getTime(),
           userId: item.profile.userId,
-        }));
+        }))
+        .sort((a, b) =>
+          b.sortValue - a.sortValue ||
+          (a.userId < b.userId ? -1 : a.userId > b.userId ? 1 : 0),
+        );
 
-      const page = paginateSorted(withDistance, 'desc');
+      const page = paginateSorted(sorted, 'desc');
       inMemoryPagination = { nextCursor: page.nextCursor };
       profiles = page.items.map(({ profile: p }) => toFeedUser(p));
-    } else {
-      // tab === 'all', sans filtre de distance : chemin historique, pagination
-      // par curseur Prisma.
-      const dbProfiles = await getDb().profile.findMany({
-        where: baseWhere,
-        include: profileInclude,
-        take: PAGE_SIZE + 1,
-        ...(cursor ? { skip: 1, cursor: { userId: cursor } } : {}),
-        orderBy: { user: { lastActive: 'desc' } },
-      });
-
-      profiles = dbProfiles.map((p) => toFeedUser(p));
     }
 
     // Pagination: we fetched PAGE_SIZE+1, if we have more than PAGE_SIZE there's a next page

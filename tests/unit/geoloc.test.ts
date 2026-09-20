@@ -15,7 +15,17 @@ describe('Geolocation utilities', () => {
 
       const dist = haversineDistance(lat, lng, fuzzed.lat, fuzzed.lng);
       expect(dist).toBeLessThan(150);
-      expect(dist).toBeGreaterThan(0);
+      // Un décalage nul est un tirage légitime (1 chance sur 256 : le second
+      // octet aléatoire vaut 0). Ce test échouait au hasard en CI.
+      expect(dist).toBeGreaterThanOrEqual(0);
+    });
+
+    it('brouille vraiment : sur cent tirages, la plupart bougent', () => {
+      const moved = Array.from({ length: 100 }, () => {
+        const f = fuzzLocation(48.8566, 2.3522);
+        return haversineDistance(48.8566, 2.3522, f.lat, f.lng) > 0;
+      }).filter(Boolean).length;
+      expect(moved).toBeGreaterThan(90);
     });
 
     it('produces different results each time (randomization)', () => {

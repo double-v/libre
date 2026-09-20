@@ -45,6 +45,15 @@ const sizeClasses: Record<ButtonSize, string> = {
   lg: 'h-12 px-5 text-base',
 };
 
+/**
+ * Classes d'un bouton, pour un lien qui doit lui ressembler (`<Link>` vers
+ * une section du profil, spec 005). On ne rend pas `Button` polymorphe : un
+ * lien reste un lien pour la navigation et les lecteurs d'écran.
+ */
+export function buttonClassName(variant: ButtonVariant = 'primary', size: ButtonSize = 'md', extra = ''): string {
+  return `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${extra}`.trim();
+}
+
 function Spinner() {
   return (
     <span

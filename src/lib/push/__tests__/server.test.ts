@@ -66,6 +66,8 @@ describe('buildPayload — rien qui identifie ou révèle (SC-006)', () => {
     // dans une notification qui transite par un tiers.
     cityLabel: 'Saint-Denis (93)',
     positionSource: 'city',
+    // Avancement du parcours d'accueil (spec 005) : privé lui aussi.
+    onboardingStep: 'ONBOARDING-SENTINELLE',
   };
   const cases = [
     ['message', buildPayload('message', { conversationId: 'c1', ...secrets })],
@@ -80,6 +82,7 @@ describe('buildPayload — rien qui identifie ou révèle (SC-006)', () => {
       for (const value of Object.values(secrets)) {
         expect(json, `${kind} laisse fuir « ${value} »`).not.toContain(value);
       }
+      expect(json).not.toContain('onboardingStep');
       expect(payload.kind).toBe(kind);
       expect(payload.title).toBeTruthy();
       expect(payload.body).toBeTruthy();

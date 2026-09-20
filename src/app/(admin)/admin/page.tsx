@@ -16,6 +16,8 @@ interface DashboardStats {
 }
 
 const fmt = new Intl.NumberFormat('fr-FR');
+/** Pourcentage arrondi, « — » quand il n'y a encore personne. */
+const pct = (n: number, d: number) => (d > 0 ? `${Math.round((n / d) * 100)} %` : '—');
 const fmtPct = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 });
 
 export default function AdminDashboard() {
@@ -139,6 +141,46 @@ export default function AdminDashboard() {
           label="Actifs 30 jours"
           value={fmt.format(a.engagement.active30d)}
           subtitle="utilisateurs uniques"
+          accent="success"
+        />
+      </AnalyticsSection>
+
+      {/* Le premier quart d'heure (spec 005) : ce que produisent les comptes
+          créés depuis 30 jours. Les pourcentages sont les critères de succès
+          de la spec (photo ≥ 60 %, position ≥ 50 %, push ≥ 30 %, retour ≥ 20 %). */}
+      <AnalyticsSection title="Premier quart d'heure (inscrits des 30 derniers jours)">
+        <MetricCard label="Inscrits" value={fmt.format(a.onboarding.signups30d)} accent="muted" />
+        <MetricCard
+          label="Avec photo"
+          value={pct(a.onboarding.withPhoto, a.onboarding.signups30d)}
+          subtitle={`${fmt.format(a.onboarding.withPhoto)} · objectif 60 %`}
+        />
+        <MetricCard
+          label="Avec position"
+          value={pct(a.onboarding.withPosition, a.onboarding.signups30d)}
+          subtitle={`${fmt.format(a.onboarding.withPosition)} · objectif 50 %`}
+        />
+        <MetricCard
+          label="Type de relation"
+          value={pct(a.onboarding.withRelationshipType, a.onboarding.signups30d)}
+          subtitle={`${fmt.format(a.onboarding.withRelationshipType)} · objectif 60 %`}
+        />
+        <MetricCard
+          label="Parcours terminé"
+          value={pct(a.onboarding.onboardingDone, a.onboarding.signups30d)}
+          subtitle={fmt.format(a.onboarding.onboardingDone)}
+          accent="gold"
+        />
+        <MetricCard
+          label="Revenus après J+1"
+          value={pct(a.onboarding.returnedAfterDay1, a.onboarding.signups30d)}
+          subtitle={`${fmt.format(a.onboarding.returnedAfterDay1)} · objectif 20 %`}
+          accent="success"
+        />
+        <MetricCard
+          label="Appareils abonnés au push"
+          value={fmt.format(a.onboarding.pushDevices)}
+          subtitle="tous comptes · objectif 30 % des inscrits"
           accent="success"
         />
       </AnalyticsSection>

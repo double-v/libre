@@ -49,6 +49,17 @@ Sont explicitement bannis dans tout livrable :
 
 5. **Densité douce** : c'est une app de rencontre, pas un dashboard B2B. On respire, on aère, on laisse de la place aux visages. Les informations denses (filtres, paramètres) sont compactes et efficaces, les surfaces émotionnelles (profils, matches) sont aérées.
 
+## Le premier quart d'heure
+
+Un compte qui n'a ni photo, ni « ce que je cherche », ni position ne peut
+être choisi par personne — et son feed ne montre que des cartes vides. Le
+parcours d'accueil (spec 005) accompagne ces trois gestes juste après
+l'inscription, chacun passable d'un geste, puis propose d'être prévenu·e
+*si ça matche* — le seul événement qui justifie une notification. Pour les
+membres déjà inscrits, une carte « Ton profil » en tête de Découvrir dit ce
+qui manque, sans chiffre, sans parler des autres, et s'écarte sept jours.
+Ce qu'on ne fera pas : relancer par e-mail, annoncer un like reçu, compter.
+
 ## Accessibility & Inclusion
 
 WCAG AA + extras.

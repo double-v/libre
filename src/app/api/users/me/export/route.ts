@@ -56,6 +56,8 @@ export async function GET() {
           // à la membre — donc dans son export (art. 20).
           positionSource: true,
           cityLabel: true,
+          // Parcours d'accueil (spec 005) : c'est à la membre, il voyage avec elle.
+          onboardingStep: true,
           createdAt: true,
           updatedAt: true,
         },
