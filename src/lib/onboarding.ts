@@ -71,7 +71,7 @@ export const NUDGE_COPY: Record<MissingKind, { title: string; body: string; cta:
     title: 'Dis ce que tu cherches',
     body: 'Les autres sauront si vous cherchez la même chose.',
     cta: 'Préciser',
-    href: '/profile#profile-section-orientation',
+    href: '/profile#profile-section-seeking',
   },
   position: {
     title: 'Indique où tu es',

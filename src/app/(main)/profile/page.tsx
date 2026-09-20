@@ -4,12 +4,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { logout } from '@/lib/logout';
 import { purgerSecretsLocaux } from '@/lib/session-cleanup';
+import { photoUrl } from '@/lib/photos';
 import TagButton from '@/components/TagButton';
 import TagSelector from '@/components/TagSelector';
 import PrivacyTip from '@/components/PrivacyTip';
 import { SENSITIVITY_LABELS, SENSITIVITY_THRESHOLDS, THRESHOLD_LABELS } from '@/lib/photo-sensitivity';
-import ProfileCompleteness from '@/components/ProfileCompleteness';
-import ProfilePhotoHero from '@/components/ProfilePhotoHero';
+import ProfileGlance from '@/components/ProfileGlance';
+import PhotoDropZone from '@/components/PhotoDropZone';
+import { CameraIcon, HeartIcon, LinesIcon, IdCardIcon, SparkIcon, LoupeIcon, EyeIcon, EyeOffIcon, LinkIcon, ShieldIcon, WarnIcon } from '@/components/ui/SectionIcons';
+import { uploadPhoto } from '@/lib/photos-client';
+import Link from 'next/link';
 import ProfileSection from '@/components/ProfileSection';
 import PublicProfilePreview from '@/components/PublicProfilePreview';
 import ProfileField from '@/components/ProfileField';
@@ -48,6 +52,9 @@ interface ProfileData {
   // Ville saisie à la main (spec 004) — privés, renvoyés à la membre seule.
   positionSource?: 'device' | 'city' | null;
   cityLabel?: string | null;
+  /** Même source que la carte de relance de Découvrir : une géoloc d'avant
+   *  #402 a `lastGeolocAt` sans `positionSource`. */
+  lastGeolocAt?: string | null;
 }
 
 const ORIENTATION_OPTIONS = ['hétéro', 'homo', 'bi', 'pan', 'ace', 'autre'];
@@ -88,7 +95,8 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [editingSection, setEditingSection] = useState<string | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // « Voir comme les autres » (#413) : l'aperçu public à la demande, plus en tête de page.
+  const [showPreview, setShowPreview] = useState(false);
   // « Maintenant » figé au montage : Date.now() est impur, on ne l'appelle pas
   // au rendu (react-hooks/purity) — il est fixé dans un effet ci-dessous.
   const [now, setNow] = useState(0);
@@ -138,6 +146,13 @@ export default function ProfilePage() {
     // de l'effet (react-hooks/set-state-in-effect, cf. #179/#193).
     void (async () => { await fetchProfile(); })();
   }, [fetchProfile]);
+
+  useEffect(() => {
+    if (!showPreview) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowPreview(false); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [showPreview]);
 
   useEffect(() => {
     // Date.now() dans une IIFE async → hors du corps synchrone de l'effet
@@ -248,16 +263,29 @@ export default function ProfilePage() {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    try {
-      const res = await fetch('/api/users/me', { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed');
-      purgerSecretsLocaux();
-      await logout();
-      router.push('/');
-    } catch {
-      setError('Erreur lors de la suppression');
+  /**
+   * Envoi d'une photo — même route et mêmes contraintes que le parcours
+   * d'accueil (`uploadPhoto`). Sert à la zone d'ajout en tête de page (#413)
+   * comme au mode édition de la section Photos.
+   */
+  const handleUpload = async (file: File) => {
+    setUploading(true);
+    setPhotoError('');
+    // Auto-déclaration (#332) : se classer soi-même évite que quelqu'un voie
+    // la photo avant la modération.
+    const result = await uploadPhoto(file, { sensitive: declareSensitive });
+    setUploading(false);
+    if (!result.ok) {
+      setPhotoError(result.error);
+      return;
     }
+    setEditPhotos(result.photos);
+    setProfile((p) => (p ? { ...p, photos: result.photos } : p));
+    if (declareSensitive) {
+      setPhotoSensitivity((m) => ({ ...m, [result.photo]: 'suggestive' }));
+      setDeclareSensitive(false);
+    }
+    toast('Photo ajoutée.');
   };
 
   if (loading) {
@@ -268,17 +296,57 @@ export default function ProfilePage() {
     ? Math.floor((now - new Date(profile.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
     : null;
 
+  const initial = (displayName.trim().charAt(0) || '·').toUpperCase();
+  const cap = (v: string) => v.charAt(0).toUpperCase() + v.slice(1);
+  const genderLabel = (v: string) => GENDER_OPTIONS.find((g) => g.value === v)?.label || v;
+
+  // Résumés d'une ligne des sections repliées (#413) : ce qui est réglé se lit
+  // sans ouvrir. Les listes vides se disent « tous » / « aucune ».
+  const searchSummary = profile
+    ? [
+        profile.searchGenders.length ? profile.searchGenders.map(genderLabel).join(', ') : 'Tous les genres',
+        profile.searchOrientations.length ? profile.searchOrientations.join(', ') : 'toutes orientations',
+        profile.searchRelationshipTypes.length ? profile.searchRelationshipTypes.join(', ') : 'tous types',
+        `${profile.ageMin}–${profile.ageMax} ans`,
+        profile.searchDistanceKm !== null ? `${profile.searchDistanceKm} km` : 'partout',
+        profile.searchInterests.length ? `intérêts : ${profile.searchInterests.join(', ')}` : 'intérêts : peu importe',
+      ].join(' · ')
+    : '';
+  const practicesSummary = profile
+    ? `${profile.practices.length ? profile.practices.join(', ') : 'Aucune pratique'} · visibles par ${
+        profile.practicesVisibility === 'public' ? 'tout le monde' : 'mes matches seulement'
+      }`
+    : '';
+  const sensitivitySummary = profile
+    ? `J'accepte de voir : ${THRESHOLD_LABELS[(profile.photoSensitivityOptIn || 'none') as keyof typeof THRESHOLD_LABELS].toLowerCase()}`
+    : '';
+  const socialSummary = profile && Object.keys(profile.socialLinks || {}).length > 0
+    ? Object.keys(profile.socialLinks).join(', ')
+    : 'Aucun lien';
+
   return (
-    <SiteShell className="py-6 md:pb-section md:pt-11">
-      <div className="mb-4 flex items-center justify-between">
+    <SiteShell width="reading" className="py-6 md:pb-section md:pt-11">
+      <div className="mb-4 flex items-center justify-between gap-2">
         <h1 className="text-2xl font-bold text-content">Profil</h1>
-        <button
-          type="button"
-          onClick={() => { purgerSecretsLocaux(); void logout().then(() => router.push('/login')); }}
-          className="rounded-full border border-hairline-strong px-3 py-1 text-xs font-medium text-muted hover:bg-fill-subtle hover:text-content"
-        >
-          Déconnexion
-        </button>
+        <div className="flex items-center gap-1">
+          {profile && (
+            <button
+              type="button"
+              onClick={() => setShowPreview(true)}
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-3 text-[13px] font-medium text-coral hover:bg-blush/50 dark:hover:bg-coral/10"
+            >
+              <EyeIcon className="h-4 w-4" />
+              Voir comme les autres
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => { purgerSecretsLocaux(); void logout().then(() => router.push('/login')); }}
+            className="rounded-full border border-hairline-strong px-3 py-1 text-xs font-medium text-muted hover:bg-fill-subtle hover:text-content"
+          >
+            Déconnexion
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -287,40 +355,264 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {profile && (
-        <PublicProfilePreview
-          displayName={displayName || 'Vous'}
-          age={age ?? undefined}
-          bio={profile.bio}
-          photos={profile.photos}
-          interests={profile.interests}
-          isVerified={isVerified}
-        />
-      )}
-
-      {profile && (
-        <ProfileCompleteness
-          profile={profile as unknown as Record<string, unknown>}
-          onSuggestionClick={startEdit}
-        />
+      {/* Aperçu public à la demande (#413) : en tête de page il occupait tout
+          le premier écran, vide chez un nouvel inscrit. */}
+      {profile && showPreview && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Ton profil vu par les autres"
+          className="fixed inset-0 z-50 overflow-y-auto bg-ink/60 p-4 backdrop-blur-sm"
+          onClick={() => setShowPreview(false)}
+        >
+          <div className="mx-auto max-w-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-2 flex justify-end">
+              <button type="button" onClick={() => setShowPreview(false)} className="rounded-full bg-surface px-3 py-1.5 text-xs font-medium text-content shadow-soft" autoFocus>
+                Fermer
+              </button>
+            </div>
+            <PublicProfilePreview
+              displayName={displayName || 'Vous'}
+              age={age ?? undefined}
+              bio={profile.bio}
+              photos={profile.photos}
+              interests={profile.interests}
+              isVerified={isVerified}
+            />
+          </div>
+        </div>
       )}
 
       {!profile ? (
-        <div className="space-y-6">
-          <p className="text-sm text-muted">Remplissez votre profil pour commencer à rencontrer des personnes.</p>
-          <p className="text-sm text-muted">C&apos;est optionnel — vous pouvez toujours compléter plus tard.</p>
-          {['identity', 'bio', 'orientation', 'interests', 'practices', 'photos', 'search', 'social'].map((s) => (
-            <button key={s} onClick={() => startEdit(s)} className="text-sm text-coral underline hover:text-terracotta">
-              Commencer par {s === 'identity' ? 'votre identité' : s === 'bio' ? 'votre bio' : s === 'orientation' ? 'votre orientation' : s === 'interests' ? 'vos centres d\'intérêt' : s === 'practices' ? 'vos pratiques' : s === 'photos' ? 'vos photos' : s === 'search' ? 'vos préférences de recherche' : 'vos liens sociaux'}
-            </button>
-          ))}
+        // Compte sans ligne de profil (d'avant la spec 005) : un PUT vide
+        // crée la ligne (upsert) — recharger ne changerait rien.
+        <div className="space-y-3">
+          <p className="text-sm text-muted">Ton profil n&apos;est pas encore créé.</p>
+          <button type="button" onClick={() => void saveSection({})} disabled={saving} className="rounded-md bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-terracotta disabled:opacity-50">
+            Créer mon profil
+          </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <>
+          {/* En-tête compact quand il y a une photo : qui je suis, en une ligne. */}
+          {profile.photos.length > 0 && (
+            <div className="mb-4 flex items-center gap-3">
+              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-sunken">
+                <Image src={photoUrl(profile.photos[0])} alt="" fill sizes="64px" className="object-cover" unoptimized />
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-lg font-semibold text-content">
+                  {displayName || 'Vous'}{age ? `, ${age}` : ''}
+                </p>
+                <p className="truncate text-[13px] text-muted">
+                  {[profile.bio ? profile.bio.split('\n')[0] : null, profile.cityLabel].filter(Boolean).join(' · ') || 'Ton profil'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <ProfileGlance profile={{ ...profile, lastGeolocAt: profile.lastGeolocAt ?? null, cityLabel: profile.cityLabel ?? null }} />
+
+          <p className="mb-2 mt-5 text-[11px] font-semibold uppercase tracking-wider text-muted">Ce que les autres voient</p>
+          <div className="space-y-2.5">
+
+          {/* Photos — d'abord : c'est ce qui permet d'être choisi·e */}
+          <ProfileSection
+            sectionId="photos"
+            title="Photos"
+            icon={<CameraIcon className="h-5 w-5" />}
+            status={profile.photos.length === 0 ? 'todo' : undefined}
+            onEdit={profile.photos.length > 0 ? () => startEdit('photos') : undefined}
+            editing={editingSection === 'photos'}
+            complete={profile.photos.length > 0}
+            defaultOpen
+          >
+            {editingSection === 'photos' ? (
+              <div className="mt-3 space-y-3">
+                {editPhotos.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {editPhotos.map((url, i) => (
+                      <div key={i} className="group relative aspect-square">
+                        <Image src={photoUrl(url)} alt={`Photo ${i + 1}`} fill className="rounded-lg object-cover" unoptimized />
+                        {i === 0 && (
+                          <span className="absolute bottom-1 left-1 rounded-full bg-ink/60 px-2 py-0.5 text-[11px] font-semibold text-white">Principale</span>
+                        )}
+                        {photoSensitivity[url] && (
+                          /* Ses propres photos restent nettes, mais la
+                             classification doit se voir : sinon c'est une
+                             sanction invisible (#330). */
+                          <span className="absolute right-1 bottom-1 rounded-full bg-ink/60 px-2 py-0.5 text-[11px] font-semibold text-white">
+                            {SENSITIVITY_LABELS[photoSensitivity[url] as keyof typeof SENSITIVITY_LABELS] ?? 'Sensible'}
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              const res = await fetch('/api/users/photos', {
+                                method: 'DELETE',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ photoKey: url }),
+                              });
+                              if (res.ok) {
+                                const data = await res.json();
+                                setEditPhotos(data.photos);
+                                setProfile((p) => (p ? { ...p, photos: data.photos } : p));
+                              }
+                            } catch { /* ignore */ }
+                          }}
+                          className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+                          aria-label="Supprimer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {photoError && <p role="alert" className="text-xs text-error">{photoError}</p>}
+                {/* Auto-déclaration (#332) : le chemin sain, la modération a
+                    posteriori arrivant toujours après que quelqu'un a vu la
+                    photo. Copie descriptive, sans jugement sur ce qu'on publie. */}
+                <label className="flex items-start gap-2 text-sm text-content">
+                  <input type="checkbox" checked={declareSensitive} onChange={(e) => setDeclareSensitive(e.target.checked)} className="mt-1 h-4 w-4 accent-coral" />
+                  <span>
+                    Ma prochaine photo est suggestive
+                    <span className="block text-xs text-muted">Elle arrivera floutée aux personnes qui n&apos;ont pas demandé à voir ce contenu.</span>
+                  </span>
+                </label>
+                {editPhotos.length < 6 && (
+                  <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-hairline-strong bg-fill-subtle p-4 transition-colors hover:border-coral hover:bg-blush dark:hover:border-coral-light dark:hover:bg-coral/10">
+                    {uploading ? (
+                      <span className="text-xs text-muted">Envoi en cours...</span>
+                    ) : (
+                      <>
+                        <CameraIcon className="h-8 w-8 text-muted" />
+                        <span className="mt-1 text-xs text-muted">JPG, PNG ou WebP — 5 Mo max</span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      disabled={uploading}
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleUpload(f); e.target.value = ''; }}
+                    />
+                  </label>
+                )}
+                <button type="button" onClick={() => setEditingSection(null)} className="rounded-full border border-hairline-strong bg-surface px-4 py-1.5 text-xs font-medium text-muted hover:bg-fill-subtle">
+                  Fermer
+                </button>
+              </div>
+            ) : profile.photos.length === 0 ? (
+              <div className="mt-3 space-y-3">
+                <PhotoDropZone initial={initial} busy={uploading} error={photoError} onFile={(f) => void handleUpload(f)} />
+                <label className="flex items-start gap-2 text-sm text-content">
+                  <input type="checkbox" checked={declareSensitive} onChange={(e) => setDeclareSensitive(e.target.checked)} className="mt-1 h-4 w-4 accent-coral" />
+                  <span>
+                    Ma prochaine photo est suggestive
+                    <span className="block text-xs text-muted">Elle arrivera floutée à qui n&apos;a pas demandé à la voir.</span>
+                  </span>
+                </label>
+                <PrivacyTip tip="Évite les détails identifiables : lieux, plaques, nom sur un vêtement." />
+              </div>
+            ) : (
+              <div className="mt-2 space-y-2">
+                {/* Grille de vignettes (proto #413) : la première est la
+                    principale, une case « + Ajouter » tant qu'il reste de la
+                    place. Le grand hero vivait ici et faisait 900 px en desktop. */}
+                <div className="grid grid-cols-3 gap-2" aria-label="Mes photos">
+                  {profile.photos.map((key, i) => (
+                    <div key={key} className="relative aspect-[4/5] overflow-hidden rounded-lg bg-fill-subtle">
+                      <Image src={photoUrl(key)} alt={i === 0 ? 'Photo principale' : `Photo ${i + 1}`} fill sizes="240px" className="object-cover" unoptimized />
+                      {i === 0 && (
+                        <span className="absolute bottom-1.5 left-1.5 rounded-full bg-ink/60 px-2 py-0.5 text-[10px] font-semibold text-white">Principale</span>
+                      )}
+                    </div>
+                  ))}
+                  {profile.photos.length < 6 && (
+                    <button
+                      type="button"
+                      onClick={() => startEdit('photos')}
+                      className="flex aspect-[4/5] items-center justify-center rounded-lg border border-dashed border-coral-light bg-sunken text-xs font-medium text-coral hover:border-coral"
+                    >
+                      + Ajouter
+                    </button>
+                  )}
+                </div>
+                <PrivacyTip tip="La première est ta photo principale. Évite les détails identifiables (lieux, plaques, etc.)." />
+              </div>
+            )}
+          </ProfileSection>
+
+          {/* Ce que je cherche — type de relation d'abord (même vocabulaire que
+              le parcours et le filtre) ; complet seulement s'il est renseigné. */}
+          <ProfileSection
+            sectionId="seeking"
+            title="Ce que je cherche"
+            icon={<HeartIcon className="h-5 w-5" />}
+            status={profile.relationshipType.length === 0 ? 'todo' : undefined}
+            onEdit={() => startEdit('orientation')}
+            editing={editingSection === 'orientation'}
+            complete={profile.relationshipType.length > 0}
+            defaultOpen
+          >
+            {editingSection === 'orientation' ? (
+              <div className="mt-3 space-y-4">
+                <div>
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Type de relation</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {RELATIONSHIP_TYPE_OPTIONS.map((opt) => (
+                      <TagButton key={opt} label={cap(opt)} selected={editRelationshipType.includes(opt)} onClick={() => setEditRelationshipType(editRelationshipType.includes(opt) ? editRelationshipType.filter((r) => r !== opt) : [...editRelationshipType, opt])} />
+                    ))}
+                  </div>
+                  <p className="mt-1.5 text-xs text-muted">Plusieurs possibles.</p>
+                </div>
+                <div>
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Orientation</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {ORIENTATION_OPTIONS.map((opt) => (
+                      <TagButton key={opt} label={cap(opt)} selected={editOrientation.includes(opt)} onClick={() => setEditOrientation(editOrientation.includes(opt) ? editOrientation.filter((o) => o !== opt) : [...editOrientation, opt])} />
+                    ))}
+                  </div>
+                </div>
+                <EditActions saving={saving} onSave={() => saveSection({ orientation: editOrientation, relationshipType: editRelationshipType })} onCancel={() => setEditingSection(null)} />
+              </div>
+            ) : (
+              <div className="mt-2 space-y-2">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted">Type de relation</p>
+                  {profile.relationshipType.length > 0
+                    ? <ChipList items={profile.relationshipType} />
+                    : (
+                      <button type="button" onClick={() => startEdit('orientation')} className="mt-1 text-sm text-coral hover:text-terracotta">
+                        Choisir — libre, poly, casual, sérieux, autre
+                      </button>
+                    )}
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted">Orientation</p>
+                  {profile.orientation.length > 0 ? <ChipList items={profile.orientation} /> : <span className="text-xs italic text-muted">Non renseignée</span>}
+                </div>
+              </div>
+            )}
+          </ProfileSection>
+
+          {/* Bio */}
+          <ProfileSection sectionId="bio" title="Bio" icon={<LinesIcon className="h-5 w-5" />} surface="blush" onEdit={() => startEdit('bio')} editing={editingSection === 'bio'} complete={profile.bio.length > 0} defaultOpen>
+            {editingSection === 'bio' ? (
+              <div className="mt-3 space-y-3">
+                <textarea rows={3} maxLength={500} value={editBio} onChange={(e) => setEditBio(e.target.value)} placeholder="Parle un peu de toi…" className={INPUT_CLASS} />
+                <p className="text-xs text-muted">{editBio.length}/500</p>
+                <EditActions saving={saving} onSave={() => saveSection({ bio: editBio })} onCancel={() => setEditingSection(null)} />
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-muted">{profile.bio || <span className="italic">Quelques mots sur toi — ce que tu aimes, ce que tu cherches ici.</span>}</p>
+            )}
+          </ProfileSection>
 
           {/* Identité */}
-          <ProfileSection sectionId="identity" title="Identité" onEdit={() => startEdit('identity')} editing={editingSection === 'identity'} complete={!!profile.birthDate && !!profile.genderIdentity}>
-            <PrivacyTip tip="Utilisez un pseudo, pas votre vrai nom. Seul votre âge sera visible, pas votre date de naissance." />
+          <ProfileSection sectionId="identity" title="Identité" icon={<IdCardIcon className="h-5 w-5" />} onEdit={() => startEdit('identity')} editing={editingSection === 'identity'} complete={!!profile.birthDate && !!profile.genderIdentity} defaultOpen>
             {editingSection === 'identity' ? (
               <div className="mt-3 space-y-3">
                 <div>
@@ -338,278 +630,36 @@ export default function ProfilePage() {
                 <EditActions saving={saving} onSave={() => saveSection({ birthDate: editBirthDate ? new Date(editBirthDate).toISOString() : undefined, genderIdentity: editGenderIdentity || undefined })} onCancel={() => setEditingSection(null)} />
               </div>
             ) : (
-              <div className="mt-2 space-y-1">
-                <ProfileField label="Âge">{age ? `${age} ans` : ''}</ProfileField>
-                <ProfileField label="Genre">{GENDER_OPTIONS.find(g => g.value === profile.genderIdentity)?.label || profile.genderIdentity}</ProfileField>
-              </div>
-            )}
-          </ProfileSection>
-
-          {/* Bio */}
-          <ProfileSection sectionId="bio" title="Bio" surface="blush" onEdit={() => startEdit('bio')} editing={editingSection === 'bio'} complete={profile.bio.length > 0}>
-            {editingSection === 'bio' ? (
-              <div className="mt-3 space-y-3">
-                <textarea rows={3} maxLength={500} value={editBio} onChange={(e) => setEditBio(e.target.value)} placeholder="Parlez un peu de vous..." className={INPUT_CLASS} />
-                <p className="text-xs text-muted">{editBio.length}/500</p>
-                <EditActions saving={saving} onSave={() => saveSection({ bio: editBio })} onCancel={() => setEditingSection(null)} />
-              </div>
-            ) : (
-              <p className="mt-2 text-sm text-muted">{profile.bio || <span className="italic text-muted">Non renseigné</span>}</p>
-            )}
-          </ProfileSection>
-
-          {/* Orientation & Relations */}
-          <ProfileSection sectionId="orientation" title="Orientation & Relations" onEdit={() => startEdit('orientation')} editing={editingSection === 'orientation'} complete={profile.orientation.length > 0 || profile.relationshipType.length > 0}>
-            {editingSection === 'orientation' ? (
-              <div className="mt-3 space-y-4">
-                <div>
-                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Orientation</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {ORIENTATION_OPTIONS.map((opt) => (
-                      <TagButton key={opt} label={opt} selected={editOrientation.includes(opt)} onClick={() => setEditOrientation(editOrientation.includes(opt) ? editOrientation.filter((o) => o !== opt) : [...editOrientation, opt])} />
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Type de relation</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {RELATIONSHIP_TYPE_OPTIONS.map((opt) => (
-                      <TagButton key={opt} label={opt} selected={editRelationshipType.includes(opt)} onClick={() => setEditRelationshipType(editRelationshipType.includes(opt) ? editRelationshipType.filter((r) => r !== opt) : [...editRelationshipType, opt])} />
-                    ))}
-                  </div>
-                </div>
-                <EditActions saving={saving} onSave={() => saveSection({ orientation: editOrientation, relationshipType: editRelationshipType })} onCancel={() => setEditingSection(null)} />
-              </div>
-            ) : (
               <div className="mt-2 space-y-2">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted">Orientation</p>
-                  <ChipList items={profile.orientation} />
-                </div>
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted">Type de relation</p>
-                  <ChipList items={profile.relationshipType} />
-                </div>
+                <p className="text-sm text-content">
+                  <strong>{age ? `${age} ans` : 'Âge non renseigné'}</strong>
+                  {profile.genderIdentity ? ` · ${genderLabel(profile.genderIdentity)}` : ''}
+                </p>
+                <PrivacyTip tip="Seul ton âge est visible, jamais ta date de naissance. Un pseudo, pas ton vrai nom." />
               </div>
             )}
           </ProfileSection>
 
           {/* Centres d'intérêt */}
-          <ProfileSection sectionId="interests" title="Centres d'intérêt" onEdit={() => startEdit('interests')} editing={editingSection === 'interests'} complete={profile.interests.length > 0}>
-            <PrivacyTip tip="Ces centres d&apos;intérêt aident à trouver des personnes qui partagent vos passions." />
+          <ProfileSection sectionId="interests" title="Centres d'intérêt" icon={<SparkIcon className="h-5 w-5" />} onEdit={() => startEdit('interests')} editing={editingSection === 'interests'} complete={profile.interests.length > 0} defaultOpen>
             {editingSection === 'interests' ? (
               <div className="mt-3 space-y-3">
                 <TagSelector categories={INTEREST_CATEGORIES} selected={editInterests} onChange={setEditInterests} placeholder="Ajouter un centre d&apos;intérêt..." />
                 <EditActions saving={saving} onSave={() => saveSection({ interests: editInterests })} onCancel={() => setEditingSection(null)} />
               </div>
             ) : (
-              <div className="mt-2"><ChipList items={profile.interests} /></div>
-            )}
-          </ProfileSection>
-
-          {/* Pratiques & Préférences */}
-          <ProfileSection sectionId="practices" title="Pratiques & Préférences" surface="sand" onEdit={() => startEdit('practices')} editing={editingSection === 'practices'} complete={profile.practices.length > 0}>
-            <p className="mt-1 text-xs text-muted">
-              Certaines personnes aiment explorer des pratiques sensuelles ou spécifiques. C&apos;est totalement optionnel.
-            </p>
-            {/* Réglage de visibilité (#328) : la phrase qui vivait ici
-                promettait « réservé aux matches » alors que l'API renvoyait le
-                champ à tout compte connecté. Elle décrit désormais un réglage
-                réel, et laisse le choix. */}
-            <div className="mt-3">
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">
-                Qui peut les voir
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                <TagButton
-                  label="Mes matches"
-                  selected={profile.practicesVisibility !== 'public'}
-                  onClick={() => savePracticesVisibility('matches')}
-                />
-                <TagButton
-                  label="Tout le monde"
-                  selected={profile.practicesVisibility === 'public'}
-                  onClick={() => savePracticesVisibility('public')}
-                />
-              </div>
-            </div>
-            <PrivacyTip
-              tip={
-                profile.practicesVisibility === 'public'
-                  ? 'Ces pratiques sont visibles par tous les comptes, y compris dans les découvertes. Tu peux revenir en arrière à tout moment.'
-                  : 'Seules les personnes avec qui tu as matché voient ces pratiques. Elles n\'apparaissent ni dans les découvertes, ni sur ta fiche publique.'
-              }
-            />
-            {editingSection === 'practices' ? (
-              <div className="mt-3 space-y-3">
-                <TagSelector categories={PRACTICE_CATEGORIES} selected={editPractices} onChange={setEditPractices} placeholder="Ajouter une pratique..." />
-                <EditActions saving={saving} onSave={() => saveSection({ practices: editPractices })} onCancel={() => setEditingSection(null)} />
-              </div>
-            ) : (
-              <div className="mt-2"><ChipList items={profile.practices} variant="practices" /></div>
-            )}
-          </ProfileSection>
-
-          {/* Photos sensibles — réglage du LECTEUR (#331), distinct de la
-              classification de ses propres photos. */}
-          <ProfileSection sectionId="photo-sensitivity" title="Photos sensibles" surface="blush" complete>
-            <p className="mt-1 text-xs text-muted">
-              Certaines photos sont classées par la modération ou par leur auteur.
-              Tu choisis ce qui s&apos;affiche sans que tu aies à le demander.
-            </p>
-            <div className="mt-3">
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">
-                J&apos;accepte de voir
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {SENSITIVITY_THRESHOLDS.map((threshold) => (
-                  <TagButton
-                    key={threshold}
-                    label={THRESHOLD_LABELS[threshold]}
-                    selected={(profile.photoSensitivityOptIn || 'none') === threshold}
-                    onClick={() => savePhotoSensitivityOptIn(threshold)}
-                  />
-                ))}
-              </div>
-            </div>
-            <PrivacyTip
-              tip={
-                profile.photoSensitivityOptIn === 'explicit'
-                  ? 'Toutes les photos s\'affichent directement, sans flou.'
-                  : profile.photoSensitivityOptIn === 'suggestive'
-                    ? 'Les photos suggestives s\'affichent directement. Les photos explicites restent floutées.'
-                    : 'Les photos classées arrivent floutées. Tu peux toujours en révéler une au cas par cas.'
-              }
-            />
-          </ProfileSection>
-
-          {/* Photos */}
-          <ProfileSection sectionId="photos" title="Photos" onEdit={() => startEdit('photos')} editing={editingSection === 'photos'} complete={profile.photos.length > 0}>
-            <PrivacyTip tip="Évitez les photos avec des détails identifiables (lieux, plaques, etc.)." />
-            {editingSection === 'photos' ? (
-              <div className="mt-3 space-y-3">
-                {editPhotos.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2">
-                    {editPhotos.map((url, i) => (
-                      <div key={i} className="group relative aspect-square">
-                        <Image src={`/api/photos/${encodeURIComponent(url)}`} alt={`Photo ${i + 1}`} fill className="rounded-lg object-cover" unoptimized />
-                        {photoSensitivity[url] && (
-                          /* Ses propres photos restent nettes, mais la
-                             classification doit se voir : sinon c'est une
-                             sanction invisible (#330). */
-                          <span className="absolute bottom-1 left-1 rounded-full bg-ink/60 px-2 py-0.5 text-[11px] font-semibold text-white">
-                            {SENSITIVITY_LABELS[photoSensitivity[url] as keyof typeof SENSITIVITY_LABELS] ?? 'Sensible'}
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            try {
-                              const res = await fetch('/api/users/photos', {
-                                method: 'DELETE',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ photoKey: url }),
-                              });
-                              if (res.ok) {
-                                const data = await res.json();
-                                setEditPhotos(data.photos);
-                                if (profile) setProfile({ ...profile, photos: data.photos });
-                              }
-                            } catch { /* ignore */ }
-                          }}
-                          className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100"
-                          aria-label="Supprimer"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {photoError && <p className="text-xs text-red-600 dark:text-red-400">{photoError}</p>}
-                {/* Auto-déclaration (#332) : le chemin sain, la modération a
-                    posteriori arrivant toujours après que quelqu'un a vu la
-                    photo. Copie descriptive, sans jugement sur ce qu'on publie. */}
-                <label className="flex items-start gap-2 text-sm text-content">
-                  <input
-                    type="checkbox"
-                    checked={declareSensitive}
-                    onChange={(e) => setDeclareSensitive(e.target.checked)}
-                    className="mt-1 h-4 w-4 accent-coral"
-                  />
-                  <span>
-                    Ma prochaine photo est suggestive
-                    <span className="block text-xs text-muted">
-                      Elle arrivera floutée aux personnes qui n&apos;ont pas demandé à voir ce contenu.
-                    </span>
-                  </span>
-                </label>
-                {editPhotos.length < 6 && (
-                  <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-hairline-strong bg-fill-subtle p-4 transition-colors hover:border-coral hover:bg-blush dark:hover:border-coral-light dark:hover:bg-coral/10">
-                    {uploading ? (
-                      <span className="text-xs text-muted">Envoi en cours...</span>
-                    ) : (
-                      <>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-muted">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.329 47.329 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-3.246 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
-                        </svg>
-                        <span className="mt-1 text-xs text-muted">JPG, PNG ou WebP — 5 Mo max</span>
-                      </>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="hidden"
-                      disabled={uploading}
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        setUploading(true);
-                        setPhotoError('');
-                        try {
-                          const formData = new FormData();
-                          formData.append('photo', file);
-                          // Auto-déclaration (#332) : se classer soi-même évite
-                          // que quelqu'un voie la photo avant la modération.
-                          if (declareSensitive) formData.append('sensitivity', 'suggestive');
-                          const res = await fetch('/api/users/photos', { method: 'POST', body: formData });
-                          const data = await res.json();
-                          if (!res.ok) throw new Error(data.error || 'Erreur');
-                          setEditPhotos(data.photos);
-                          if (profile) setProfile({ ...profile, photos: data.photos });
-                          if (declareSensitive) {
-                            setPhotoSensitivity((m) => ({ ...m, [data.photo]: 'suggestive' }));
-                            setDeclareSensitive(false);
-                          }
-                          toast('Photo ajoutée.');
-                        } catch (err) {
-                          setPhotoError(err instanceof Error ? err.message : 'Erreur lors de l\'envoi');
-                        } finally {
-                          setUploading(false);
-                          e.target.value = '';
-                        }
-                      }}
-                    />
-                  </label>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setEditingSection(null)}
-                  className="rounded-full border border-hairline-strong bg-surface px-4 py-1.5 text-xs font-medium text-muted hover:bg-fill-subtle"
-                >
-                  Fermer
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <ChipList items={profile.interests} />
+                <button type="button" onClick={() => startEdit('interests')} className="rounded-full border border-dashed border-coral-light px-3 py-1 text-xs font-medium text-coral hover:bg-blush/50">
+                  + ajouter
                 </button>
               </div>
-            ) : (
-              <div className="mt-2">
-                <ProfilePhotoHero
-                  photos={profile.photos}
-                  onAddClick={() => setEditingSection('photos')}
-                />
-              </div>
             )}
           </ProfileSection>
+          </div>
+
+          <p className="mb-2 mt-6 text-[11px] font-semibold uppercase tracking-wider text-muted">Où et qui je cherche</p>
+          <div className="space-y-2.5">
 
           {/* Ta position — ville saisie à la main en repli de la géoloc (spec 004) */}
           <ProfilePositionCard
@@ -620,17 +670,21 @@ export default function ProfilePage() {
           />
 
           {/* Préférences de recherche — même composant que /discover (#235) */}
-          <ProfileSection sectionId="search" title="Préférences de recherche" surface="blush" onEdit={() => startEdit('search')} editing={editingSection === 'search'} complete>
-            <p className="mt-1 text-xs text-muted">
-              Qui souhaitez-vous rencontrer ? Ces préférences filtrent aussi votre page Découvrir.
-            </p>
+          <ProfileSection
+            sectionId="search"
+            title="Préférences de recherche"
+            icon={<LoupeIcon className="h-5 w-5" />}
+            surface="blush"
+            status="set"
+            summary={searchSummary}
+            defaultOpen={false}
+            onEdit={() => startEdit('search')}
+            editing={editingSection === 'search'}
+          >
+            <p className="mt-1 text-xs text-muted">Qui souhaites-tu rencontrer ? Ces préférences filtrent aussi ta page Découvrir.</p>
             {editingSection === 'search' ? (
               <div className="mt-3 space-y-4">
-                <SearchFilters
-                  value={editSearchFilters}
-                  onChange={setEditSearchFilters}
-                  framed={false}
-                />
+                <SearchFilters value={editSearchFilters} onChange={setEditSearchFilters} framed={false} />
                 <EditActions
                   saving={saving}
                   onSave={() => saveSection({
@@ -649,54 +703,132 @@ export default function ProfilePage() {
               <div className="mt-2 space-y-2">
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wider text-muted">Genre recherché</p>
-                  {profile.searchGenders.length > 0
-                    ? <ChipList items={profile.searchGenders.map((g) => GENDER_OPTIONS.find((o) => o.value === g)?.label || g)} />
-                    : <span className="text-xs italic text-muted">Tous</span>}
+                  {profile.searchGenders.length > 0 ? <ChipList items={profile.searchGenders.map(genderLabel)} /> : <span className="text-xs italic text-muted">Tous</span>}
                 </div>
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wider text-muted">Orientation recherchée</p>
-                  {profile.searchOrientations.length > 0
-                    ? <ChipList items={profile.searchOrientations} />
-                    : <span className="text-xs italic text-muted">Toutes</span>}
+                  {profile.searchOrientations.length > 0 ? <ChipList items={profile.searchOrientations} /> : <span className="text-xs italic text-muted">Toutes</span>}
                 </div>
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wider text-muted">Type de relation recherché</p>
-                  {profile.searchRelationshipTypes.length > 0
-                    ? <ChipList items={profile.searchRelationshipTypes} />
-                    : <span className="text-xs italic text-muted">Tous</span>}
+                  {profile.searchRelationshipTypes.length > 0 ? <ChipList items={profile.searchRelationshipTypes} /> : <span className="text-xs italic text-muted">Tous</span>}
                 </div>
                 <ProfileField label="Tranche d'âge">{profile.ageMin} – {profile.ageMax} ans</ProfileField>
-                <ProfileField label="Distance max">
-                  {profile.searchDistanceKm !== null ? `${profile.searchDistanceKm} km` : 'Partout'}
-                </ProfileField>
+                <ProfileField label="Distance max">{profile.searchDistanceKm !== null ? `${profile.searchDistanceKm} km` : 'Partout'}</ProfileField>
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wider text-muted">Centres d&apos;intérêt recherchés</p>
-                  {profile.searchInterests.length > 0
-                    ? <ChipList items={profile.searchInterests} />
-                    : <span className="text-xs italic text-muted">Peu importe</span>}
+                  {profile.searchInterests.length > 0 ? <ChipList items={profile.searchInterests} /> : <span className="text-xs italic text-muted">Peu importe</span>}
+                </div>
+              </div>
+            )}
+          </ProfileSection>
+          </div>
+
+          <p className="mb-2 mt-6 text-[11px] font-semibold uppercase tracking-wider text-muted">Intimité et confidentialité</p>
+          <div className="space-y-2.5">
+
+          {/* Pratiques & Préférences — la visibilité reste modifiable au clic,
+              hors mode édition (#328). */}
+          <ProfileSection
+            sectionId="practices"
+            title="Pratiques & préférences"
+            icon={<EyeIcon className="h-5 w-5" />}
+            surface="sand"
+            status="optional"
+            summary={practicesSummary}
+            defaultOpen={false}
+            onEdit={() => startEdit('practices')}
+            editing={editingSection === 'practices'}
+          >
+            <p className="mt-1 text-xs text-muted">Certaines personnes aiment explorer des pratiques sensuelles ou spécifiques. C&apos;est totalement optionnel.</p>
+            <div className="mt-3">
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Qui peut les voir</p>
+              <div className="flex flex-wrap gap-1.5">
+                <TagButton label="Mes matches" selected={profile.practicesVisibility !== 'public'} onClick={() => savePracticesVisibility('matches')} />
+                <TagButton label="Tout le monde" selected={profile.practicesVisibility === 'public'} onClick={() => savePracticesVisibility('public')} />
+              </div>
+            </div>
+            <PrivacyTip
+              tip={
+                profile.practicesVisibility === 'public'
+                  ? 'Ces pratiques sont visibles par tous les comptes, y compris dans les découvertes. Tu peux revenir en arrière à tout moment.'
+                  : 'Seules les personnes avec qui tu as matché voient ces pratiques. Elles n\'apparaissent ni dans les découvertes, ni sur ta fiche publique.'
+              }
+            />
+            {editingSection === 'practices' ? (
+              <div className="mt-3 space-y-3">
+                <TagSelector categories={PRACTICE_CATEGORIES} selected={editPractices} onChange={setEditPractices} placeholder="Ajouter une pratique..." />
+                <EditActions saving={saving} onSave={() => saveSection({ practices: editPractices })} onCancel={() => setEditingSection(null)} />
+              </div>
+            ) : (
+              <div className="mt-3">
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Mes pratiques</p>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <ChipList items={profile.practices} variant="practices" />
+                  <button type="button" onClick={() => startEdit('practices')} className="rounded-full border border-dashed border-coral-light px-3 py-1 text-xs font-medium text-coral hover:bg-blush/50">+ ajouter</button>
                 </div>
               </div>
             )}
           </ProfileSection>
 
+          {/* Photos sensibles — réglage du LECTEUR (#331), distinct de la
+              classification de ses propres photos. */}
+          <ProfileSection
+            sectionId="photo-sensitivity"
+            title="Photos sensibles"
+            icon={<EyeOffIcon className="h-5 w-5" />}
+            surface="blush"
+            status="set"
+            summary={sensitivitySummary}
+            defaultOpen={false}
+          >
+            <p className="mt-1 text-xs text-muted">Certaines photos sont classées par la modération ou par leur auteur. Tu choisis ce qui s&apos;affiche sans que tu aies à le demander.</p>
+            <div className="mt-3">
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">J&apos;accepte de voir</p>
+              <div className="flex flex-wrap gap-1.5">
+                {SENSITIVITY_THRESHOLDS.map((threshold) => (
+                  <TagButton key={threshold} label={THRESHOLD_LABELS[threshold]} selected={(profile.photoSensitivityOptIn || 'none') === threshold} onClick={() => savePhotoSensitivityOptIn(threshold)} />
+                ))}
+              </div>
+            </div>
+            <PrivacyTip
+              tip={
+                profile.photoSensitivityOptIn === 'explicit'
+                  ? 'Toutes les photos s\'affichent directement, sans flou.'
+                  : profile.photoSensitivityOptIn === 'suggestive'
+                    ? 'Les photos suggestives s\'affichent directement. Les photos explicites restent floutées.'
+                    : 'Les photos classées arrivent floutées. Tu peux toujours en révéler une au cas par cas.'
+              }
+            />
+          </ProfileSection>
+
           {/* Liens sociaux */}
-          <ProfileSection sectionId="social" title="Liens sociaux" onEdit={() => startEdit('social')} editing={editingSection === 'social'} complete={Object.keys(profile.socialLinks || {}).length > 0}>
-            <PrivacyTip tip="Ne les partagez qu&apos;avec des personnes de confiance." />
+          <ProfileSection
+            sectionId="social"
+            title="Liens sociaux"
+            icon={<LinkIcon className="h-5 w-5" />}
+            status="optional"
+            summary={socialSummary}
+            defaultOpen={false}
+            onEdit={() => startEdit('social')}
+            editing={editingSection === 'social'}
+          >
+            <PrivacyTip tip="Ne les partage qu'avec des personnes de confiance." />
             {editingSection === 'social' ? (
               <div className="mt-3 space-y-3">
                 {Object.entries(editSocialLinks).map(([platform, url]) => (
                   <div key={platform} className="flex items-center gap-2">
                     <span className="w-20 shrink-0 text-xs font-medium text-muted">{platform}</span>
                     <input type="url" value={url} onChange={(e) => setEditSocialLinks({ ...editSocialLinks, [platform]: e.target.value })} className={INPUT_CLASS_SM} />
-                    <button type="button" onClick={() => { const c = { ...editSocialLinks }; delete c[platform]; setEditSocialLinks(c); }} className="text-xs text-red-500 dark:text-red-400">✕</button>
+                    <button type="button" onClick={() => { const c = { ...editSocialLinks }; delete c[platform]; setEditSocialLinks(c); }} className="text-xs text-red-500 dark:text-red-400" aria-label={`Retirer ${platform}`}>✕</button>
                   </div>
                 ))}
                 <div className="flex gap-2">
-                  <select value={editSocialPlatform} onChange={(e) => setEditSocialPlatform(e.target.value)} className="rounded-md border border-hairline-strong px-2 py-1.5 text-xs">
+                  <select value={editSocialPlatform} onChange={(e) => setEditSocialPlatform(e.target.value)} className="rounded-md border border-hairline-strong px-2 py-1.5 text-xs" aria-label="Plateforme">
                     {SOCIAL_PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
                   </select>
-                  <input type="url" value={editSocialUrl} onChange={(e) => setEditSocialUrl(e.target.value)} placeholder="https://..." className={INPUT_CLASS_SM} />
-                  <button type="button" onClick={() => { if (editSocialUrl.trim()) { setEditSocialLinks({ ...editSocialLinks, [editSocialPlatform]: editSocialUrl.trim() }); setEditSocialUrl(''); } }} disabled={!editSocialUrl.trim()} className="rounded-md border border-hairline-strong px-3 py-1.5 text-xs disabled:opacity-40">+</button>
+                  <input type="url" value={editSocialUrl} onChange={(e) => setEditSocialUrl(e.target.value)} placeholder="https://..." className={INPUT_CLASS_SM} aria-label="Adresse du profil" />
+                  <button type="button" onClick={() => { if (editSocialUrl.trim()) { setEditSocialLinks({ ...editSocialLinks, [editSocialPlatform]: editSocialUrl.trim() }); setEditSocialUrl(''); } }} disabled={!editSocialUrl.trim()} className="rounded-md border border-hairline-strong px-3 py-1.5 text-xs disabled:opacity-40" aria-label="Ajouter ce lien">+</button>
                 </div>
                 <EditActions saving={saving} onSave={() => saveSection({ socialLinks: editSocialLinks })} onCancel={() => setEditingSection(null)} />
               </div>
@@ -704,40 +836,33 @@ export default function ProfilePage() {
               <div className="mt-2">
                 {Object.keys(profile.socialLinks || {}).length > 0
                   ? <ChipList items={Object.keys(profile.socialLinks)} />
-                  : <span className="text-xs italic text-muted">Non renseigné</span>}
+                  : <span className="text-xs italic text-muted">Instagram, Snapchat, TikTok, Twitter, Telegram, Discord.</span>}
               </div>
             )}
           </ProfileSection>
 
           {/* Conseils vie privée */}
-          <section className="rounded-xl border border-hairline bg-fill-subtle p-4 sm:p-5">
-            <h2 className="text-lg font-semibold text-content">Conseils vie privée</h2>
+          <ProfileSection sectionId="privacy-tips" title="Conseils vie privée" icon={<ShieldIcon className="h-5 w-5" />} summary="Pseudo, prudence, signalement" defaultOpen={false}>
             <ul className="mt-3 space-y-2 text-xs text-muted">
-              <li className="flex gap-2"><span aria-hidden="true">•</span>N&apos;utilisez jamais votre vrai nom complet comme pseudo.</li>
-              <li className="flex gap-2"><span aria-hidden="true">•</span>Ne faites pas confiance aveuglément à quelqu&apos;un en ligne, même sur Libre.</li>
-              <li className="flex gap-2"><span aria-hidden="true">•</span>Ne partagez pas d&apos;informations sensibles (adresse, lieu de travail) dans votre bio.</li>
-              <li className="flex gap-2"><span aria-hidden="true">•</span>Vos messages sont chiffrés, mais Libre ne peut pas garantir la bonne foi de la personne en face.</li>
-              <li className="flex gap-2"><span aria-hidden="true">•</span>Signalez tout comportement suspect. La modération communautaire est là pour ça.</li>
+              <li className="flex gap-2"><span aria-hidden="true">•</span>N&apos;utilise jamais ton vrai nom complet comme pseudo.</li>
+              <li className="flex gap-2"><span aria-hidden="true">•</span>Ne fais pas confiance aveuglément à quelqu&apos;un en ligne, même sur Libre.</li>
+              <li className="flex gap-2"><span aria-hidden="true">•</span>Ne partage pas d&apos;informations sensibles (adresse, lieu de travail) dans ta bio.</li>
+              <li className="flex gap-2"><span aria-hidden="true">•</span>Tes messages sont chiffrés, mais Libre ne peut pas garantir la bonne foi de la personne en face.</li>
+              <li className="flex gap-2"><span aria-hidden="true">•</span>Signale tout comportement suspect. La modération communautaire est là pour ça.</li>
             </ul>
-          </section>
+          </ProfileSection>
 
-          {/* Zone dangereuse */}
-          <section className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20 sm:p-5">
-            <h2 className="text-lg font-semibold text-red-700 dark:text-red-400">Zone dangereuse</h2>
-            <p className="mt-2 text-xs text-muted">La suppression de votre compte est définitive. Toutes vos données seront effacées.</p>
-            {!showDeleteConfirm ? (
-              <button type="button" onClick={() => setShowDeleteConfirm(true)} className="mt-3 rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/30">Supprimer mon compte</button>
-            ) : (
-              <div className="mt-3 space-y-2">
-                <p className="text-xs font-medium text-red-700 dark:text-red-400">Etes-vous sûr ? Cette action est irréversible.</p>
-                <div className="flex gap-2">
-                  <button type="button" onClick={handleDeleteAccount} className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700">Oui, supprimer</button>
-                  <button type="button" onClick={() => setShowDeleteConfirm(false)} className="rounded-md border border-hairline-strong px-3 py-1.5 text-xs font-medium text-muted hover:bg-fill-subtle">Annuler</button>
-                </div>
-              </div>
-            )}
-          </section>
-        </div>
+          {/* Supprimer mon compte — le parcours complet (confirmation par mot
+              de passe) vit dans Paramètres ; ici on y mène, on ne le duplique
+              plus (la copie d'ici appelait DELETE sans mot de passe → 400). */}
+          <ProfileSection sectionId="danger" title="Supprimer mon compte" icon={<WarnIcon className="h-5 w-5" />} surface="danger" summary="Définitif : profil, photos, conversations" defaultOpen={false}>
+            <p className="mt-2 text-xs text-muted">La suppression est définitive : profil, photos et conversations sont effacés. Elle se confirme avec ton mot de passe, dans Paramètres.</p>
+            <Link href="/settings#zone-dangereuse" className="mt-3 inline-flex min-h-[44px] items-center rounded-md border border-error/40 px-3 text-sm font-medium text-error hover:bg-red-50 dark:hover:bg-red-950/30">
+              Supprimer mon compte…
+            </Link>
+          </ProfileSection>
+          </div>
+        </>
       )}
     </SiteShell>
   );

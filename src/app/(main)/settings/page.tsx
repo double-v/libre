@@ -63,6 +63,14 @@ export default function SettingsPage() {
     }
   }, []);
 
+  // Arrivée avec une ancre (ex. /settings#zone-dangereuse depuis le profil,
+  // #413) : la section n'existe qu'après le chargement, donc le navigateur
+  // ne l'a pas trouvée à la navigation. On y va une fois montée.
+  useEffect(() => {
+    if (loading || typeof window === 'undefined' || !window.location.hash) return;
+    document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ block: 'start' });
+  }, [loading]);
+
   useEffect(() => {
     // IIFE async → pas de setState synchrone dans le corps de l'effet
     // (react-hooks/set-state-in-effect, cf. #179/#193).
@@ -242,7 +250,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Delete account */}
-        <section className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20 sm:p-5">
+        <section id="zone-dangereuse" className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20 sm:p-5">
           <h2 className="mb-2 text-lg font-semibold text-red-700 dark:text-red-400">
             Zone dangereuse
           </h2>
