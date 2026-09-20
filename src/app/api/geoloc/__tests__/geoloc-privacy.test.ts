@@ -180,6 +180,25 @@ describe('POST /api/geoloc/update — privacy (issue #153)', () => {
     expect(fakeDb.profile.upsert).not.toHaveBeenCalled();
   });
 
+  it('accepte le premier enregistrement même si le profil vient d\'être édité (#400)', async () => {
+    // Profil créé/édité il y a 2 min (onboarding, filtres de Découvrir) mais
+    // jamais géolocalisé : le throttle ne doit pas retomber sur updatedAt,
+    // sinon la première position part à la poubelle avec un 200 silencieux.
+    fakeDb.profile.findUnique.mockResolvedValue({
+      invisibleMode: false,
+      lastGeolocAt: null,
+      lastKnownLat: 0,
+      lastKnownLng: 0,
+      updatedAt: new Date(Date.now() - 2 * 60 * 1000),
+    });
+
+    const res = await POST(makeRequest({ latitude: 48.86, longitude: 2.36 }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.throttled).toBeUndefined();
+    expect(fakeDb.profile.upsert).toHaveBeenCalledTimes(1);
+  });
+
   it('allows update when no lastGeolocAt set (first update)', async () => {
     fakeDb.profile.findUnique.mockResolvedValue(null);
 

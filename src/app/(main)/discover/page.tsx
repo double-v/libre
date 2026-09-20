@@ -8,6 +8,7 @@ import GridFillerCards from '@/components/GridFillerCards';
 import CrossingsView from '@/components/CrossingsView';
 import Button from '@/components/ui/Button';
 import SiteShell from '@/components/ui/SiteShell';
+import { classifyGeolocError, geolocFailureMessage, geolocUpdateMessage } from '@/lib/geoloc-client';
 
 // Onglet unique de découverte : un seul écran, trois façons de rencontrer.
 // « Pour toi » = feed algorithmique, « À proximité » = rayon géoloc,
@@ -215,7 +216,7 @@ export default function DiscoverPage() {
   function handleActivateGeoloc() {
     setGeoError('');
     if (!navigator.geolocation) {
-      setGeoError("La géolocalisation n'est pas disponible sur cet appareil.");
+      setGeoError(geolocFailureMessage('unsupported'));
       return;
     }
     setGeoRequesting(true);
@@ -231,6 +232,14 @@ export default function DiscoverPage() {
             }),
           });
           if (!res.ok) throw new Error();
+          // Un 200 peut ne rien avoir enregistré (mode invisible) : le dire,
+          // sinon l'invite réapparaît à l'identique et l'utilisatrice conclut
+          // que « ça ne marche pas » (#400).
+          const message = geolocUpdateMessage(await res.json());
+          if (message) {
+            setGeoError(message);
+            return;
+          }
           await fetchPage(true);
         } catch {
           setGeoError('Impossible d\'enregistrer ta position, réessaie plus tard.');
@@ -238,10 +247,8 @@ export default function DiscoverPage() {
           setGeoRequesting(false);
         }
       },
-      () => {
-        setGeoError(
-          "Géolocalisation refusée. Autorise l'accès dans les réglages de ton navigateur pour voir les célibataires à proximité.",
-        );
+      (error) => {
+        setGeoError(geolocFailureMessage(classifyGeolocError(error)));
         setGeoRequesting(false);
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
