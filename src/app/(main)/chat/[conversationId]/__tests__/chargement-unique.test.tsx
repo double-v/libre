@@ -23,7 +23,7 @@ vi.mock('@/hooks/useEncryptedChat', () => ({
 }));
 const encryptMessage = vi.fn(async (t: string, clePair: string) => `chiffre-pour:${clePair}:${t}`);
 vi.mock('@/lib/crypto', () => ({
-  encryptMessage: (...a: [string, string, string]) => encryptMessage(...a),
+  encryptMessage: (t: string, clePair: string) => encryptMessage(t, clePair),
   decryptMessageAvecHistorique: vi.fn(async (t: string) => t),
 }));
 vi.mock('@/components/chat/ChatMessageList', () => ({
