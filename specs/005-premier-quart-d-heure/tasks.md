@@ -145,14 +145,14 @@ l'ordre photo > cherche > position, écartable 7 jours, sans nombre. Ferme **#34
 
 ### Tests for User Story 4
 
-- [ ] T033 [P] [US4] Test rouge `src/components/__tests__/ProfileNudgeCard.test.tsx` : pour chaque `MissingKind`, rend la copie de `NUDGE_COPY` et un lien vers l'ancre attendue ; « Plus tard » appelle `onDismiss` ; le texte ne contient aucun chiffre ; la carte porte `aria-label="Compléter ton profil"`
-- [ ] T034 [P] [US4] Test rouge `src/app/(main)/discover/__tests__/nudge-card.test.tsx` : profil sans photo + pas de clé → carte rendue avant le premier `ProfileCard` ; clé datée d'hier → pas de carte ; clé datée de 8 jours → carte ; profil complet → pas de carte ; `localStorage` qui `throw` → carte rendue
+- [x] T033 [P] [US4] Test rouge `src/components/__tests__/ProfileNudgeCard.test.tsx` : pour chaque `MissingKind`, rend la copie de `NUDGE_COPY` et un lien vers l'ancre attendue ; « Plus tard » appelle `onDismiss` ; le texte ne contient aucun chiffre ; la carte porte `aria-label="Compléter ton profil"`
+- [x] T034 [P] [US4] Test rouge `src/app/(main)/discover/__tests__/nudge-card.test.tsx` : profil sans photo + pas de clé → carte rendue avant le premier `ProfileCard` ; clé datée d'hier → pas de carte ; clé datée de 8 jours → carte ; profil complet → pas de carte ; `localStorage` qui `throw` → carte rendue
 
 ### Implementation for User Story 4
 
-- [ ] T035 [US4] Créer `src/components/ProfileNudgeCard.tsx` : `Card` silhouette `ProfileCard`, zone haute `bg-sunken` avec cœur coral, eyebrow « Ton profil », titre, texte, `Button` primary (lien) + ghost « Plus tard » ; vert sur T033
-- [ ] T036 [US4] Insérer la carte dans la grille de `src/app/(main)/discover/page.tsx` (avant `visibleUsers`, uniquement sur `tab === 'all'` et page 1), pilotée par `deriveMissing(profile)` et `NUDGE_DISMISS_KEY` (lecture/écriture en `try/catch`) ; ajuster `GridFillerCards` si `realCount` doit compter la carte ; vert sur T034
-- [ ] T037 [P] [US4] Poser `id="profile-section-position"` sur le conteneur de `ProfilePositionCard` dans `src/components/ProfilePositionCard.tsx` (les deux autres ancres existent via `ProfileSection`)
+- [x] T035 [US4] Créer `src/components/ProfileNudgeCard.tsx` : `Card` silhouette `ProfileCard`, zone haute `bg-sunken` avec cœur coral, eyebrow « Ton profil », titre, texte, `Button` primary (lien) + ghost « Plus tard » ; vert sur T033
+- [x] T036 [US4] Insérer la carte dans la grille de `src/app/(main)/discover/page.tsx` (avant `visibleUsers`, uniquement sur `tab === 'all'` et page 1), pilotée par `deriveMissing(profile)` et `NUDGE_DISMISS_KEY` (lecture/écriture en `try/catch`) ; ajuster `GridFillerCards` si `realCount` doit compter la carte ; vert sur T034
+- [x] T037 [P] [US4] Poser `id="profile-section-position"` sur le conteneur de `ProfilePositionCard` dans `src/components/ProfilePositionCard.tsx` (les deux autres ancres existent via `ProfileSection`)
 
 **Checkpoint**: T033/T034 verts ; quickstart S6 ; captures de la grille avec carte en 420 px et 1080 px.
 
