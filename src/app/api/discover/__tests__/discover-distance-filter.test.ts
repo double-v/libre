@@ -193,10 +193,14 @@ describe('GET /api/discover?tab=all — distance affichée sans filtre (#327)', 
     const res = await GET(makeRequest('tab=all'));
     const body = await res.json();
 
-    expect(body.users[0].distanceBucket).toBe('lt1');
-    expect(body.users[1].distanceBucket).toBe('gt50');
-    // Chemin historique conservé : pagination par curseur Prisma.
-    expect(fakeDb.profile.findMany.mock.calls[0][0].take).toBe(21);
+    // L'ordre entre deux profils à activité égale n'est pas garanti (départage
+    // par userId depuis le tri « visages d'abord », spec 005) : on regarde
+    // l'ensemble des tranches, pas leur position.
+    const buckets = body.users.map((u: { distanceBucket: string }) => u.distanceBucket).sort();
+    expect(buckets).toEqual(['gt50', 'lt1']);
+    // Depuis la spec 005, « Pour toi » trie en mémoire (visages d'abord) :
+    // plus de `take` Prisma, la page est découpée après le tri complet.
+    expect(fakeDb.profile.findMany.mock.calls[0][0].take).toBeUndefined();
   });
 
   it('n\'affiche rien quand l\'autre profil n\'a pas de géoloc', async () => {

@@ -141,4 +141,17 @@ describe('Turnstile enforcement on /api/auth/register (#144)', () => {
     expect(res.status).toBe(201);
     expect(mockVerifyTurnstile).not.toHaveBeenCalled();
   });
+
+  it('crée le profil dans la même opération que le compte (#342, spec 005)', async () => {
+    vi.stubEnv('TURNSTILE_SECRET_KEY', '');
+    vi.stubEnv('NODE_ENV', 'development');
+
+    const res = await POST(buildRequest({ turnstileToken: undefined }));
+
+    expect(res.status).toBe(201);
+    // Sans ligne de profil, un compte n'existe pour personne dans Découvrir :
+    // c'est la création imbriquée qui l'empêche, et rien d'autre.
+    const data = fakeDb.user.create.mock.calls[0][0].data;
+    expect(data.profile?.create).toBeDefined();
+  });
 });

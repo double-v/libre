@@ -71,13 +71,13 @@ profils avec photo précèdent les trois sans, quelle que soit l'activité.
 
 ### Tests for User Story 1
 
-- [ ] T012 [P] [US1] Test rouge `src/app/api/discover/__tests__/discover-photo-first.test.ts` (base du fichier `discover-distance-filter.test.ts`) : les quatre cas du contrat `discover-feed-order.md` — photo avant sans photo malgré `lastActive` plus ancien ; à photo égale, activité récente d'abord ; page 2 via `nextCursor` sans doublon et dans le même ordre (mettre 25 profils, PAGE_SIZE = 20) ; aucun profil sans photo absent de l'union des pages ; sur les deux chemins `tab=all` (sans et avec `distance=50` + profil géolocalisé)
-- [ ] T013 [P] [US1] Test rouge `src/app/api/auth/register/__tests__/register-creates-profile.test.ts` (ou ajout au test existant) : `user.create` est appelé avec `profile.create` — garde de non-régression de #342 (déjà vrai depuis #375, à verrouiller)
+- [x] T012 [P] [US1] Test rouge `src/app/api/discover/__tests__/discover-photo-first.test.ts` (base du fichier `discover-distance-filter.test.ts`) : les quatre cas du contrat `discover-feed-order.md` — photo avant sans photo malgré `lastActive` plus ancien ; à photo égale, activité récente d'abord ; page 2 via `nextCursor` sans doublon et dans le même ordre (mettre 25 profils, PAGE_SIZE = 20) ; aucun profil sans photo absent de l'union des pages ; sur les deux chemins `tab=all` (sans et avec `distance=50` + profil géolocalisé)
+- [x] T013 [P] [US1] Test rouge `src/app/api/auth/register/__tests__/register-creates-profile.test.ts` (ou ajout au test existant) : `user.create` est appelé avec `profile.create` — garde de non-régression de #342 (déjà vrai depuis #375, à verrouiller)
 
 ### Implementation for User Story 1
 
-- [ ] T014 [US1] Refondre les deux chemins `tab === 'all'` de `src/app/api/discover/route.ts` sur `paginateSorted` : `findMany` sur `baseWhere` (+ `geoWhere` si distance), tri `(hasPhoto desc, lastActive desc, userId asc)`, `sortValue = (hasPhoto ? 2 ** 53 : 0) + lastActive` ; supprimer le curseur Prisma sur ce chemin ; commentaire « limite connue » du contrat — vert sur T012
-- [ ] T015 [US1] Vérifier FR-003 dans `src/app/api/discover/route.ts` : la clause `birthDate` n'est posée que si `ageMin > 18 || ageMax < 99` (déjà le cas) ; ajouter un `it` dans T012 qui le prouve (profil sans `birthDate` présent sans filtre d'âge)
+- [x] T014 [US1] Refondre les deux chemins `tab === 'all'` de `src/app/api/discover/route.ts` sur `paginateSorted` : `findMany` sur `baseWhere` (+ `geoWhere` si distance), tri `(hasPhoto desc, lastActive desc, userId asc)`, `sortValue = (hasPhoto ? 2 ** 53 : 0) + lastActive` ; supprimer le curseur Prisma sur ce chemin ; commentaire « limite connue » du contrat — vert sur T012
+- [x] T015 [US1] Vérifier FR-003 dans `src/app/api/discover/route.ts` : la clause `birthDate` n'est posée que si `ageMin > 18 || ageMax < 99` (déjà le cas) ; ajouter un `it` dans T012 qui le prouve (profil sans `birthDate` présent sans filtre d'âge)
 
 **Checkpoint**: T012/T013 verts ; sur base locale clonée + migration : 0 compte sans profil (quickstart S1, S7).
 
