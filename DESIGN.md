@@ -793,6 +793,7 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 | `Toast` | enter, visible, exit (auto-dismiss) | success, info, error | Confirmations fugaces d'action (signalement, check-in validé, sauvegarde) |
 | `ThemeMenu` | closed, open, focus-trap | popover (desktop), bottom-sheet (mobile) | `LobbyThemeSwitcher`, radios d'apparence en double |
 | `ThemeToggle` | light, dark, auto | icon-button (cycle Mode) | boutons Mode ad hoc dans les headers |
+| `ActionMenu` | closed, open | « ⋯ » + `role="menu"` (2–4 actions contextuelles) | actions inline qui débordent d'une ligne (en-tête du fil, #417) |
 | `CityPicker` | idle, typing (< 3 lettres, sans recherche), loading, open (listbox, option active), empty, unavailable, rate-limited | — | Toute saisie de ville (profil, invite Découvrir) — spec 004 |
 | `SiteShell` | — | content, reading, app | Les `mx-auto max-w-* px-*` ad hoc dispersés (448/512/672/768/1080) |
 | `SiteNav` | guest, connecté | guest, authed (× width) | `LobbyNav`, `TopNav`, nav ad hoc de `/manifesto` |
@@ -1021,6 +1022,32 @@ sélecteurs ad hoc historiques (`LobbyThemeSwitcher`, radios en double).
 - **Garde-fou re-skin** : les vignettes d'aperçu **doivent** différer d'un thème à
   l'autre (elles portent `data-theme` en local) — c'est le contrôle visuel que le
   système de tokens fonctionne, en écho au render-check `variantsIdentical`.
+
+### ActionMenu (`src/components/ui/ActionMenu.tsx`)
+
+Le « ⋯ » du DS (#417). Quand une ligne porte plus d'actions qu'elle n'a de
+place — l'en-tête d'un fil à 390 px : prénom + « On échange nos réseaux ? » +
+« Activer un check-in de sécurité » — le contenu garde sa ligne et les actions
+passent derrière **un seul déclencheur**. Ce n'est pas un menu de navigation :
+deux à quatre actions contextuelles, jamais plus.
+
+- **Déclencheur** : `icon-button` 44 × 44 (`rounded-control`, `text-muted` →
+  `hover:bg-fill-subtle hover:text-content`), trois points, `aria-label`
+  explicite (« Plus d’actions »), `aria-haspopup="menu"` + `aria-expanded`.
+- **Panneau** : `role="menu"` ancré sous le bouton, aligné en fin de ligne
+  (`align="end"` par défaut), `bg-surface`, `rounded-card`, `border-hairline`,
+  `shadow-pop`, largeur min 220 px. **Pas d'animation** : deux lignes qui
+  apparaissent n'ont rien à montrer — c'est déjà la version
+  `prefers-reduced-motion`.
+- **Éléments** : fournis par l'appelant (`children(fermer)`), avec
+  `role="menuitem"`, pleine largeur, `min-h-[44px]`, `px-3`, `text-sm`,
+  `hover:bg-fill-subtle`. Un composant existant y entre tel quel avec une
+  `presentation="menu"` (cf. `ShareContactButton`). L'élément qui agit appelle
+  `fermer()` lui-même.
+- **A11y** : Échap et clic-dehors ferment ; focus sur le premier élément à
+  l'ouverture, rendu au déclencheur à la fermeture.
+- **Ce qui n'y va pas** : un état à montrer en permanence (le check-in **actif**
+  reste un bandeau sous l'en-tête), une action primaire de la page.
 
 ### ThemeToggle (`src/components/ui/ThemeToggle.tsx`)
 

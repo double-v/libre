@@ -15,6 +15,7 @@ import ProfileModal from '@/components/ProfileModal';
 import { CheckinButton } from '@/components/CheckinButton';
 import ChatMessageList from '@/components/chat/ChatMessageList';
 import Alert from '@/components/ui/Alert';
+import ActionMenu from '@/components/ui/ActionMenu';
 
 // Taille de page (miroir du défaut serveur, #200). On ne charge/déchiffre que
 // cette tranche au départ ; le scroll-up charge les plus anciennes.
@@ -88,6 +89,8 @@ export default function ChatConversationPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [otherUser, setOtherUser] = useState<ConversationData['otherUser'] | null>(null);
   const [otherPublicKey, setOtherPublicKey] = useState<string | null>(null);
+  const [checkinModal, setCheckinModal] = useState(false);
+  const [checkinActif, setCheckinActif] = useState(false);
   // Les clés du pair sont lues par le déchiffrement via cette ref, pas via
   // l'état : `loadConversation` les pose puis déchiffre dans la foulée, et une
   // fermeture sur l'état verrait encore `null`. Les passer en dépendance
@@ -427,13 +430,48 @@ export default function ChatConversationPage() {
             {otherUser?.displayName ?? 'Utilisateur'}
           </h1>
         </div>
+        {/* Les actions du fil vivent derrière un seul « ⋯ » (#417) : à 390 px,
+            prénom + deux libellés ne tenaient pas sur la ligne. Le check-in
+            actif, lui, reste un bandeau sous l'en-tête — un état de sécurité
+            ne se range pas dans un menu. */}
         {otherUser && (
-          <div className="flex items-center gap-2">
-            <CheckinButton />
-            <ShareContactButton conversationId={conversationId} onSend={handleShareContact} />
-          </div>
+          <ActionMenu label="Plus d’actions">
+            {(fermer) => (
+              <>
+                <ShareContactButton
+                  conversationId={conversationId}
+                  onSend={handleShareContact}
+                  presentation="menu"
+                  onDone={fermer}
+                />
+                {!checkinActif && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      fermer();
+                      setCheckinModal(true);
+                    }}
+                    className="flex min-h-[44px] w-full items-center rounded-control px-3 text-left text-sm font-medium text-content hover:bg-fill-subtle focus-visible:outline-none focus-visible:shadow-focus"
+                  >
+                    Activer un check-in de sécurité
+                  </button>
+                )}
+              </>
+            )}
+          </ActionMenu>
         )}
       </div>
+
+      {/* Bandeau du check-in actif + modal de durée (déclenchée par le menu) */}
+      {otherUser && (
+        <div className={checkinActif ? 'mx-4 mt-2' : undefined}>
+          <CheckinButton
+            declencheurExterne={{ ouvrir: checkinModal, onFermer: () => setCheckinModal(false) }}
+            onActifChange={setCheckinActif}
+          />
+        </div>
+      )}
 
       {/* Error banner */}
       {error && (
