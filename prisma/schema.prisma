@@ -91,6 +91,7 @@ model Profile {
   searchGenders         String[]  @default([])
   searchOrientations    String[]  @default([])
   searchInterests       String[]  @default([])
+  searchRelationshipTypes String[] @default([])
   // Filtre de distance du feed (#327). NULL = « partout » : volontairement
   // distinct de `maxDistanceKm` (rayon historique du segment « À proximité »,
   // qui vaut 50 chez tout le monde par défaut). Réutiliser `maxDistanceKm`

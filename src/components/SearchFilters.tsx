@@ -1,7 +1,12 @@
 'use client';
 
 import TagButton from './TagButton';
-import { GENDER_OPTIONS, ORIENTATION_OPTIONS, INTEREST_CATEGORIES } from '@/lib/taxonomy';
+import {
+  GENDER_OPTIONS,
+  ORIENTATION_OPTIONS,
+  RELATIONSHIP_TYPE_OPTIONS,
+  INTEREST_CATEGORIES,
+} from '@/lib/taxonomy';
 import Card from './ui/Card';
 
 // Modèle de filtres de recherche partagé entre /discover et /profil (#235).
@@ -10,6 +15,8 @@ import Card from './ui/Card';
 export interface SearchFiltersValue {
   genders: string[];
   orientations: string[];
+  /** Types de relation recherchés (#409). Vide = tous. */
+  relationshipTypes: string[];
   ageMin: number;
   ageMax: number;
   interests: string[];
@@ -21,6 +28,7 @@ export interface SearchFiltersValue {
 export const EMPTY_SEARCH_FILTERS: SearchFiltersValue = {
   genders: [],
   orientations: [],
+  relationshipTypes: [],
   ageMin: 18,
   ageMax: 99,
   interests: [],
@@ -35,6 +43,7 @@ export function hasActiveFilters(v: SearchFiltersValue): boolean {
   return (
     v.genders.length > 0 ||
     v.orientations.length > 0 ||
+    v.relationshipTypes.length > 0 ||
     v.ageMin > 18 ||
     v.ageMax < 99 ||
     v.interests.length > 0 ||
@@ -97,6 +106,21 @@ export default function SearchFilters({
               label={opt.charAt(0).toUpperCase() + opt.slice(1)}
               selected={value.orientations.includes(opt)}
               onClick={() => set({ orientations: toggle(value.orientations, opt) })}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Type de relation recherché — critère premier d'une rencontre (#409) */}
+      <div>
+        <p className={LABEL_CLASS}>Type de relation</p>
+        <div className="flex flex-wrap gap-1.5">
+          {RELATIONSHIP_TYPE_OPTIONS.map((opt) => (
+            <TagButton
+              key={opt}
+              label={opt.charAt(0).toUpperCase() + opt.slice(1)}
+              selected={value.relationshipTypes.includes(opt)}
+              onClick={() => set({ relationshipTypes: toggle(value.relationshipTypes, opt) })}
             />
           ))}
         </div>

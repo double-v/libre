@@ -17,7 +17,7 @@ import ChipList from '@/components/ChipList';
 import SearchFilters, { type SearchFiltersValue } from '@/components/SearchFilters';
 import { toast } from '@/lib/toast';
 import Image from 'next/image';
-import { INTEREST_CATEGORIES, PRACTICE_CATEGORIES, GENDER_OPTIONS } from '@/lib/taxonomy';
+import { INTEREST_CATEGORIES, PRACTICE_CATEGORIES, GENDER_OPTIONS, RELATIONSHIP_TYPE_OPTIONS } from '@/lib/taxonomy';
 import SiteShell from '@/components/ui/SiteShell';
 import ProfilePositionCard from '@/components/ProfilePositionCard';
 
@@ -39,6 +39,7 @@ interface ProfileData {
   ageMax: number;
   searchGenders: string[];
   searchOrientations: string[];
+  searchRelationshipTypes: string[];
   searchInterests: string[];
   searchDistanceKm: number | null;
   practicesVisibility: string;
@@ -50,7 +51,6 @@ interface ProfileData {
 }
 
 const ORIENTATION_OPTIONS = ['hétéro', 'homo', 'bi', 'pan', 'ace', 'autre'];
-const RELATIONSHIP_TYPE_OPTIONS = ['libre', 'poly', 'casual', 'sérieux', 'autre'];
 const SOCIAL_PLATFORMS = ['Instagram', 'Snapchat', 'TikTok', 'Twitter', 'Telegram', 'Discord'];
 
 const INPUT_CLASS = 'mt-1 block w-full rounded-md border border-hairline-strong bg-surface px-3 py-2 text-sm text-content shadow-sm placeholder:text-muted focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral dark:placeholder:text-muted';
@@ -108,7 +108,7 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [photoError, setPhotoError] = useState('');
   const [editSearchFilters, setEditSearchFilters] = useState<SearchFiltersValue>({
-    genders: [], orientations: [], ageMin: 18, ageMax: 99, interests: [], distanceKm: null,
+    genders: [], orientations: [], relationshipTypes: [], ageMin: 18, ageMax: 99, interests: [], distanceKm: null,
   });
   const [editSocialLinks, setEditSocialLinks] = useState<Record<string, string>>({});
   const [editSocialPlatform, setEditSocialPlatform] = useState('Instagram');
@@ -163,6 +163,7 @@ export default function ProfilePage() {
       setEditSearchFilters({
         genders: profile?.searchGenders ?? [],
         orientations: profile?.searchOrientations ?? [],
+        relationshipTypes: profile?.searchRelationshipTypes ?? [],
         ageMin: profile?.ageMin ?? 18,
         ageMax: profile?.ageMax ?? 99,
         interests: profile?.searchInterests ?? [],
@@ -638,6 +639,7 @@ export default function ProfilePage() {
                     searchDistanceKm: editSearchFilters.distanceKm,
                     searchGenders: editSearchFilters.genders,
                     searchOrientations: editSearchFilters.orientations,
+                    searchRelationshipTypes: editSearchFilters.relationshipTypes,
                     searchInterests: editSearchFilters.interests,
                   })}
                   onCancel={() => setEditingSection(null)}
@@ -656,6 +658,12 @@ export default function ProfilePage() {
                   {profile.searchOrientations.length > 0
                     ? <ChipList items={profile.searchOrientations} />
                     : <span className="text-xs italic text-muted">Toutes</span>}
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted">Type de relation recherché</p>
+                  {profile.searchRelationshipTypes.length > 0
+                    ? <ChipList items={profile.searchRelationshipTypes} />
+                    : <span className="text-xs italic text-muted">Tous</span>}
                 </div>
                 <ProfileField label="Tranche d'âge">{profile.ageMin} – {profile.ageMax} ans</ProfileField>
                 <ProfileField label="Distance max">

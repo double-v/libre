@@ -50,6 +50,7 @@ function buildUrl(tab: FeedTab, cursor?: string, filters?: SearchFiltersValue): 
   if (filters) {
     if (filters.genders.length) params.set('gender', filters.genders.join(','));
     if (filters.orientations.length) params.set('orientation', filters.orientations.join(','));
+    if (filters.relationshipTypes.length) params.set('relationshipType', filters.relationshipTypes.join(','));
     if (filters.ageMin > 18) params.set('ageMin', String(filters.ageMin));
     if (filters.ageMax < 99) params.set('ageMax', String(filters.ageMax));
     if (filters.interests.length) params.set('interests', filters.interests.join(','));
@@ -185,6 +186,7 @@ export default function DiscoverPage() {
             setFilters({
               genders: p.searchGenders ?? [],
               orientations: p.searchOrientations ?? [],
+              relationshipTypes: p.searchRelationshipTypes ?? [],
               ageMin: p.ageMin ?? 18,
               ageMax: p.ageMax ?? 99,
               interests: p.searchInterests ?? [],
@@ -212,6 +214,7 @@ export default function DiscoverPage() {
         body: JSON.stringify({
           searchGenders: f.genders,
           searchOrientations: f.orientations,
+          searchRelationshipTypes: f.relationshipTypes,
           ageMin: f.ageMin,
           ageMax: f.ageMax,
           searchInterests: f.interests,

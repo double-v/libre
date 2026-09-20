@@ -5,6 +5,7 @@
  * 1. Sélectionner un genre émet la nouvelle valeur (préférence « qui je veux voir »)
  * 2. Le curseur de distance et son état « partout » (#327)
  * 3. « Réinitialiser » n'apparaît que quand un filtre est actif, et remet à zéro
+ * 4. Le type de relation recherché se sélectionne comme l'orientation (#409)
  */
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -61,9 +62,33 @@ describe('<SearchFilters />', () => {
     expect(onChange).toHaveBeenCalledWith(EMPTY_SEARCH_FILTERS);
   });
 
+  it('émet le type de relation basculé (#409)', () => {
+    const onChange = vi.fn();
+    render(<SearchFilters value={EMPTY_SEARCH_FILTERS} onChange={onChange} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Sérieux' }));
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ relationshipTypes: ['sérieux'] }),
+    );
+  });
+
+  it('retire un type de relation déjà sélectionné', () => {
+    const onChange = vi.fn();
+    render(
+      <SearchFilters
+        value={{ ...EMPTY_SEARCH_FILTERS, relationshipTypes: ['libre', 'poly'] }}
+        onChange={onChange}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Poly' }));
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ relationshipTypes: ['libre'] }),
+    );
+  });
+
   it('hasActiveFilters reflects non-default values', () => {
     expect(hasActiveFilters(EMPTY_SEARCH_FILTERS)).toBe(false);
     expect(hasActiveFilters({ ...EMPTY_SEARCH_FILTERS, orientations: ['bi'] })).toBe(true);
+    expect(hasActiveFilters({ ...EMPTY_SEARCH_FILTERS, relationshipTypes: ['libre'] })).toBe(true);
     expect(hasActiveFilters({ ...EMPTY_SEARCH_FILTERS, ageMin: 25 })).toBe(true);
     expect(hasActiveFilters({ ...EMPTY_SEARCH_FILTERS, distanceKm: 25 })).toBe(true);
   });
