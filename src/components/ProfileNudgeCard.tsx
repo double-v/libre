@@ -21,19 +21,22 @@ export interface ProfileNudgeCardProps {
 export default function ProfileNudgeCard({ kind, onDismiss }: ProfileNudgeCardProps) {
   const copy = NUDGE_COPY[kind];
   return (
-    <Card as="article" variant="profile" aria-label="Compléter ton profil" className="flex h-full flex-col">
-      <div className="bg-sunken px-4 pb-1.5 pt-5">
+    <Card as="article" variant="media" aria-label="Compléter ton profil" className="flex h-full flex-col">
+      {/* Prend la hauteur libre quand la rangée est haute (photos voisines) :
+          une zone douce, pas un trou blanc. */}
+      <div className="flex min-h-[88px] flex-1 items-center justify-center bg-sunken px-4 py-5">
         <HeartMark className="h-9 w-9 text-coral" aria-hidden="true" />
       </div>
-      <div className="flex flex-1 flex-col px-4 pb-4 pt-3.5">
+      <div className="flex flex-col px-4 pb-4 pt-3.5">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted">Ton profil</p>
         <h3 className="mt-1 text-lg font-semibold text-content">{copy.title}</h3>
         <p className="mt-2 text-sm leading-relaxed text-muted">{copy.body}</p>
-        <div className="mt-auto flex items-center gap-2 pt-3.5">
-          <Link href={copy.href} className={buttonClassName('primary', 'md', 'flex-1')}>
+        {/* Empilées : à trois colonnes, deux libellés sur une ligne se coupent. */}
+        <div className="mt-auto flex flex-col gap-1.5 pt-3.5">
+          <Link href={copy.href} className={buttonClassName('primary', 'md', 'w-full')}>
             {copy.cta}
           </Link>
-          <Button type="button" variant="ghost" onClick={onDismiss}>
+          <Button type="button" variant="ghost" fullWidth onClick={onDismiss}>
             Plus tard
           </Button>
         </div>
