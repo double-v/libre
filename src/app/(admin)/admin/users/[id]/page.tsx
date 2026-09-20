@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AdminUserPhotos from '@/components/admin/AdminUserPhotos';
+import AdminUserKeyState from '@/components/admin/AdminUserKeyState';
 
 interface UserDetail {
   id: string;
@@ -107,21 +108,26 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* User info */}
-        <div className="rounded-xl border border-hairline p-4">
-          <h2 className="mb-3 font-semibold text-content">Informations</h2>
-          <dl className="space-y-2 text-sm">
-            <div className="flex justify-between"><dt className="text-muted">Email</dt><dd>{user.email}</dd></div>
-            <div className="flex justify-between"><dt className="text-muted">Rôle</dt><dd>{user.role}</dd></div>
-            <div className="flex justify-between"><dt className="text-muted">Statut</dt><dd>{user.isBanned ? 'Banni' : user.isVerified ? 'Vérifié' : 'Actif'}</dd></div>
-            <div className="flex justify-between"><dt className="text-muted">Inscrit</dt><dd>{new Date(user.createdAt).toLocaleDateString('fr-FR')}</dd></div>
-            <div className="flex justify-between"><dt className="text-muted">Dernière activité</dt><dd>{new Date(user.lastActive).toLocaleDateString('fr-FR')}</dd></div>
-            {user.profile && (
-              <>
-                <div className="flex justify-between"><dt className="text-muted">Bio</dt><dd className="max-w-[200px] truncate">{user.profile.bio}</dd></div>
-                <div className="flex justify-between"><dt className="text-muted">Photos</dt><dd>{user.profile.photos.length}</dd></div>
-              </>
-            )}
-          </dl>
+        <div className="space-y-4">
+          <div className="rounded-xl border border-hairline p-4">
+            <h2 className="mb-3 font-semibold text-content">Informations</h2>
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between"><dt className="text-muted">Email</dt><dd>{user.email}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted">Rôle</dt><dd>{user.role}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted">Statut</dt><dd>{user.isBanned ? 'Banni' : user.isVerified ? 'Vérifié' : 'Actif'}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted">Inscrit</dt><dd>{new Date(user.createdAt).toLocaleDateString('fr-FR')}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted">Dernière activité</dt><dd>{new Date(user.lastActive).toLocaleDateString('fr-FR')}</dd></div>
+              {user.profile && (
+                <>
+                  <div className="flex justify-between"><dt className="text-muted">Bio</dt><dd className="max-w-[200px] truncate">{user.profile.bio}</dd></div>
+                  <div className="flex justify-between"><dt className="text-muted">Photos</dt><dd>{user.profile.photos.length}</dd></div>
+                </>
+              )}
+            </dl>
+          </div>
+
+          {/* Clé de messagerie (#341) — le support ne répond plus à l'aveugle */}
+          <AdminUserKeyState userId={user.id} />
         </div>
 
         {/* Actions */}
