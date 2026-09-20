@@ -60,9 +60,33 @@ function announceRemaining(seconds: number): string {
   return `Il reste environ ${minutes} minute${minutes > 1 ? 's' : ''} avant l'alerte de ton Cercle.`;
 }
 
-export function CheckinButton() {
+interface CheckinButtonProps {
+  /**
+   * Déclencheur porté ailleurs (#417 : dans le `ActionMenu` de l'en-tête du
+   * fil). Le composant ne rend alors plus son bouton « Activer » : seulement
+   * la modal de durée quand `ouvrir` est vrai, et le bandeau quand un check-in
+   * est actif — un état de sécurité ne se range pas dans un menu.
+   */
+  declencheurExterne?: { ouvrir: boolean; onFermer: () => void };
+  /** Prévient l'appelant quand un check-in devient actif ou cesse de l'être. */
+  onActifChange?: (actif: boolean) => void;
+}
+
+export function CheckinButton({ declencheurExterne, onActifChange }: CheckinButtonProps = {}) {
   const [active, setActive] = useState<ActiveCheckin | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const modalOuverte = declencheurExterne ? declencheurExterne.ouvrir : showModal;
+  const fermerModal = () => {
+    setShowModal(false);
+    declencheurExterne?.onFermer();
+  };
+
+  const actif = active !== null;
+  useEffect(() => {
+    onActifChange?.(actif);
+    // `onActifChange` est une fonction stable côté appelant (setState).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actif]);
   const [loading, setLoading] = useState(true);
   const [actionInFlight, setActionInFlight] = useState(false);
   const [error, setError] = useState('');
@@ -127,7 +151,7 @@ export function CheckinButton() {
         expiresAt: data.expiresAt,
         secondsRemaining: Math.max(0, Math.floor((expiresAt - Date.now()) / 1000)),
       });
-      setShowModal(false);
+      fermerModal();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur');
     } finally {
@@ -227,20 +251,22 @@ export function CheckinButton() {
     );
   }
 
-  // ── État inactif : bouton simple ──
+  // ── État inactif : bouton simple (ou rien, si le déclencheur est ailleurs) ──
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setShowModal(true)}
-        title="Tu as un RDV ? Si tu ne reviens pas dans le temps choisi, ton Cercle est alerté."
-        className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-coral/30 bg-surface px-3 text-sm font-medium text-coral-dark hover:bg-coral/5 focus-visible:outline-none focus-visible:shadow-focus"
-      >
-        <span aria-hidden="true">🛡</span>&nbsp;Activer un check-in de sécurité
-      </button>
-      {showModal && (
+      {!declencheurExterne && (
+        <button
+          type="button"
+          onClick={() => setShowModal(true)}
+          title="Tu as un RDV ? Si tu ne reviens pas dans le temps choisi, ton Cercle est alerté."
+          className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-coral/30 bg-surface px-3 text-sm font-medium text-coral-dark hover:bg-coral/5 focus-visible:outline-none focus-visible:shadow-focus"
+        >
+          <span aria-hidden="true">🛡</span>&nbsp;Activer un check-in de sécurité
+        </button>
+      )}
+      {modalOuverte && (
         <DurationModal
-          onClose={() => setShowModal(false)}
+          onClose={fermerModal}
           onChoose={handleStart}
           inFlight={actionInFlight}
           error={error}
