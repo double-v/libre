@@ -94,6 +94,7 @@ export async function GET(request: NextRequest) {
     const ageMinFilter = parseInt(searchParams.get('ageMin') || '18', 10);
     const ageMaxFilter = parseInt(searchParams.get('ageMax') || '99', 10);
     const interestsFilter = searchParams.get('interests')?.split(',').filter(Boolean) || [];
+    const relationshipTypeFilter = searchParams.get('relationshipType')?.split(',').filter(Boolean) || [];
 
     // Filtre de distance (#327). Paramètre absent = « partout » : on ne retombe
     // pas sur la valeur persistée, parce que « aucun filtre » est un état
@@ -116,6 +117,9 @@ export async function GET(request: NextRequest) {
       ...(genderFilter.length > 0 ? { genderIdentity: { in: genderFilter } } : {}),
       ...(orientationFilter.length > 0 ? { orientation: { hasSome: orientationFilter } } : {}),
       ...(interestsFilter.length > 0 ? { interests: { hasSome: interestsFilter } } : {}),
+      // Strict comme l'orientation : un profil qui n'a rien déclaré sort du
+      // feed dès que le filtre est actif (#409).
+      ...(relationshipTypeFilter.length > 0 ? { relationshipType: { hasSome: relationshipTypeFilter } } : {}),
       ...(ageMinFilter > 18 || ageMaxFilter < 99
         ? { birthDate: { gte: ageMaxBirthDate, lte: ageMinBirthDate } }
         : {}),

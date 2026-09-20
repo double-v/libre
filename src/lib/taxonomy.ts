@@ -21,6 +21,11 @@ export const GENDER_OPTIONS = [
 
 export const ORIENTATION_OPTIONS = ['hétéro', 'homo', 'bi', 'pan', 'ace', 'autre'] as const;
 
+// Type de relation : déclaré sur le profil ET critère de recherche (#409).
+// Une seule liste pour que le filtre ne puisse jamais viser une valeur que
+// personne ne peut déclarer.
+export const RELATIONSHIP_TYPE_OPTIONS = ['libre', 'poly', 'casual', 'sérieux', 'autre'] as const;
+
 // ─── Centres d'intérêt ────────────────────────────────────────────────────────
 
 export const INTEREST_CATEGORIES: TagCategory[] = [
