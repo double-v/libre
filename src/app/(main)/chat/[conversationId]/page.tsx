@@ -160,21 +160,31 @@ export default function ChatConversationPage() {
   // (Le scroll — départ en bas, stick-to-bottom, prepend sans saut — est porté
   //  par `ChatMessageList`/Virtuoso : plus de gestion manuelle de scrollTop ici.)
 
+  // Relit la clé courante du pair (et celles qu'il a remplacées). Appelée à
+  // l'ouverture ET avant chaque envoi : si le pair réinitialise sa clé (#340)
+  // pendant que ce fil est ouvert, chiffrer avec la clé lue à l'ouverture
+  // produirait un message qu'il ne lira jamais — et personne ne le saurait.
+  const chargerClesPair = useCallback(async (pairId: string): Promise<string | null> => {
+    try {
+      const res = await fetch(`/api/users/${pairId}`);
+      if (!res.ok) return clesPairRef.current.courante;
+      const profil: ProfileData = await res.json();
+      const courante = profil.publicKey ?? null;
+      clesPairRef.current = { courante, anciennes: profil.previousPublicKeys ?? [] };
+      setOtherPublicKey(courante);
+      return courante;
+    } catch {
+      return clesPairRef.current.courante;
+    }
+  }, []);
+
   const loadConversation = useCallback(async () => {
     try {
       const convoRes = await fetch(`/api/chat/${conversationId}`);
       if (!convoRes.ok) throw new Error('Failed to fetch conversation');
       const convoData: ConversationData = await convoRes.json();
       setOtherUser(convoData.otherUser);
-
-      const profileRes = await fetch(`/api/users/${convoData.otherUser.id}`);
-      if (profileRes.ok) {
-        const profileData: ProfileData = await profileRes.json();
-        const courante = profileData.publicKey ?? null;
-        const anciennes = profileData.previousPublicKeys ?? [];
-        clesPairRef.current = { courante, anciennes };
-        setOtherPublicKey(courante);
-      }
+      await chargerClesPair(convoData.otherUser.id);
 
       // Page initiale : uniquement les ~50 plus récents (#200). On ne déchiffre
       // que cette tranche ; les plus anciens se chargent au scroll-up.
@@ -197,7 +207,7 @@ export default function ChatConversationPage() {
     } finally {
       setLoading(false);
     }
-  }, [conversationId, applyDecryption]);
+  }, [conversationId, applyDecryption, chargerClesPair]);
 
   // ─── Charger les messages plus anciens (scroll-up paginé, #200) ──────────
 
@@ -290,8 +300,10 @@ export default function ChatConversationPage() {
     setError('');
     try {
       let content = text;
-      if (otherPublicKey && privateKey) {
-        content = await encryptMessage(text, otherPublicKey, privateKey);
+      // Clé du pair relue à l'instant de l'envoi, jamais celle de l'ouverture.
+      const clePair = otherUser ? await chargerClesPair(otherUser.id) : otherPublicKey;
+      if (clePair && privateKey) {
+        content = await encryptMessage(text, clePair, privateKey);
       }
 
       const res = await fetch(`/api/chat/${conversationId}/messages`, {
