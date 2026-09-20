@@ -49,6 +49,9 @@ describe('mustOnboard', () => {
   it('un profil absent est traité comme un parcours à 0', () => {
     expect(mustOnboard(null)).toBe(true);
   });
+  it('un profil sans le champ (réponse partielle) n’envoie pas dans le tunnel', () => {
+    expect(mustOnboard({})).toBe(false);
+  });
 });
 
 describe('nextStep', () => {

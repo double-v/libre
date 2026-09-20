@@ -33,6 +33,22 @@ export interface EngagementStats {
   active30d: number;
 }
 
+/**
+ * Le premier quart d'heure (spec 005, SC-001…SC-007) : ce que produisent les
+ * comptes créés depuis 30 jours. Surface admin seulement — jamais côté membre.
+ */
+export interface OnboardingStats {
+  signups30d: number;
+  withPhoto: number;
+  withPosition: number;
+  withRelationshipType: number;
+  onboardingDone: number;
+  /** Revenus après leur premier jour (proxy `lastActive - createdAt > 1 j`). */
+  returnedAfterDay1: number;
+  /** Appareils abonnés aux notifications, tous comptes confondus. */
+  pushDevices: number;
+}
+
 export interface ModerationStats {
   bansLast30d: number;
   unbansLast30d: number;
@@ -51,6 +67,7 @@ export interface AnalyticsStats {
   topPractices: DistributionItem[];
   engagement: EngagementStats;
   moderation: ModerationStats;
+  onboarding: OnboardingStats;
 }
 
 /**

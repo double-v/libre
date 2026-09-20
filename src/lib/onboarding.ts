@@ -46,8 +46,12 @@ export function deriveMissing(profile: OnboardingProfile): MissingKind | null {
  * déjà appliquée en base : ici on ne regarde que l'avancement. Un profil
  * absent (course entre inscription et première lecture) vaut 0.
  */
-export function mustOnboard(profile: Pick<OnboardingProfile, 'onboardingStep'> | null): boolean {
-  return (profile?.onboardingStep ?? 0) < ONBOARDING_DONE;
+export function mustOnboard(profile: Partial<Pick<OnboardingProfile, 'onboardingStep'>> | null): boolean {
+  if (profile === null) return true;
+  // Champ absent (réponse partielle, données d'une autre époque) : on ne
+  // piège personne dans le tunnel sur une incertitude.
+  if (typeof profile.onboardingStep !== 'number') return false;
+  return profile.onboardingStep < ONBOARDING_DONE;
 }
 
 /** L'avancement ne recule jamais et plafonne à terminé. */

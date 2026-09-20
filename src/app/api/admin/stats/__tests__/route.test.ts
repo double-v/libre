@@ -25,6 +25,7 @@ const fakeDb = {
   feedback: { count: vi.fn() },
   moderationLog: { groupBy: vi.fn() },
   photoModeration: { count: vi.fn() },
+  pushSubscription: { count: vi.fn() },
   $queryRaw: vi.fn(),
 };
 
@@ -123,6 +124,10 @@ describe('GET /api/admin/stats — forme de la réponse', () => {
       active7d: expect.any(Number),
       active30d: expect.any(Number),
     });
+    // Le premier quart d'heure (spec 005) : lecture des critères de succès.
+    expect(data.analytics.onboarding).toEqual({
+      signups30d: 40, withPhoto: 24, withPosition: 20, withRelationshipType: 25, onboardingDone: 30, returnedAfterDay1: 9, pushDevices: 12,
+    });
     expect(data.analytics.moderation).toMatchObject({
       bansLast30d: expect.any(Number),
       unbansLast30d: expect.any(Number),
@@ -185,6 +190,7 @@ function setupHarmlessMocks() {
   fakeDb.encounter.count.mockResolvedValue(0);
 
   // Distributions sur tableaux
+  fakeDb.pushSubscription.count.mockResolvedValue(12);
   fakeDb.$queryRaw
     .mockResolvedValueOnce([{ avg: 2.3 }])
     .mockResolvedValueOnce([
@@ -201,7 +207,11 @@ function setupHarmlessMocks() {
     ])
     .mockResolvedValueOnce([
       { value: 'Polyamour', count: BigInt(2) },
-    ]);
+    ])
+    // Le premier quart d'heure (spec 005) — une requête, après les distributions.
+    .mockResolvedValueOnce([{
+      signups: BigInt(40), with_photo: BigInt(24), with_position: BigInt(20), with_relationship: BigInt(25), done: BigInt(30), returned: BigInt(9),
+    }]);
 
   // Modération
   fakeDb.moderationLog.groupBy.mockResolvedValue([]);

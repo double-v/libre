@@ -4,6 +4,13 @@ import DiscoverPage from '@/app/(main)/discover/page';
 
 // Stubs légers : on isole la logique de fetch du feed de DiscoverPage des
 // effets propres des composants enfants (géoloc, fetch de CrossingsView, …).
+// Garde du parcours d'accueil (spec 005) : la page lit le router ; ici le
+// profil est « terminé » (champ absent = pas de tunnel), rien ne redirige.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn(), back: vi.fn(), prefetch: vi.fn() }),
+  usePathname: () => '/discover',
+  useSearchParams: () => new URLSearchParams(),
+}));
 vi.mock('@/components/ProfileCard', () => ({ default: () => <div data-testid="profile-card" /> }));
 vi.mock('@/components/ProfileModal', () => ({ default: () => null }));
 vi.mock('@/components/DiscoverFilters', () => ({ default: () => <div /> }));
@@ -14,6 +21,8 @@ vi.mock('@/components/CrossingsView', () => ({ default: () => <div data-testid="
 vi.mock('@/components/ui/Button', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   default: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  // La carte de relance (spec 005) stylise un lien comme un bouton.
+  buttonClassName: () => '',
 }));
 
 function jsonResponse(body: unknown): Response {

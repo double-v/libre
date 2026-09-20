@@ -39,6 +39,42 @@ export async function GET() {
   });
 }
 
+/**
+ * Le premier quart d'heure (spec 005) : une seule requête sur les comptes
+ * créés depuis 30 jours, plus le nombre d'appareils abonnés. C'est la
+ * lecture des critères de succès de la spec, sans requête à la main.
+ */
+async function computeOnboarding(cutoff30d: Date): Promise<AnalyticsStats['onboarding']> {
+  const [rows, pushDevices] = await Promise.all([
+    getDb().$queryRaw<Array<{
+      signups: bigint; with_photo: bigint; with_position: bigint; with_relationship: bigint; done: bigint; returned: bigint;
+    }>>`
+      SELECT
+        COUNT(*)                                                                  AS signups,
+        COUNT(*) FILTER (WHERE cardinality(p."photos") > 0)                       AS with_photo,
+        COUNT(*) FILTER (WHERE p."last_geoloc_at" IS NOT NULL OR p."city_label" IS NOT NULL) AS with_position,
+        COUNT(*) FILTER (WHERE cardinality(p."relationshipType") > 0)             AS with_relationship,
+        COUNT(*) FILTER (WHERE p."onboardingStep" >= 3)                           AS done,
+        COUNT(*) FILTER (WHERE u."lastActive" - u."createdAt" > interval '1 day') AS returned
+      FROM "users" u
+      LEFT JOIN "profiles" p ON p."userId" = u.id
+      WHERE u."createdAt" >= ${cutoff30d}
+    `,
+    getDb().pushSubscription.count(),
+  ]);
+  const r = rows[0];
+  const n = (v: bigint | undefined) => Number(v ?? 0);
+  return {
+    signups30d: n(r?.signups),
+    withPhoto: n(r?.with_photo),
+    withPosition: n(r?.with_position),
+    withRelationshipType: n(r?.with_relationship),
+    onboardingDone: n(r?.done),
+    returnedAfterDay1: n(r?.returned),
+    pushDevices,
+  };
+}
+
 async function computeAnalytics(totalUsers: number): Promise<AnalyticsStats> {
   const cutoff30d = cutoffDate(30);
   const cutoff7d = cutoffDate(7);
@@ -237,6 +273,7 @@ async function computeAnalytics(totalUsers: number): Promise<AnalyticsStats> {
       active7d,
       active30d,
     },
+    onboarding: await computeOnboarding(cutoff30d),
     moderation: {
       bansLast30d: moderationMap['BAN'] ?? 0,
       unbansLast30d: moderationMap['UNBAN'] ?? 0,
