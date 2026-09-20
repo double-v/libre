@@ -20,8 +20,12 @@ const DEVICE_KEY_STORAGE_KEY = 'libre_device_key';
  */
 export type EtatCle = 'chargement' | 'pret' | 'illisible' | 'indisponible';
 
-/** Retire les clés d'identité de l'ancien stockage local — voir appelant. */
-function purgerCleHeritee(): void {
+/**
+ * Retire les clés d'identité de l'ancien stockage local — voir appelant.
+ * Exportée pour la réinitialisation (#340) : une clé héritée qui ne correspond
+ * plus à la publique du compte ne doit pas rester à traîner.
+ */
+export function purgerCleHeritee(): void {
   try {
     localStorage.removeItem(PRIVATE_KEY_STORAGE_KEY);
     localStorage.removeItem(PUBLIC_KEY_STORAGE_KEY);

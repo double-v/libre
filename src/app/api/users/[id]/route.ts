@@ -44,6 +44,13 @@ export async function GET(
             publicKey: true,
           },
         },
+        // Clés publiques remplacées par une réinitialisation (#340), de la plus
+        // récente à la plus ancienne : le lecteur essaie la courante, puis
+        // celles-ci, pour relire ce qu'il avait chiffré avant.
+        userKeyHistory: {
+          select: { publicKey: true },
+          orderBy: { replacedAt: 'desc' },
+        },
       },
     });
 
@@ -117,6 +124,9 @@ export async function GET(
 
     if (user.userKey) {
       publicProfile.publicKey = user.userKey.publicKey;
+    }
+    if (user.userKeyHistory.length > 0) {
+      publicProfile.previousPublicKeys = user.userKeyHistory.map((k) => k.publicKey);
     }
 
     return NextResponse.json(publicProfile, { status: 200 });

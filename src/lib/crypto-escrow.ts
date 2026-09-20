@@ -127,3 +127,18 @@ export function publiqueCorrespondALaPrivee(publicKey: string, privateKey: strin
     return false;
   }
 }
+
+/**
+ * Une clé publique annoncée par le client est-elle bien une clé ECDH P-256
+ * (SPKI, base64) ? Refuser ici évite d'enregistrer une chaîne que personne ne
+ * pourra importer côté navigateur — un pair chiffrerait alors dans le vide.
+ */
+export async function publiqueP256Valide(base64: string): Promise<boolean> {
+  try {
+    const bytes = Buffer.from(base64, 'base64');
+    await crypto.subtle.importKey('spki', bytes, { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+    return true;
+  } catch {
+    return false;
+  }
+}

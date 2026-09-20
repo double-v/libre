@@ -155,6 +155,29 @@ export async function decryptMessage(
   return arrayBufferToString(plaintext);
 }
 
+/**
+ * Déchiffre en essayant la clé publique courante du pair, puis celles qu'il a
+ * remplacées (#340, de la plus récente à la plus ancienne). Un message chiffré
+ * pour une clé remplacée reste lisible chez celui qui l'a écrit ou reçu avec
+ * la bonne privée ; sans ce repli, la réinitialisation du pair rendrait notre
+ * propre historique illisible. Lève la dernière erreur si rien n'ouvre.
+ */
+export async function decryptMessageAvecHistorique(
+  encryptedBase64: string,
+  senderPublicKeys: readonly string[],
+  recipientPrivateKey: string,
+): Promise<string> {
+  let derniereErreur: unknown = new Error('aucune clé publique à essayer');
+  for (const publique of senderPublicKeys) {
+    try {
+      return await decryptMessage(encryptedBase64, publique, recipientPrivateKey);
+    } catch (e) {
+      derniereErreur = e;
+    }
+  }
+  throw derniereErreur;
+}
+
 // ─── Private Key Encryption / Decryption ──────────────────────────────────────
 
 /**

@@ -49,6 +49,7 @@ function userWith(visibility: string, id = OTHER_ID) {
       invisibleMode: false,
     },
     userKey: null,
+    userKeyHistory: [],
   };
 }
 

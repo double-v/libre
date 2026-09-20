@@ -25,6 +25,7 @@ model User {
 
   profile              Profile?
   userKey              UserKey?
+  userKeyHistory       UserKeyHistory[]
   sentLikes            Like[]                @relation("SentLikes")
   receivedLikes        Like[]                @relation("ReceivedLikes")
   matchesAsA           Match[]               @relation("UserAMatches")
@@ -155,6 +156,23 @@ model UserKey {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_keys")
+}
+
+// Clés publiques remplacées par une réinitialisation (#340). Le pair s'en sert
+// pour relire ce qu'il avait chiffré pour l'ancienne clé : sans cette trace, une
+// réinitialisation d'un côté rendrait l'historique illisible des deux côtés.
+// Une clé publique n'est pas un secret ; on ne garde jamais rien de privé ici.
+model UserKeyHistory {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  publicKey  String
+  createdAt  DateTime
+  replacedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_key_history")
 }
 
 model Encounter {
