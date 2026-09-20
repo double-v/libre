@@ -121,6 +121,9 @@ function MainShell({ children }: { children: React.ReactNode }) {
           pour ne pas dupliquer le landmark : la tab bar navigue entre sections.
           `md:hidden` (#347) : à partir de `md` les sections vivent dans SiteNav,
           et un seul landmark de navigation subsiste par breakpoint. */}
+      {/* Parcours d'accueil (spec 005) : tunnel court, une seule issue latérale
+          (« Plus tard ») — la tab bar s'efface, SiteNav reste. */}
+      {!pathname.startsWith('/bienvenue') && (
       <nav role="navigation" aria-label="Navigation des sections" className="fixed bottom-0 left-0 right-0 z-50 border-t border-hairline bg-surface pb-safe md:hidden">
         <div className="mx-auto flex min-h-14 max-w-lg items-center justify-around">
           {APP_SECTIONS.map(({ href, label, Icon }) => {
@@ -148,6 +151,7 @@ function MainShell({ children }: { children: React.ReactNode }) {
           })}
         </div>
       </nav>
+      )}
 
       {session?.user?.id && <MatchDialog userId={session.user.id} />}
 

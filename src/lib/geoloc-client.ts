@@ -78,3 +78,50 @@ export function geolocFallbackPrompt(kind: GeolocFailure | 'invisible'): string 
   if (kind === 'invisible') return null;
   return 'Ou indique ta ville';
 }
+
+export type DevicePositionResult =
+  | { ok: true }
+  | { ok: false; kind: GeolocFailure | 'invisible' | 'server'; message: string };
+
+/**
+ * Demande la position de l'appareil et l'enregistre, brouillée sur place
+ * (#401), via `POST /api/geoloc/update`. Même parcours que le bouton
+ * « Activer la géoloc » de Découvrir, sous forme de promesse pour le parcours
+ * d'accueil (spec 005) : chaque échec est nommé (refus, indisponible,
+ * expiré, non supporté, invisible, serveur) pour proposer la ville derrière.
+ */
+export function requestDevicePosition(
+  fetchImpl: typeof fetch = fetch,
+): Promise<DevicePositionResult> {
+  return new Promise((resolve) => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      resolve({ ok: false, kind: 'unsupported', message: geolocFailureMessage('unsupported') });
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const res = await fetchImpl('/api/geoloc/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(fuzzedPosition(position.coords)),
+          });
+          if (!res.ok) throw new Error();
+          const message = geolocUpdateMessage(await res.json());
+          if (message) {
+            resolve({ ok: false, kind: 'invisible', message });
+            return;
+          }
+          resolve({ ok: true });
+        } catch {
+          resolve({ ok: false, kind: 'server', message: "Impossible d'enregistrer ta position, réessaie plus tard." });
+        }
+      },
+      (error) => {
+        const kind = classifyGeolocError(error);
+        resolve({ ok: false, kind, message: geolocFailureMessage(kind) });
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
+    );
+  });
+}
