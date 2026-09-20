@@ -63,6 +63,14 @@ export default function SettingsPage() {
     }
   }, []);
 
+  // Arrivée avec une ancre (ex. /settings#zone-dangereuse depuis le profil,
+  // #413) : la section n'existe qu'après le chargement, donc le navigateur
+  // ne l'a pas trouvée à la navigation. On y va une fois montée.
+  useEffect(() => {
+    if (loading || typeof window === 'undefined' || !window.location.hash) return;
+    document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ block: 'start' });
+  }, [loading]);
+
   useEffect(() => {
     // IIFE async → pas de setState synchrone dans le corps de l'effet
     // (react-hooks/set-state-in-effect, cf. #179/#193).

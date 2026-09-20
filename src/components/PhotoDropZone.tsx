@@ -33,7 +33,7 @@ export default function PhotoDropZone({
       <p className="text-sm leading-snug text-muted">
         {lead}
         <br />
-        <span className="text-xs">JPG, PNG ou WebP · 10 Mo max · 6 photos</span>
+        <span className="text-xs">JPG, PNG ou WebP · 5 Mo max · 6 photos</span>
       </p>
       <input
         id={inputId}

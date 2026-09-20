@@ -52,6 +52,9 @@ interface ProfileData {
   // Ville saisie à la main (spec 004) — privés, renvoyés à la membre seule.
   positionSource?: 'device' | 'city' | null;
   cityLabel?: string | null;
+  /** Même source que la carte de relance de Découvrir : une géoloc d'avant
+   *  #402 a `lastGeolocAt` sans `positionSource`. */
+  lastGeolocAt?: string | null;
 }
 
 const ORIENTATION_OPTIONS = ['hétéro', 'homo', 'bi', 'pan', 'ace', 'autre'];
@@ -381,7 +384,14 @@ export default function ProfilePage() {
       )}
 
       {!profile ? (
-        <p className="text-sm text-muted">Ton profil arrive… recharge la page dans un instant.</p>
+        // Compte sans ligne de profil (d'avant la spec 005) : un PUT vide
+        // crée la ligne (upsert) — recharger ne changerait rien.
+        <div className="space-y-3">
+          <p className="text-sm text-muted">Ton profil n&apos;est pas encore créé.</p>
+          <button type="button" onClick={() => void saveSection({})} disabled={saving} className="rounded-md bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-terracotta disabled:opacity-50">
+            Créer mon profil
+          </button>
+        </div>
       ) : (
         <>
           {/* En-tête compact quand il y a une photo : qui je suis, en une ligne. */}
@@ -401,7 +411,7 @@ export default function ProfilePage() {
             </div>
           )}
 
-          <ProfileGlance profile={{ ...profile, lastGeolocAt: profile.positionSource ? new Date() : null, cityLabel: profile.cityLabel ?? null }} />
+          <ProfileGlance profile={{ ...profile, lastGeolocAt: profile.lastGeolocAt ?? null, cityLabel: profile.cityLabel ?? null }} />
 
           <p className="mb-2 mt-5 text-[11px] font-semibold uppercase tracking-wider text-muted">Ce que les autres voient</p>
           <div className="space-y-2.5">
@@ -478,7 +488,7 @@ export default function ProfilePage() {
                     ) : (
                       <>
                         <CameraIcon className="h-8 w-8 text-muted" />
-                        <span className="mt-1 text-xs text-muted">JPG, PNG ou WebP — 10 Mo max</span>
+                        <span className="mt-1 text-xs text-muted">JPG, PNG ou WebP — 5 Mo max</span>
                       </>
                     )}
                     <input

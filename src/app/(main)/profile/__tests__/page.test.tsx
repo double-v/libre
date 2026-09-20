@@ -12,9 +12,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
-}));
+// Router stable comme en vrai Next : un objet neuf à chaque rendu relancerait
+// `fetchProfile` (useCallback([router])) et écraserait l'état après un PUT.
+const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }));
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
 vi.mock('@/lib/logout', () => ({ logout: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('@/lib/session-cleanup', () => ({ purgerSecretsLocaux: vi.fn() }));
 vi.mock('@/lib/toast', () => ({ toast: vi.fn() }));
@@ -81,6 +82,25 @@ describe('/profile — la page invite à compléter (#413)', () => {
     expect(screen.getByRole('dialog', { name: 'Ton profil vu par les autres' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }));
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('une géoloc d’avant #402 (lastGeolocAt sans positionSource) compte comme une position — même vérité que Découvrir', async () => {
+    await renderPage({ ...base, lastGeolocAt: '2026-08-01T00:00:00.000Z', positionSource: null });
+    const glance = screen.getByRole('navigation', { name: 'Compléter mon profil' });
+    expect(within(glance).getAllByRole('link').map((l) => l.getAttribute('data-state'))).toEqual(['todo', 'todo', 'done']);
+  });
+
+  it('compte sans ligne de profil : un bouton crée le profil, pas « recharge »', async () => {
+    const calls: Array<{ url: string; method?: string }> = [];
+    vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
+      calls.push({ url, method: init?.method });
+      if (url === '/api/users/profile' && !init) return Promise.resolve({ ok: true, status: 200, json: async () => ({ profile: null, displayName: 'Sam', isVerified: false }) } as Response);
+      return Promise.resolve({ ok: true, status: 200, json: async () => ({ profile: base }) } as Response);
+    }));
+    render(<ProfilePage />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Créer mon profil' }));
+    await screen.findByRole('navigation', { name: 'Compléter mon profil' });
+    expect(calls.some((c) => c.url === '/api/users/profile' && c.method === 'PUT')).toBe(true);
   });
 
   it('les sections secondaires sont repliées avec un résumé qui dit la valeur', async () => {

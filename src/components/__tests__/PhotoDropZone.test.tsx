@@ -11,7 +11,8 @@ describe('<PhotoDropZone />', () => {
     const onFile = vi.fn();
     render(<PhotoDropZone initial="S" onFile={onFile} />);
     expect(screen.getByText('S')).toBeInTheDocument();
-    expect(screen.getByText(/JPG, PNG ou WebP/)).toBeInTheDocument();
+    // La limite affichée est celle de la route (src/lib/r2.ts) : 5 Mo.
+    expect(screen.getByText(/JPG, PNG ou WebP · 5 Mo max/)).toBeInTheDocument();
     const file = new File(['x'], 'a.jpg', { type: 'image/jpeg' });
     fireEvent.change(screen.getByLabelText('Ajouter une photo'), { target: { files: [file] } });
     expect(onFile).toHaveBeenCalledWith(file);
