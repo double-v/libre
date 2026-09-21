@@ -13,7 +13,7 @@ vi.mock('next-auth', () => ({ __esModule: true, default: vi.fn(), getServerSessi
 
 const fakeDb = {
   consent: { findFirst: vi.fn(), create: vi.fn(), updateMany: vi.fn((args: unknown) => ({ op: 'consent', args })) },
-  profile: { updateMany: vi.fn((args: unknown) => ({ op: 'profile', args })) },
+  profile: { updateMany: vi.fn((args: unknown) => ({ op: 'profile', args })), findUnique: vi.fn() },
   $transaction: vi.fn(async (ops: unknown[]) => ops),
 };
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => fakeDb }));
@@ -25,13 +25,22 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockGetServerSession.mockResolvedValue({ user: { id: ME } });
   fakeDb.consent.findFirst.mockResolvedValue(null);
+  fakeDb.profile.findUnique.mockResolvedValue({ genderIdentity: '', orientation: [], practices: [], searchGenders: [], searchOrientations: [] });
 });
 
 describe('/api/users/consent', () => {
   it('GET dit si le consentement est actif', async () => {
-    expect(await (await GET()).json()).toEqual({ sensitiveData: false });
+    expect(await (await GET()).json()).toEqual({ sensitiveData: false, aRegulariser: false });
     fakeDb.consent.findFirst.mockResolvedValue({ id: 'c' });
-    expect(await (await GET()).json()).toEqual({ sensitiveData: true });
+    expect(await (await GET()).json()).toEqual({ sensitiveData: true, aRegulariser: false });
+  });
+
+  it('GET signale un avenant à régulariser : données sensibles en base, sans consentement', async () => {
+    fakeDb.profile.findUnique.mockResolvedValue({ genderIdentity: '', orientation: ['bi'], practices: [], searchGenders: [], searchOrientations: [] });
+    expect(await (await GET()).json()).toEqual({ sensitiveData: false, aRegulariser: true });
+    // Avec consentement, rien à régulariser, quelle que soit la base.
+    fakeDb.consent.findFirst.mockResolvedValue({ id: 'c' });
+    expect((await (await GET()).json()).aRegulariser).toBe(false);
   });
 
   it('POST enregistre le consentement avec sa trace (IP, user-agent)', async () => {

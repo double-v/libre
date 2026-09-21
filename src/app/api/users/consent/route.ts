@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import {
   aConsentementSensible,
+  consentementARegulariser,
   donnerConsentementSensible,
   retirerConsentementSensible,
   traceConsentement,
@@ -18,7 +19,11 @@ import {
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  return NextResponse.json({ sensitiveData: await aConsentementSensible(session.user.id) });
+  const [sensitiveData, aRegulariser] = await Promise.all([
+    aConsentementSensible(session.user.id),
+    consentementARegulariser(session.user.id),
+  ]);
+  return NextResponse.json({ sensitiveData, aRegulariser });
 }
 
 export async function POST(request: Request) {

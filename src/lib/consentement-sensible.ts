@@ -10,9 +10,11 @@
 import { getDb } from '@/lib/db';
 
 import {
+  CHAMPS_SENSIBLES,
   CONSENT_SENSIBLE_TYPE,
   CONSENT_SENSIBLE_VERSION,
   VIDE_SENSIBLE,
+  porteDonneeSensible,
 } from '@/lib/consentement-sensible-champs';
 
 export * from '@/lib/consentement-sensible-champs';
@@ -23,6 +25,20 @@ export async function aConsentementSensible(userId: string): Promise<boolean> {
     select: { id: true },
   });
   return actif !== null;
+}
+
+/**
+ * Avenant (#425) : un compte inscrit avant la case porte déjà orientation ou
+ * pratiques sans consentement. Tant que c'est le cas, l'app lui montre le
+ * bandeau d'avenant ; accepter ou effacer le fait disparaître.
+ */
+export async function consentementARegulariser(userId: string): Promise<boolean> {
+  if (await aConsentementSensible(userId)) return false;
+  const profil = await getDb().profile.findUnique({
+    where: { userId },
+    select: Object.fromEntries(CHAMPS_SENSIBLES.map((c) => [c, true])) as Record<(typeof CHAMPS_SENSIBLES)[number], true>,
+  });
+  return profil !== null && porteDonneeSensible(profil);
 }
 
 /** Enregistre le consentement s'il n'est pas déjà actif ; renvoie l'état final. */
