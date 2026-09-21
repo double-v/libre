@@ -17,6 +17,7 @@ vi.mock('next-auth', () => ({
 const fakeDb = {
   user: { findUnique: vi.fn() },
   profile: { upsert: vi.fn(), findUnique: vi.fn() },
+  consent: { findFirst: vi.fn(async () => null) },
 };
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => fakeDb }));
 vi.mock('@/lib/photo-veil', () => ({ __esModule: true, photoSensitivityMap: vi.fn(async () => ({})) }));
