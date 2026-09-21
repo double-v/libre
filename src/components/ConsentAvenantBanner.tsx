@@ -68,7 +68,8 @@ export default function ConsentAvenantBanner() {
 
   if (!aRegulariser) return null;
 
-  const bouton = 'rounded-full px-3 py-1 text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-coral disabled:opacity-50';
+  // Cibles tactiles ≥ 44 px (charte) : ce sont des décisions, pas des liens.
+  const bouton = 'inline-flex min-h-11 items-center rounded-full px-3 text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-coral disabled:opacity-50';
 
   return (
     <div role="region" aria-label="Avenant à la politique de confidentialité" className="border-b border-coral/20 bg-sunken px-4 py-2 text-xs text-coral-dark dark:border-coral/30 dark:text-coral-light">
@@ -100,7 +101,7 @@ export default function ConsentAvenantBanner() {
         <button
           type="button"
           onClick={fermer}
-          className="ml-1 text-coral-dark/60 hover:text-coral-dark dark:text-coral-light/60 dark:hover:text-coral-light"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full text-coral-dark/60 hover:text-coral-dark dark:text-coral-light/60 dark:hover:text-coral-light"
           aria-label="Fermer l’avenant pour cette session"
         >
           &times;
