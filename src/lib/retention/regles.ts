@@ -29,6 +29,9 @@ export const REGLES_RETENTION = [
   { id: 'passwordResetTokens', donnees: 'Tokens de réinitialisation de mot de passe', duree: '1 heure ou jusqu’à utilisation', jours: 0, depuis: 'expiration' },
   { id: 'verificationRequests', donnees: 'Demandes de vérification (selfies)', duree: 'Jusqu’à résolution + 30 jours', jours: 30, depuis: 'résolution' },
   { id: 'reports', donnees: 'Signalements', duree: 'Jusqu’à résolution + 1 an', jours: 365, depuis: 'résolution' },
+  // Pas de date de résolution sur les retours : l'âge court depuis la
+  // création, une fois le retour clos — au plus tôt que promis, jamais plus tard.
+  { id: 'feedback', donnees: 'Retours (feedback)', duree: 'Jusqu’à résolution + 1 an', jours: 365, depuis: 'création' },
   { id: 'encounters', donnees: 'Croisements (position arrondie et horodatage)', duree: '90 jours', jours: 90, depuis: 'création' },
   { id: 'safetyCheckins', donnees: 'Check-ins de sécurité (dernière position)', duree: 'Jusqu’à résolution + 30 jours', jours: 30, depuis: 'résolution' },
   { id: 'consentTrace', donnees: 'Trace technique du consentement (adresse IP, navigateur)', duree: '3 ans — le consentement lui-même est conservé', jours: 3 * 365, depuis: 'création' },

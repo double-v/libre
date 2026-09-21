@@ -63,6 +63,9 @@ function regles(now: Date): Record<RegleId, Regle> {
     reports: async () =>
       (await db.report.deleteMany({ where: { resolvedAt: { lt: seuil('reports', now) } } })).count,
 
+    feedback: async () =>
+      (await db.feedback.deleteMany({ where: { status: { in: ['resolved', 'spam'] }, createdAt: { lt: seuil('feedback', now) } } })).count,
+
     encounters: async () =>
       (await db.encounter.deleteMany({ where: { happenedAt: { lt: seuil('encounters', now) } } })).count,
 

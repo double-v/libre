@@ -17,6 +17,7 @@ const fakeDb = {
   passwordResetToken: { deleteMany: vi.fn(async () => ({ count: 3 })) },
   verificationRequest: { findMany: vi.fn<(args: unknown) => Promise<unknown[]>>(async () => []), deleteMany: vi.fn(async () => ({ count: 0 })) },
   report: { deleteMany: vi.fn(async () => ({ count: 1 })) },
+  feedback: { deleteMany: vi.fn(async () => ({ count: 1 })) },
   encounter: { deleteMany: vi.fn(async () => ({ count: 5 })) },
   safetyCheckin: { deleteMany: vi.fn(async () => ({ count: 1 })) },
   consent: { updateMany: vi.fn(async () => ({ count: 4 })) },
@@ -51,6 +52,13 @@ describe('purgerRetention — seuils', () => {
   it('signalements : résolus depuis plus d’un an (jamais les non résolus)', async () => {
     await purgerRetention(NOW);
     expect(fakeDb.report.deleteMany).toHaveBeenCalledWith({ where: { resolvedAt: { lt: il_y_a(365) } } });
+  });
+
+  it('retours : clos (resolved/spam) et créés il y a plus d’un an — jamais les ouverts', async () => {
+    await purgerRetention(NOW);
+    expect(fakeDb.feedback.deleteMany).toHaveBeenCalledWith({
+      where: { status: { in: ['resolved', 'spam'] }, createdAt: { lt: il_y_a(365) } },
+    });
   });
 
   it('croisements : plus de 90 jours', async () => {
