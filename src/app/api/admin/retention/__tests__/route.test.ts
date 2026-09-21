@@ -47,6 +47,11 @@ describe('GET /api/admin/retention', () => {
     expect((await (await GET()).json()).enRetard).toBe(true);
   });
 
+  it('un passage récent avec une règle en échec est en retard : la journée est réclamée, pas tenue', async () => {
+    fakeDb.retentionState.findUnique.mockResolvedValue({ lastRunAt: new Date(), lastReport: { encounters: 1, reports: { erreur: 'boom' } } });
+    expect((await (await GET()).json()).enRetard).toBe(true);
+  });
+
   it('refuse un non-admin (404 : la route n’existe pas pour lui)', async () => {
     fakeDb.user.findUnique.mockResolvedValue({ role: 'USER' });
     expect((await GET()).status).toBe(404);

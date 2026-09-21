@@ -63,9 +63,11 @@ export default function RetentionPanel() {
               {etat.lastRunAt ? fmtDate.format(new Date(etat.lastRunAt)) : 'La purge n’a encore jamais tourné.'}
             </p>
             <p role="status" className={`mt-1 text-sm ${etat.enRetard ? 'text-error' : 'text-muted'}`}>
-              {etat.enRetard
-                ? 'En retard : aucun passage depuis plus de 48 h. La purge se déclenche par les visites ; sans trafic, lance-la ici.'
-                : 'À jour — déclenchée par le trafic, une fois par jour.'}
+              {!etat.enRetard
+                ? 'À jour — déclenchée par le trafic, une fois par jour.'
+                : Object.values(etat.lastReport ?? {}).some((v) => typeof v === 'object')
+                  ? 'En retard : le dernier passage a laissé des règles en échec (voir le bilan). Relance ici, et regarde les journaux si ça persiste.'
+                  : 'En retard : aucun passage depuis plus de 48 h. La purge se déclenche par les visites ; sans trafic, lance-la ici.'}
             </p>
           </div>
           <button

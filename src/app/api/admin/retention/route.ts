@@ -48,10 +48,14 @@ export async function POST() {
 async function etat() {
   const temoin = await getDb().retentionState.findUnique({ where: { id: 'singleton' } });
   const lastRunAt = temoin?.lastRunAt ?? null;
+  const lastReport = (temoin?.lastReport ?? null) as Record<string, number | { erreur: string }> | null;
+  // Une règle en échec compte comme un retard : la journée a été réclamée
+  // (lastRunAt avancé) mais la promesse n'est pas tenue.
+  const enEchec = lastReport !== null && Object.values(lastReport).some((v) => typeof v === 'object');
   return {
     lastRunAt,
-    lastReport: temoin?.lastReport ?? null,
-    enRetard: lastRunAt === null || Date.now() - lastRunAt.getTime() > RETARD_ALERTE_MS,
+    lastReport,
+    enRetard: lastRunAt === null || Date.now() - lastRunAt.getTime() > RETARD_ALERTE_MS || enEchec,
     regles: REGLES_RETENTION.map(({ id, donnees, duree }) => ({ id, donnees, duree })),
   };
 }
