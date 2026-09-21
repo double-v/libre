@@ -23,6 +23,7 @@ const adminNavItems: Array<{ href: string; label: string; icon: string; queue?: 
   { href: '/admin/logs', label: 'Logs', icon: 'logs' },
   { href: '/admin/square', label: 'La Place', icon: 'square' },
   { href: '/admin/rate-limits', label: 'Rate-limits', icon: 'gauge' },
+  { href: '/admin/retention', label: 'Rétention', icon: 'logs' },
 ];
 
 function SidebarIcon({ icon }: { icon: string }) {
