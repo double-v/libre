@@ -9,39 +9,13 @@
  */
 import { getDb } from '@/lib/db';
 
-export const CONSENT_SENSIBLE_TYPE = 'sensitive_data';
-export const CONSENT_SENSIBLE_VERSION = '1';
+import {
+  CONSENT_SENSIBLE_TYPE,
+  CONSENT_SENSIBLE_VERSION,
+  VIDE_SENSIBLE,
+} from '@/lib/consentement-sensible-champs';
 
-export const CHAMPS_SENSIBLES = [
-  'genderIdentity',
-  'orientation',
-  'practices',
-  'searchGenders',
-  'searchOrientations',
-] as const;
-
-export type ChampSensible = (typeof CHAMPS_SENSIBLES)[number];
-
-/** Valeur vide pour chaque champ, celle que le retrait rétablit. */
-export const VIDE_SENSIBLE = {
-  genderIdentity: '',
-  orientation: [] as string[],
-  practices: [] as string[],
-  searchGenders: [] as string[],
-  searchOrientations: [] as string[],
-} satisfies Record<ChampSensible, '' | string[]>;
-
-function estVide(valeur: unknown): boolean {
-  return valeur === undefined || valeur === '' || (Array.isArray(valeur) && valeur.length === 0);
-}
-
-/**
- * Le corps porte-t-il une valeur sensible non vide ? Vider un champ ne demande
- * rien : c'est le geste même du retrait, il doit rester possible sans.
- */
-export function porteDonneeSensible(data: Record<string, unknown>): boolean {
-  return CHAMPS_SENSIBLES.some((champ) => !estVide(data[champ]));
-}
+export * from '@/lib/consentement-sensible-champs';
 
 export async function aConsentementSensible(userId: string): Promise<boolean> {
   const actif = await getDb().consent.findFirst({

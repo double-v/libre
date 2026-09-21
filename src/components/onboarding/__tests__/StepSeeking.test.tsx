@@ -33,13 +33,41 @@ describe('<StepSeeking />', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Bi' }));
     // « Autre » de l'orientation (3e liste), pas celui du type de relation.
     fireEvent.click(screen.getAllByRole('button', { name: 'Autre' })[2]);
+    fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
     await waitFor(() => expect(onContinue).toHaveBeenCalledWith({
       relationshipType: ['libre', 'poly'],
       searchRelationshipTypes: ['libre', 'poly'],
       searchGenders: ['femme'],
       searchOrientations: ['bi', 'autre'],
+      sensitiveConsent: true,
     }));
+  });
+
+  it('demande la case art. 9 dès qu’un genre ou une orientation est choisi, et l’envoie (#425)', async () => {
+    const onContinue = vi.fn().mockResolvedValue(undefined);
+    render(<StepSeeking onContinue={onContinue} onLater={vi.fn()} />);
+    // Sans choix sensible : pas de case, on peut continuer.
+    expect(screen.queryByRole('checkbox')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Femme' }));
+    const consent = screen.getByRole('checkbox');
+    expect(consent).not.toBeChecked();
+    expect(screen.getByRole('button', { name: 'Continuer' })).toBeDisabled();
+    fireEvent.click(consent);
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    await waitFor(() => expect(onContinue).toHaveBeenCalledWith(expect.objectContaining({
+      searchGenders: ['femme'],
+      sensitiveConsent: true,
+    })));
+  });
+
+  it('sans choix sensible, « Continuer » n’envoie pas de consentement', async () => {
+    const onContinue = vi.fn().mockResolvedValue(undefined);
+    render(<StepSeeking onContinue={onContinue} onLater={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Libre' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    await waitFor(() => expect(onContinue).toHaveBeenCalled());
+    expect(onContinue.mock.calls[0][0]).not.toHaveProperty('sensitiveConsent');
   });
 
   it('« Plus tard » n’envoie rien', () => {

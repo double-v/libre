@@ -4,6 +4,7 @@ import { useState } from 'react';
 import OnboardingShell from './OnboardingShell';
 import TagButton from '@/components/TagButton';
 import Card from '@/components/ui/Card';
+import ConsentSensibleField from '@/components/ConsentSensibleField';
 import { GENDER_OPTIONS, ORIENTATION_OPTIONS, RELATIONSHIP_TYPE_OPTIONS } from '@/lib/taxonomy';
 
 /**
@@ -17,6 +18,8 @@ export interface SeekingPayload {
   searchRelationshipTypes: string[];
   searchGenders: string[];
   searchOrientations: string[];
+  /** Art. 9 (#425) : présent seulement si un genre ou une orientation est choisi. */
+  sensitiveConsent?: true;
 }
 
 export interface StepSeekingProps {
@@ -33,7 +36,13 @@ export default function StepSeeking({ onContinue, onLater }: StepSeekingProps) {
   const [rel, setRel] = useState<string[]>([]);
   const [genders, setGenders] = useState<string[]>([]);
   const [orientations, setOrientations] = useState<string[]>([]);
+  const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  // Genres et orientations cherchés révèlent l'orientation : la case art. 9
+  // n'apparaît que si la personne en choisit, et bloque tant qu'elle n'est
+  // pas cochée. Le type de relation seul ne demande rien.
+  const sensible = genders.length > 0 || orientations.length > 0;
 
   async function submit() {
     setBusy(true);
@@ -43,6 +52,7 @@ export default function StepSeeking({ onContinue, onLater }: StepSeekingProps) {
         searchRelationshipTypes: rel,
         searchGenders: genders,
         searchOrientations: orientations,
+        ...(sensible ? { sensitiveConsent: true as const } : {}),
       });
     } finally {
       setBusy(false);
@@ -54,7 +64,7 @@ export default function StepSeeking({ onContinue, onLater }: StepSeekingProps) {
       step={1}
       title="Ce que tu cherches"
       lead="Les autres sauront si vous cherchez la même chose. Tu peux en choisir plusieurs, et changer d'avis à tout moment."
-      primary={{ label: 'Continuer', onClick: () => void submit(), loading: busy }}
+      primary={{ label: 'Continuer', onClick: () => void submit(), loading: busy, disabled: sensible && !consent }}
       onLater={onLater}
     >
       <Card as="section" variant="filter">
@@ -89,6 +99,7 @@ export default function StepSeeking({ onContinue, onLater }: StepSeekingProps) {
               ))}
             </div>
           </div>
+          {sensible && <ConsentSensibleField checked={consent} onChange={setConsent} />}
         </div>
       </Card>
     </OnboardingShell>
