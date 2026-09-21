@@ -73,9 +73,11 @@ export async function GET() {
         where: { likerId: userId },
         select: { likedId: true, createdAt: true },
       }),
+      // Art. 15.4 — qui m'a liké, bloqué ou signalé appartient à l'autre :
+      // on exporte l'existence et la date, jamais l'identifiant (#426).
       getDb().like.findMany({
         where: { likedId: userId },
-        select: { likerId: true, createdAt: true },
+        select: { createdAt: true },
       }),
       getDb().match.findMany({
         where: { userA: userId },
@@ -103,7 +105,7 @@ export async function GET() {
       }),
       getDb().block.findMany({
         where: { blockedId: userId },
-        select: { blockerId: true, createdAt: true },
+        select: { createdAt: true },
       }),
       getDb().report.findMany({
         where: { reporterId: userId },
@@ -111,7 +113,7 @@ export async function GET() {
       }),
       getDb().report.findMany({
         where: { reportedId: userId },
-        select: { reporterId: true, reason: true, status: true, createdAt: true },
+        select: { reason: true, status: true, createdAt: true },
       }),
       getDb().verificationRequest.findMany({
         where: { userId },

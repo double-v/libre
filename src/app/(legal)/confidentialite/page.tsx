@@ -10,7 +10,7 @@ export default function ConfidentialitePage() {
     <article className="prose prose-gray dark:prose-invert max-w-none">
       <h1>Politique de confidentialité</h1>
       <p className="text-sm text-muted">
-        Dernière mise à jour : 3 septembre 2026
+        Dernière mise à jour : 21 septembre 2026
       </p>
 
       <p>
@@ -210,7 +210,8 @@ export default function ConfidentialitePage() {
       <ul>
         <li><strong>L&apos;équipe Libre</strong>{' '}: administrateurs pour la modération (contenu du Carré, signalements, demandes de vérification)</li>
         <li><strong>Cloudflare</strong>{' '}: fournisseur de sécurité (Turnstile anti-bot, CDN). Politique de confidentialité : <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">cloudflare.com/privacypolicy</a></li>
-        <li><strong>Vercel</strong>{' '}: hébergement. Politique de confidentialité : <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">vercel.com/legal/privacy-policy</a></li>
+        <li><strong>Vercel</strong>{' '}: hébergement de l&apos;application. Politique de confidentialité : <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">vercel.com/legal/privacy-policy</a></li>
+        <li><strong>Neon</strong>{' '}: hébergement de la base de données (l&apos;ensemble des données décrites au §2), dans la région AWS eu-central-1 (Francfort, Allemagne). Politique : <a href="https://neon.tech/privacy-policy" target="_blank" rel="noopener noreferrer">neon.tech/privacy-policy</a></li>
         <li><strong>Resend</strong>{' '}: envoi d&apos;e-mails transactionnels (vérification, réinitialisation). Politique : <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">resend.com/legal/privacy-policy</a></li>
         <li><strong>Pusher</strong>{' '}: notifications en temps réel (WebSocket). Politique : <a href="https://pusher.com/legal/privacy/" target="_blank" rel="noopener noreferrer">pusher.com/legal/privacy</a></li>
         <li><strong>Cloudflare R2</strong>{' '}: stockage des photos de profil. Même politique que Cloudflare ci-dessus.</li>
@@ -225,8 +226,9 @@ export default function ConfidentialitePage() {
       {/* ─── 7. Transferts hors UE ─── */}
       <h2>7. Transferts de données hors Union européenne</h2>
       <p>
-        Certains sous-traitants (Vercel, Cloudflare, Pusher) peuvent traiter des données en dehors de l&apos;Union européenne.
-        Ces transferts sont encadrés par :
+        La base de données reste dans l&apos;Union européenne (Neon, Francfort). Certains sous-traitants
+        (Vercel, Cloudflare, Pusher, Resend) peuvent traiter des données en dehors de l&apos;Union européenne,
+        au passage (requêtes, e-mails, notifications). Ces transferts sont encadrés par :
       </p>
       <ul>
         <li>Des clauses contractuelles types (SCC) approuvées par la Commission européenne</li>

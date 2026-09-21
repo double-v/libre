@@ -11,6 +11,12 @@
  *
  * Ce fichier re-export l'API publique pour ne pas casser les imports
  * existants (`from '@/lib/rate-limit'`).
+ *
+ * RGPD (#429) : Upstash reçoit des identifiants de compte et des adresses IP.
+ * Vérifié le 2026-09-21, `UPSTASH_REDIS_REST_URL` n'est **pas** défini en
+ * production : c'est le fallback mémoire qui tourne, et Upstash ne figure donc
+ * pas parmi les destinataires de la politique de confidentialité (§6). Le jour
+ * où on le branche, l'ajouter à §6 et §7 **avant** de poser la variable.
  */
 export {
   rateLimit,
