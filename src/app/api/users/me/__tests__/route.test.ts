@@ -66,6 +66,8 @@ describe('DELETE /api/users/me', () => {
     fakeDb.user.findUnique.mockResolvedValue({
       passwordHash: 'hash',
       profile: { photos: [] },
+      photoModerations: [],
+      verificationRequests: [],
     });
     mockCompare.mockResolvedValue(true);
 
@@ -79,6 +81,8 @@ describe('DELETE /api/users/me', () => {
     fakeDb.user.findUnique.mockResolvedValue({
       passwordHash: 'hash',
       profile: { photos: [] },
+      photoModerations: [],
+      verificationRequests: [],
     });
     mockCompare.mockResolvedValue(false);
 
@@ -92,6 +96,8 @@ describe('DELETE /api/users/me', () => {
     fakeDb.user.findUnique.mockResolvedValue({
       passwordHash: 'hash',
       profile: { photos: [] },
+      photoModerations: [],
+      verificationRequests: [],
     });
 
     const res = await DELETE(deleteRequest());
@@ -104,6 +110,8 @@ describe('DELETE /api/users/me', () => {
     fakeDb.user.findUnique.mockResolvedValue({
       passwordHash: null,
       profile: { photos: [] },
+      photoModerations: [],
+      verificationRequests: [],
     });
 
     const res = await DELETE(deleteRequest({}));
@@ -117,6 +125,8 @@ describe('DELETE /api/users/me', () => {
     fakeDb.user.findUnique.mockResolvedValue({
       passwordHash: 'hash',
       profile: { photos: [PHOTO_KEY] },
+      photoModerations: [],
+      verificationRequests: [],
     });
     mockCompare.mockResolvedValue(true);
     mockDeletePhoto.mockResolvedValue(undefined);
@@ -127,10 +137,38 @@ describe('DELETE /api/users/me', () => {
     expect(mockDeletePhoto).toHaveBeenCalledWith(PHOTO_KEY);
   });
 
+  it('efface aussi les dérivés floutés et les selfies de vérification (#428)', async () => {
+    // La cascade SQL efface la ligne, pas l'objet : sans ce passage, le flou et
+    // le selfie — une photo du visage — restent dans le bucket sans plus aucun
+    // lien vers un compte, donc introuvables pour un effacement ultérieur.
+    const BLUR_KEY = `${ALICE_ID}/photo.blur.jpg`;
+    const SELFIE_KEY = `${ALICE_ID}/selfie.jpg`;
+    fakeDb.user.findUnique.mockResolvedValue({
+      passwordHash: 'hash',
+      profile: { photos: [PHOTO_KEY] },
+      photoModerations: [{ blurredKey: BLUR_KEY }],
+      verificationRequests: [
+        { selfieUrl: `/api/photos/${SELFIE_KEY}` },
+        // Le selfie peut être une photo du profil : une seule suppression.
+        { selfieUrl: `https://libre.example/api/photos/${PHOTO_KEY}` },
+      ],
+    });
+    mockCompare.mockResolvedValue(true);
+    mockDeletePhoto.mockResolvedValue(undefined);
+
+    const res = await DELETE(deleteRequest({ confirmPassword: 'Motdepasse1' }));
+
+    expect(res.status).toBe(204);
+    const cles = mockDeletePhoto.mock.calls.map((c) => c[0]).sort();
+    expect(cles).toEqual([PHOTO_KEY, BLUR_KEY, SELFIE_KEY].sort());
+  });
+
   it('supprime quand même le compte si R2 est en panne', async () => {
     fakeDb.user.findUnique.mockResolvedValue({
       passwordHash: 'hash',
       profile: { photos: [PHOTO_KEY] },
+      photoModerations: [],
+      verificationRequests: [],
     });
     mockCompare.mockResolvedValue(true);
     mockDeletePhoto.mockRejectedValue(new Error('R2 down'));
