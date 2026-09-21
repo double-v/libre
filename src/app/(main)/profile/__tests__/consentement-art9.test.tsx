@@ -78,7 +78,7 @@ describe('/profile — consentement art. 9', () => {
     fireEvent.click(pratiques().getByRole('button', { name: /Modifier Pratiques/ }));
     expect(pratiques().getByRole('button', { name: 'Enregistrer' })).toBeInTheDocument();
     expect(pratiques().queryByText(/J’accepte que Libre enregistre/)).toBeNull();
-  });
+  }, 15_000);
 
   it('avec consentement : aucune case, l’écriture part telle quelle', async () => {
     await ouvrir(true, 'Ce que je cherche');

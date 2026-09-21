@@ -171,6 +171,7 @@ export default function ProfilePage() {
   const startEdit = (section: string) => {
     setEditingSection(section);
     setEditConsent(false);
+    setConsentError('');
     if (section === 'identity') {
       setEditBirthDate(profile?.birthDate ? profile.birthDate.split('T')[0] : '');
       setEditGenderIdentity(profile?.genderIdentity ?? '');
@@ -227,15 +228,22 @@ export default function ProfilePage() {
    * vide exige la case cochée — refus sur place, pas d'aller-retour. Vider un
    * champ ne demande rien.
    */
+  const [consentError, setConsentError] = useState('');
   const saveSensible = (data: Record<string, unknown>) => {
     if (sensitiveConsent || !porteDonneeSensible(data)) return saveSection(data);
     if (!editConsent) {
-      setError(COPY_CONSENT_SENSIBLE.requis);
+      setConsentError(COPY_CONSENT_SENSIBLE.requis);
       return Promise.resolve();
     }
     return saveSection({ ...data, sensitiveConsent: true });
   };
-  const consentField = sensitiveConsent ? null : <ConsentSensibleField checked={editConsent} onChange={setEditConsent} />;
+  const consentField = sensitiveConsent ? null : (
+    <ConsentSensibleField
+      checked={editConsent}
+      onChange={(v) => { setEditConsent(v); setConsentError(''); }}
+      error={consentError}
+    />
+  );
 
   /**
    * Visibilité des pratiques (#328) — enregistrée au clic, sans passer par le
