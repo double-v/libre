@@ -6,6 +6,7 @@ import { logout } from '@/lib/logout';
 import { purgerSecretsLocaux } from '@/lib/session-cleanup';
 import { toast } from '@/lib/toast';
 import PushSettings from '@/components/PushSettings';
+import ConsentSensibleSettings from '@/components/ConsentSensibleSettings';
 import KeySettings from '@/components/KeySettings';
 import AppearanceSettings from '@/components/AppearanceSettings';
 import SiteShell from '@/components/ui/SiteShell';
@@ -314,6 +315,8 @@ export default function SettingsPage() {
         </section>
 
         {/* RGPD: Data export & legal links */}
+        <ConsentSensibleSettings />
+
         <section className="rounded-xl border border-hairline bg-surface p-4 sm:p-5">
           <h2 className="text-lg font-semibold text-content">Vos droits RGPD</h2>
           <p className="mt-1 text-sm text-muted">

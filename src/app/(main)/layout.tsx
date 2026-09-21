@@ -13,6 +13,7 @@ import { UnreadProvider, useUnread } from '@/hooks/useUnread';
 
 const MatchDialog = dynamic(() => import('@/components/MatchDialog'), { ssr: false });
 const FeedbackButton = dynamic(() => import('@/components/FeedbackButton'), { ssr: false });
+const ConsentAvenantBanner = dynamic(() => import('@/components/ConsentAvenantBanner'), { ssr: false });
 const ToastHost = dynamic(() => import('@/components/ui/Toast'), { ssr: false });
 
 const BETA_DISMISSED_KEY = 'libre_beta_dismissed';
@@ -113,7 +114,12 @@ function MainShell({ children }: { children: React.ReactNode }) {
         width="content"
         showSections
         banner={
-          <BetaBanner onFeedback={() => window.dispatchEvent(new Event('open-feedback'))} />
+          <>
+            <BetaBanner onFeedback={() => window.dispatchEvent(new Event('open-feedback'))} />
+            {/* Avenant art. 9 (#425) : seulement connecté, et seulement pour
+                un compte qui porte déjà des données sensibles sans consentement. */}
+            {session?.user?.id && <ConsentAvenantBanner />}
+          </>
         }
       />
 

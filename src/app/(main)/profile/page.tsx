@@ -8,6 +8,8 @@ import { photoUrl } from '@/lib/photos';
 import TagButton from '@/components/TagButton';
 import TagSelector from '@/components/TagSelector';
 import PrivacyTip from '@/components/PrivacyTip';
+import ConsentSensibleField, { COPY_CONSENT_SENSIBLE } from '@/components/ConsentSensibleField';
+import { porteDonneeSensible } from '@/lib/consentement-sensible-champs';
 import { SENSITIVITY_LABELS, SENSITIVITY_THRESHOLDS, THRESHOLD_LABELS } from '@/lib/photo-sensitivity';
 import ProfileGlance from '@/components/ProfileGlance';
 import PhotoDropZone from '@/components/PhotoDropZone';
@@ -95,6 +97,11 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [editingSection, setEditingSection] = useState<string | null>(null);
+  // Art. 9 (#425) : tant que le compte n'a pas consenti, chaque section qui
+  // touche l'orientation, le genre, les pratiques ou les personnes cherchées
+  // montre la case, et la première écriture l'emporte avec elle.
+  const [sensitiveConsent, setSensitiveConsent] = useState(false);
+  const [editConsent, setEditConsent] = useState(false);
   // « Voir comme les autres » (#413) : l'aperçu public à la demande, plus en tête de page.
   const [showPreview, setShowPreview] = useState(false);
   // « Maintenant » figé au montage : Date.now() est impur, on ne l'appelle pas
@@ -134,6 +141,7 @@ export default function ProfilePage() {
       setDisplayName(data.displayName ?? '');
       setIsVerified(Boolean(data.isVerified));
       setPhotoSensitivity(data.photoSensitivity ?? {});
+      setSensitiveConsent(Boolean(data.sensitiveConsent));
     } catch {
       setError('Impossible de charger le profil');
     } finally {
@@ -162,6 +170,8 @@ export default function ProfilePage() {
 
   const startEdit = (section: string) => {
     setEditingSection(section);
+    setEditConsent(false);
+    setConsentError('');
     if (section === 'identity') {
       setEditBirthDate(profile?.birthDate ? profile.birthDate.split('T')[0] : '');
       setEditGenderIdentity(profile?.genderIdentity ?? '');
@@ -199,10 +209,11 @@ export default function ProfilePage() {
       });
       if (!res.ok) {
         const result = await res.json();
-        throw new Error(result.error || 'Erreur');
+        throw new Error(result.error === 'consent_required' ? COPY_CONSENT_SENSIBLE.requis : result.error || 'Erreur');
       }
       const result = await res.json();
       setProfile(result.profile);
+      if (data.sensitiveConsent) setSensitiveConsent(true);
       setEditingSection(null);
       toast('Profil enregistré.');
     } catch (err) {
@@ -211,6 +222,28 @@ export default function ProfilePage() {
       setSaving(false);
     }
   };
+
+  /**
+   * Écriture d'une section sensible : sans consentement actif, une valeur non
+   * vide exige la case cochée — refus sur place, pas d'aller-retour. Vider un
+   * champ ne demande rien.
+   */
+  const [consentError, setConsentError] = useState('');
+  const saveSensible = (data: Record<string, unknown>) => {
+    if (sensitiveConsent || !porteDonneeSensible(data)) return saveSection(data);
+    if (!editConsent) {
+      setConsentError(COPY_CONSENT_SENSIBLE.requis);
+      return Promise.resolve();
+    }
+    return saveSection({ ...data, sensitiveConsent: true });
+  };
+  const consentField = sensitiveConsent ? null : (
+    <ConsentSensibleField
+      checked={editConsent}
+      onChange={(v) => { setEditConsent(v); setConsentError(''); }}
+      error={consentError}
+    />
+  );
 
   /**
    * Visibilité des pratiques (#328) — enregistrée au clic, sans passer par le
@@ -576,7 +609,8 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 </div>
-                <EditActions saving={saving} onSave={() => saveSection({ orientation: editOrientation, relationshipType: editRelationshipType })} onCancel={() => setEditingSection(null)} />
+                {consentField}
+                <EditActions saving={saving} onSave={() => void saveSensible({ orientation: editOrientation, relationshipType: editRelationshipType })} onCancel={() => setEditingSection(null)} />
               </div>
             ) : (
               <div className="mt-2 space-y-2">
@@ -627,7 +661,8 @@ export default function ProfilePage() {
                     ))}
                   </select>
                 </div>
-                <EditActions saving={saving} onSave={() => saveSection({ birthDate: editBirthDate ? new Date(editBirthDate).toISOString() : undefined, genderIdentity: editGenderIdentity || undefined })} onCancel={() => setEditingSection(null)} />
+                {editGenderIdentity ? consentField : null}
+                <EditActions saving={saving} onSave={() => void saveSensible({ birthDate: editBirthDate ? new Date(editBirthDate).toISOString() : undefined, genderIdentity: editGenderIdentity || undefined })} onCancel={() => setEditingSection(null)} />
               </div>
             ) : (
               <div className="mt-2 space-y-2">
@@ -685,9 +720,10 @@ export default function ProfilePage() {
             {editingSection === 'search' ? (
               <div className="mt-3 space-y-4">
                 <SearchFilters value={editSearchFilters} onChange={setEditSearchFilters} framed={false} />
+                {consentField}
                 <EditActions
                   saving={saving}
-                  onSave={() => saveSection({
+                  onSave={() => void saveSensible({
                     ageMin: editSearchFilters.ageMin,
                     ageMax: editSearchFilters.ageMax,
                     searchDistanceKm: editSearchFilters.distanceKm,
@@ -758,7 +794,8 @@ export default function ProfilePage() {
             {editingSection === 'practices' ? (
               <div className="mt-3 space-y-3">
                 <TagSelector categories={PRACTICE_CATEGORIES} selected={editPractices} onChange={setEditPractices} placeholder="Ajouter une pratique..." />
-                <EditActions saving={saving} onSave={() => saveSection({ practices: editPractices })} onCancel={() => setEditingSection(null)} />
+                {consentField}
+                <EditActions saving={saving} onSave={() => void saveSensible({ practices: editPractices })} onCancel={() => setEditingSection(null)} />
               </div>
             ) : (
               <div className="mt-3">

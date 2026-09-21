@@ -116,9 +116,14 @@ export default function ConfidentialitePage() {
             <td>Art. 6(1)(b)</td>
           </tr>
           <tr>
-            <td>Profil (bio, photos, preferences, localisation)</td>
+            <td>Profil (bio, photos, préférences d&apos;âge et de distance, localisation)</td>
             <td>Exécution du contrat</td>
             <td>Art. 6(1)(b)</td>
+          </tr>
+          <tr>
+            <td>Orientation sexuelle, identité de genre, pratiques, genres et orientations recherchés</td>
+            <td>Consentement explicite, distinct des CGU, retirable à tout moment (le retrait efface ces champs)</td>
+            <td>Art. 9(2)(a)</td>
           </tr>
           <tr>
             <td>Communications (messages E2E, Carré)</td>
@@ -296,6 +301,7 @@ export default function ConfidentialitePage() {
       <ul>
         <li><strong>Accès, rectification, portabilité</strong>{' '}: directement depuis vos paramètres de compte (Paramètres &gt; Exporter mes données)</li>
         <li><strong>Effacement</strong>{' '}: depuis Paramètres &gt; Supprimer mon compte</li>
+        <li><strong>Retrait du consentement</strong>{' '}sur l&apos;orientation, le genre et les pratiques : depuis Paramètres &gt; Données sensibles. Ces champs sont effacés aussitôt ; le compte reste.</li>
         <li><strong>Tout autre droit</strong>{' '}: par e-mail à <a href="mailto:dpo@getlibre.fr">dpo@getlibre.fr</a></li>
       </ul>
       <p>

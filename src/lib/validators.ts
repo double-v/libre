@@ -83,6 +83,10 @@ export const profileUpdateSchema = z.object({
     lat: z.number().min(-90).max(90),
     lng: z.number().min(-180).max(180),
   }).nullable().optional(),
+  // Consentement art. 9 donné dans la même requête que la première saisie
+  // (#425) : évite un aller-retour et une fenêtre où la case est cochée mais
+  // pas encore enregistrée.
+  sensitiveConsent: z.literal(true).optional(),
 }).refine((data) => {
   if (data.ageMin !== undefined && data.ageMax !== undefined) {
     return data.ageMin <= data.ageMax;

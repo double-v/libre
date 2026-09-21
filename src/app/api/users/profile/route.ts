@@ -6,6 +6,7 @@ import { authOptions } from '@/lib/auth';
 import { profileUpdateSchema } from '@/lib/validators';
 import { photoSensitivityMap } from '@/lib/photo-veil';
 import { formatCityLabel } from '@/lib/geocoding';
+import { aConsentementSensible, donnerConsentementSensible, porteDonneeSensible, traceConsentement } from '@/lib/consentement-sensible';
 
 export async function GET() {
   try {
@@ -26,7 +27,12 @@ export async function GET() {
     // Classification de ses propres photos (#330) : le propriétaire les voit
     // toujours nettes, mais doit savoir lesquelles arrivent floutées aux autres
     // — sans ça la classification serait une sanction invisible.
-    const photoSensitivity = await photoSensitivityMap(user.profile?.photos ?? []);
+    const [photoSensitivity, sensitiveConsent] = await Promise.all([
+      photoSensitivityMap(user.profile?.photos ?? []),
+      // Le client sait s'il doit demander la case art. 9 avant la première
+      // saisie d'orientation, de genre ou de pratiques (#425).
+      aConsentementSensible(session.user.id),
+    ]);
 
     return NextResponse.json(
       {
@@ -34,6 +40,7 @@ export async function GET() {
         displayName: user.displayName,
         isVerified: user.isVerified,
         photoSensitivity,
+        sensitiveConsent,
       },
       { status: 200 }
     );
@@ -64,6 +71,18 @@ export async function PUT(request: Request) {
     }
 
     const data = parsed.data;
+
+    // Art. 9 (#425) : aucune valeur d'orientation, de genre ou de pratiques ne
+    // se persiste sans consentement explicite actif — donné avant, ou dans
+    // cette requête même. Vider un champ ne demande rien.
+    if (porteDonneeSensible(data)) {
+      const consenti = data.sensitiveConsent
+        ? await donnerConsentementSensible(session.user.id, traceConsentement(request))
+        : await aConsentementSensible(session.user.id);
+      if (!consenti) {
+        return NextResponse.json({ error: 'consent_required' }, { status: 403 });
+      }
+    }
 
     const updateData: Record<string, unknown> = {};
     const createData: Record<string, unknown> = { userId: session.user.id };
