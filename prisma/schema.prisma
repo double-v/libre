@@ -359,6 +359,17 @@ model SquareMessage {
 /// État singleton de La Place (#13) — le reset quotidien ne dépend plus d'un
 /// cron : c'est le premier passage HTTP après l'heure de reset qui l'exécute.
 /// Cette ligne est le témoin qui empêche les suivants de le refaire.
+// Témoin de la purge de rétention (#427) : un singleton, comme SquareState.
+// `lastRunAt` sert de verrou (UPDATE … WHERE lastRunAt < borne), `lastReport`
+// garde le bilan du dernier passage pour la page admin.
+model RetentionState {
+  id         String   @id @default("singleton")
+  lastRunAt  DateTime @map("last_run_at")
+  lastReport Json?    @map("last_report")
+
+  @@map("retention_state")
+}
+
 model SquareState {
   id String @id @default("singleton")
   /// Borne du dernier reset appliqué (heure UTC pile, cf. `reset-clock.ts`) —

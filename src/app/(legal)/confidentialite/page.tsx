@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { REGLES_RETENTION } from '@/lib/retention/regles';
 
 export const metadata: Metadata = {
   title: 'Politique de confidentialité',
@@ -170,6 +171,10 @@ export default function ConfidentialitePage() {
 
       {/* ─── 5. Durées de conservation ─── */}
       <h2>5. Durées de conservation</h2>
+      <p>
+        Les durées ci-dessous sont appliquées par une purge automatique quotidienne (#427) :
+        ce tableau et la purge lisent la même liste.
+      </p>
       <table>
         <thead>
           <tr>
@@ -187,25 +192,15 @@ export default function ConfidentialitePage() {
             <td>Jusqu&apos;à suppression du compte ou de la conversation</td>
           </tr>
           <tr>
-            <td>Logs de modération</td>
-            <td>3 ans après la dernière action</td>
-          </tr>
-          <tr>
             <td>Tokens de vérification e-mail</td>
-            <td>24 heures ou jusqu&apos;à utilisation</td>
+            <td>24 heures ou jusqu&apos;à utilisation (jeton signé, jamais stocké)</td>
           </tr>
-          <tr>
-            <td>Tokens de réinitialisation mot de passe</td>
-            <td>1 heure ou jusqu&apos;à utilisation</td>
-          </tr>
-          <tr>
-            <td>Demandes de vérification (selfies)</td>
-            <td>Jusqu&apos;à résolution + 30 jours</td>
-          </tr>
-          <tr>
-            <td>Feedback</td>
-            <td>Jusqu&apos;à résolution + 1 an</td>
-          </tr>
+          {REGLES_RETENTION.map((r) => (
+            <tr key={r.id} data-retention={r.id}>
+              <td>{r.donnees}</td>
+              <td>{r.duree}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
 

@@ -5,6 +5,7 @@ import AnalyticsSection from '@/components/admin/AnalyticsSection';
 import DistributionBar from '@/components/admin/DistributionBar';
 import MetricCard from '@/components/admin/MetricCard';
 import type { AnalyticsStats } from '@/lib/admin-analytics';
+import RetentionAlert from '@/components/admin/RetentionAlert';
 
 interface DashboardStats {
   totalUsers: number;
@@ -59,6 +60,7 @@ export default function AdminDashboard() {
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-content">Tableau de bord</h1>
+      <RetentionAlert />
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         {cards.map((card) => (
           <div key={card.label} className={`rounded-xl border border-hairline p-4 ${card.color}`}>
