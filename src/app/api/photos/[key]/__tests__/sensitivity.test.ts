@@ -153,6 +153,25 @@ describe('GET /api/photos/[key] — photo classée (#330)', () => {
     expect(servedKey()).toBe(BOB_BLUR);
   });
 
+  // #433 — l'écran a posé le voile : le dérivé part, quoi que dise le seuil.
+  // Sinon une URL voilée peut avoir pointé vers l'original, et le navigateur le
+  // ressort de sa mémoire sous le bouton « Voir ».
+  it('sert toujours le dérivé sur ?voile=1, même si le seuil couvre le niveau', async () => {
+    withViewerThreshold('explicit');
+    await call(BOB_AVATAR, '?voile=1');
+    expect(servedKey()).toBe(BOB_BLUR);
+  });
+
+  it('ne laisse pas ?reveal=1 ouvrir une URL marquée voilée', async () => {
+    await call(BOB_AVATAR, '?voile=1&reveal=1');
+    expect(servedKey()).toBe(BOB_BLUR);
+  });
+
+  it('interdit toute réutilisation de la redirection par le navigateur', async () => {
+    const res = await call(BOB_AVATAR);
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store');
+  });
+
   it('ne consulte pas le seuil quand la photo n\'est pas classée', async () => {
     fakeDb.photoModeration.findUnique.mockResolvedValue(null);
     fakeDb.profile.findUnique.mockResolvedValue({ photos: [BOB_AVATAR] });

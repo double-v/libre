@@ -33,7 +33,7 @@ describe('<SensitivePhoto />', () => {
     render(<SensitivePhoto photoKey={KEY} alt="Camille" veiled />);
 
     // Avant : aucune requête vers l'original.
-    expect(screen.getByAltText('Camille (floutée)')).toHaveAttribute('src', SRC);
+    expect(screen.getByAltText('Camille (floutée)')).toHaveAttribute('src', `${SRC}?voile=1`);
 
     fireEvent.click(screen.getByRole('button', { name: /Voir la photo/ }));
 
@@ -60,7 +60,20 @@ describe('<SensitivePhoto />', () => {
     render(<SensitivePhoto photoKey={KEY} alt="Camille" veiled revealable={false} />);
 
     expect(screen.queryByRole('button')).toBeNull();
-    expect(screen.getByAltText('Camille (floutée)')).toHaveAttribute('src', SRC);
+    expect(screen.getByAltText('Camille (floutée)')).toHaveAttribute('src', `${SRC}?voile=1`);
+  });
+
+  // #433 : un navigateur ressort une image déjà chargée dans le document sur
+  // la seule foi de son URL. Si voilée et nette partageaient une adresse,
+  // l'original vu avant une bascule de seuil réapparaîtrait sous le voile.
+  it('ne partage jamais son URL voilée avec l\'URL nette', () => {
+    const { rerender } = render(<SensitivePhoto photoKey={KEY} alt="Camille" />);
+    const nette = screen.getByAltText('Camille').getAttribute('src');
+
+    rerender(<SensitivePhoto photoKey={KEY} alt="Camille" veiled />);
+    const voilee = screen.getByAltText('Camille (floutée)').getAttribute('src');
+
+    expect(voilee).not.toBe(nette);
   });
 
   it('affiche la pastille de niveau sur ses propres photos', () => {

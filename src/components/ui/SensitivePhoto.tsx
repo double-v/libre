@@ -69,7 +69,16 @@ export default function SensitivePhoto({
   const [revealed, setRevealed] = useState(false);
   const showVeil = veiled && !revealed;
 
-  const src = revealed ? `${photoUrl(photoKey)}?reveal=1` : photoUrl(photoKey);
+  // L'URL porte l'état (#433). Voilée et nette ne partagent jamais la même
+  // adresse : un navigateur ressort une image déjà chargée dans le document
+  // sur la seule foi de son URL, en-têtes de cache ou pas. Avec une adresse
+  // commune, l'original vu avant une bascule de seuil réapparaissait en clair
+  // sous le bouton « Voir ». `?voile=1` force le dérivé côté serveur.
+  const src = revealed
+    ? `${photoUrl(photoKey)}?reveal=1`
+    : veiled
+      ? `${photoUrl(photoKey)}?voile=1`
+      : photoUrl(photoKey);
 
   return (
     <div

@@ -112,11 +112,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     let servedKey = decodedKey;
     if (moderation) {
+      // `?voile=1` = l'écran a posé le voile (#433). On sert alors le dérivé
+      // sans rien recalculer, même si le seuil a changé entre-temps : une URL
+      // voilée ne doit jamais avoir pointé vers l'original, sinon le navigateur
+      // peut ressortir de sa mémoire une image nette sous le bouton « Voir ».
+      const voile = request.nextUrl.searchParams.get('voile') === '1';
       // `?reveal=1` = le clic « Voir ». Ce n'est pas un contournement : la
       // révélation au cas par cas est le comportement voulu, y compris pour un
       // compte dont le seuil dit non. Ce qui compte est conservé — sans geste
       // explicite, l'original ne part pas.
-      const reveal = request.nextUrl.searchParams.get('reveal') === '1';
+      const reveal = !voile && request.nextUrl.searchParams.get('reveal') === '1';
       const viewer = isOwner
         ? null
         : await getDb().profile.findUnique({
@@ -124,7 +129,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             select: { photoSensitivityOptIn: true },
           });
 
-      if (!canSeeOriginal({
+      if (voile || !canSeeOriginal({
         level: moderation.sensitivity,
         viewerThreshold: viewer?.photoSensitivityOptIn,
         isOwner,
@@ -137,7 +142,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const signedUrl = await getPhotoSignedUrl(servedKey);
     return NextResponse.redirect(signedUrl, {
       headers: {
-        'Cache-Control': 'private, max-age=900',
+        // Jamais réutilisable (#433) : la destination dépend d'un état qui
+        // bouge — seuil du lecteur, classification de la photo. Avec l'ancien
+        // `max-age=900`, un lecteur qui passait à « Aucune photo sensible », ou
+        // dont une photo déjà vue venait d'être classée, se voyait rejouer
+        // pendant un quart d'heure la redirection vers l'original.
+        'Cache-Control': 'private, no-store',
         'X-Content-Type-Options': 'nosniff',
       },
     });

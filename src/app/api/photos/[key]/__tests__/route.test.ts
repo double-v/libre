@@ -175,7 +175,7 @@ describe('GET /api/photos/[key] — contrôle d\'accès (issue #143)', () => {
 
     const [req, ctx] = makeNextRequest(ALICE_PHOTO);
     const res = await GET(req as NextRequest, ctx);
-    expect(res.headers.get('Cache-Control')).toBe('private, max-age=900');
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store');
     expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff');
   });
 });
