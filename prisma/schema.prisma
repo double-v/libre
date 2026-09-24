@@ -48,6 +48,7 @@ model User {
   passwordResetTokens  PasswordResetToken[]
   moderationActions    ModerationLog[]       @relation("ModerationActions")
   moderationTargets    ModerationLog[]       @relation("ModerationTargets")
+  journalPosts         JournalPost[]         @relation("JournalPostAuteur")
   consents             Consent[]
   squareReports        SquareMessageReport[] @relation("SquareReportsMade")
 
@@ -137,6 +138,11 @@ model SiteConfig {
   // `square`. Vide = tout activé. Liste de ce qui est coupé, pas de ce qui est
   // actif : une fonctionnalité future est active sans migration de données.
   featuresDisabled String[] @default([])
+  // Fonctionnalités **coupées par défaut** et allumées depuis l'admin (spec 007,
+  // R4) : `journal_comments`. `featuresDisabled` ne sait pas dire « coupé tant
+  // qu'on ne l'allume pas » — son vide vaut « tout activé ». Vide ici = tout ce
+  // qui est coupé par défaut le reste.
+  featuresEnabled  String[] @default([])
   updatedAt     DateTime @updatedAt
   updatedBy     String?  @db.Uuid
   updatedByUser User?    @relation("SiteConfigUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
@@ -631,4 +637,33 @@ model PushSubscription {
 
   @@index([userId])
   @@map("push_subscriptions")
+}
+
+/// Publication du journal « Où en est Libre » (spec 007, #351).
+///
+/// Publique une fois `publiee` : tout ce qui est écrit ici part sur une page
+/// indexée d'un projet open source — d'où les garde-fous éditoriaux
+/// (`src/lib/journal/garde-fous.ts`) recontrôlés par le serveur à chaque
+/// publication. `auteurId` n'est jamais affiché (« L'équipe Libre »).
+model JournalPost {
+  id           String    @id @default(uuid()) @db.Uuid
+  /// Fixé à la première publication, jamais modifié ensuite : une adresse
+  /// partagée ne doit pas casser. `null` tant que jamais publiée.
+  slug         String?   @unique
+  titre        String
+  corps        String
+  /// `brouillon` | `publiee`. Dépublier ramène à `brouillon`.
+  statut       String    @default("brouillon")
+  /// Première publication, conservée par les republications.
+  publieeAt    DateTime?
+  modifieeAt   DateTime  @updatedAt
+  createdAt    DateTime  @default(now())
+  auteurId     String?   @db.Uuid
+  auteur       User?     @relation("JournalPostAuteur", fields: [auteurId], references: [id], onDelete: SetNull)
+  /// Préparation de #352 : sans interface au MVP, fermé par défaut. Les
+  /// commentaires exigeront aussi l'interrupteur global `journal_comments`.
+  commentsOpen Boolean   @default(false)
+
+  @@index([statut, publieeAt(sort: Desc)])
+  @@map("journal_posts")
 }
