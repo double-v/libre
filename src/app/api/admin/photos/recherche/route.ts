@@ -22,8 +22,8 @@ type Moteur = keyof typeof MOTEURS;
  * C'est le **seul** chemin par lequel une photo sort vers un tiers, d'où trois
  * verrous : un admin, une clé qui figure dans les photos d'un profil (jamais
  * un selfie de vérification, un dérivé flouté ou une clé inventée), et une
- * trace `SEARCH_PHOTO` écrite **avant** la redirection — si elle échoue, rien
- * ne sort.
+ * trace `SEARCH_PHOTO` écrite entre la signature et la redirection : pas de
+ * sortie sans trace, pas de trace sans sortie.
  */
 export async function GET(request: Request) {
   const adminResult = await requireAdmin();
@@ -44,6 +44,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Photo introuvable' }, { status: 404 });
     }
 
+    // Signer d'abord : signer n'envoie rien à personne, et une trace écrite
+    // avant un échec de signature mentirait (vu en local sans R2).
+    const signee = await getPhotoSignedUrl(cle);
     await getDb().moderationLog.create({
       data: {
         adminId: adminResult.userId,
@@ -53,7 +56,6 @@ export async function GET(request: Request) {
       },
     });
 
-    const signee = await getPhotoSignedUrl(cle);
     return NextResponse.redirect(MOTEURS[moteur as Moteur] + encodeURIComponent(signee), 302);
   } catch (error) {
     console.error('photos.search.failed', error instanceof Error ? error.message : 'unknown');

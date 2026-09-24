@@ -85,6 +85,13 @@ describe('GET /api/admin/photos/recherche', () => {
     expect(mockSigned).not.toHaveBeenCalled();
   });
 
+  it('pas de trace sans sortie : si la signature échoue, rien n’est journalisé', async () => {
+    mockSigned.mockRejectedValueOnce(new Error('Stockage non configuré.'));
+    const res = await GET(req({ cle: CLE, moteur: 'lens' }));
+    expect(res.status).toBe(500);
+    expect(fakeDb.moderationLog.create).not.toHaveBeenCalled();
+  });
+
   it('n’ouvre pas de redirection si la journalisation échoue : pas de trace, pas de sortie', async () => {
     fakeDb.moderationLog.create.mockRejectedValueOnce(new Error('db'));
     const res = await GET(req({ cle: CLE, moteur: 'lens' }));
