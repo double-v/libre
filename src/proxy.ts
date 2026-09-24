@@ -37,6 +37,7 @@ const PROTECTED_PREFIXES = [
   '/chat',
   '/profile',
   '/settings',
+  '/verify',
   '/admin',
 ];
 

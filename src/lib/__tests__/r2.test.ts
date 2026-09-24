@@ -81,6 +81,26 @@ describe('deletePhoto', () => {
     await expect(deletePhoto('user-123/abc.jpg')).rejects.toThrow('Stockage non configuré');
   });
 });
+describe('uploadPhoto — dossier (#436)', () => {
+  // Vraie image : depuis #441, uploadPhoto ré-encode et refuse un contenu indécodable.
+  const fichier = async () => {
+    const sharp = (await import('sharp')).default;
+    const jpeg = await sharp({ create: { width: 8, height: 8, channels: 3, background: '#888' } }).jpeg().toBuffer();
+    return new File([new Uint8Array(jpeg)], 's.jpg', { type: 'image/jpeg' });
+  };
+
+  it('range un selfie de vérification sous <userId>/verif/', async () => {
+    const { uploadPhoto } = await import('../r2');
+    const key = await uploadPhoto(await fichier(), 'u1', 'verif');
+    expect(key).toMatch(/^u1\/verif\/[0-9a-f-]{36}\.jpg$/);
+    expect(mockSend.mock.calls[0][0].input.Key).toBe(key);
+  });
+
+  it('sans dossier, la clé reste <userId>/<uuid>.<ext>', async () => {
+    const { uploadPhoto } = await import('../r2');
+    expect(await uploadPhoto(await fichier(), 'u1')).toMatch(/^u1\/[0-9a-f-]{36}\.jpg$/);
+  });
+});
 
 // --- #441 : métadonnées retirées avant R2 ---
 

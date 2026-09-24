@@ -2,67 +2,75 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
-import { verificationRequestSchema } from '@/lib/validators';
+import { isR2Configured, uploadPhoto } from '@/lib/r2';
+import { photoUrl } from '@/lib/photos';
+import { rateLimit, limits } from '@/lib/rate-limit';
+import { lireJetonGeste } from '@/lib/verification/jeton-geste';
+import { peutDemander, statutVerification } from '@/lib/verification/statut';
+
+// ---------------------------------------------------------------------------
+// Badge vérifié par selfie (#436).
+//
+// GET  : où en est ma vérification (page /verify, Paramètres).
+// POST : envoi du selfie, multipart `selfie` + `jeton` (cf. ./geste). Le geste
+//        enregistré est celui relu dans le jeton signé, jamais une valeur du
+//        client. Le selfie va sous `<userId>/verif/` et n'entre pas dans
+//        `profile.photos` : il n'est servi qu'au membre et à la modération.
+// ---------------------------------------------------------------------------
+
+export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+  }
+  return NextResponse.json(await statutVerification(session.user.id));
+}
 
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
-
-    const body = await request.json();
-    const parsed = verificationRequestSchema.safeParse(body);
-
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
-        { status: 400 },
-      );
-    }
-
-    const { selfieUrl } = parsed.data;
     const userId = session.user.id;
 
-    // selflieUrl must point to a photo the user uploaded (R2 path /api/photos/<userId>/...).
-    // This prevents SSRF and tracking-pixel attacks via attacker-controlled URLs.
-    const allowedPrefix = `/api/photos/${userId}/`;
-    if (!selfieUrl.startsWith(allowedPrefix)) {
-      return NextResponse.json(
-        { error: 'selfieUrl must be a photo the user uploaded' },
-        { status: 400 },
-      );
+    const rl = await rateLimit(`api:${userId}`, limits.api.limit, limits.api.windowMs);
+    if (!rl.success) {
+      return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+    }
+    if (!isR2Configured()) {
+      return NextResponse.json({ error: 'Stockage non configuré' }, { status: 503 });
     }
 
-    // Check for existing pending verification request
-    const existingPending = await getDb().verificationRequest.findFirst({
-      where: {
-        userId,
-        status: 'pending',
-      },
-    });
-
-    if (existingPending) {
-      return NextResponse.json(
-        { error: 'A pending verification request already exists' },
-        { status: 409 },
-      );
+    const formData = await request.formData();
+    const jeton = formData.get('jeton');
+    const contenu = typeof jeton === 'string' ? await lireJetonGeste(jeton, userId) : null;
+    if (!contenu) {
+      return NextResponse.json({ error: 'Ton geste a expiré. Tires-en un nouveau.' }, { status: 400 });
+    }
+    const selfie = formData.get('selfie');
+    if (!(selfie instanceof File)) {
+      return NextResponse.json({ error: 'Aucune image fournie' }, { status: 400 });
     }
 
-    const verificationRequest = await getDb().verificationRequest.create({
-      data: {
-        userId,
-        selfieUrl,
-        status: 'pending',
-      },
-    });
+    if (!peutDemander(await statutVerification(userId))) {
+      return NextResponse.json({ error: 'Une demande est déjà en cours ou ton profil est vérifié.' }, { status: 409 });
+    }
 
-    return NextResponse.json({ verificationRequest }, { status: 201 });
+    let key: string;
+    try {
+      key = await uploadPhoto(selfie, userId, 'verif');
+    } catch (error) {
+      // Messages de validation de `uploadPhoto` (format, taille) : écrits pour le membre.
+      return NextResponse.json({ error: error instanceof Error ? error.message : 'Image refusée' }, { status: 400 });
+    }
+
+    await getDb().verificationRequest.create({
+      data: { userId, selfieUrl: photoUrl(key), challenge: contenu.geste, status: 'pending' },
+    });
+    return NextResponse.json({ statut: 'en_cours' }, { status: 201 });
   } catch (error) {
-    console.error('Verification request error:', error);
-    return NextResponse.json(
-      { error: 'Une erreur est survenue, veuillez réessayer' },
-      { status: 500 },
-    );
+    console.error('[verify] envoi du selfie', error instanceof Error ? error.message : 'erreur');
+    return NextResponse.json({ error: 'Une erreur est survenue, réessaie.' }, { status: 500 });
   }
 }

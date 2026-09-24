@@ -6,7 +6,6 @@ import {
   reportSchema,
   messageSchema,
   geolocUpdateSchema,
-  verificationRequestSchema,
   blockSchema,
 } from '@/lib/validators';
 
@@ -209,21 +208,6 @@ describe('Validation schemas', () => {
     });
   });
 
-  describe('verificationRequestSchema', () => {
-    it('validates a verification request', () => {
-      const result = verificationRequestSchema.safeParse({
-        selfieUrl: 'https://r2.example.com/selfie.jpg',
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it('rejects invalid URL', () => {
-      const result = verificationRequestSchema.safeParse({
-        selfieUrl: 'not-a-url',
-      });
-      expect(result.success).toBe(false);
-    });
-  });
 
   describe('blockSchema', () => {
     it('validates a block', () => {

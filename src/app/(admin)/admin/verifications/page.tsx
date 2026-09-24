@@ -1,15 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import Card from '@/components/ui/Card';
-
-interface VerificationRow {
-  id: string;
-  selfieUrl: string;
-  status: string;
-  createdAt: string;
-  user: { id: string; displayName: string; emailMasque: string };
-}
+import AdminVerificationCard, { type Decision, type VerificationRow } from '@/components/AdminVerificationCard';
 
 export default function AdminVerificationsPage() {
   const [verifications, setVerifications] = useState<VerificationRow[]>([]);
@@ -38,15 +30,16 @@ export default function AdminVerificationsPage() {
     void (async () => { await fetchVerifications(); })();
   }, [fetchVerifications]);
 
-  const handleAction = async (verificationId: string, action: 'APPROVE_VERIFICATION' | 'REJECT_VERIFICATION', reason?: string) => {
+  const handleDecision = async (verificationId: string, decision: Decision) => {
+    setActionError('');
     try {
       const res = await fetch(`/api/admin/verifications/${verificationId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, reason }),
+        body: JSON.stringify(decision),
       });
       if (!res.ok) throw new Error();
-      fetchVerifications();
+      await fetchVerifications();
     } catch {
       setActionError('Erreur lors du traitement');
     }
@@ -54,7 +47,7 @@ export default function AdminVerificationsPage() {
 
   const statusLabels: Record<string, string> = {
     pending: 'En attente',
-    approved: 'Approuvées',
+    approved: 'Validées',
     rejected: 'Refusées',
   };
 
@@ -66,6 +59,8 @@ export default function AdminVerificationsPage() {
         {Object.entries(statusLabels).map(([key, label]) => (
           <button
             key={key}
+            type="button"
+            aria-pressed={status === key}
             onClick={() => setStatus(key)}
             className={`rounded-md px-3 py-1.5 text-sm font-medium ${status === key ? 'bg-coral text-white' : 'bg-fill-subtle text-muted hover:bg-fill-subtle'}`}
           >
@@ -83,33 +78,7 @@ export default function AdminVerificationsPage() {
       ) : (
         <div className="space-y-3">
           {verifications.map((v) => (
-            <Card key={v.id} variant="profile">
-              <div className="flex items-start gap-4">
-                <img src={v.selfieUrl} alt="Selfie de vérification" className="h-24 w-24 rounded-lg object-cover" />
-                <div className="flex-1">
-                  <p className="font-medium text-content">{v.user.displayName}</p>
-                  <p className="text-sm text-muted">{v.user.emailMasque}</p>
-                  <p className="mt-1 text-xs text-muted">{new Date(v.createdAt).toLocaleDateString('fr-FR')}</p>
-                  <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                    v.status === 'pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                    : v.status === 'approved' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                  }`}>
-                    {statusLabels[v.status] ?? v.status}
-                  </span>
-                </div>
-                {status === 'pending' && (
-                  <div className="flex gap-2">
-                    <button onClick={() => handleAction(v.id, 'APPROVE_VERIFICATION')} className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700">
-                      Approuver
-                    </button>
-                    <button onClick={() => handleAction(v.id, 'REJECT_VERIFICATION')} className="rounded-md border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
-                      Refuser
-                    </button>
-                  </div>
-                )}
-              </div>
-            </Card>
+            <AdminVerificationCard key={v.id} v={v} onDecision={(d) => handleDecision(v.id, d)} />
           ))}
         </div>
       )}

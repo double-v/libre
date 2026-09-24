@@ -50,6 +50,10 @@ const fakeDb = {
   moderationLog: {
     create: vi.fn(),
   },
+  // Selfies de vérification (#436) : servis hors `profile.photos`.
+  verificationRequest: {
+    findFirst: vi.fn(),
+  },
 };
 vi.mock('@/lib/db', () => ({
   __esModule: true,
@@ -88,12 +92,6 @@ beforeEach(() => {
   fakeDb.user.findUnique.mockResolvedValue({ role: 'USER' });
   fakeDb.moderationLog.create.mockResolvedValue({});
 });
-
-function makeRequest(key: string): Request {
-  return new Request(`http://localhost/api/photos/${encodeURIComponent(key)}`, {
-    method: 'GET',
-  });
-}
 
 // NextRequest requires a `headers` property + dynamic route params
 function makeNextRequest(key: string): [Request, { params: Promise<{ key: string }> }] {
@@ -239,5 +237,57 @@ describe('GET /api/photos/[key] — dérogation ADMIN (#323)', () => {
     const [req, ctx] = makeNextRequest(BOB_PHOTO);
     const res = await GET(req as NextRequest, ctx);
     expect(res.status).toBe(307);
+  });
+});
+/**
+ * Selfie de vérification (#436) — rangé sous `<userId>/verif/`, hors des
+ * photos du profil. Il ne sert qu'à la modération : ni un match, ni l'avatar
+ * public, ni personne d'autre que son auteur et un admin ne l'obtient.
+ */
+describe('GET /api/photos/[key] — selfie de vérification (#436)', () => {
+  const SELFIE = `${BOB_ID}/verif/${randomUUID()}.jpg`;
+  const demande = () => fakeDb.verificationRequest.findFirst.mockResolvedValue({ id: 'v1' });
+
+  it('son auteur le voit', async () => {
+    demande();
+    mockGetServerSession.mockResolvedValue({ user: { id: BOB_ID } });
+    const [req, ctx] = makeNextRequest(SELFIE);
+    const res = await GET(req as NextRequest, ctx);
+    expect(res.status).toBe(307);
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store');
+    expect(fakeDb.verificationRequest.findFirst).toHaveBeenCalledWith({
+      where: { userId: BOB_ID, selfieUrl: `/api/photos/${encodeURIComponent(SELFIE)}` },
+      select: { id: true },
+    });
+  });
+
+  it('un admin le voit', async () => {
+    demande();
+    fakeDb.user.findUnique.mockResolvedValue({ role: 'ADMIN' });
+    const [req, ctx] = makeNextRequest(SELFIE);
+    expect((await GET(req as NextRequest, ctx)).status).toBe(307);
+  });
+
+  it('un autre membre, même matché, ne le voit pas', async () => {
+    demande();
+    fakeDb.match.findFirst.mockResolvedValue({ id: 'm1' });
+    const [req, ctx] = makeNextRequest(SELFIE);
+    expect((await GET(req as NextRequest, ctx)).status).toBe(404);
+    expect(mockGetPhotoSignedUrl).not.toHaveBeenCalled();
+  });
+
+  it('404 si aucune demande ne le référence, même pour son auteur', async () => {
+    fakeDb.verificationRequest.findFirst.mockResolvedValue(null);
+    mockGetServerSession.mockResolvedValue({ user: { id: BOB_ID } });
+    const [req, ctx] = makeNextRequest(SELFIE);
+    expect((await GET(req as NextRequest, ctx)).status).toBe(404);
+  });
+
+  it('ne consulte jamais les photos du profil pour un selfie', async () => {
+    demande();
+    mockGetServerSession.mockResolvedValue({ user: { id: BOB_ID } });
+    const [req, ctx] = makeNextRequest(SELFIE);
+    await GET(req as NextRequest, ctx);
+    expect(fakeDb.profile.findUnique).not.toHaveBeenCalled();
   });
 });

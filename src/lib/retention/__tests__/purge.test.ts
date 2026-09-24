@@ -93,14 +93,17 @@ describe('purgerRetention — seuils', () => {
     fakeDb.verificationRequest.findMany.mockResolvedValue([
       { id: 'v1', selfieUrl: '/api/photos/u1/selfie.jpg', user: { profile: { photos: [] } } },
       { id: 'v2', selfieUrl: 'https://x/api/photos/u2/portrait.jpg', user: { profile: { photos: ['u2/portrait.jpg'] } } },
+      // Format du badge selfie (#436) : clé encodée, sous verif/.
+      { id: 'v3', selfieUrl: `/api/photos/${encodeURIComponent('u3/verif/s.jpg')}`, user: { profile: { photos: [] } } },
     ]);
-    fakeDb.verificationRequest.deleteMany.mockResolvedValue({ count: 2 });
+    fakeDb.verificationRequest.deleteMany.mockResolvedValue({ count: 3 });
     const bilan = await purgerRetention(NOW);
     expect(fakeDb.verificationRequest.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { resolvedAt: { lt: il_y_a(30) } } }));
-    expect(mockDeletePhoto).toHaveBeenCalledTimes(1);
+    expect(mockDeletePhoto).toHaveBeenCalledTimes(2);
     expect(mockDeletePhoto).toHaveBeenCalledWith('u1/selfie.jpg');
-    expect(fakeDb.verificationRequest.deleteMany).toHaveBeenCalledWith({ where: { id: { in: ['v1', 'v2'] } } });
-    expect(bilan.verificationRequests).toBe(2);
+    expect(mockDeletePhoto).toHaveBeenCalledWith('u3/verif/s.jpg');
+    expect(fakeDb.verificationRequest.deleteMany).toHaveBeenCalledWith({ where: { id: { in: ['v1', 'v2', 'v3'] } } });
+    expect(bilan.verificationRequests).toBe(3);
   });
 
   it('une règle qui tombe n’empêche pas les autres, et le bilan le dit', async () => {

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CODES_MOTIFS } from '@/lib/verification/motifs';
 import { ONBOARDING_DONE } from '@/lib/onboarding';
 import { GENDER_OPTIONS } from '@/lib/taxonomy';
 import { PRACTICES_VISIBILITY_VALUES } from '@/lib/profile-visibility';
@@ -122,10 +123,6 @@ export const geolocUpdateSchema = z.object({
   longitude: z.number().min(-180).max(180),
 });
 
-export const verificationRequestSchema = z.object({
-  selfieUrl: z.string().url().startsWith('https://', { message: 'selfieUrl must be HTTPS' }),
-});
-
 export const blockSchema = z.object({
   blockedId: z.string().uuid(),
 });
@@ -136,10 +133,16 @@ export const adminHandleReportSchema = z.object({
   reason: z.string().max(500).optional(),
 });
 
-export const adminHandleVerificationSchema = z.object({
-  action: z.enum(['APPROVE_VERIFICATION', 'REJECT_VERIFICATION']),
-  reason: z.string().max(500).optional(),
-});
+// Un refus porte un motif de la liste fermée (#436) : c'est ce que le membre lit.
+export const adminHandleVerificationSchema = z
+  .object({
+    action: z.enum(['APPROVE_VERIFICATION', 'REJECT_VERIFICATION']),
+    motif: z.enum(CODES_MOTIFS).optional(),
+  })
+  .refine((d) => d.action === 'APPROVE_VERIFICATION' || d.motif, {
+    message: 'Motif de refus requis',
+    path: ['motif'],
+  });
 
 export const adminBanSchema = z.object({
   banned: z.boolean(),

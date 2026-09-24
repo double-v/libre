@@ -3,60 +3,7 @@ import { describe, it, expect } from 'vitest';
 // These tests require a running server with database.
 // They document the expected API behavior.
 describe('Moderation APIs (requires server)', () => {
-  // --- Verification Request ---
-
-  it('creates a verification request', async () => {
-    // POST /api/moderation/verify with { selfieUrl: 'https://example.com/selfie.jpg' }
-    // Authenticated user
-    // Expect 201, body.verificationRequest with status "pending"
-  });
-
-  it('rejects duplicate pending verification request', async () => {
-    // User already has a pending verification request
-    // POST /api/moderation/verify with { selfieUrl: 'https://example.com/selfie2.jpg' }
-    // Expect 409
-  });
-
-  it('rejects unauthenticated verification request', async () => {
-    // POST /api/moderation/verify without session
-    // Expect 401
-  });
-
-  it('rejects invalid selfieUrl', async () => {
-    // POST /api/moderation/verify with { selfieUrl: 'not-a-url' }
-    // Expect 400 validation error
-  });
-
-  // --- Verification Review ---
-
-  it('approves a verification request', async () => {
-    // PUT /api/moderation/verify/:id with { status: 'approved' }
-    // Authenticated as moderator
-    // Expect 200, body.verificationRequest.status === 'approved'
-    // User's isVerified should now be true
-  });
-
-  it('rejects a verification request', async () => {
-    // PUT /api/moderation/verify/:id with { status: 'rejected' }
-    // Authenticated as moderator
-    // Expect 200, body.verificationRequest.status === 'rejected'
-    // User's isVerified should remain false
-  });
-
-  it('rejects invalid status on review', async () => {
-    // PUT /api/moderation/verify/:id with { status: 'invalid' }
-    // Expect 400
-  });
-
-  it('returns 404 for nonexistent verification request', async () => {
-    // PUT /api/moderation/verify/:nonexistentId with { status: 'approved' }
-    // Expect 404
-  });
-
-  it('rejects unauthenticated verification review', async () => {
-    // PUT /api/moderation/verify/:id without session
-    // Expect 401
-  });
+  // Vérification (#436) : couverte par src/app/api/moderation/verify/__tests__ et src/app/api/admin/verifications/__tests__.
 
   // --- Report ---
 

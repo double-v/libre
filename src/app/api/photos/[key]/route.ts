@@ -6,6 +6,7 @@ import { getPhotoSignedUrl, isR2Configured } from '@/lib/r2';
 import { rateLimit, limits, rateLimitHeaders } from '@/lib/rate-limit';
 import { verifyAdmin } from '@/lib/admin';
 import { canSeeOriginal } from '@/lib/photo-sensitivity';
+import { photoUrl } from '@/lib/photos';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ key: string }> }) {
   try {
@@ -34,6 +35,24 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const ownerId = decodedKey.split('/')[0];
     if (!ownerId) {
       return NextResponse.json({ error: 'Clé invalide' }, { status: 400 });
+    }
+
+    // Selfie de vérification (#436) : hors `profile.photos`, il ne sert qu'à
+    // la modération. Son auteur et un admin seulement — un match n'y a aucun
+    // droit. Un autre lecteur reçoit 404 plutôt que 403, comme pour une clé
+    // inconnue : l'existence d'une demande de badge ne le regarde pas.
+    if (decodedKey.split('/')[1] === 'verif') {
+      const demande = await getDb().verificationRequest.findFirst({
+        where: { userId: ownerId, selfieUrl: photoUrl(decodedKey) },
+        select: { id: true },
+      });
+      const autorise = demande && (ownerId === session.user.id || (await verifyAdmin()));
+      if (!autorise) {
+        return NextResponse.json({ error: 'Photo introuvable' }, { status: 404 });
+      }
+      return NextResponse.redirect(await getPhotoSignedUrl(decodedKey), {
+        headers: { 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' },
+      });
     }
 
     // La clé doit réellement appartenir au profil du propriétaire — sans ça,
