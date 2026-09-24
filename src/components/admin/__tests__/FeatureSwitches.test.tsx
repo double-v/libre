@@ -62,6 +62,13 @@ describe('FeatureSwitches', () => {
     expect(puts[0]).toEqual({ checkin: true, crossings: true, square: true, journal_comments: true });
   });
 
+  it('avant la réponse du serveur, chaque interrupteur montre son défaut', () => {
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})));
+    render(<FeatureSwitches />);
+    expect(screen.getByRole('switch', { name: /commentaires du journal/i })).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByRole('switch', { name: /la place/i })).toHaveAttribute('aria-checked', 'true');
+  });
+
   it('si le serveur refuse, l’interrupteur revient et le dit', async () => {
     stubFetch({ checkin: true, crossings: true, square: true }, 500);
     const user = userEvent.setup();

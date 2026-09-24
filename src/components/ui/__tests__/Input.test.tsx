@@ -61,3 +61,14 @@ describe('<Input /> — œil mot de passe', () => {
     expect(screen.queryByRole('button')).toBeNull();
   });
 });
+
+describe('<Input multiline /> (spec 007)', () => {
+  it('la hauteur suit `rows` : aucune hauteur fixe de champ une ligne sur la zone de texte', () => {
+    render(<Input label="Texte" multiline rows={12} />);
+    const zone = screen.getByLabelText('Texte');
+    expect(zone.tagName).toBe('TEXTAREA');
+    expect(zone).toHaveAttribute('rows', '12');
+    expect(zone.className).not.toMatch(/(^|\s)h-(9|11)(\s|$)/);
+    expect(zone.className).toMatch(/min-h-11/);
+  });
+});

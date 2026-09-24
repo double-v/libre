@@ -60,7 +60,9 @@ export default function FeatureSwitches() {
   return (
     <div className="space-y-3">
       {FEATURES.map((feature) => {
-        const on = features?.[feature] ?? true;
+        // Avant la réponse, afficher le défaut — jamais « allumé » d'office :
+        // une fonctionnalité coupée par défaut paraîtrait active (spec 007).
+        const on = features?.[feature] ?? DEFAUTS[feature];
         const titreId = `feature-${feature}-titre`;
         return (
           <section key={feature} className="rounded-xl border border-hairline bg-surface p-4 sm:p-5">
