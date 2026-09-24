@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { photoUrl } from '@/lib/photos';
 import { SENSITIVITY_LABELS, SENSITIVITY_LEVELS, type SensitivityLevel } from '@/lib/photo-sensitivity';
+import AdminPhotoSearch from '@/components/AdminPhotoSearch';
 
 /**
  * Galerie de modération des photos d'un profil (#323).
@@ -177,6 +178,7 @@ export default function AdminUserPhotos({
                 >
                   Retirer
                 </button>
+                <AdminPhotoSearch cle={key} />
               </figcaption>
             </figure>
           ))}

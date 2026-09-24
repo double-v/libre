@@ -5,6 +5,8 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Tag from '@/components/ui/Tag';
 import { MOTIFS_REFUS, type MotifRefus } from '@/lib/verification/motifs';
+import { cleDepuisUrl } from '@/lib/photos';
+import AdminPhotoSearch from '@/components/AdminPhotoSearch';
 
 /**
  * Une demande de badge dans la file admin (#436) — le selfie se juge à côté
@@ -79,6 +81,7 @@ export default function AdminVerificationCard({ v, onDecision }: { v: Verificati
                     {/* eslint-disable-next-line @next/next/no-img-element -- proxy signé */}
                     <img src={src} alt={`Photo ${i + 1} du profil`} className="aspect-[4/5] w-full rounded-xl bg-sunken object-cover" />
                     {i === 0 && <span className="absolute left-2 top-2 rounded-full bg-surface/90 px-2 py-0.5 text-[11px] font-semibold text-content">Principale</span>}
+                    {cleDepuisUrl(src) && <AdminPhotoSearch cle={cleDepuisUrl(src)!} />}
                   </div>
                 ))}
               </div>

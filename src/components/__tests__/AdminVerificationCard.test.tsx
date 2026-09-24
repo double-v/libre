@@ -20,6 +20,12 @@ const demande = (over: Partial<VerificationRow> = {}): VerificationRow => ({
 });
 
 describe('AdminVerificationCard', () => {
+  it('propose la recherche inversée sur les photos du profil, jamais sur le selfie (#442)', () => {
+    render(<AdminVerificationCard v={demande()} onDecision={vi.fn()} />);
+    const lens = screen.getAllByRole('link', { name: 'Google Lens', hidden: true });
+    expect(lens.map((a) => new URL(a.getAttribute('href')!, 'http://x').searchParams.get('cle'))).toEqual(['u1/a.jpg', 'u1/b.jpg']);
+  });
+
   it('montre selfie, geste et photos du profil côte à côte', () => {
     render(<AdminVerificationCard v={demande()} onDecision={vi.fn()} />);
     expect(screen.getByAltText('Selfie de vérification de Camille')).toHaveAttribute('src', '/api/photos/u1%2Fverif%2Fs.jpg');
