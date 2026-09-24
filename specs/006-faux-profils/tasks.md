@@ -39,10 +39,10 @@
 **Goal**: depuis la fiche d'un membre, lancer Lens / Yandex / TinEye sur une photo, journalisé.
 **Independent Test**: sur une fiche avec photos, cliquer « Google Lens » ouvre la recherche de cette photo ; `/admin/logs` montre `SEARCH_PHOTO`.
 
-- [ ] T007 [P] [US1] Tests puis route `src/app/api/admin/photos/recherche/route.ts` (contrat api.md) : 401/403 non-admin ; 400 moteur inconnu ; 404 clé absente de `profile.photos` ; 302 vers `lens.google.com/uploadbyurl?url=`, `yandex.com/images/search?rpt=imageview&url=`, `tineye.com/search?url=` avec `getPhotoSignedUrl(clé originale)` encodée ; `moderationLog` `SEARCH_PHOTO` (reason = `moteur:clé`) — tests dans `src/app/api/admin/photos/recherche/__tests__/route.test.ts`
-- [ ] T008 [US1] Prototype HTML du bouton « Rechercher cette image » (menu 3 moteurs) sur une vignette de la fiche admin, clair/sombre ; **validation opérateur avant T009**
-- [ ] T009 [US1] Composant `src/components/AdminPhotoSearch.tsx` (liens `target="_blank" rel="noopener noreferrer"` vers la route T007, 3 moteurs, cible ≥ 44 px) + test `src/components/__tests__/AdminPhotoSearch.test.tsx` ; l'intégrer sous chaque photo de `src/app/(admin)/admin/users/[id]/page.tsx` et de `src/components/AdminVerificationCard.tsx`
-- [ ] T010 [US1] Libellé `SEARCH_PHOTO` dans la page `/admin/logs` s'il y a une table de libellés ; capture Playwright clair/sombre de la fiche membre
+- [x] T007 [P] [US1] Tests puis route `src/app/api/admin/photos/recherche/route.ts` (contrat api.md) : 401/403 non-admin ; 400 moteur inconnu ; 404 clé absente de `profile.photos` ; 302 vers `lens.google.com/uploadbyurl?url=`, `yandex.com/images/search?rpt=imageview&url=`, `tineye.com/search?url=` avec `getPhotoSignedUrl(clé originale)` encodée ; `moderationLog` `SEARCH_PHOTO` (reason = `moteur:clé`) — tests dans `src/app/api/admin/photos/recherche/__tests__/route.test.ts`
+- [x] T008 [US1] Prototype HTML du bouton « Rechercher cette image » (menu 3 moteurs) sur une vignette de la fiche admin, clair/sombre ; **validation opérateur avant T009**
+- [x] T009 [US1] Composant `src/components/AdminPhotoSearch.tsx` (liens `target="_blank" rel="noopener noreferrer"` vers la route T007, 3 moteurs, cible ≥ 44 px) + test `src/components/__tests__/AdminPhotoSearch.test.tsx` ; l'intégrer sous chaque photo de `src/app/(admin)/admin/users/[id]/page.tsx` et de `src/components/AdminVerificationCard.tsx`
+- [x] T010 [US1] Libellé `SEARCH_PHOTO` dans la page `/admin/logs` s'il y a une table de libellés ; capture Playwright clair/sombre de la fiche membre
 
 **Checkpoint** : US1 livrable seule — sert immédiatement sur chaque signalement « Faux profil ».
 
