@@ -19,7 +19,9 @@ export default function FeatureSwitches() {
   useEffect(() => {
     let annule = false;
     fetch('/api/admin/features')
-      .then(async (r) => (r.ok ? ((await r.json()) as Features) : DEFAUTS))
+      // Partir des défauts : une réponse sans une clé (serveur d'avant une
+      // fonctionnalité) ne doit pas produire un PUT incomplet, que la route refuse.
+      .then(async (r) => (r.ok ? { ...DEFAUTS, ...((await r.json()) as Partial<Features>) } : DEFAUTS))
       .catch(() => DEFAUTS)
       .then((f) => {
         if (!annule) setFeatures(f);

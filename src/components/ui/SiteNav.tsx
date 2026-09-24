@@ -165,6 +165,11 @@ export function SiteNavView({
                 <Link href="/manifesto" className={`hidden sm:inline-flex ${textLinkClass}`}>
                   Manifesto
                 </Link>
+                {/* Journal « Où en est Libre » (spec 007, US4) : même traitement que
+                    Manifesto — masqué sur téléphone, sans badge de nouveauté. */}
+                <Link href="/journal" className={`hidden sm:inline-flex ${textLinkClass}`}>
+                  Journal
+                </Link>
                 <Link href="/login" className={`inline-flex ${textLinkClass}`}>
                   Se connecter
                 </Link>

@@ -46,8 +46,20 @@ describe('FeatureSwitches', () => {
     const place = await screen.findByRole('switch', { name: /la place/i });
     await user.click(place);
     await waitFor(() => expect(puts).toHaveLength(1));
-    expect(puts[0]).toEqual({ checkin: true, crossings: true, square: false });
+    expect(puts[0]).toEqual({ checkin: true, crossings: true, square: false, journal_comments: false });
     expect(place).toHaveAttribute('aria-checked', 'false');
+  });
+
+  it('les commentaires du journal : coupés par défaut, allumables (spec 007, FR-023)', async () => {
+    stubFetch({ checkin: true, crossings: true, square: true, journal_comments: false });
+    const user = userEvent.setup();
+    render(<FeatureSwitches />);
+    const commentaires = await screen.findByRole('switch', { name: /commentaires du journal/i });
+    expect(commentaires).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByText(/À venir/)).toBeInTheDocument();
+    await user.click(commentaires);
+    await waitFor(() => expect(puts).toHaveLength(1));
+    expect(puts[0]).toEqual({ checkin: true, crossings: true, square: true, journal_comments: true });
   });
 
   it('si le serveur refuse, l’interrupteur revient et le dit', async () => {

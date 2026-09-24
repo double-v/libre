@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { logout } from '@/lib/logout';
@@ -176,6 +177,32 @@ export default function SettingsPage() {
       <div className="space-y-6">
         <AppearanceSettings />
 
+        {/* Libre (spec 007, US4 ; maquette T014, écran 5) : le journal et le
+            manifeste, l'accès stable depuis l'app connectée. Aucune pastille ni
+            compteur quand une nouvelle paraît (PRODUCT.md, subtilité). */}
+        <section className="rounded-xl border border-hairline bg-surface p-4 sm:p-5">
+          <h2 className="text-lg font-semibold text-content">Libre</h2>
+          <ul className="mt-2 divide-y divide-hairline">
+            {[
+              { href: '/journal', label: 'Où en est Libre', detail: 'Les nouvelles du projet' },
+              { href: '/manifesto', label: 'Notre manifesto', detail: null },
+            ].map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="flex min-h-11 items-center justify-between gap-2 py-3 text-sm font-medium text-content transition-colors hover:text-coral focus:outline-none focus-visible:ring-2 focus-visible:ring-coral dark:hover:text-coral-light"
+                >
+                  <span>
+                    {link.label}
+                    {link.detail && <span className="block text-xs font-normal text-muted">{link.detail}</span>}
+                  </span>
+                  <span aria-hidden="true" className="text-muted">›</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
         {/* Invisible mode */}
         <section className="rounded-xl border border-hairline bg-surface p-4 sm:p-5">
           <div className="flex items-center justify-between">
@@ -334,11 +361,10 @@ export default function SettingsPage() {
         <section className="rounded-xl border border-hairline bg-surface p-4 sm:p-5">
           <h2 className="text-lg font-semibold text-content">Informations légales</h2>
           <p className="mt-1 text-sm text-muted">
-            Notre manifeste et les documents qui encadrent Libre.
+            Les documents qui encadrent Libre.
           </p>
           <ul className="mt-3 divide-y divide-gray-200 dark:divide-gray-700">
             {[
-              { href: '/manifesto', label: 'Manifeste' },
               { href: '/cgu', label: "Conditions d'utilisation" },
               { href: '/confidentialite', label: 'Politique de confidentialité' },
               { href: '/mentions-legales', label: 'Mentions légales' },
