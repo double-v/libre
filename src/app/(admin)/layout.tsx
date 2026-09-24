@@ -172,10 +172,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </aside>
 
-      {/* Mobile header — `min-w-0` : sans lui, la nav `overflow-x-auto` élargit
-          la colonne au lieu de défiler, et ThemeMenu/Retour sortent du viewport. */}
-      <div className="flex min-w-0 flex-1 flex-col md:hidden">
-        <header className="border-b border-hairline bg-surface p-4">
+      {/* Colonne de contenu — `min-w-0` : sans lui, la nav mobile `overflow-x-auto`
+          élargit la colonne au lieu de défiler, et ThemeMenu/Retour sortent du
+          viewport. Un seul <main> : la page n'était montée deux fois (une copie
+          mobile, une desktop, masquées en CSS) — requêtes et état en double. */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="border-b border-hairline bg-surface p-4 md:hidden">
           <div className="flex items-center justify-between gap-2">
             <Link href="/admin" className="inline-flex items-center gap-2 text-lg font-bold text-coral dark:text-coral-light">
               <HeartMark className="h-6 w-6" />
@@ -201,11 +203,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             ))}
           </nav>
         </header>
-        <main className="flex-1 overflow-y-auto p-4">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
       </div>
-
-      {/* Desktop content */}
-      <main className="hidden flex-1 overflow-y-auto p-6 md:block">{children}</main>
     </div>
   );
 }

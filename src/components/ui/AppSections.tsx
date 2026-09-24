@@ -22,6 +22,16 @@ export interface AppSection {
   feature?: Feature;
 }
 
+/**
+ * `active` ne se dessine que sur le cœur (rempli) ; ailleurs il est ignoré,
+ * mais il ne doit pas finir en attribut du <svg> — React avertit sur chaque
+ * page de l'app sinon.
+ */
+function sansActive({ active, ...props }: { active?: boolean } & SVGProps<SVGSVGElement>): SVGProps<SVGSVGElement> {
+  void active;
+  return props;
+}
+
 function HeartSection({ active = false, ...props }: { active?: boolean } & SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" aria-hidden="true" {...props}>
@@ -30,7 +40,8 @@ function HeartSection({ active = false, ...props }: { active?: boolean } & SVGPr
   );
 }
 
-function ChatSection(props: SVGProps<SVGSVGElement>) {
+function ChatSection(p: { active?: boolean } & SVGProps<SVGSVGElement>) {
+  const props = sansActive(p);
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" {...props}>
       <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
@@ -38,7 +49,8 @@ function ChatSection(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-function PeopleSection(props: SVGProps<SVGSVGElement>) {
+function PeopleSection(p: { active?: boolean } & SVGProps<SVGSVGElement>) {
+  const props = sansActive(p);
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
       <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
@@ -49,7 +61,8 @@ function PeopleSection(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-function PersonSection(props: SVGProps<SVGSVGElement>) {
+function PersonSection(p: { active?: boolean } & SVGProps<SVGSVGElement>) {
+  const props = sansActive(p);
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" {...props}>
       <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
