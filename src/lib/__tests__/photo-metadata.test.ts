@@ -22,7 +22,7 @@ const GPS = {
 };
 
 /** Image 40×20 (paysage), rouge à gauche, bleue à droite. */
-async function base(): Promise<sharp.Sharp> {
+async function base(): Promise<ReturnType<typeof sharp>> {
   const gauche = await sharp({ create: { width: 20, height: 20, channels: 3, background: '#ff0000' } }).png().toBuffer();
   return sharp({ create: { width: 40, height: 20, channels: 3, background: '#0000ff' } })
     .composite([{ input: gauche, left: 0, top: 0 }]);
