@@ -618,6 +618,8 @@ géolocalisation ».
 | badge-verified | blue-100 | blue-800 | pill | Verified user indicator |
 | badge-online | green-500 bg | white text | pill | "En ligne" indicator |
 | badge-beta | warning bg | ink | pill | Beta banner |
+| badge-pending | amber-50 / dark:amber-900/30 | amber-800 / dark:amber-300 | pill | Demande en cours d'examen (badge vérifié, #436) |
+| badge-refused | red-50 / dark:red-900/30 | red-700 / dark:red-300 | pill | Demande non validée (#436) |
 
 ### Status Indicators
 

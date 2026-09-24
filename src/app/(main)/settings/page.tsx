@@ -11,6 +11,7 @@ import KeySettings from '@/components/KeySettings';
 import AppearanceSettings from '@/components/AppearanceSettings';
 import SiteShell from '@/components/ui/SiteShell';
 import Input from '@/components/ui/Input';
+import VerificationSettings from '@/components/verification/VerificationSettings';
 
 interface Profile {
   userId: string;
@@ -20,7 +21,6 @@ interface Profile {
 export default function SettingsPage() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [isVerified, setIsVerified] = useState(false);
   const [loading, setLoading] = useState(true);
   const [invisibleToggling, setInvisibleToggling] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -44,7 +44,6 @@ export default function SettingsPage() {
       }
       const data = await res.json();
       setProfile(data.profile);
-      setIsVerified(data.isVerified ?? false);
     } catch {
       setError('Impossible de charger les paramètres');
     } finally {
@@ -213,31 +212,8 @@ export default function SettingsPage() {
         {/* Clé de messagerie (#340) — la porte de sortie d'un fil illisible */}
         <KeySettings />
 
-        {/* Verification status */}
-        <section className="rounded-xl border border-hairline bg-surface p-4 sm:p-5">
-          <h2 className="text-lg font-semibold text-content">Vérification</h2>
-          {isVerified ? (
-            <div className="mt-2 flex items-center gap-2">
-              <span className="inline-block h-5 w-5 rounded-full bg-green-500" aria-hidden="true" />
-              <p className="text-sm text-green-700 dark:text-green-400">
-                Votre identité est vérifiée
-              </p>
-            </div>
-          ) : (
-            <div className="mt-2 space-y-2">
-              <p className="text-sm text-muted">
-                Obtenez le badge vérifié pour augmenter la confiance des autres utilisateurs.
-              </p>
-              <button
-                type="button"
-                onClick={() => router.push('/verify')}
-                className="rounded-md bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-terracotta focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2"
-              >
-                Obtenir le badge
-              </button>
-            </div>
-          )}
-        </section>
+        {/* Badge vérifié (#436) */}
+        <VerificationSettings />
 
         {/* Sign out */}
         <section className="rounded-xl border border-hairline bg-surface p-4 sm:p-5">

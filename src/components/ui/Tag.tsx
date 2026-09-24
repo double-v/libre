@@ -8,7 +8,9 @@ export type TagVariant =
   | 'accent' // practices, etc. : sand/coral
   | 'verified' // badge vérification : bleu
   | 'online' // indicateur "en ligne" : vert
-  | 'beta'; // bannière bêta : warning ambre
+  | 'beta' // bannière bêta : warning ambre
+  | 'pending' // demande en cours d'examen (badge vérifié #436) : ambre doux
+  | 'refused'; // demande non validée (#436) : rouge doux
 
 export type TagSize = 'sm' | 'md';
 
@@ -36,12 +38,15 @@ const variantClasses: Record<TagVariant, string> = {
   verified: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
   online: 'bg-success text-white',
   beta: 'bg-warning text-ink',
+  // Même palette que les variantes warning/error d'Alert : un statut, pas une alerte.
+  pending: 'bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+  refused: 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
 };
 
 /**
  * Tag — composant UI partagé du Design System Libre.
  *
- * Variantes : default, selected, accent, verified, online, beta.
+ * Variantes : default, selected, accent, verified, online, beta, pending, refused.
  * Tailles : sm (12px), md (14px).
  * Forme : pill (rounded-full), non-interactive par défaut.
  *

@@ -81,3 +81,18 @@ describe('deletePhoto', () => {
     await expect(deletePhoto('user-123/abc.jpg')).rejects.toThrow('Stockage non configuré');
   });
 });
+describe('uploadPhoto — dossier (#436)', () => {
+  const fichier = () => new File([new Uint8Array([0xff, 0xd8, 0xff])], 's.jpg', { type: 'image/jpeg' });
+
+  it('range un selfie de vérification sous <userId>/verif/', async () => {
+    const { uploadPhoto } = await import('../r2');
+    const key = await uploadPhoto(fichier(), 'u1', 'verif');
+    expect(key).toMatch(/^u1\/verif\/[0-9a-f-]{36}\.jpg$/);
+    expect(mockSend.mock.calls[0][0].input.Key).toBe(key);
+  });
+
+  it('sans dossier, la clé reste <userId>/<uuid>.<ext>', async () => {
+    const { uploadPhoto } = await import('../r2');
+    expect(await uploadPhoto(fichier(), 'u1')).toMatch(/^u1\/[0-9a-f-]{36}\.jpg$/);
+  });
+});

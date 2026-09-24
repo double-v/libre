@@ -277,7 +277,11 @@ model VerificationRequest {
   id         String    @id @default(uuid()) @db.Uuid
   userId     String    @db.Uuid
   selfieUrl  String
+  /// Code du geste tiré par le serveur (#436, src/lib/verification/gestes.ts).
+  challenge    String?
   status     String    @default("pending")
+  /// Motif de refus lu par le membre, code fermé (src/lib/verification/motifs.ts).
+  rejectReason String?
   reviewedBy String?   @db.Uuid
   createdAt  DateTime  @default(now())
   resolvedAt DateTime?

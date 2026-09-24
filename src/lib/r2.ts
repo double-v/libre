@@ -22,7 +22,12 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const SIGNED_URL_TTL = 900; // 15 minutes
 
-export async function uploadPhoto(file: File, userId: string): Promise<string> {
+/**
+ * `dossier` range l'objet hors des photos de profil (`verif` : selfies de
+ * vérification, #436). La clé commence toujours par l'identifiant du membre :
+ * le proxy, la purge et l'effacement du compte en déduisent le propriétaire.
+ */
+export async function uploadPhoto(file: File, userId: string, dossier?: 'verif'): Promise<string> {
   if (!ALLOWED_TYPES.includes(file.type)) {
     throw new Error('Format non supporté. Utilisez JPG, PNG ou WebP.');
   }
@@ -48,7 +53,7 @@ export async function uploadPhoto(file: File, userId: string): Promise<string> {
 
   const bucket = process.env.R2_BUCKET_NAME!;
   const ext = file.type.split('/')[1] === 'jpeg' ? 'jpg' : file.type.split('/')[1];
-  const key = `${userId}/${crypto.randomUUID()}.${ext}`;
+  const key = `${userId}/${dossier ? `${dossier}/` : ''}${crypto.randomUUID()}.${ext}`;
 
   await client.send(new PutObjectCommand({
     Bucket: bucket,

@@ -17,10 +17,14 @@ export async function PATCH(
     return NextResponse.json({ error: 'Validation échouée' }, { status: 400 });
   }
 
-  const { action, reason } = parsed.data;
+  const { action, motif } = parsed.data;
   const verification = await getDb().verificationRequest.findUnique({ where: { id } });
   if (!verification) {
     return NextResponse.json({ error: 'Demande non trouvée' }, { status: 404 });
+  }
+  // Une décision ne se réécrit pas en silence : le membre l'a peut-être déjà lue.
+  if (verification.status !== 'pending') {
+    return NextResponse.json({ error: 'Demande déjà traitée' }, { status: 409 });
   }
 
   const isApproved = action === 'APPROVE_VERIFICATION';
@@ -29,6 +33,7 @@ export async function PATCH(
     where: { id },
     data: {
       status: isApproved ? 'approved' : 'rejected',
+      rejectReason: isApproved ? null : motif,
       reviewedBy: adminResult.userId,
       resolvedAt: new Date(),
     },
@@ -46,7 +51,7 @@ export async function PATCH(
       adminId: adminResult.userId,
       targetUserId: verification.userId,
       action,
-      reason: reason ?? null,
+      reason: motif ?? null,
     },
   });
 

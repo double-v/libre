@@ -143,12 +143,15 @@ describe('DELETE /api/users/me', () => {
     // lien vers un compte, donc introuvables pour un effacement ultérieur.
     const BLUR_KEY = `${ALICE_ID}/photo.blur.jpg`;
     const SELFIE_KEY = `${ALICE_ID}/selfie.jpg`;
+    const SELFIE_VERIF = `${ALICE_ID}/verif/selfie.jpg`;
     fakeDb.user.findUnique.mockResolvedValue({
       passwordHash: 'hash',
       profile: { photos: [PHOTO_KEY] },
       photoModerations: [{ blurredKey: BLUR_KEY }],
       verificationRequests: [
         { selfieUrl: `/api/photos/${SELFIE_KEY}` },
+        // Format du badge selfie (#436) : clé encodée, sous verif/.
+        { selfieUrl: `/api/photos/${encodeURIComponent(SELFIE_VERIF)}` },
         // Le selfie peut être une photo du profil : une seule suppression.
         { selfieUrl: `https://libre.example/api/photos/${PHOTO_KEY}` },
       ],
@@ -160,7 +163,7 @@ describe('DELETE /api/users/me', () => {
 
     expect(res.status).toBe(204);
     const cles = mockDeletePhoto.mock.calls.map((c) => c[0]).sort();
-    expect(cles).toEqual([PHOTO_KEY, BLUR_KEY, SELFIE_KEY].sort());
+    expect(cles).toEqual([PHOTO_KEY, BLUR_KEY, SELFIE_KEY, SELFIE_VERIF].sort());
   });
 
   it('supprime quand même le compte si R2 est en panne', async () => {
