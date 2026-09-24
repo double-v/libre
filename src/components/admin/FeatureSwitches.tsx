@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { FEATURES, COPY_FEATURES, TOUTES_ACTIVEES, type Feature, type Features } from '@/lib/features';
+import { FEATURES, COPY_FEATURES, DEFAUTS, type Feature, type Features } from '@/lib/features';
 
 /**
  * FeatureSwitches — les interrupteurs de fonctionnalités (#418), côté admin.
@@ -19,8 +19,8 @@ export default function FeatureSwitches() {
   useEffect(() => {
     let annule = false;
     fetch('/api/admin/features')
-      .then(async (r) => (r.ok ? ((await r.json()) as Features) : TOUTES_ACTIVEES))
-      .catch(() => TOUTES_ACTIVEES)
+      .then(async (r) => (r.ok ? ((await r.json()) as Features) : DEFAUTS))
+      .catch(() => DEFAUTS)
       .then((f) => {
         if (!annule) setFeatures(f);
       });

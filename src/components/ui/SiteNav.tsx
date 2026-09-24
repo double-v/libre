@@ -9,7 +9,7 @@ import SiteShell, { type ShellWidth } from './SiteShell';
 import HeartMark from './HeartMark';
 import { sectionsVisibles, isSectionActive } from './AppSections';
 import { useFeatures } from '@/hooks/useFeatures';
-import { TOUTES_ACTIVEES, type Features } from '@/lib/features';
+import { DEFAUTS, type Features } from '@/lib/features';
 import NotificationDot from './NotificationDot';
 import { useUnread } from '@/hooks/useUnread';
 import { useAdminQueues } from '@/hooks/useAdminQueues';
@@ -97,7 +97,7 @@ export function SiteNavView({
   hasUnreadMessages = false,
   hasAdminPending = false,
   pathname = '',
-  features = TOUTES_ACTIVEES,
+  features = DEFAUTS,
 }: SiteNavViewProps) {
   const authed = variant === 'authed';
 

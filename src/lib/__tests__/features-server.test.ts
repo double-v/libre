@@ -31,10 +31,21 @@ describe('features-server (#418)', () => {
     expect((await getFeatures()).checkin).toBe(false);
   });
 
-  it('sur panne de lecture, ne coupe rien', async () => {
+  it('sur panne de lecture, retombe sur les défauts : ne coupe rien, n’allume rien', async () => {
     fakeDb.siteConfig.findUnique.mockRejectedValue(new Error('boom'));
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    expect(await getFeatures()).toEqual({ checkin: true, crossings: true, square: true });
+    expect(await getFeatures()).toEqual({ checkin: true, crossings: true, square: true, journal_comments: false });
+  });
+
+  it('lit aussi la liste des fonctionnalités activées (spec 007, R4)', async () => {
+    fakeDb.siteConfig.findUnique.mockResolvedValue({ featuresDisabled: [], featuresEnabled: ['journal_comments'] });
+    expect((await getFeatures()).journal_comments).toBe(true);
+    expect(fakeDb.siteConfig.findUnique).toHaveBeenCalledWith(expect.objectContaining({ select: { featuresDisabled: true, featuresEnabled: true } }));
+  });
+
+  it('config absente (base neuve) : commentaires du journal coupés', async () => {
+    fakeDb.siteConfig.findUnique.mockResolvedValue(null);
+    expect(await gardeFeature('journal_comments')).not.toBeNull();
   });
 
   it('gardeFeature : null si active, 403 feature_disabled sinon', async () => {

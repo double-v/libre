@@ -32,7 +32,19 @@ describe('useFeatures', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('réseau')));
     const { result } = renderHook(() => useFeatures());
     await new Promise((r) => setTimeout(r, 20));
-    expect(result.current).toEqual({ checkin: true, crossings: true, square: true });
+    expect(result.current).toEqual({ checkin: true, crossings: true, square: true, journal_comments: false });
+  });
+
+  it('une fonctionnalité coupée par défaut ne s’allume que sur un true explicite (spec 007)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ journal_comments: 'oui' }) }));
+    const a = renderHook(() => useFeatures());
+    expect(a.result.current.journal_comments).toBe(false);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(a.result.current.journal_comments).toBe(false);
+    _resetFeaturesCache();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ journal_comments: true }) }));
+    const b = renderHook(() => useFeatures());
+    await waitFor(() => expect(b.result.current.journal_comments).toBe(true));
   });
 
   it('une réponse partielle ou malformée ne coupe rien', async () => {
