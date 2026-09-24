@@ -7,7 +7,7 @@
  * « Erreur lors de la suppression du compte » sans plus d'explication.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import SettingsPage from '../page';
 
 const mockPush = vi.fn();
@@ -159,5 +159,24 @@ describe('<SettingsPage /> — déconnexion', () => {
 
     await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'));
     expect(mockClearBadge.mock.invocationCallOrder[0]).toBeLessThan(mockPush.mock.invocationCallOrder[0]);
+  });
+});
+
+describe('<SettingsPage /> — section « Libre » (spec 007, US4)', () => {
+  it('mène au journal et au manifeste, sans pastille ni compteur', async () => {
+    stubFetch();
+    render(<SettingsPage />);
+    const section = (await screen.findByRole('heading', { level: 2, name: 'Libre' })).closest('section')!;
+    const liens = within(section).getAllByRole('link');
+    expect(liens.map((a) => a.getAttribute('href'))).toEqual(['/journal', '/manifesto']);
+    expect(within(section).getByRole('link', { name: /Où en est Libre/ })).toHaveTextContent('Les nouvelles du projet');
+    expect(section.querySelector('[aria-label*="ouveau"], [class*="NotificationDot"]')).toBeNull();
+  });
+
+  it('le manifeste n’est plus listé deux fois (retiré des informations légales)', async () => {
+    stubFetch();
+    render(<SettingsPage />);
+    await screen.findByRole('heading', { level: 2, name: 'Libre' });
+    expect(screen.getAllByRole('link', { name: /manifest/i })).toHaveLength(1);
   });
 });

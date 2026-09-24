@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { FEATURES, COPY_FEATURES, TOUTES_ACTIVEES, type Feature, type Features } from '@/lib/features';
+import { FEATURES, COPY_FEATURES, DEFAUTS, type Feature, type Features } from '@/lib/features';
 
 /**
  * FeatureSwitches — les interrupteurs de fonctionnalités (#418), côté admin.
@@ -19,8 +19,10 @@ export default function FeatureSwitches() {
   useEffect(() => {
     let annule = false;
     fetch('/api/admin/features')
-      .then(async (r) => (r.ok ? ((await r.json()) as Features) : TOUTES_ACTIVEES))
-      .catch(() => TOUTES_ACTIVEES)
+      // Partir des défauts : une réponse sans une clé (serveur d'avant une
+      // fonctionnalité) ne doit pas produire un PUT incomplet, que la route refuse.
+      .then(async (r) => (r.ok ? { ...DEFAUTS, ...((await r.json()) as Partial<Features>) } : DEFAUTS))
+      .catch(() => DEFAUTS)
       .then((f) => {
         if (!annule) setFeatures(f);
       });
@@ -58,7 +60,9 @@ export default function FeatureSwitches() {
   return (
     <div className="space-y-3">
       {FEATURES.map((feature) => {
-        const on = features?.[feature] ?? true;
+        // Avant la réponse, afficher le défaut — jamais « allumé » d'office :
+        // une fonctionnalité coupée par défaut paraîtrait active (spec 007).
+        const on = features?.[feature] ?? DEFAUTS[feature];
         const titreId = `feature-${feature}-titre`;
         return (
           <section key={feature} className="rounded-xl border border-hairline bg-surface p-4 sm:p-5">

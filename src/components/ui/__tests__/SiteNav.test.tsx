@@ -36,6 +36,7 @@ describe('<SiteNavView /> — variante guest', () => {
 
     expect(screen.getByRole('link', { name: 'Accueil Libre' })).toHaveAttribute('href', '/');
     expect(screen.getByRole('link', { name: 'Manifesto' })).toHaveAttribute('href', '/manifesto');
+    expect(screen.getByRole('link', { name: 'Journal' })).toHaveAttribute('href', '/journal');
     expect(screen.getByRole('link', { name: 'Se connecter' })).toHaveAttribute('href', '/login');
     expect(screen.getByRole('link', { name: 'Créer un compte' })).toHaveAttribute('href', '/register');
 

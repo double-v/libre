@@ -144,7 +144,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
 
   const fieldClasses = [
     baseFieldClasses,
-    sizeClasses[size],
+    // Multiligne : la hauteur suit `rows`. La hauteur fixe d'un champ une ligne
+    // (h-11) écrasait `rows` et réduisait la zone de texte à une ligne (vu sur
+    // l'éditeur du journal, spec 007) ; on garde le plancher tactile de 44 px.
+    multiline ? 'min-h-11 py-2.5 text-sm' : sizeClasses[size],
     stateClasses,
     paddingClasses,
     className ?? '',

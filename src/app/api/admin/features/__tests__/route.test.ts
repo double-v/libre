@@ -35,14 +35,14 @@ beforeEach(() => {
 describe('/api/admin/features', () => {
   it('GET renvoie l’état des trois interrupteurs', async () => {
     fakeDb.siteConfig.findUnique.mockResolvedValue({ featuresDisabled: ['square'] });
-    await expect((await GET()).json()).resolves.toEqual({ checkin: true, crossings: true, square: false });
+    await expect((await GET()).json()).resolves.toEqual({ checkin: true, crossings: true, square: false, journal_comments: false });
   });
 
   it('PUT écrit la liste de ce qui est coupé, journalise, et invalide le cache', async () => {
     await getFeatures(); // amorce le cache
-    const res = await put({ checkin: false, crossings: true, square: false });
+    const res = await put({ checkin: false, crossings: true, square: false, journal_comments: false });
     expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ checkin: false, crossings: true, square: false });
+    await expect(res.json()).resolves.toEqual({ checkin: false, crossings: true, square: false, journal_comments: false });
 
     const ecrit = fakeDb.siteConfig.upsert.mock.calls[0][0];
     expect(ecrit.update.featuresDisabled).toEqual(['checkin', 'square']);
@@ -55,7 +55,19 @@ describe('/api/admin/features', () => {
     expect((await getFeatures()).checkin).toBe(false);
   });
 
-  it('PUT refuse un corps qui ne porte pas les trois booléens', async () => {
+  it('PUT range une fonctionnalité coupée par défaut dans la liste des activées (spec 007)', async () => {
+    const res = await put({ checkin: true, crossings: true, square: true, journal_comments: true });
+    expect(res.status).toBe(200);
+    const ecrit = fakeDb.siteConfig.upsert.mock.calls[0][0];
+    expect(ecrit.update).toMatchObject({ featuresDisabled: [], featuresEnabled: ['journal_comments'] });
+    expect(ecrit.create).toMatchObject({ featuresDisabled: [], featuresEnabled: ['journal_comments'] });
+    expect(fakeDb.moderationLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ action: 'SET_FEATURES', reason: 'allumees: journal_comments' }),
+    });
+  });
+
+  it('PUT refuse un corps qui ne porte pas tous les booléens', async () => {
+    expect((await put({ checkin: true, crossings: true, square: true })).status).toBe(400);
     expect((await put({ square: 'non' })).status).toBe(400);
     expect((await put({ checkin: true, crossings: true })).status).toBe(400);
     expect(fakeDb.siteConfig.upsert).not.toHaveBeenCalled();
@@ -64,6 +76,6 @@ describe('/api/admin/features', () => {
   it('refuse un non-admin (404, route cachée)', async () => {
     fakeDb.user.findUnique.mockResolvedValue({ role: 'USER' });
     expect((await GET()).status).toBe(404);
-    expect((await put({ checkin: true, crossings: true, square: true })).status).toBe(404);
+    expect((await put({ checkin: true, crossings: true, square: true, journal_comments: false })).status).toBe(404);
   });
 });

@@ -14,8 +14,8 @@ export async function GET() {
 }
 
 /**
- * Écriture : le corps porte les trois booléens, on stocke la liste de ce qui
- * est coupé. Journalisé dans `ModerationLog` (cible = l'admin lui-même : il
+ * Écriture : le corps porte un booléen par fonctionnalité, on stocke les
+ * écarts aux défauts — coupées d'un côté, allumées de l'autre (spec 007, R4). Journalisé dans `ModerationLog` (cible = l'admin lui-même : il
  * n'y a pas d'autre sujet), et cache serveur invalidé pour que l'API réponde
  * juste dès la requête suivante.
  */
@@ -33,20 +33,24 @@ export async function PUT(request: NextRequest) {
       );
     }
     const features = Object.fromEntries(FEATURES.map((f) => [f, body[f] as boolean])) as Features;
-    const featuresDisabled = configDepuisFeatures(features);
+    const { featuresDisabled, featuresEnabled } = configDepuisFeatures(features);
 
     const db = getDb();
     await db.siteConfig.upsert({
       where: { id: SINGLETON_ID },
-      update: { featuresDisabled, updatedBy: adminResult.userId },
-      create: { id: SINGLETON_ID, featuresDisabled, updatedBy: adminResult.userId },
+      update: { featuresDisabled, featuresEnabled, updatedBy: adminResult.userId },
+      create: { id: SINGLETON_ID, featuresDisabled, featuresEnabled, updatedBy: adminResult.userId },
     });
+    const ecarts = [
+      featuresDisabled.length ? `coupees: ${featuresDisabled.join(', ')}` : '',
+      featuresEnabled.length ? `allumees: ${featuresEnabled.join(', ')}` : '',
+    ].filter(Boolean);
     await db.moderationLog.create({
       data: {
         adminId: adminResult.userId,
         targetUserId: adminResult.userId,
         action: 'SET_FEATURES',
-        reason: featuresDisabled.length ? `coupees: ${featuresDisabled.join(', ')}` : 'tout active',
+        reason: ecarts.length ? ecarts.join(' ; ') : 'defauts',
       },
     });
     invaliderFeatures();

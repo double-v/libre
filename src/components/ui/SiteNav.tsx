@@ -9,7 +9,7 @@ import SiteShell, { type ShellWidth } from './SiteShell';
 import HeartMark from './HeartMark';
 import { sectionsVisibles, isSectionActive } from './AppSections';
 import { useFeatures } from '@/hooks/useFeatures';
-import { TOUTES_ACTIVEES, type Features } from '@/lib/features';
+import { DEFAUTS, type Features } from '@/lib/features';
 import NotificationDot from './NotificationDot';
 import { useUnread } from '@/hooks/useUnread';
 import { useAdminQueues } from '@/hooks/useAdminQueues';
@@ -97,7 +97,7 @@ export function SiteNavView({
   hasUnreadMessages = false,
   hasAdminPending = false,
   pathname = '',
-  features = TOUTES_ACTIVEES,
+  features = DEFAUTS,
 }: SiteNavViewProps) {
   const authed = variant === 'authed';
 
@@ -164,6 +164,11 @@ export function SiteNavView({
               <>
                 <Link href="/manifesto" className={`hidden sm:inline-flex ${textLinkClass}`}>
                   Manifesto
+                </Link>
+                {/* Journal « Où en est Libre » (spec 007, US4) : même traitement que
+                    Manifesto — masqué sur téléphone, sans badge de nouveauté. */}
+                <Link href="/journal" className={`hidden sm:inline-flex ${textLinkClass}`}>
+                  Journal
                 </Link>
                 <Link href="/login" className={`inline-flex ${textLinkClass}`}>
                   Se connecter

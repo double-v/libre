@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { featuresDepuisConfig, TOUTES_ACTIVEES, type Feature, type Features } from '@/lib/features';
+import { featuresDepuisConfig, DEFAUTS, type Feature, type Features } from '@/lib/features';
 
 const SINGLETON_ID = 'singleton';
 
@@ -24,16 +24,16 @@ export async function getFeatures(): Promise<Features> {
   try {
     const config = await getDb().siteConfig.findUnique({
       where: { id: SINGLETON_ID },
-      select: { featuresDisabled: true },
+      select: { featuresDisabled: true, featuresEnabled: true },
     });
-    const features = featuresDepuisConfig(config?.featuresDisabled);
+    const features = featuresDepuisConfig(config?.featuresDisabled, config?.featuresEnabled);
     cache = { features, expire: maintenant + TTL_MS };
     return features;
   } catch (error) {
-    // Panne de lecture : on ne coupe rien par accident. Le coupe-feu exige un
-    // geste explicite, pas une erreur.
+    // Panne de lecture : retour aux défauts. On ne coupe rien par accident (le
+    // coupe-feu exige un geste explicite) et on n'allume rien non plus.
     console.error('features.read.failed', error instanceof Error ? error.message : 'unknown');
-    return TOUTES_ACTIVEES;
+    return DEFAUTS;
   }
 }
 

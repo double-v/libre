@@ -938,6 +938,31 @@ Chat — un seul branchement couvre les quatre surfaces.
   (`useFocusTrap`), fermeture Échap, cibles `min-h-11` (44px), `aria-pressed`
   sur les motifs. `motion-reduce:transition-none` sur toutes les transitions.
 
+### Prose (`src/components/ui/Prose.tsx`) — proposé pour la spec 007
+
+Conteneur de **texte long** lisible : les publications du journal « Où en est
+Libre » (#351), et plus tard toute page de lecture (CGU, manifeste) qui voudrait
+s'y aligner. Il ne rend **aucun HTML** : il met en forme des enfants React déjà
+échappés (cf. `TexteJournal`, spec 007 R2).
+
+| Élément | Rendu | Tokens |
+|---|---|---|
+| conteneur | largeur `reading` (`SiteShell`), ~65 caractères par ligne | — |
+| paragraphe | `text-base leading-relaxed`, espacement par `gap` du conteneur (jamais `mb-*` sur `<p>`, cf. règle CSS non layerisée) | `text-content` |
+| listes | puces / numéros dans la marge, `pl-5`, même interligne | `text-content`, marqueurs `text-muted` |
+| lien | souligné, `underline-offset-2`, focus ring coral ; externe suivi d'une flèche `↗` `aria-hidden` | `text-coral` (clair) / `text-coral-light` (sombre) |
+| gras / italique | `font-semibold` / `italic` | hérités |
+| mot sans espace, URL longue | `break-words` : jamais de défilement horizontal | — |
+
+Aucune animation. Le titre, la date et la signature restent hors de `Prose`
+(portés par la page) ; `Prose` ne connaît que le corps.
+
+**Alertes éditoriales** (écran de rédaction, spec 007) : pas de nouveau
+composant — `Alert` suffit. Alerte bloquante → `variant="error"` sans case ;
+alerte levable → `variant="warning"` avec une case « Je maintiens cet extrait »
+(`Input` case à cocher, cible ≥ 44 px). L'extrait incriminé s'affiche en
+`font-mono text-sm` dans l'alerte, la règle en `title`.
+
 ### AdminUserPhotos (`src/components/admin/AdminUserPhotos.tsx`)
 
 Galerie de modération des photos d'un profil (#323). La fiche admin n'affichait

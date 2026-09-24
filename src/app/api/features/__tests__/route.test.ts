@@ -24,12 +24,12 @@ beforeEach(() => {
 });
 
 describe('GET /api/features', () => {
-  it('renvoie les trois booléens, sans cache HTTP', async () => {
+  it('renvoie un booléen par fonctionnalité, sans cache HTTP', async () => {
     fakeDb.siteConfig.findUnique.mockResolvedValue({ featuresDisabled: ['crossings'] });
     const res = await GET();
     expect(res.status).toBe(200);
     expect(res.headers.get('cache-control')).toMatch(/no-store/);
-    await expect(res.json()).resolves.toEqual({ checkin: true, crossings: false, square: true });
+    await expect(res.json()).resolves.toEqual({ checkin: true, crossings: false, square: true, journal_comments: false });
   });
 });
 

@@ -1,15 +1,23 @@
 /**
  * Interrupteurs de fonctionnalités (#418) — partie pure, partagée client/serveur.
  *
- * Trois fonctionnalités coupables depuis l'admin, sans redéploiement. Le
- * serveur stocke la liste de ce qui est COUPÉ (`SiteConfig.featuresDisabled`) ;
- * tout ce qui n'y figure pas est actif. Le défaut est donc « rien ne change ».
+ * Fonctionnalités pilotables depuis l'admin, sans redéploiement. Chacune a un
+ * **défaut** (`DEFAUTS`) ; le serveur ne stocke que les écarts à ce défaut :
+ * `SiteConfig.featuresDisabled` pour celles actives par défaut qu'on a coupées,
+ * `SiteConfig.featuresEnabled` pour celles coupées par défaut qu'on a allumées
+ * (spec 007, R4). Listes vides = chaque fonctionnalité à son défaut : une
+ * fonctionnalité future s'ajoute sans migration de données, dans un sens comme
+ * dans l'autre.
  */
-export const FEATURES = ['checkin', 'crossings', 'square'] as const;
+export const FEATURES = ['checkin', 'crossings', 'square', 'journal_comments'] as const;
 export type Feature = (typeof FEATURES)[number];
 export type Features = Record<Feature, boolean>;
 
-export const TOUTES_ACTIVEES: Features = { checkin: true, crossings: true, square: true };
+/**
+ * État sans aucun geste admin — et état de repli sur panne de lecture : une
+ * erreur ne coupe rien de ce qui tourne, et n'allume rien de ce qui attend.
+ */
+export const DEFAUTS: Features = { checkin: true, crossings: true, square: true, journal_comments: false };
 
 /** Ce que l'admin lit sur chaque interrupteur — libellé et ce que « coupé » produit. */
 export const COPY_FEATURES: Record<Feature, { libelle: string; effet: string }> = {
@@ -25,6 +33,10 @@ export const COPY_FEATURES: Record<Feature, { libelle: string; effet: string }> 
     libelle: 'La Place',
     effet: 'Coupé : l’onglet disparaît de la barre du bas, la page et l’API répondent « en pause », les crons ne font rien.',
   },
+  journal_comments: {
+    libelle: 'Commentaires du journal',
+    effet: 'Coupé par défaut. À venir : allumé, les inscrits pourront commenter les nouvelles où les commentaires sont ouverts, après validation par l’équipe. Aujourd’hui, sans effet visible.',
+  },
 };
 
 /** Copie membre, unique et douce — jamais « désactivé par l’admin ». */
@@ -34,17 +46,22 @@ export function estFeature(valeur: unknown): valeur is Feature {
   return typeof valeur === 'string' && (FEATURES as readonly string[]).includes(valeur);
 }
 
-/** Traduit la liste stockée (ce qui est coupé) en carte d'état (ce qui est actif). */
-export function featuresDepuisConfig(featuresDisabled: readonly string[] | null | undefined): Features {
+/** Traduit les deux listes stockées (les écarts aux défauts) en carte d'état. */
+export function featuresDepuisConfig(
+  featuresDisabled: readonly string[] | null | undefined,
+  featuresEnabled: readonly string[] | null | undefined,
+): Features {
   const coupees = new Set(featuresDisabled ?? []);
-  return {
-    checkin: !coupees.has('checkin'),
-    crossings: !coupees.has('crossings'),
-    square: !coupees.has('square'),
-  };
+  const allumees = new Set(featuresEnabled ?? []);
+  return Object.fromEntries(
+    FEATURES.map((f) => [f, DEFAUTS[f] ? !coupees.has(f) : allumees.has(f)]),
+  ) as Features;
 }
 
-/** Sens inverse : de la carte d'état vers la liste à stocker, ordre stable. */
-export function configDepuisFeatures(features: Features): Feature[] {
-  return FEATURES.filter((f) => !features[f]);
+/** Sens inverse : de la carte d'état vers les deux listes à stocker, ordre stable. */
+export function configDepuisFeatures(features: Features): { featuresDisabled: Feature[]; featuresEnabled: Feature[] } {
+  return {
+    featuresDisabled: FEATURES.filter((f) => DEFAUTS[f] && !features[f]),
+    featuresEnabled: FEATURES.filter((f) => !DEFAUTS[f] && features[f]),
+  };
 }
