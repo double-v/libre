@@ -1,6 +1,11 @@
+import PhotoMetadataPanel from '@/components/admin/PhotoMetadataPanel';
 import RetentionPanel from '@/components/admin/RetentionPanel';
 
-/** Purge de rétention (#427) — état, bilan, lancement manuel. */
+/**
+ * Purge de rétention (#427) — état, bilan, lancement manuel ; et rattrapage
+ * des métadonnées photo (#441), même famille : des données personnelles
+ * qu'on ne garde plus.
+ */
 export default function AdminRetentionPage() {
   return (
     <div className="mx-auto max-w-2xl">
@@ -11,6 +16,9 @@ export default function AdminRetentionPage() {
         permet de lancer à la main. Chaque lancement manuel est journalisé.
       </p>
       <RetentionPanel />
+      <div className="mt-6">
+        <PhotoMetadataPanel />
+      </div>
     </div>
   );
 }

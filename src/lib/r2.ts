@@ -2,6 +2,7 @@ import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } fro
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { fileTypeFromBuffer } from 'file-type';
 import { blurredDerivativeBuffer } from '@/lib/photo-blur';
+import { aDesMetadonnees, retirerMetadonnees } from '@/lib/photo-metadata';
 import { blurredKeyFor } from '@/lib/photo-sensitivity';
 
 function getR2Client(): S3Client | null {
@@ -46,6 +47,16 @@ export async function uploadPhoto(file: File, userId: string): Promise<string> {
     throw new Error('Stockage non configuré.');
   }
 
+  // #441 : aucune photo n'atteint R2 avec ses métadonnées (position GPS de la
+  // prise de vue, appareil, heure). Indécodable = refus : stocker l'original
+  // tel quel serait précisément la fuite qu'on ferme.
+  let propre: Buffer;
+  try {
+    ({ buffer: propre } = await retirerMetadonnees(buffer, file.type));
+  } catch {
+    throw new Error('L\'image est illisible. Essaie avec une autre photo.');
+  }
+
   const bucket = process.env.R2_BUCKET_NAME!;
   const ext = file.type.split('/')[1] === 'jpeg' ? 'jpg' : file.type.split('/')[1];
   const key = `${userId}/${crypto.randomUUID()}.${ext}`;
@@ -53,11 +64,43 @@ export async function uploadPhoto(file: File, userId: string): Promise<string> {
   await client.send(new PutObjectCommand({
     Bucket: bucket,
     Key: key,
-    Body: buffer,
+    Body: propre,
     ContentType: file.type,
   }));
 
   return key;
+}
+
+const MIME_PAR_EXTENSION: Record<string, string> = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' };
+
+/**
+ * Rattrapage #441 : retire les métadonnées d'une photo déjà stockée, en la
+ * réécrivant **à la même clé** — les profils, le voile (#433) et la
+ * modération la désignent par sa clé, rien d'autre ne bouge.
+ *
+ * Une photo déjà propre n'est pas réécrite : le rattrapage se rejoue sans
+ * coût ni perte de qualité (chaque ré-encodage JPEG en coûte un peu). Lève
+ * sur une erreur R2 ou une image indécodable : l'appelant compte l'échec et
+ * passe à la suivante.
+ */
+export async function nettoyerPhotoExistante(key: string): Promise<'nettoyee' | 'propre'> {
+  const client = getR2Client();
+  if (!client) {
+    throw new Error('Stockage non configuré.');
+  }
+  const bucket = process.env.R2_BUCKET_NAME!;
+
+  const original = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+  if (!original.Body) {
+    throw new Error('Photo introuvable dans le stockage.');
+  }
+  const buffer = Buffer.from(await original.Body.transformToByteArray());
+  if (!(await aDesMetadonnees(buffer))) return 'propre';
+
+  const mime = MIME_PAR_EXTENSION[key.split('.').pop()?.toLowerCase() ?? ''] ?? 'image/jpeg';
+  const { buffer: propre } = await retirerMetadonnees(buffer, mime);
+  await client.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: propre, ContentType: mime }));
+  return 'nettoyee';
 }
 
 export async function getPhotoSignedUrl(key: string): Promise<string> {
