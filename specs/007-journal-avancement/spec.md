@@ -213,7 +213,11 @@ publication.
   publique.
 - **FR-011**: Une publication DOIT porter une indication, sans interface à ce
   stade, précisant si elle accepte des commentaires (préparation de #352 ;
-  fermée par défaut).
+  fermée par défaut). Décision opérateur du 2026-09-24 : quand #352 arrivera,
+  les commentaires s'allumeront **aussi** par un interrupteur global dans les
+  fonctionnalités de l'admin, **coupé par défaut** ; une publication n'accepte
+  de commentaires que si l'interrupteur global **et** son propre réglage sont
+  ouverts.
 - **FR-012**: Chaque publication, dépublication et modification d'une
   publication publiée DOIT être tracée au journal de modération (auteur, date,
   publication, règles levées le cas échéant).
@@ -248,6 +252,14 @@ publication.
 - **FR-021**: La navigation publique DOIT proposer un lien vers la page.
 - **FR-022**: L'app connectée DOIT proposer un accès stable à la page, sans
   badge, pastille ni compteur de nouveauté.
+
+**Préparation des commentaires (#352)**
+
+- **FR-023**: Les fonctionnalités de l'admin DOIVENT proposer un interrupteur
+  « Commentaires du journal », **coupé par défaut** — y compris sur une
+  installation neuve et quand le réglage n'a jamais été touché. Tant que #352
+  n'est pas livré, l'interrupteur est présent mais son effet est décrit comme à
+  venir ; il ne rend rien visible au public.
 
 ### Règles éditoriales *(contenu de FR-014, à reprendre tel quel dans l'écran)*
 
@@ -332,7 +344,8 @@ On dit **ce que le membre y gagne**, jamais **comment ça marche**.
 
 ## Hors périmètre (spec suivante)
 
-- Réactions et commentaires modérés (#352), sondages (#353).
+- Réactions et commentaires modérés (#352), sondages (#353). Les commentaires
+  dépendront d'un interrupteur global de l'admin, coupé par défaut (cf. FR-011).
 - Publications réservées aux inscrits (piste de l'opérateur, écartée pour le
   MVP au profit des garde-fous).
 - Abonnement, notification push ou e-mail d'une nouvelle publication.
