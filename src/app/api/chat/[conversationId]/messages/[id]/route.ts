@@ -9,9 +9,11 @@ import { verifyParticipant } from '@/lib/chat-access';
 // DELETE /api/chat/[conversationId]/messages/[id]
 //
 // Suppression par l'auteur de SON propre message (#201). Soft-delete : on
-// positionne `deletedAt`, on ne détruit jamais la ligne — le contenu (ciphertext)
-// reste en base pour la modération/RGPD mais est masqué à l'affichage (GET) et
-// remplacé par un tombstone « Message supprimé » côté client.
+// positionne `deletedAt`, la ligne reste pour le tombstone « Message supprimé »
+// côté client. Le contenu (ciphertext) est masqué à l'affichage (GET) tout de
+// suite, et vidé 30 jours plus tard par la purge de rétention (#202,
+// `messagesEffaces` dans `src/lib/retention/regles.ts`) : le temps qu'un
+// message regretté puis effacé puisse encore être signalé.
 // ---------------------------------------------------------------------------
 export async function DELETE(
   _request: Request,

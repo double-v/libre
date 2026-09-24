@@ -189,7 +189,7 @@ export default function ConfidentialitePage() {
           </tr>
           <tr>
             <td>Messages (chiffrés E2E)</td>
-            <td>Jusqu&apos;à suppression du compte ou de la conversation</td>
+            <td>Tant que le match existe : effacés avec la conversation au blocage, ou à la suppression du compte</td>
           </tr>
           <tr>
             <td>Tokens de vérification e-mail</td>

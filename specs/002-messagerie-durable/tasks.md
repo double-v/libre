@@ -91,11 +91,11 @@ partiellement, avec la raison en clair.
 
 **Test d'indépendance** : effacer un message et vérifier la pierre tombale des deux côtés ; rompre un match de test et vérifier qu'aucun chemin ne restitue le fil.
 
-- [ ] T035 [US5] Trancher avec l'opérateur la **fenêtre de conservation pour la modération** : le ciphertext est aujourd'hui gardé exprès (#201), et l'escrow le rend lisible par le service. Décision produit, préalable au code
-- [ ] T036 [P] [US5] Tests dans `src/app/api/chat/[conversationId]/messages/[id]/__tests__/route.test.ts` : après effacement, aucune réponse d'API ne contient le contenu
-- [ ] T037 [US5] Appliquer la décision de T035 dans `src/app/api/chat/[conversationId]/messages/[id]/route.ts`
-- [ ] T038 [P] [US5] Test de cascade dans `src/__tests__/purge-cascade.test.ts` : rupture de match et suppression de compte détruisent conversation, messages, clés de conversation **et** coffre — l'attester par un test, pas par lecture du schéma
-- [ ] T039 [US5] Purge périodique via un cron déclaré dans `vercel.json` (deux crons existent déjà, le patron est en place)
+- [x] T035 [US5] Trancher avec l'opérateur la **fenêtre de conservation pour la modération** : le ciphertext est aujourd'hui gardé exprès (#201), et l'escrow le rend lisible par le service. Décision produit, préalable au code — **tranché le 2026-09-24 : 30 jours après l'effacement**, puis le chiffré est vidé (la pierre tombale reste)
+- [x] T036 [P] [US5] Tests dans `src/app/api/chat/[conversationId]/messages/[id]/__tests__/route.test.ts` : après effacement, aucune réponse d'API ne contient le contenu
+- [x] T037 [US5] Appliquer la décision de T035 dans `src/app/api/chat/[conversationId]/messages/[id]/route.ts`
+- [x] T038 [P] [US5] Test de cascade dans `src/__tests__/purge-cascade.test.ts` : rupture de match et suppression de compte détruisent conversation, messages, clés de conversation **et** coffre — l'attester par un test, pas par lecture du schéma
+- [x] T039 [US5] ~~Purge périodique via un cron déclaré dans `vercel.json`~~ → règle `messagesEffaces` de la purge de rétention (#427), déclenchée par le trafic : les crons Vercel sont morts en prod (`CRON_SECRET` absent)
 
 ---
 

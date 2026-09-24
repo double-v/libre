@@ -28,4 +28,12 @@ describe('page Confidentialité — durées de conservation', () => {
     expect(screen.getByText(/Check-ins de sécurité/)).toBeInTheDocument();
     expect(screen.getByText(/Trace technique du consentement/)).toBeInTheDocument();
   });
+
+  it('messages : ne promet plus de « suppression de la conversation », geste qui n’existe pas (#202)', () => {
+    render(<Confidentialite />);
+    const ligne = screen.getByText('Messages (chiffrés E2E)').closest('tr')!;
+    expect(ligne.textContent).not.toMatch(/suppression[^.]*de la conversation/);
+    expect(ligne.textContent).toMatch(/blocage/);
+    expect(ligne.textContent).toMatch(/suppression du compte/);
+  });
 });

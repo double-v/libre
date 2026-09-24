@@ -72,6 +72,13 @@ function regles(now: Date): Record<RegleId, Regle> {
     safetyCheckins: async () =>
       (await db.safetyCheckin.deleteMany({ where: { resolvedAt: { lt: seuil('safetyCheckins', now) } } })).count,
 
+    // La ligne reste : elle tient la place de la pierre tombale dans le fil.
+    messagesEffaces: async () =>
+      (await db.message.updateMany({
+        where: { deletedAt: { lt: seuil('messagesEffaces', now) }, content: { not: '' } },
+        data: { content: '' },
+      })).count,
+
     // La preuve du consentement reste (type, version, date) ; seule la trace
     // technique s'efface.
     consentTrace: async () =>
