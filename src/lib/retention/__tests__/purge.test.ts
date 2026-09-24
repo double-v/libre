@@ -21,6 +21,7 @@ const fakeDb = {
   encounter: { deleteMany: vi.fn(async () => ({ count: 5 })) },
   safetyCheckin: { deleteMany: vi.fn(async () => ({ count: 1 })) },
   consent: { updateMany: vi.fn(async () => ({ count: 4 })) },
+  message: { updateMany: vi.fn(async () => ({ count: 6 })) },
   retentionState: { updateMany: vi.fn(), create: vi.fn(), upsert: vi.fn(), findUnique: vi.fn() },
 };
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => fakeDb }));
@@ -77,6 +78,15 @@ describe('purgerRetention — seuils', () => {
       where: { createdAt: { lt: il_y_a(3 * 365) }, OR: [{ ipAddress: { not: null } }, { userAgent: { not: null } }] },
       data: { ipAddress: null, userAgent: null },
     });
+  });
+
+  it('messages effacés : 30 j après l’effacement, le chiffré est vidé — la pierre tombale reste (#202)', async () => {
+    const bilan = await purgerRetention(NOW);
+    expect(fakeDb.message.updateMany).toHaveBeenCalledWith({
+      where: { deletedAt: { lt: il_y_a(30) }, content: { not: '' } },
+      data: { content: '' },
+    });
+    expect(bilan.messagesEffaces).toBe(6);
   });
 
   it('selfies : résolus + 30 j → ligne effacée et objet R2 aussi, sauf si c’est encore une photo du profil', async () => {

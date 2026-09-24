@@ -21,7 +21,7 @@ export interface RegleRetention {
   /** Âge au-delà duquel la ligne est purgée, en jours, à compter de `depuis`. */
   jours: number;
   /** Ce que mesure l'âge. */
-  depuis: 'création' | 'résolution' | 'expiration';
+  depuis: 'création' | 'résolution' | 'expiration' | 'effacement';
 }
 
 export const REGLES_RETENTION = [
@@ -34,6 +34,11 @@ export const REGLES_RETENTION = [
   { id: 'feedback', donnees: 'Retours (feedback)', duree: 'Jusqu’à résolution + 1 an', jours: 365, depuis: 'création' },
   { id: 'encounters', donnees: 'Croisements (position arrondie et horodatage)', duree: '90 jours', jours: 90, depuis: 'création' },
   { id: 'safetyCheckins', donnees: 'Check-ins de sécurité (dernière position)', duree: 'Jusqu’à résolution + 30 jours', jours: 30, depuis: 'résolution' },
+  // Le geste « effacer » masque le message tout de suite ; le chiffré reste
+  // 30 jours pour qu'un message regretté puis effacé puisse encore être
+  // signalé — l'escrow le rend lisible par le service, d'où une fenêtre courte
+  // (décision opérateur du 2026-09-24, #202). La pierre tombale, elle, reste.
+  { id: 'messagesEffaces', donnees: 'Messages effacés par leur auteur (contenu chiffré)', duree: '30 jours après l’effacement', jours: 30, depuis: 'effacement' },
   { id: 'consentTrace', donnees: 'Trace technique du consentement (adresse IP, navigateur)', duree: '3 ans — le consentement lui-même est conservé', jours: 3 * 365, depuis: 'création' },
 ] as const satisfies readonly RegleRetention[];
 
