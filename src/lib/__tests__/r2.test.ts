@@ -82,17 +82,81 @@ describe('deletePhoto', () => {
   });
 });
 describe('uploadPhoto — dossier (#436)', () => {
-  const fichier = () => new File([new Uint8Array([0xff, 0xd8, 0xff])], 's.jpg', { type: 'image/jpeg' });
+  // Vraie image : depuis #441, uploadPhoto ré-encode et refuse un contenu indécodable.
+  const fichier = async () => {
+    const sharp = (await import('sharp')).default;
+    const jpeg = await sharp({ create: { width: 8, height: 8, channels: 3, background: '#888' } }).jpeg().toBuffer();
+    return new File([new Uint8Array(jpeg)], 's.jpg', { type: 'image/jpeg' });
+  };
 
   it('range un selfie de vérification sous <userId>/verif/', async () => {
     const { uploadPhoto } = await import('../r2');
-    const key = await uploadPhoto(fichier(), 'u1', 'verif');
+    const key = await uploadPhoto(await fichier(), 'u1', 'verif');
     expect(key).toMatch(/^u1\/verif\/[0-9a-f-]{36}\.jpg$/);
     expect(mockSend.mock.calls[0][0].input.Key).toBe(key);
   });
 
   it('sans dossier, la clé reste <userId>/<uuid>.<ext>', async () => {
     const { uploadPhoto } = await import('../r2');
-    expect(await uploadPhoto(fichier(), 'u1')).toMatch(/^u1\/[0-9a-f-]{36}\.jpg$/);
+    expect(await uploadPhoto(await fichier(), 'u1')).toMatch(/^u1\/[0-9a-f-]{36}\.jpg$/);
+  });
+});
+
+// --- #441 : métadonnées retirées avant R2 ---
+
+async function jpegAvecGps(): Promise<Buffer> {
+  const sharp = (await import('sharp')).default;
+  return sharp({ create: { width: 30, height: 20, channels: 3, background: '#888888' } })
+    .jpeg()
+    .withExif({ IFD3: { GPSLatitudeRef: 'N', GPSLatitude: '48/1 51/1 2410/100' } })
+    .toBuffer();
+}
+
+describe('uploadPhoto (#441)', () => {
+  it('stocke la photo sans EXIF : la position de prise de vue ne part jamais dans R2', async () => {
+    const sharp = (await import('sharp')).default;
+    const { uploadPhoto } = await import('../r2');
+    const entree = await jpegAvecGps();
+    const file = new File([new Uint8Array(entree)], 'photo.jpg', { type: 'image/jpeg' });
+
+    const key = await uploadPhoto(file, 'user-123');
+
+    expect(key).toMatch(/^user-123\/.+\.jpg$/);
+    const put = mockSend.mock.calls[0][0].input as { Body: Buffer; ContentType: string };
+    expect(put.ContentType).toBe('image/jpeg');
+    expect((await sharp(put.Body).metadata()).exif).toBeUndefined();
+  });
+
+  it('refuse une image indécodable plutôt que de stocker l’original', async () => {
+    const { uploadPhoto } = await import('../r2');
+    const file = new File([new Uint8Array(Buffer.from('pas une image'))], 'x.jpg', { type: 'image/jpeg' });
+    await expect(uploadPhoto(file, 'user-123')).rejects.toThrow('illisible');
+    expect(mockSend).not.toHaveBeenCalled();
+  });
+});
+
+describe('nettoyerPhotoExistante (#441, rattrapage)', () => {
+  it('réécrit à la même clé une photo qui porte des métadonnées', async () => {
+    const sharp = (await import('sharp')).default;
+    const { nettoyerPhotoExistante } = await import('../r2');
+    const entree = await jpegAvecGps();
+    mockSend.mockResolvedValueOnce({ Body: { transformToByteArray: async () => new Uint8Array(entree) } });
+
+    expect(await nettoyerPhotoExistante('user-123/a.jpg')).toBe('nettoyee');
+
+    expect(mockSend).toHaveBeenCalledTimes(2);
+    const put = mockSend.mock.calls[1][0].input as { Key: string; Body: Buffer; ContentType: string };
+    expect(put).toMatchObject({ Key: 'user-123/a.jpg', ContentType: 'image/jpeg' });
+    expect((await sharp(put.Body).metadata()).exif).toBeUndefined();
+  });
+
+  it('ne réécrit pas une photo déjà propre (rattrapage rejouable sans coût)', async () => {
+    const sharp = (await import('sharp')).default;
+    const { nettoyerPhotoExistante } = await import('../r2');
+    const propre = await sharp({ create: { width: 8, height: 8, channels: 3, background: '#000' } }).png().toBuffer();
+    mockSend.mockResolvedValueOnce({ Body: { transformToByteArray: async () => new Uint8Array(propre) } });
+
+    expect(await nettoyerPhotoExistante('user-123/b.png')).toBe('propre');
+    expect(mockSend).toHaveBeenCalledTimes(1);
   });
 });
