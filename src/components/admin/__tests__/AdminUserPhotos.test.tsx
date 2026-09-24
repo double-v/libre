@@ -38,6 +38,12 @@ function setup(photos: string[]) {
 }
 
 describe('<AdminUserPhotos />', () => {
+  it('propose la recherche inversée sous chaque photo, sur sa propre clé (#442)', () => {
+    setup(['u-1/a.jpg', 'u-1/b.jpg']);
+    const lens = screen.getAllByRole('link', { name: 'Google Lens', hidden: true });
+    expect(lens.map((a) => new URL(a.getAttribute('href')!, 'http://x').searchParams.get('cle'))).toEqual(['u-1/a.jpg', 'u-1/b.jpg']);
+  });
+
   it('affiche une vignette par photo, pas un compteur', () => {
     setup(['u-1/a.jpg', 'u-1/b.jpg', 'u-1/c.jpg']);
     expect(screen.getAllByRole('img')).toHaveLength(3);
