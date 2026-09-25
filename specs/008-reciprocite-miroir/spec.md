@@ -6,6 +6,8 @@
 
 **Status**: Draft
 
+**Issues** : #452 (US1), #453 (US2), #454 (US3)
+
 **Input**: User description: "Réciprocité miroir sur l'intention et la distance. Principe : « tu vois ce que tu montres », pour donner envie de compléter son profil sans rien bloquer ni punir. Règle A — « Ce que je cherche » en miroir. Règle B — Distance en miroir. Hors périmètre : questions de profil en miroir (spec suivante), photos, présence, accusés de lecture."
 
 ## Contexte

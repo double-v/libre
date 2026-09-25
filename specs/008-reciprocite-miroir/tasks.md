@@ -11,7 +11,8 @@ description: "Task list — 008 Réciprocité miroir (intention et distance)"
 (principe III, corollaire #328) ; la boucle de livraison travaille en TDD.
 Chaque test s'écrit et échoue avant son implémentation.
 
-**Organization**: une phase par user story ; une issue GitHub par user story.
+**Organization**: une phase par user story ; une issue GitHub par user story —
+US1 #452, US2 #453, US3 #454.
 
 ## Format: `[ID] [P?] [Story] Description`
 
