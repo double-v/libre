@@ -10,7 +10,7 @@ export default function CGUPage() {
     <article className="prose prose-gray dark:prose-invert max-w-none">
       <h1>Conditions générales d&apos;utilisation</h1>
       <p className="text-sm text-muted">
-        Dernière mise à jour : 3 septembre 2026
+        Dernière mise à jour : 25 septembre 2026
       </p>
 
       {/* ─── 1. Objet ─── */}
@@ -92,6 +92,10 @@ export default function CGUPage() {
         <li>Ne pas publier de contenu illégal, violent, haineux, sexiste, raciste, homophobe ou discriminant</li>
         <li>Ne pas harceler, menacer ou importuner un autre utilisateur</li>
         <li>Ne pas utiliser le Service à des fins commerciales, de prostitution ou de trafic</li>
+        <li>
+          Ne pas promouvoir, proposer ni vendre de produits stupéfiants ou illicites, que ce soit dans votre profil,
+          vos réponses aux questions ou vos messages
+        </li>
         <li>Ne pas spammer le Carré ou les messageries privées</li>
         <li>Ne pas tenter de contourner les mesures de sécurité (anti-bot, vérification)</li>
         <li>Ne pas créer de faux profil ou de compte bot</li>

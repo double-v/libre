@@ -36,4 +36,11 @@ describe('page CGU — posture de messagerie', () => {
     expect(page).not.toMatch(/le serveur ne peut pas les lire/i);
     expect(page).not.toMatch(/ne peut pas lire vos messages/i);
   });
+
+  // Spec 009 : la question « habitudes » est en texte libre ; la règle de
+  // conduite dit ce qui n'y a pas sa place, sans que l'app l'y invite.
+  it('interdit de promouvoir ou proposer des produits illicites, réponses comprises', () => {
+    render(<CGUPage />);
+    expect(screen.getByText(/Ne pas promouvoir, proposer ni vendre de produits stupéfiants ou illicites/)).toHaveTextContent(/réponses aux questions/);
+  });
 });

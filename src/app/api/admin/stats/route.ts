@@ -274,6 +274,7 @@ async function computeAnalytics(totalUsers: number): Promise<AnalyticsStats> {
       active30d,
     },
     onboarding: await computeOnboarding(cutoff30d),
+    answers: await computeAnswers(cutoff30d),
     moderation: {
       bansLast30d: moderationMap['BAN'] ?? 0,
       unbansLast30d: moderationMap['UNBAN'] ?? 0,
@@ -303,4 +304,46 @@ function distributionFromRecord(
 function percent(part: number, whole: number): number {
   if (whole === 0) return 0;
   return Math.round((part / whole) * 1000) / 10;
+}
+
+/**
+ * Questions en miroir (spec 009, SC-002/003/006). Une seule requête
+ * d'agrégats sur les membres actifs à 30 jours ; SC-003 compare des paires
+ * de réponses publiées, jamais le contenu des messages.
+ */
+async function computeAnswers(cutoff30d: Date): Promise<AnalyticsStats['answers']> {
+  const rows = await getDb().$queryRaw<Array<{
+    active: bigint; with_answer: bigint; choices_only: bigint; matches: bigint; matches_shared: bigint;
+  }>>`
+    WITH actifs AS (
+      SELECT u.id FROM "users" u WHERE u."lastActive" >= ${cutoff30d}
+    ), par_membre AS (
+      SELECT a."userId", bool_and(a."text" = '') AS que_des_choix
+      FROM "profile_answers" a JOIN actifs ON actifs.id = a."userId"
+      WHERE a."status" = 'published'
+      GROUP BY a."userId"
+    )
+    SELECT
+      (SELECT COUNT(*) FROM actifs)                                  AS active,
+      (SELECT COUNT(*) FROM par_membre)                              AS with_answer,
+      (SELECT COUNT(*) FROM par_membre WHERE que_des_choix)          AS choices_only,
+      (SELECT COUNT(*) FROM "matches" m WHERE m."createdAt" >= ${cutoff30d}) AS matches,
+      (SELECT COUNT(*) FROM "matches" m
+        WHERE m."createdAt" >= ${cutoff30d}
+          AND EXISTS (
+            SELECT 1 FROM "profile_answers" a
+            JOIN "profile_answers" b ON b."questionKey" = a."questionKey"
+            WHERE a."userId" = m."userA" AND b."userId" = m."userB"
+              AND a."status" = 'published' AND b."status" = 'published'
+          ))                                                         AS matches_shared
+  `;
+  const r = rows?.[0];
+  const n = (v: bigint | undefined) => Number(v ?? 0);
+  return {
+    active30d: n(r?.active),
+    withAnswer: n(r?.with_answer),
+    choicesOnly: n(r?.choices_only),
+    matches30d: n(r?.matches),
+    matchesSharingQuestion: n(r?.matches_shared),
+  };
 }

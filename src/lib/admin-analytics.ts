@@ -49,6 +49,24 @@ export interface OnboardingStats {
   pushDevices: number;
 }
 
+/**
+ * Questions de profil en miroir (spec 009) : lecture de SC-002, SC-003 et
+ * SC-006 sur les 30 derniers jours. Surface admin seulement. Aucune lecture
+ * de message (chiffrés) ni trace des fiches consultées : des agrégats.
+ */
+export interface AnswersStats {
+  /** Membres actifs sur 30 jours. */
+  active30d: number;
+  /** Parmi eux, avec au moins une réponse publiée (SC-002). */
+  withAnswer: number;
+  /** Parmi eux, n'ayant répondu que par des choix, sans texte (SC-006). */
+  choicesOnly: number;
+  /** Matchs créés sur 30 jours… */
+  matches30d: number;
+  /** …dont les deux membres partagent au moins une question répondue (SC-003). */
+  matchesSharingQuestion: number;
+}
+
 export interface ModerationStats {
   bansLast30d: number;
   unbansLast30d: number;
@@ -68,6 +86,7 @@ export interface AnalyticsStats {
   engagement: EngagementStats;
   moderation: ModerationStats;
   onboarding: OnboardingStats;
+  answers: AnswersStats;
 }
 
 /**

@@ -264,6 +264,13 @@ Règles d'exposition :
   ignoré dans ce cas (sinon il sert à deviner). « je verrai en chemin » compte
   comme une déclaration. Garde par route : `src/__tests__/intention-never-leaks.test.ts`
   — y ajouter toute route qui sérialise l'intention d'autrui.
+- Questions en miroir (spec 009) : la réponse d'autrui à une question (texte
+  **et** choix) ne sort que vers une lectrice qui a une réponse **publiée** à
+  la même question — décision unique `answersFor` (`src/lib/answers.ts`) ;
+  réponse retirée par la modération jamais envoyée à autrui. Banque dans le
+  code (`src/lib/questions.ts`, clés stables, modifiée par PR). Détection de
+  contact partagée `src/lib/contact.ts` (mode `pseudo` / `texte`). Garde par
+  route : `src/__tests__/answers-never-leak.test.ts`.
 
 ## Notifications (spec 003, #389–#393)
 
