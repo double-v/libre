@@ -2,7 +2,7 @@
  * Tests — section « Mes questions » du profil (spec 009, US1).
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ProfileAnswers from '../ProfileAnswers';
 
 afterEach(() => vi.unstubAllGlobals());
@@ -55,6 +55,8 @@ describe('<ProfileAnswers />', () => {
   it('ouvre « une par une » sur un thème, avec « Passer cette question »', async () => {
     stub([]);
     render(<ProfileAnswers />);
+    // Les parcours s'ouvrent une fois mes réponses chargées.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Rire & légèreté' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Rire & légèreté' }));
     expect(screen.getByText('Rire & légèreté')).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('Qu’est-ce qui te fait rire à coup sûr');

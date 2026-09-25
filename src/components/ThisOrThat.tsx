@@ -44,16 +44,18 @@ export default function ThisOrThat({
   }
 
   async function choose(option: string) {
+    const key = pair.key;
     setSaving(option);
     setError('');
-    const r = await saveAnswer(pair.key, [option], '');
+    const r = await saveAnswer(key, [option], '');
     setSaving(null);
     if (!r.ok) {
       setError(r.error);
       return;
     }
     onAnswered(r.answer);
-    setQueue((q) => q.slice(1));
+    // Par la clé : la file a pu bouger pendant l'enregistrement.
+    setQueue((q) => q.filter((x) => x.key !== key));
   }
 
   return (
@@ -81,7 +83,7 @@ export default function ThisOrThat({
         </div>
       )}
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="secondary" onClick={() => setQueue((q) => [...q.slice(1), q[0]])}>
+        <Button type="button" variant="secondary" disabled={saving !== null} onClick={() => setQueue((q) => [...q.slice(1), q[0]])}>
           Passer cette question
         </Button>
         <Button type="button" variant="ghost" onClick={onStop}>

@@ -41,6 +41,10 @@ export default function ProfileAnswers() {
     };
   }, []);
 
+  // Tant que mes réponses ne sont pas chargées, les parcours restent fermés :
+  // sinon une question déjà répondue reviendrait vide et l'enregistrement
+  // écraserait la réponse existante (revue PR #466).
+  const pret = answers !== null;
   const answered = useMemo(() => new Set((answers ?? []).filter((a) => a.status !== 'removed').map((a) => a.key)), [answers]);
 
   function upsert(a: SerializedAnswer) {
@@ -79,8 +83,9 @@ export default function ProfileAnswers() {
       <div className="grid gap-2">
         <button
           type="button"
+          disabled={!pret}
           onClick={() => setMode({ kind: 'suite' })}
-          className="flex min-h-16 items-center gap-3 rounded-2xl bg-sunken px-4 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-coral"
+          className="flex min-h-16 disabled:cursor-not-allowed disabled:opacity-60 items-center gap-3 rounded-2xl bg-sunken px-4 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-coral"
         >
           <span aria-hidden="true" className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-surface font-bold text-coral">→</span>
           <span>
@@ -93,8 +98,9 @@ export default function ProfileAnswers() {
         </button>
         <button
           type="button"
+          disabled={!pret}
           onClick={() => setMode({ kind: 'ceci' })}
-          className="flex min-h-16 items-center gap-3 rounded-2xl bg-sunken px-4 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-coral"
+          className="flex min-h-16 disabled:cursor-not-allowed disabled:opacity-60 items-center gap-3 rounded-2xl bg-sunken px-4 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-coral"
         >
           <span aria-hidden="true" className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-surface font-bold text-coral">⇄</span>
           <span>
@@ -111,7 +117,7 @@ export default function ProfileAnswers() {
         <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Ou choisis un thème</div>
         <div className="flex flex-wrap gap-2">
           {THEMES.filter((t) => t.key !== 'ceci-ou-cela').map((t) => (
-            <Button key={t.key} type="button" variant="secondary" size="sm" className="min-h-11 rounded-full" onClick={() => setMode({ kind: 'suite', theme: t.key })}>
+            <Button key={t.key} type="button" variant="secondary" size="sm" className="min-h-11 rounded-full" disabled={!pret} onClick={() => setMode({ kind: 'suite', theme: t.key })}>
               {t.label}
             </Button>
           ))}

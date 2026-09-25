@@ -55,7 +55,9 @@ export default function QuestionFlow({
         question={current}
         onSaved={(a) => {
           onAnswered(a);
-          setQueue((q) => q.slice(1));
+          // Par la clé, pas « la première » : la file a pu bouger pendant
+          // l'enregistrement (revue PR #466).
+          setQueue((q) => q.filter((x) => x.key !== current.key));
         }}
         onCancel={() => setQueue((q) => [...q.slice(1), q[0]])}
         cancelLabel="Passer cette question"

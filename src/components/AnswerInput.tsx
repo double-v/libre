@@ -151,7 +151,7 @@ export default function AnswerInput({
 
       <div className="flex flex-wrap gap-2">
         {onCancel && (
-          <Button type="button" variant="secondary" onClick={onCancel}>
+          <Button type="button" variant="secondary" onClick={onCancel} disabled={saving}>
             {cancelLabel}
           </Button>
         )}
