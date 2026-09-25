@@ -129,8 +129,11 @@ export async function GET(request: NextRequest) {
       // Strict comme l'orientation : un profil qui n'a rien déclaré sort du
       // feed dès que le filtre est actif (#409).
       ...(intentionFilter.length > 0 ? { relationshipType: { hasSome: intentionFilter } } : {}),
+      // Un profil sans date de naissance reste visible (#345) : en SQL, NULL ne
+      // satisfait aucun intervalle, et bouger le curseur d'un cran effaçait en
+      // silence tous les profils incomplets — la majorité au lancement.
       ...(ageMinFilter > 18 || ageMaxFilter < 99
-        ? { birthDate: { gte: ageMaxBirthDate, lte: ageMinBirthDate } }
+        ? { OR: [{ birthDate: { gte: ageMaxBirthDate, lte: ageMinBirthDate } }, { birthDate: null }] }
         : {}),
     };
 
@@ -312,15 +315,22 @@ export async function GET(request: NextRequest) {
       // noie personne — les plus proches restent en tête. Les comptes qui
       // avaient réglé un rayon serré le retrouvent : la migration a recopié
       // `maxDistanceKm` dans `searchDistanceKm` quand il n'était pas au défaut.
-      const maxDist = distanceFilterKm ?? MAX_DISTANCE_KM;
+      // « Partout » veut dire sans plafond (#344) : un rayon caché de 500 km
+      // excluait sans un mot le premier inscrit outre-mer ou frontalier.
+      const maxDist = distanceFilterKm ?? Infinity;
       const candidates = await getDb().profile.findMany({
-        where: { ...baseWhere, ...geoWhere(maxDist) },
+        where: {
+          ...baseWhere,
+          ...(distanceFilterKm !== null
+            ? geoWhere(distanceFilterKm)
+            : { lastKnownLat: { not: 0 }, lastKnownLng: { not: 0 } }),
+        },
         include: profileInclude,
       });
 
       const withDistance = candidates
         .map((p) => ({ profile: p, distanceKm: distanceKmTo(p) ?? Infinity }))
-        .filter(({ distanceKm }) => distanceKm <= maxDist)
+        .filter(({ distanceKm }) => Number.isFinite(distanceKm) && distanceKm <= maxDist)
         // Tri stable : distance croissante puis userId, pour que le curseur
         // (distance, userId) découpe la liste sans doublon ni trou (issue #180).
         .sort((a, b) =>

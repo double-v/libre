@@ -265,4 +265,45 @@ describe('GET /api/discover?tab=nearby — précision conservée (#327)', () => 
     expect(body.users).toHaveLength(1);
     expect(body.users[0].distanceKm).toBeGreaterThan(100);
   });
+
+  it('« partout » va au-delà de 500 km, sans bounding box (#344)', async () => {
+    // Le curseur dit « partout » : un profil outre-mer ou à l'autre bout du
+    // pays doit apparaître, en fin de liste, pas disparaître sans un mot.
+    fakeDb.profile.findMany.mockResolvedValue([
+      makeProfile(randomUUID(), { deltaLng: 0.05 }),
+      makeProfile(randomUUID(), { deltaLng: 10 }), // ~730 km
+    ]);
+
+    const body = await (await GET(makeRequest('tab=nearby'))).json();
+
+    expect(body.users).toHaveLength(2);
+    expect(body.users[1].distanceKm).toBeGreaterThan(500);
+    const where = fakeDb.profile.findMany.mock.calls[0][0].where;
+    expect(where.lastKnownLat).toEqual({ not: 0 });
+    expect(where.lastKnownLng).toEqual({ not: 0 });
+  });
+});
+
+describe('GET /api/discover — filtre d\'âge et profils sans date de naissance (#345)', () => {
+  it('avec ageMin=25, un profil sans date de naissance reste dans le feed', async () => {
+    // Décision #345 (b) : bouger le curseur d'âge ne doit pas effacer en
+    // silence tous les profils incomplets. En SQL, un NULL ne satisfait aucun
+    // intervalle : il faut l'admettre explicitement.
+    await GET(makeRequest('tab=all&ageMin=25'));
+
+    const where = fakeDb.profile.findMany.mock.calls[0][0].where;
+    expect(where.birthDate).toBeUndefined();
+    expect(where.OR).toEqual([
+      { birthDate: { gte: expect.any(Date), lte: expect.any(Date) } },
+      { birthDate: null },
+    ]);
+  });
+
+  it('aux bornes par défaut, n\'ajoute aucune clause d\'âge', async () => {
+    await GET(makeRequest('tab=all'));
+
+    const where = fakeDb.profile.findMany.mock.calls[0][0].where;
+    expect(where.birthDate).toBeUndefined();
+    expect(where.OR).toBeUndefined();
+  });
 });

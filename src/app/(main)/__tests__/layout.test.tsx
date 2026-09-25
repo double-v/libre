@@ -11,6 +11,7 @@
  * Les enfants dynamiques (MatchDialog / FeedbackButton / ToastHost) sont hors
  * périmètre du layout → `next/dynamic` est neutralisé.
  */
+import { LAUNCH_COPY } from '@/lib/lancement';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import { useSession } from 'next-auth/react';
@@ -96,14 +97,16 @@ describe('MainLayout — shell migration (#280)', () => {
     expect(screen.getByRole('button', { name: /Apparence/ })).toBeInTheDocument();
   });
 
-  it('câble la bannière bêta dans la nav', () => {
+  it('câble la bannière de démarrage dans la nav (#346)', () => {
     render(
       <MainLayout>
         <p>Contenu app</p>
       </MainLayout>,
     );
     // La bannière se révèle post-montage (aucune clé de dismiss en localStorage).
-    expect(screen.getByText('Bêta')).toBeInTheDocument();
+    // Elle dit que le site démarre, plus qu'il est « en bêta ».
+    expect(screen.getByText(LAUNCH_COPY.banniere)).toBeInTheDocument();
+    expect(screen.queryByText('Bêta')).not.toBeInTheDocument();
   });
 });
 
