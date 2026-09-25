@@ -17,7 +17,7 @@ export async function GET() {
 
     const user = await getDb().user.findUnique({
       where: { id: session.user.id },
-      select: { displayName: true, isVerified: true, profile: true },
+      select: { displayName: true, isVerified: true, mustRenameDisplayName: true, profile: true },
     });
 
     if (!user) {
@@ -39,6 +39,8 @@ export async function GET() {
         profile: user.profile,
         displayName: user.displayName,
         isVerified: user.isVerified,
+        // Pseudo retiré par la règle (#459) : Découvrir envoie vers /pseudo.
+        mustRenameDisplayName: user.mustRenameDisplayName,
         photoSensitivity,
         sensitiveConsent,
       },

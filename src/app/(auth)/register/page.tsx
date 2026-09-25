@@ -9,6 +9,7 @@ import PrivacyTip from '@/components/PrivacyTip';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Alert from '@/components/ui/Alert';
+import { PSEUDO_HINT, PSEUDO_MAX } from '@/lib/pseudo';
 
 const TURNSTILE_LOAD_TIMEOUT = 5000;
 
@@ -113,12 +114,19 @@ export default function RegisterPage() {
             type="text"
             label="Pseudo"
             required
-            autoComplete="username"
+            // « nickname », pas « username » : pour les navigateurs et les
+            // gestionnaires de mots de passe, « username » est l'identifiant de
+            // connexion — ils y proposaient l'adresse e-mail (#459).
+            autoComplete="nickname"
+            maxLength={PSEUDO_MAX}
+            hint={PSEUDO_HINT}
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="Un pseudo qui vous ressemble"
           />
-          <PrivacyTip tip="Un pseudo, c'est plus safe qu'un vrai nom. Vos matches ne verront que ça." />
+          {/* Le pseudo est public (cartes, fiches, La Place) : ne pas promettre
+              qu'il est réservé aux matches (#459, leçon #328). */}
+          <PrivacyTip tip="Un pseudo, c'est plus sûr qu'un vrai nom : c'est lui que tout le monde verra. Pas d'adresse ni de numéro." />
         </div>
 
         <Input

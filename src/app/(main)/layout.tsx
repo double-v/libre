@@ -77,6 +77,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
 function MainShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  // Tunnels sans tab bar : parcours d'accueil (spec 005), renommage imposé (#459).
+  const estTunnel = pathname.startsWith('/bienvenue') || pathname.startsWith('/pseudo');
   const { data: session } = useSession();
   const { hasUnread } = useUnread();
   const features = useFeatures();
@@ -130,8 +132,9 @@ function MainShell({ children }: { children: React.ReactNode }) {
           `md:hidden` (#347) : à partir de `md` les sections vivent dans SiteNav,
           et un seul landmark de navigation subsiste par breakpoint. */}
       {/* Parcours d'accueil (spec 005) : tunnel court, une seule issue latérale
-          (« Plus tard ») — la tab bar s'efface, SiteNav reste. */}
-      {!pathname.startsWith('/bienvenue') && (
+          (« Plus tard ») — la tab bar s'efface, SiteNav reste. Même chose pour
+          le renommage imposé du pseudo (#459). */}
+      {!estTunnel && (
       <nav role="navigation" aria-label="Navigation des sections" className="fixed bottom-0 left-0 right-0 z-50 border-t border-hairline bg-surface pb-safe md:hidden">
         <div className="mx-auto flex min-h-14 max-w-lg items-center justify-around">
           {sectionsVisibles(features).map(({ href, label, Icon }) => {
@@ -163,7 +166,9 @@ function MainShell({ children }: { children: React.ReactNode }) {
 
       {session?.user?.id && <MatchDialog userId={session.user.id} />}
 
-      <FeedbackButton />
+      {/* /pseudo (#459) : une seule action, et le bouton flottant recouvrait
+          « Enregistrer » sur mobile. Le lien « Signaler » du bandeau bêta reste. */}
+      {!pathname.startsWith('/pseudo') && <FeedbackButton />}
       <ToastHost />
     </div>
   );

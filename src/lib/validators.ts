@@ -4,6 +4,7 @@ import { ONBOARDING_DONE } from '@/lib/onboarding';
 import { GENDER_OPTIONS } from '@/lib/taxonomy';
 import { PRACTICES_VISIBILITY_VALUES } from '@/lib/profile-visibility';
 import { SENSITIVITY_LEVELS, SENSITIVITY_THRESHOLDS } from '@/lib/photo-sensitivity';
+import { validatePseudo } from '@/lib/pseudo';
 
 const VALID_REPORT_REASONS = ['harassment', 'spam', 'fake', 'inappropriate', 'other'] as const;
 
@@ -35,13 +36,28 @@ function normalizeGenderIdentity(v: string | undefined): string | undefined {
   return 'autre';
 }
 
+/**
+ * Pseudo (#459) : la règle vit dans `@/lib/pseudo`, commune à l'inscription et
+ * au renommage. Renvoie la forme normalisée (NFC, espaces fusionnés).
+ */
+export const pseudoSchema = z
+  .string({ message: 'Veuillez entrer un pseudo' })
+  .transform((raw, ctx) => {
+    const verdict = validatePseudo(raw);
+    if (!verdict.ok) {
+      ctx.addIssue({ code: 'custom', message: verdict.message });
+      return z.NEVER;
+    }
+    return verdict.value;
+  });
+
 export const registerSchema = z.object({
   email: z.string({ message: 'Veuillez entrer un email valide' }).email('Veuillez entrer un email valide'),
   password: z.string({ message: 'Veuillez entrer un mot de passe' }).regex(
     passwordRegex,
     '8 caractères min, avec majuscule, minuscule, chiffre et caractère spécial',
   ),
-  displayName: z.string({ message: 'Veuillez entrer un pseudo' }).min(1, 'Le pseudo est requis').max(50, 'Le pseudo ne peut pas dépasser 50 caractères').transform((s) => s.trim()),
+  displayName: pseudoSchema,
   birthDate: birthDateSchema,
   turnstileToken: z.string().nullable().optional(),
   deviceId: z.string().nullable().optional(),
