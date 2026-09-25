@@ -28,7 +28,8 @@ export type PseudoVerdict =
 export const PSEUDO_MESSAGES: Record<PseudoMotif, string> = {
   longueur: `Entre ${PSEUDO_MIN} et ${PSEUDO_MAX} caractères.`,
   contact: 'Pas d’adresse e-mail, de lien ni de numéro dans un pseudo : il est visible par tout le monde.',
-  caracteres: 'Seulement des lettres, des chiffres, des espaces et \' - . _',
+  // Espaces insécables entre les signes : sinon « . _ » part seul à la ligne.
+  caracteres: 'Seulement des lettres, des chiffres, des espaces et les signes\u00a0\'\u00a0-\u00a0.\u00a0_',
 };
 
 export const PSEUDO_HINT =
