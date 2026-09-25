@@ -16,7 +16,15 @@
 - **Rationale** : décision opérateur ; chaque ajout passe en revue.
 - **Alternatives** : table éditable depuis l'admin (rejeté par l'opérateur).
 
-### Banque initiale proposée — 96 questions en 9 thèmes + 24 « Ceci ou cela » (à valider)
+### Banque validée — 89 questions en 9 thèmes + 24 « Ceci ou cela »
+
+> Revue de l'opérateur du 2026-09-25 (page de revue interactive) : 104 validées
+> telles quelles, 7 rejetées (`compliment`, `generosite`, `geste-inconnu`,
+> `lieu-enfance`, `message-garde`, `proches-disent`, `rencontre-marquante` —
+> « trop déclaratif », « cliché », « faible valeur »), 7 reformulées ci-dessous,
+> 2 gardées sans avis (`tout-le-temps`, `tenir-a-quelquun`). Goût relevé :
+> pas d'auto-éloge ni de souvenir sentimental ; oui au ludique et au clivant
+> léger (« unpopular opinion »).
 
 Critères : ouvertes, légères ; ni santé, ni politique (→ spec 010), ni
 religion, ni sexualité, ni argent, ni corps ; rien qui suppose une mobilité
@@ -29,13 +37,27 @@ l'aide à la saisie ne cite que des produits légaux et n'incite à rien :
 *« Par exemple le café, l'alcool, le tabac, le CBD… Tu en dis ce que tu veux,
 ou rien. »* Pas de choix fermés, donc pas de filtre.
 
+
+**Aides à la saisie** (affichées sous le champ) :
+
+| Clé | Aide |
+|---|---|
+| `habitudes` | Tu peux parler par exemple du café, de l'alcool, du tabac ou du CBD. Tu en dis ce que tu veux, et rien ne t'oblige à répondre. |
+| `confiance` | Un green flag, c'est un signe qui te met en confiance chez quelqu'un. Par exemple : quelqu'un qui tient parole. |
+| `red-flag` | Un red flag, c'est un signal d'alerte : un comportement qui te fait prendre tes distances. |
+| `unpopular-opinion` | C'est ton unpopular opinion. Par exemple : l'ananas sur la pizza, c'est très bien. |
+
+Les termes anglais courants (green flag, red flag, unpopular opinion) sont
+gardés **et expliqués en français** : c'est l'occasion de donner ce
+vocabulaire à tout le monde, de 18 à 79 ans (demande de l'opérateur).
+
 **Au quotidien (`quotidien`)**
 
 | Clé | Intitulé | Format |
 |---|---|---|
 | `dimanche-ideal` | Un dimanche idéal, ça ressemble à quoi ? | ouverte |
 | `petit-plaisir` | Ton petit plaisir du quotidien ? | ouverte |
-| `matin-ou-soir` | Plutôt du matin ou du soir, et ça donne quoi ? | choix unique : Du matin · Du soir · Ça dépend des jours |
+| `matin-ou-soir` | Tu as plus d'énergie le matin ou le soir ? | choix unique : Le matin · Le soir · Ça dépend des jours |
 | `heure-libre` | Une heure devant toi, tu en fais quoi ? | ouverte |
 | `rituel` | Un rituel auquel tu tiens ? | ouverte |
 | `bruit-de-fond` | Chez toi, qu'est-ce qui tourne en fond : musique, podcast, silence ? | choix multiple : Musique · Podcast · Radio · Silence |
@@ -58,7 +80,7 @@ ou rien. »* Pas de choix fermés, donc pas de filtre.
 | `bande-son` | La bande-son de ta vie en ce moment ? | ouverte |
 | `personnage` | Un personnage de fiction dont tu te sens proche ? | ouverte |
 | `derniere-claque` | La dernière œuvre qui t'a mis une claque ? | ouverte |
-| `jeu` | Un jeu (de société, vidéo, de mots…) qui te plaît ? | choix multiple : De société · Vidéo · De mots · De cartes |
+| `jeu` | À quels jeux aimes-tu jouer ? | choix multiple : Jeux de société · Jeux vidéo · Jeux de mots · Jeux de cartes · *Je ne suis pas trop joueur·se* (exclusive) |
 | `a-recommander` | Un podcast, une chaîne ou une newsletter à recommander ? | ouverte |
 | `citation` | Une phrase ou une citation qui te suit ? | ouverte |
 | `musee` | Si tu avais ton musée, on y verrait quoi ? | ouverte |
@@ -72,8 +94,8 @@ ou rien. »* Pas de choix fermés, donc pas de filtre.
 | `talent-inutile` | Un talent parfaitement inutile dont tu es fier·e ? | ouverte |
 | `blague` | Ta meilleure (ou ta pire) blague ? | ouverte |
 | `anecdote` | Une anecdote que tu racontes souvent ? | ouverte |
-| `opinion-futile` | Une opinion futile que tu défends avec ferveur ? | ouverte |
-| `super-pouvoir` | Un super-pouvoir modeste que tu aimerais avoir ? | choix unique : Ne jamais avoir froid · Retrouver ses clés · Parler aux animaux · Autre (précise !) |
+| `unpopular-opinion` | Quel avis défends-tu alors que presque personne n'est d'accord ? | ouverte — avec aide |
+| `super-pouvoir` | Un super-pouvoir modeste que tu aimerais avoir ? | choix unique : Ne jamais avoir froid · Retrouver ses clés · Toujours avoir du réseau · Autre |
 | `animal` | Si tu étais un animal, lequel, et pourquoi ? | choix unique : Chat · Chien · Oiseau · Poisson · Autre (précise !) |
 | `mot-prefere` | Ton mot préféré, et pourquoi ? | ouverte |
 | `expression` | Une expression que tu dis tout le temps ? | ouverte |
@@ -83,7 +105,6 @@ ou rien. »* Pas de choix fermés, donc pas de filtre.
 
 | Clé | Intitulé | Format |
 |---|---|---|
-| `proches-disent` | Ce que tes proches disent de toi ? | ouverte |
 | `touche-chez-quelquun` | Ce qui te touche chez quelqu'un ? | ouverte |
 | `en-amitie` | Ce que tu apportes dans une amitié ? | ouverte |
 | `petite-attention` | Une petite attention qui te fait fondre ? | ouverte |
@@ -93,8 +114,7 @@ ou rien. »* Pas de choix fermés, donc pas de filtre.
 | `silence-a-deux` | Le silence avec quelqu'un : confortable ou pas ? | choix unique : Confortable · Ça dépend · Pas trop |
 | `libre-a-deux` | « Être libre à deux », ça veut dire quoi pour toi ? | ouverte |
 | `rythme` | Ton rythme idéal pour faire connaissance ? | choix unique : Doucement · Au feeling · Sans tarder |
-| `fait-fuir` | Ce qui te fait fuir, gentiment ? | ouverte |
-| `compliment` | Un compliment qui t'a marqué·e ? | ouverte |
+| `red-flag` | Quel est ton red flag ? | ouverte — avec aide |
 
 **Façon de voir (`valeurs`)**
 
@@ -103,12 +123,10 @@ ou rien. »* Pas de choix fermés, donc pas de filtre.
 | `conviction-changee` | Une conviction qui a changé avec le temps ? | ouverte |
 | `fierte-discrete` | Une chose dont tu es fier·e sans le crier ? | ouverte |
 | `agace` | Une petite chose du quotidien qui t'agace ? | ouverte |
-| `generosite` | Une générosité qui t'a marqué·e ? | ouverte |
 | `echec-appris` | Ce qu'un échec t'a appris ? | ouverte |
 | `prendre-son-temps` | Ce que tu refuses de faire vite ? | ouverte |
 | `regle-perso` | Une règle que tu t'es fixée ? | ouverte |
 | `changer-avis` | Qu'est-ce qui peut te faire changer d'avis ? | ouverte |
-| `geste-inconnu` | Un geste gentil reçu d'un·e inconnu·e ? | ouverte |
 | `compte-moins` | Une chose qui compte moins pour toi qu'avant ? | ouverte |
 | `meilleur-conseil` | Le meilleur conseil qu'on t'ait donné ? | ouverte |
 
@@ -134,10 +152,7 @@ ou rien. »* Pas de choix fermés, donc pas de filtre.
 | `odeur-souvenir` | Une odeur qui te ramène à un souvenir ? | ouverte |
 | `souvenir-enfance` | Un souvenir d'enfance qui te fait sourire ? | ouverte |
 | `petite-victoire` | Une petite victoire récente ? | ouverte |
-| `rencontre-marquante` | Une rencontre qui a compté ? | ouverte |
-| `message-garde` | Un message ou une lettre que tu as gardé ? | ouverte |
 | `annee-a-revivre` | Une année que tu revivrais ? | ouverte |
-| `lieu-enfance` | Un lieu de ton enfance ? | ouverte |
 | `fou-rire` | Ton plus grand fou rire ? | ouverte |
 | `plus-beau-cadeau` | Le plus beau cadeau reçu (ou fait) ? | ouverte |
 
@@ -167,7 +182,7 @@ ou rien. »* Pas de choix fermés, donc pas de filtre.
 | `ce-que-j-espere` | Ce que tu espères trouver ici ? | ouverte |
 | `me-connaitre` | Le meilleur moyen de te connaître ? | ouverte |
 | `question-a-poser` | Une question que tu aimerais qu'on te pose ? | ouverte |
-| `confiance` | Un signe qui te met en confiance ? | ouverte |
+| `confiance` | Quel est ton green flag ? | ouverte — avec aide |
 | `partager` | Une chose que tu aimerais partager avec quelqu'un ? | ouverte |
 
 
@@ -197,7 +212,7 @@ ou rien. »* Pas de choix fermés, donc pas de filtre.
 | `groupe-comite` | Grande tablée | Petit comité |
 | `garder-jeter` | Tout garder | Tout jeter |
 | `recette-au-pif` | Recette | Au pif |
-| `nuit-grasse-mat` | Nuit blanche | Grasse matinée |
+| `leve-tot-grasse-mat` | Lève-tôt | Grasse matinée |
 | `message-long-court` | Messages longs | Messages courts |
 
 ## R2 — Une table plutôt qu'un champ JSON du profil

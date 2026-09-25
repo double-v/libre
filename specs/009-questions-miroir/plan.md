@@ -7,7 +7,7 @@
 ## Summary
 
 Une banque de questions ouvertes versionnée dans le code
-(`src/lib/questions.ts`, clés stables, 96 questions en 9 thèmes + 24 « Ceci ou
+(`src/lib/questions.ts`, clés stables, 89 questions en 9 thèmes + 24 « Ceci ou
 cela », trois formats : ouverte, choix + précision, ceci-ou-cela), une table
 `profile_answers` (une réponse par question, sans limite de nombre ; choix
 et/ou texte 0–300), et une décision miroir unique
