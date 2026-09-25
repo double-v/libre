@@ -59,6 +59,7 @@ const fakeDb = {
   verificationRequest: table({ status: 'pending', createdAt: now, resolvedAt: null }),
   feedback: table({ category: 'bug', message: 'm', status: 'open', createdAt: now }),
   consent: table({ type: 'cgu', version: '1', given: true, createdAt: now, withdrawnAt: null }),
+  profileAnswer: table({ questionKey: 'fait-rire', choices: [], text: 'Les chats.', status: 'published', createdAt: now, updatedAt: now }),
 };
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => fakeDb }));
 
@@ -85,5 +86,13 @@ describe('GET /api/users/me/export — identité des tiers', () => {
     expect(data.moderation.reportsMade[0].reportedId).toBe(CIBLE);
     expect(data.moderation.blocksMade[0].blockedId).toBe(CIBLE);
     expect(JSON.stringify(data.social.matches)).toContain(MUTUEL);
+  });
+
+  // Spec 009 (FR-013) : les réponses aux questions sont des données du membre.
+  it('contient mes réponses aux questions', async () => {
+    const body = await (await GET()).json();
+    expect(body.questionAnswers).toEqual([
+      expect.objectContaining({ questionKey: 'fait-rire', text: 'Les chats.', status: 'published' }),
+    ]);
   });
 });

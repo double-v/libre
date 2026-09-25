@@ -23,7 +23,7 @@ export async function GET() {
     const userId = session.user.id;
 
     // Fetch all user data
-    const [user, profile, userKey, sentLikes, receivedLikes, matchesAsA, matchesAsB, conversations, encountersAsA, encountersAsB, blocksMade, blocksReceived, reportsMade, reportsReceived, verificationRequests, feedback, consents] = await Promise.all([
+    const [user, profile, userKey, sentLikes, receivedLikes, matchesAsA, matchesAsB, conversations, encountersAsA, encountersAsB, blocksMade, blocksReceived, reportsMade, reportsReceived, verificationRequests, feedback, consents, questionAnswers] = await Promise.all([
       getDb().user.findUnique({
         where: { id: userId },
         select: {
@@ -127,6 +127,11 @@ export async function GET() {
         where: { userId },
         select: { type: true, version: true, given: true, createdAt: true, withdrawnAt: true },
       }),
+      // Réponses aux questions de profil (spec 009, FR-013), retirées comprises.
+      getDb().profileAnswer.findMany({
+        where: { userId },
+        select: { questionKey: true, choices: true, text: true, status: true, createdAt: true, updatedAt: true },
+      }),
     ]);
 
     if (!user) {
@@ -138,6 +143,7 @@ export async function GET() {
       format: 'Libre_RGPD_Portability_v1',
       user,
       profile,
+      questionAnswers,
       // E2E public key (the only key material the server ever sees).
       // Without it the user cannot decrypt their exported ciphertexts
       // elsewhere — this is the "key portability" piece of art. 20.

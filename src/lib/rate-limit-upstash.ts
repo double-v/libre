@@ -200,6 +200,9 @@ export const limits: Record<string, RateLimitPreset> = {
   // Renommage du pseudo (#459) : quelques essais pour trouver le bon, pas de
   // quoi changer d'identité en boucle pour échapper aux signalements.
   pseudo: { limit: 5, windowMs: 3_600_000 },
+  // Réponses aux questions (spec 009) : « Répondre une par une » et « Ceci
+  // ou cela » enchaînent des dizaines de réponses en quelques minutes.
+  answers: { limit: 120, windowMs: 3_600_000 },
 };
 
 export function rateLimitHeaders(
