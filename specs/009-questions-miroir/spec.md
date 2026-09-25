@@ -42,6 +42,7 @@ Ce qui existe et se réutilise :
 - Q: Taille de la banque ? → A: **grande** (80 à 150 questions), classée par thèmes, avec un mode « Répondre à la suite ».
 - Q: Substances (alcool, tabac, CBD…) ? → A: une **question ouverte en texte libre**. Les exemples légaux figurent seulement comme aide à la saisie ; on n'incite à rien, chacun livre ce qu'il veut de ses habitudes. Pas de choix fermés, donc pas de filtre.
 - Q: Opinion politique et questions filtrables ? → A: **hors 009** : spec 010 (questions à choix, filtres, cadre RGPD art. 9).
+- Q: Choix unique ou multiple ? → A: les deux, selon la question (exemple de l'opérateur : « Un jeu qui te plaît » appelle plusieurs réponses) ; annoncé en toutes lettres à l'écran ; options exclusives possibles (« Aucun des quatre »).
 - Q: Comment aider les personnes timides, réservées ou pudiques, et éviter la page blanche, sans brider les plus expressives ? → A: **trois formats** : *choix + précision facultative* (pastilles, puis « Tu veux préciser ? »), *ouverte* (texte libre avec aide), et une série ludique **« Ceci ou cela »** (choix binaires, rien à écrire). Les choix de la 009 servent à répondre, **pas à filtrer** (la 010 décidera lesquels deviennent des critères).
 
 ## User Scenarios & Testing *(mandatory)*
@@ -192,10 +193,14 @@ concerné voit qu'elle a été retirée.
   « Répondre à la suite » (question suivante sans réponse, « Passer »
   toujours disponible).
 - **FR-002b**: Chaque question a un **format** : *ouverte* (texte 1–300),
-  *choix* (une pastille parmi 2 à 5, plus une précision facultative de 0 à
-  300 caractères), ou *ceci-ou-cela* (une option parmi deux, sans texte). Une
-  réponse à choix sans précision est complète. Le choix doit appartenir aux
-  options de la question.
+  *choix* (pastilles parmi 2 à 5 options, plus une précision facultative de 0
+  à 300 caractères), ou *ceci-ou-cela* (une option parmi deux, sans texte). Une
+  question à choix est **à choix unique** ou **à choix multiple** ; l'écran
+  l'annonce en toutes lettres (« Choisis une réponse. » / « Tu peux choisir
+  plusieurs réponses. »). En choix multiple, une option peut être
+  **exclusive** (« Aucun des quatre ») : la choisir retire les autres. Une
+  réponse à choix sans précision est complète. Les choix doivent appartenir
+  aux options de la question, sans doublon, au moins un.
 - **FR-002c**: Un mode **« Ceci ou cela »** MUST enchaîner les paires sans
   réponse, un toucher par paire, « Passer » toujours disponible, sortie libre,
   sans compteur ni série.
@@ -240,9 +245,11 @@ concerné voit qu'elle a été retirée.
 ### Key Entities
 
 - **Question** : clé stable, thème, format (ouverte / choix / ceci-ou-cela),
-  options (pour les formats à choix), intitulé, aide à la saisie facultative,
+  choix unique ou multiple, options (pour les formats à choix, dont
+  d'éventuelles options exclusives), intitulé, aide à la saisie facultative,
   état (proposée / retirée), ordre d'affichage.
-- **Réponse** : autrice, question, choix (facultatif, clé d'option), texte
+- **Réponse** : autrice, question, choix (liste de clés d'options, vide pour
+  une ouverte, un seul pour un choix unique ou un ceci-ou-cela), texte
   (facultatif selon le format, 0–300), dates de création et de modification,
   état (publiée / retirée par la modération). Au moins un choix ou un texte.
 - **État de lecture d'une réponse** : dérivé pour un couple (lectrice,

@@ -29,9 +29,9 @@ US1 #461, US2 #462, US3 #463, US4 #465.
 ## Phase 2: Foundational
 
 - [ ] T004 [P] Extraire `contientUnContact` de `src/lib/pseudo.ts` vers `src/lib/contact.ts` (export), déplacer ses cas de test dans `src/lib/__tests__/contact.test.ts` ; `pseudo.test.ts` reste vert sans changement
-- [ ] T005 [P] Test puis `src/lib/questions.ts` : banque validée (T001), clés uniques `[a-z-]+` (questions et options), formats cohérents (`choix` 2–5 options, `ceci-ou-cela` 2, `ouverte` aucune), espace insécable avant « ? », `proposedQuestions(theme?)` (hors `retired`), `questionByKey`
+- [ ] T005 [P] Test puis `src/lib/questions.ts` : banque validée (T001), clés uniques `[a-z-]+` (questions et options), formats cohérents (`choix` 2–5 options, `ceci-ou-cela` 2, `ouverte` aucune ; `exclusive` seulement si `multiple`), espace insécable avant « ? », `proposedQuestions(theme?)` (hors `retired`), `questionByKey`
 - [ ] T006 Migration `prisma/migrations/20260926100000_profile_answers/migration.sql` (table, `UNIQUE(userId, questionKey)`, index `(userId)`, FK cascade) + `model ProfileAnswer` dans `prisma/schema.prisma` (+ relation sur `User`) ; appliquer sur une base locale, jamais Neon
-- [ ] T007 Tests puis `src/lib/answers.ts` : `validateAnswer(question, { choice, text })` par format (FR-002b ; texte R6 : NFC, sauts de ligne gardés, 0/1–300, contact refusé via `contact.ts`, invisibles refusés, emoji permis ; choix ∈ options), `answersFor({ isSelf, viewerKeys, answers })` (table de `data-model.md`, ni choix ni texte si voilé, réponses `removed` jamais vers autrui, tri : en commun d'abord)
+- [ ] T007 Tests puis `src/lib/answers.ts` : `validateAnswer(question, { choice, text })` par format (FR-002b ; texte R6 : NFC, sauts de ligne gardés, 0/1–300, contact refusé via `contact.ts`, invisibles refusés, emoji permis ; `choices` ∈ options, un seul si choix unique ou ceci-ou-cela, sans doublon, exclusive seule), `answersFor({ isSelf, viewerKeys, answers })` (table de `data-model.md`, ni choix ni texte si voilé, réponses `removed` jamais vers autrui, tri : en commun d'abord)
 
 **Checkpoint**: T004–T007 verts.
 
@@ -43,10 +43,10 @@ US1 #461, US2 #462, US3 #463, US4 #465.
 
 **Independent Test**: quickstart 1, 4, 5.
 
-- [ ] T008 [P] [US1] Tests `src/app/api/users/me/answers/__tests__/route.test.ts` : GET (mes réponses + banque), PUT (création, modification, clé inconnue/retirée 400, format non respecté 400, choix hors options 400, contact 400 avec motif, champs ignorés), DELETE idempotent, 401, 429
+- [ ] T008 [P] [US1] Tests `src/app/api/users/me/answers/__tests__/route.test.ts` : GET (mes réponses + banque), PUT (création, modification, clé inconnue/retirée 400, format non respecté 400, choix hors options / en double / plusieurs pour un choix unique / exclusive combinée 400, contact 400 avec motif, champs ignorés), DELETE idempotent, 401, 429
 - [ ] T009 [US1] `src/app/api/users/me/answers/route.ts` (GET/PUT/DELETE) ; préréglage `answers` dans `src/lib/rate-limit-upstash.ts` (R9)
 - [ ] T010 [P] [US1] Export : ajouter les réponses à `src/app/api/users/me/export/route.ts` + test ; vérifier la cascade à la suppression du compte (test existant de suppression ou nouveau cas)
-- [ ] T011 [P] [US1] Tests `src/components/__tests__/AnswerInput.test.tsx` (pastille seule = réponse ; précision repliée jusqu'au toucher ; texte requis pour une ouverte ; aide affichée pour `habitudes`) et `ProfileAnswers.test.tsx` (thèmes, « Répondre à la suite » avec « Passer », retrait, refus relayé, mention « retirée par la modération »)
+- [ ] T011 [P] [US1] Tests `src/components/__tests__/AnswerInput.test.tsx` (pastille seule = réponse ; choix unique : une pastille remplace l'autre ; choix multiple : ajout/retrait, option exclusive qui retire les autres ; phrase « Choisis une réponse. » / « Tu peux choisir plusieurs réponses. » ; précision repliée jusqu'au choix ; texte requis pour une ouverte ; aide affichée pour `habitudes`) et `ProfileAnswers.test.tsx` (thèmes, « Répondre à la suite » avec « Passer », retrait, refus relayé, mention « retirée par la modération »)
 - [ ] T012 [US1] `src/components/AnswerInput.tsx`, `src/components/ProfileAnswers.tsx` et intégration dans `src/app/(main)/profile/page.tsx` (section après la bio), après T003
 
 **Checkpoint**: quickstart 1, 4, 5.
@@ -61,7 +61,7 @@ US1 #461, US2 #462, US3 #463, US4 #465.
 
 - [ ] T013 [P] [US2] Garde `src/__tests__/answers-never-leak.test.ts` (base factice honorant `select`, sentinelle dans le texte) sur `GET /api/users/[id]` : voilé, visible, soi-même, lectrice introuvable, réponse `removed` jamais envoyée
 - [ ] T014 [US2] `src/app/api/users/[id]/route.ts` : lire les réponses publiées de la personne lue et les clés publiées de la lectrice, sérialiser via `answersFor`
-- [ ] T015 [P] [US2] Tests `src/components/__tests__/AnswerBlock.test.tsx` : visible (choix, précision, texte), voilée + invitation, saisie en place selon le format → PUT puis `onAnswered`, « Voir toutes ses réponses » replié, aucun nombre affiché
+- [ ] T015 [P] [US2] Tests `src/components/__tests__/AnswerBlock.test.tsx` : visible (un ou plusieurs choix en pastilles, précision, texte), voilée + invitation, saisie en place selon le format → PUT puis `onAnswered`, « Voir toutes ses réponses » replié, aucun nombre affiché
 - [ ] T016 [US2] `src/components/AnswerBlock.tsx` (après T003)
 - [ ] T017 [US2] `src/components/ProfileModal.tsx` : section « Ses réponses » (après la bio), relecture de la fiche après `onAnswered`
 

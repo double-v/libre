@@ -6,9 +6,11 @@
 ## R1 — La banque dans le code
 
 - **Decision** : `src/lib/questions.ts` exporte une liste ordonnée
-  `{ key, theme, format, options?, label, hint?, retired? }` — `format` :
-  `ouverte` · `choix` (2–5 options, précision facultative) · `ceci-ou-cela`
-  (2 options, sans texte). Les options ont chacune une clé stable. La **clé** (ASCII, stable) est ce
+  `{ key, theme, format, multiple?, options?, label, hint?, retired? }` —
+  `format` : `ouverte` · `choix` (2–5 options, précision facultative ;
+  `multiple: true` pour le choix multiple) · `ceci-ou-cela` (2 options, une
+  seule, sans texte). Chaque option a une clé stable ; une option peut être
+  `exclusive` (« Aucun des quatre ») : choisie, elle remplace les autres. La **clé** (ASCII, stable) est ce
   qui est stocké ; intitulé et aide se reformulent sans migration. Retirer une
   question = `retired: true` : plus proposée, réponses existantes affichées.
 - **Rationale** : décision opérateur ; chaque ajout passe en revue.
@@ -33,16 +35,16 @@ ou rien. »* Pas de choix fermés, donc pas de filtre.
 |---|---|---|
 | `dimanche-ideal` | Un dimanche idéal, ça ressemble à quoi ? | ouverte |
 | `petit-plaisir` | Ton petit plaisir du quotidien ? | ouverte |
-| `matin-ou-soir` | Plutôt du matin ou du soir, et ça donne quoi ? | choix : Du matin · Du soir · Ça dépend des jours |
+| `matin-ou-soir` | Plutôt du matin ou du soir, et ça donne quoi ? | choix unique : Du matin · Du soir · Ça dépend des jours |
 | `heure-libre` | Une heure devant toi, tu en fais quoi ? | ouverte |
 | `rituel` | Un rituel auquel tu tiens ? | ouverte |
-| `bruit-de-fond` | Chez toi, qu'est-ce qui tourne en fond : musique, podcast, silence ? | choix : Musique · Podcast · Radio · Silence |
+| `bruit-de-fond` | Chez toi, qu'est-ce qui tourne en fond : musique, podcast, silence ? | choix multiple : Musique · Podcast · Radio · Silence |
 | `plat-reconfort` | Le plat qui te réconforte ? | ouverte |
 | `cuisine-plaisir` | Ce que tu cuisines quand tu veux faire plaisir ? | ouverte |
 | `endroit-reflechir` | Ton endroit préféré pour réfléchir ? | ouverte |
 | `objet-fetiche` | Un objet dont tu ne te sépares pas ? | ouverte |
 | `derniere-decouverte` | Ta dernière petite découverte ? | ouverte |
-| `jour-de-pluie` | Un jour de pluie, idéalement ? | choix : Sous un plaid · Dehors quand même · Au café · Au lit |
+| `jour-de-pluie` | Un jour de pluie, idéalement ? | choix multiple : Sous un plaid · Dehors quand même · Au café · Au lit |
 
 **Goûts & culture (`culture`)**
 
@@ -56,7 +58,7 @@ ou rien. »* Pas de choix fermés, donc pas de filtre.
 | `bande-son` | La bande-son de ta vie en ce moment ? | ouverte |
 | `personnage` | Un personnage de fiction dont tu te sens proche ? | ouverte |
 | `derniere-claque` | La dernière œuvre qui t'a mis une claque ? | ouverte |
-| `jeu` | Un jeu (de société, vidéo, de mots…) qui te plaît ? | choix : De société · Vidéo · De mots · De cartes |
+| `jeu` | Un jeu (de société, vidéo, de mots…) qui te plaît ? | choix multiple : De société · Vidéo · De mots · De cartes |
 | `a-recommander` | Un podcast, une chaîne ou une newsletter à recommander ? | ouverte |
 | `citation` | Une phrase ou une citation qui te suit ? | ouverte |
 | `musee` | Si tu avais ton musée, on y verrait quoi ? | ouverte |
@@ -71,8 +73,8 @@ ou rien. »* Pas de choix fermés, donc pas de filtre.
 | `blague` | Ta meilleure (ou ta pire) blague ? | ouverte |
 | `anecdote` | Une anecdote que tu racontes souvent ? | ouverte |
 | `opinion-futile` | Une opinion futile que tu défends avec ferveur ? | ouverte |
-| `super-pouvoir` | Un super-pouvoir modeste que tu aimerais avoir ? | choix : Ne jamais avoir froid · Retrouver ses clés · Parler aux animaux · Autre (précise !) |
-| `animal` | Si tu étais un animal, lequel, et pourquoi ? | choix : Chat · Chien · Oiseau · Poisson · Autre (précise !) |
+| `super-pouvoir` | Un super-pouvoir modeste que tu aimerais avoir ? | choix unique : Ne jamais avoir froid · Retrouver ses clés · Parler aux animaux · Autre (précise !) |
+| `animal` | Si tu étais un animal, lequel, et pourquoi ? | choix unique : Chat · Chien · Oiseau · Poisson · Autre (précise !) |
 | `mot-prefere` | Ton mot préféré, et pourquoi ? | ouverte |
 | `expression` | Une expression que tu dis tout le temps ? | ouverte |
 | `petite-honte` | Une petite honte qui te fait rire aujourd'hui ? | ouverte |
@@ -85,12 +87,12 @@ ou rien. »* Pas de choix fermés, donc pas de filtre.
 | `touche-chez-quelquun` | Ce qui te touche chez quelqu'un ? | ouverte |
 | `en-amitie` | Ce que tu apportes dans une amitié ? | ouverte |
 | `petite-attention` | Une petite attention qui te fait fondre ? | ouverte |
-| `apres-desaccord` | Après un désaccord, tu fais comment ? | choix : J'en parle tout de suite · J'ai besoin d'un temps · Ça dépend |
+| `apres-desaccord` | Après un désaccord, tu fais comment ? | choix unique : J'en parle tout de suite · J'ai besoin d'un temps · Ça dépend |
 | `quand-ca-va-pas` | Quand ça ne va pas, qu'est-ce qui t'aide ? | ouverte |
 | `tenir-a-quelquun` | À quoi on reconnaît que tu tiens à quelqu'un ? | ouverte |
-| `silence-a-deux` | Le silence avec quelqu'un : confortable ou pas ? | choix : Confortable · Ça dépend · Pas trop |
+| `silence-a-deux` | Le silence avec quelqu'un : confortable ou pas ? | choix unique : Confortable · Ça dépend · Pas trop |
 | `libre-a-deux` | « Être libre à deux », ça veut dire quoi pour toi ? | ouverte |
-| `rythme` | Ton rythme idéal pour faire connaissance ? | choix : Doucement · Au feeling · Sans tarder |
+| `rythme` | Ton rythme idéal pour faire connaissance ? | choix unique : Doucement · Au feeling · Sans tarder |
 | `fait-fuir` | Ce qui te fait fuir, gentiment ? | ouverte |
 | `compliment` | Un compliment qui t'a marqué·e ? | ouverte |
 
@@ -144,15 +146,15 @@ ou rien. »* Pas de choix fermés, donc pas de filtre.
 | Clé | Intitulé | Format |
 |---|---|---|
 | `habitudes` | Côté habitudes, tu te situes où ? | ouverte — aide légale |
-| `cafe-the` | Café, thé, ou autre chose ? | choix : Café · Thé · Les deux · Ni l'un ni l'autre |
-| `couche-tot-tard` | Couche-tôt ou couche-tard ? | choix : Couche-tôt · Couche-tard · Ça dépend |
-| `ecrans` | Ton rapport aux écrans ? | choix : J'en décroche facilement · Toujours connecté·e · Je fais des pauses exprès |
-| `range-desordre` | Plutôt rangé·e ou joyeux désordre ? | choix : Rangé·e · Joyeux désordre · Rangé·e en surface |
-| `planifier-improviser` | Tout planifier ou improviser ? | choix : Je planifie · J'improvise · Un peu des deux |
-| `soiree-ideale` | Une soirée idéale, elle se passe où ? | choix : Chez moi · Chez des proches · Dehors · Ça dépend avec qui |
-| `animaux` | Les animaux et toi ? | choix : J'en ai · J'aimerais en avoir · Plutôt ceux des autres · Pas trop mon truc |
-| `plantes` | Main verte ou cimetière à plantes ? | choix : Main verte · En progrès · Cimetière à plantes |
-| `appel-ou-message` | Appel, vocal ou message ? | choix : Appel · Vocal · Message · Tout sauf l'appel |
+| `cafe-the` | Café, thé, ou autre chose ? | choix multiple : Café · Thé · Tisane · Chocolat chaud · *Aucun des quatre* (exclusive) |
+| `couche-tot-tard` | Couche-tôt ou couche-tard ? | choix unique : Couche-tôt · Couche-tard · Ça dépend |
+| `ecrans` | Ton rapport aux écrans ? | choix unique : J'en décroche facilement · Toujours connecté·e · Je fais des pauses exprès |
+| `range-desordre` | Plutôt rangé·e ou joyeux désordre ? | choix unique : Rangé·e · Joyeux désordre · Rangé·e en surface |
+| `planifier-improviser` | Tout planifier ou improviser ? | choix unique : Je planifie · J'improvise · Un peu des deux |
+| `soiree-ideale` | Une soirée idéale, elle se passe où ? | choix multiple : Chez moi · Chez des proches · Dehors · *Peu importe le lieu, tant que la compagnie est bonne* (exclusive) |
+| `animaux` | Les animaux et toi ? | choix unique : J'en ai · J'aimerais en avoir · Plutôt ceux des autres · Pas trop mon truc |
+| `plantes` | Main verte ou cimetière à plantes ? | choix unique : Main verte · En progrès · Cimetière à plantes |
+| `appel-ou-message` | Appel, vocal ou message ? | choix multiple : Appel · Vocal · Message · Visio |
 
 **Pour se rencontrer (`rencontre`)**
 
@@ -246,6 +248,24 @@ ou rien. »* Pas de choix fermés, donc pas de filtre.
 - **Alternatives** : tout en texte avec suggestions de phrases (rejeté :
   toujours une page à remplir) ; tout en QCM (rejeté : bride les plus
   expressifs, aplatit les profils).
+
+## R4d — Choix unique ou multiple (retour opérateur 2026-09-25)
+
+- **Decision** : chaque question à choix déclare `multiple`. L'écran le dit en
+  toutes lettres sous l'intitulé : « Choisis une réponse. » ou « Tu peux
+  choisir plusieurs réponses. ». Unique : choisir une option remplace la
+  précédente. Multiple : chaque option s'ajoute ou se retire ; une option
+  `exclusive` désélectionne les autres, et inversement. Sur la fiche, un
+  choix multiple s'affiche en pastilles côte à côte.
+- **Classement de la banque** : 6 questions à choix multiple (`bruit-de-fond`,
+  `jour-de-pluie`, `jeu`, `cafe-the`, `soiree-ideale`, `appel-ou-message`),
+  12 à choix unique. « Café, thé » perd « Les deux » (inutile en multiple) ;
+  « Appel ou message » perd « Tout sauf l'appel » (contradictoire en
+  multiple) et gagne « Visio ».
+- **Rationale** : exemple de l'opérateur (« Un jeu qui te plaît ») ; imposer
+  un seul choix y trahit la réponse. L'indication écrite vaut mieux qu'une
+  différence purement visuelle (cases carrées ou rondes) pour un public de
+  18 à 79 ans.
 
 ## R4b — Répondre à la suite
 
