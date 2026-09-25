@@ -6,7 +6,7 @@
 
 **Status**: Draft
 
-**Issues** : #461 (US1), #462 (US2), #463 (US3)
+**Issues** : #461 (US1), #462 (US2), #463 (US3), #465 (US4)
 
 **Input**: User description: "Spec 009 — questions de profil en miroir (#5 du brainstorm réciprocité du 2026-09-25) : une banque de questions ouvertes ; la réponse d'une personne reste voilée tant que tu n'as pas répondu à la même question. Enrichit les profils sans rien demander de sensible et donne des points d'accroche pour le premier message."
 
@@ -37,16 +37,22 @@ Ce qui existe et se réutilise :
 ### Session 2026-09-25
 
 - Q: Granularité du miroir ? → A: question par question, avec invitation en place (saisie directement dans la fiche).
-- Q: Nombre de réponses par profil ? → A: 5 au plus.
+- Q: Nombre de réponses par profil ? → A: 5 au plus. **Révisé le même jour** (retour d'une bêta-testeuse, souvenir d'OkCupid : l'envie de répondre à beaucoup de questions) → **sans limite** ; une réponse par question, donc borné par la banque.
 - Q: Gestion de la banque ? → A: fixée dans le code, modifiée par PR.
+- Q: Taille de la banque ? → A: **grande** (80 à 150 questions), classée par thèmes, avec un mode « Répondre à la suite ».
+- Q: Substances (alcool, tabac, CBD…) ? → A: une **question ouverte en texte libre**. Les exemples légaux figurent seulement comme aide à la saisie ; on n'incite à rien, chacun livre ce qu'il veut de ses habitudes. Pas de choix fermés, donc pas de filtre.
+- Q: Opinion politique et questions filtrables ? → A: **hors 009** : spec 010 (questions à choix, filtres, cadre RGPD art. 9).
+- Q: Comment aider les personnes timides, réservées ou pudiques, et éviter la page blanche, sans brider les plus expressives ? → A: **trois formats** : *choix + précision facultative* (pastilles, puis « Tu veux préciser ? »), *ouverte* (texte libre avec aide), et une série ludique **« Ceci ou cela »** (choix binaires, rien à écrire). Les choix de la 009 servent à répondre, **pas à filtrer** (la 010 décidera lesquels deviennent des critères).
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Répondre à des questions sur son profil (Priority: P1)
 
-Depuis son profil, une membre choisit une question dans la banque, écrit sa
-réponse, l'enregistre ; elle peut en avoir plusieurs, les modifier, les
-retirer. Ses réponses apparaissent sur sa fiche.
+Depuis son profil, une membre parcourt la banque par thèmes, ou se laisse
+proposer les questions une à une (« Répondre à la suite », avec « Passer »).
+Selon la question, elle **touche une pastille** (et peut préciser par écrit),
+ou **écrit** librement. Elle modifie et retire ses réponses. Autant qu'elle
+veut : une réponse par question. Ses réponses apparaissent sur sa fiche.
 
 **Why this priority**: sans réponses, rien à lire ni à dévoiler. C'est le socle.
 
@@ -60,11 +66,37 @@ son profil ; sa propre fiche les affiche.
 2. **Given** une réponse contenant une adresse e-mail, un `@`, un lien ou un
    numéro, **When** elle l'enregistre, **Then** l'enregistrement est refusé
    avec un message qui énonce la règle sans accuser.
-3. **Given** une membre qui a déjà atteint le nombre maximal de réponses,
-   **When** elle veut en ajouter une, **Then** on lui propose d'en remplacer
-   une plutôt que de refuser sèchement.
+3. **Given** le mode « Répondre à la suite », **When** elle enregistre ou
+   passe une question, **Then** la suivante sans réponse s'affiche ; elle en
+   sort quand elle veut, sans message qui la retienne.
 4. **Given** une réponse existante, **When** elle la retire, **Then** elle
    disparaît de sa fiche et du profil.
+5. **Given** une question à choix, **When** elle touche une pastille sans rien
+   écrire, **Then** c'est une réponse complète ; **When** elle ajoute une
+   précision, **Then** la précision s'affiche sous le choix.
+
+---
+
+### User Story 4 - « Ceci ou cela » : répondre en jouant (Priority: P2)
+
+Une membre qui ne sait pas quoi écrire lance « Ceci ou cela » : deux options
+à la fois (« Mer ou montagne ? »), elle en touche une ou passe, la suivante
+arrive. Rien à écrire. Ses choix s'affichent sur sa fiche, en ligne compacte.
+
+**Why this priority**: l'entrée la plus douce pour les personnes réservées ;
+elle nourrit le miroir sans demander de se livrer.
+
+**Independent Test**: enchaîner dix paires en moins d'une minute ; la fiche
+les montre ; une lectrice n'en lit que celles auxquelles elle a répondu.
+
+**Acceptance Scenarios**:
+
+1. **Given** le mode « Ceci ou cela », **When** elle touche une option,
+   **Then** le choix est enregistré et la paire suivante sans réponse s'affiche.
+2. **Given** une paire, **When** elle passe, **Then** rien n'est enregistré.
+3. **Given** la fiche d'une autre personne, **When** la lectrice a répondu à
+   la même paire, **Then** elle voit le choix de l'autre ; sinon la paire est
+   voilée, comme toute question (FR-004).
 
 ---
 
@@ -123,7 +155,14 @@ concerné voit qu'elle a été retirée.
 
 - **Aucune question commune** : si la lectrice n'a répondu à aucune des
   questions de la fiche, toutes les réponses sont voilées ; la fiche ne doit
-  pas ressembler à un mur de refus (FR-008).
+  pas ressembler à un mur de refus (FR-008) : quelques invitations, le reste
+  replié.
+- **Beaucoup de réponses** : une fiche peut porter des dizaines de réponses ;
+  elle montre d'abord les questions en commun, puis replie le reste.
+- **Réponse sur les substances qui évoque un produit illégal** : Libre ne la
+  sollicite pas (aide à la saisie limitée aux exemples légaux) ; elle suit la
+  modération ordinaire sur signalement, et les CGU interdisent d'y promouvoir
+  ou d'y proposer des produits illicites.
 - **Question retirée de la banque** : les réponses existantes restent
   affichées, la question n'est plus proposée aux nouvelles réponses.
 - **Réponse vide ou seulement des espaces** : refusée comme une absence.
@@ -141,11 +180,25 @@ concerné voit qu'elle a été retirée.
 ### Functional Requirements
 
 - **FR-001**: Le système MUST proposer une banque de questions ouvertes,
-  légères, sans thème sensible (santé, politique, religion, sexualité, argent,
-  corps). La banque est **fixée dans le code** et versionnée : ajouter,
-  reformuler ou retirer une question passe par une PR.
-- **FR-002**: Un membre MUST pouvoir répondre à **5 questions au plus**,
-  une réponse par question, de 1 à 300 caractères après normalisation.
+  légères, classées par **thèmes**, sans thème sensible (santé, politique,
+  religion, sexualité, argent, corps) — à l'exception d'une question sur les
+  **habitudes** (alcool, tabac, CBD…) en texte libre, dont l'aide à la saisie
+  ne cite que des produits légaux et n'incite à rien. La banque est **fixée
+  dans le code** et versionnée : ajouter, reformuler ou retirer une question
+  passe par une PR. Elle compte 80 à 150 questions au lancement.
+- **FR-002**: Un membre MUST pouvoir répondre à **autant de questions qu'il
+  veut**, une réponse par question, de 1 à 300 caractères après
+  normalisation. Le profil propose un parcours par thèmes et un mode
+  « Répondre à la suite » (question suivante sans réponse, « Passer »
+  toujours disponible).
+- **FR-002b**: Chaque question a un **format** : *ouverte* (texte 1–300),
+  *choix* (une pastille parmi 2 à 5, plus une précision facultative de 0 à
+  300 caractères), ou *ceci-ou-cela* (une option parmi deux, sans texte). Une
+  réponse à choix sans précision est complète. Le choix doit appartenir aux
+  options de la question.
+- **FR-002c**: Un mode **« Ceci ou cela »** MUST enchaîner les paires sans
+  réponse, un toucher par paire, « Passer » toujours disponible, sortie libre,
+  sans compteur ni série.
 - **FR-003**: Une réponse MUST être refusée si elle contient un moyen de
   contact (même détection que le pseudo, #459 : e-mail, `@`, lien ou domaine,
   numéro), avec un message qui énonce la règle.
@@ -164,8 +217,9 @@ concerné voit qu'elle a été retirée.
   sienne » ouvre la saisie de cette question directement dans la fiche ; une
   fois enregistrée, la réponse de l'autre s'affiche sans quitter la fiche.
   Voilée ou non, une question garde la même densité douce : aucune fiche ne
-  doit ressembler à un mur de refus. Si la lectrice a déjà 5 réponses, la
-  saisie en place propose d'en remplacer une.
+  doit ressembler à un mur de refus. Ordre sur la fiche : d'abord les
+  questions **en commun** (lisibles), puis quelques invitations, puis
+  « Voir toutes ses réponses » qui déplie le reste — sans aucun nombre.
 - **FR-009**: Les réponses d'un profil signalé MUST être visibles de l'admin
   dans le signalement ; l'admin MUST pouvoir retirer une réponse, action
   journalisée, avec une mention sobre chez l'autrice.
@@ -180,9 +234,12 @@ concerné voit qu'elle a été retirée.
 
 ### Key Entities
 
-- **Question** : intitulé, état (proposée / retirée), ordre d'affichage.
-- **Réponse** : autrice, question, texte (1–300), dates de création et de
-  modification, état (publiée / retirée par la modération).
+- **Question** : clé stable, thème, format (ouverte / choix / ceci-ou-cela),
+  options (pour les formats à choix), intitulé, aide à la saisie facultative,
+  état (proposée / retirée), ordre d'affichage.
+- **Réponse** : autrice, question, choix (facultatif, clé d'option), texte
+  (facultatif selon le format, 0–300), dates de création et de modification,
+  état (publiée / retirée par la modération). Au moins un choix ou un texte.
 - **État de lecture d'une réponse** : dérivé pour un couple (lectrice,
   réponse) — visible, voilée pour la lectrice. Jamais stocké.
 
@@ -201,11 +258,17 @@ concerné voit qu'elle a été retirée.
   portant un e-mail, `@`, lien ou numéro).
 - **SC-005**: Temps médian pour écrire une première réponse : moins d'une
   minute depuis l'invitation.
+- **SC-006**: Parmi les profils avec au moins une réponse, une part notable
+  n'a répondu **que** par des choix (pastilles ou « Ceci ou cela ») : signe
+  que les formats ludiques atteignent les personnes qui n'auraient rien écrit.
 
 ## Assumptions
 
-- La banque démarre avec 15 à 25 questions, proposées au plan dans le ton de
-  `PRODUCT.md` et validées par l'opérateur.
+- La banque démarre avec 80 à 150 questions par thèmes, proposées au plan dans
+  le ton de `PRODUCT.md` et validées par l'opérateur.
+- Les réponses en texte libre ne sont pas filtrables : une recherche du type
+  « quelqu'un qui consomme du CBD » relève de la spec 010 si l'opérateur y
+  ajoute un jour une question à choix sur ce sujet.
 - Les réponses s'affichent sur la fiche (modale profil) ; les cartes de
   Découvrir n'en montrent pas.
 - Pas de réponses aux réponses, pas de réactions : l'accroche passe par le

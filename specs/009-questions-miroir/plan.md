@@ -7,13 +7,15 @@
 ## Summary
 
 Une banque de questions ouvertes versionnée dans le code
-(`src/lib/questions.ts`, clés stables), une table `profile_answers` (≤ 5 par
-membre, une par question, 1–300 caractères), et une décision miroir unique
+(`src/lib/questions.ts`, clés stables, 96 questions en 9 thèmes + 24 « Ceci ou
+cela », trois formats : ouverte, choix + précision, ceci-ou-cela), une table
+`profile_answers` (une réponse par question, sans limite de nombre ; choix
+et/ou texte 0–300), et une décision miroir unique
 `answersFor` (même famille que `intentionFor`, spec 008) appliquée à la
 sérialisation de la fiche : une réponse d'autrui n'est envoyée que si la
 lectrice a répondu à la même question ; sinon l'intitulé et
-`veiled: true`. La saisie se fait dans le profil et **en place** dans la
-fiche, sous la question voilée. La détection de contact du pseudo (#459) est
+`veiled: true`. La saisie se fait dans le profil (par thèmes, « Répondre à la suite »,
+« Ceci ou cela ») et **en place** dans la fiche, sous la question voilée. La détection de contact du pseudo (#459) est
 extraite dans `src/lib/contact.ts` et partagée. Modération : réponses jointes
 au signalement côté admin, retrait journalisé dans `ModerationLog`.
 
@@ -35,7 +37,7 @@ au signalement côté admin, retrait journalisé dans `ModerationLog`.
 
 **Constraints**: fermé par défaut (principe III) ; copie sans chiffre ni comparaison ; DS existant ; prototype validé avant l'UI (principe V) ; contenu des messages chiffré, donc la mesure SC-003 ne lit jamais les messages.
 
-**Scale/Scope**: ~115 comptes ; 1 table, 1 module de banque, 1 module de règle, 3 routes membre + 1 route admin, 1 section profil, 1 bloc de fiche, 1 ajout à l'admin des signalements.
+**Scale/Scope**: ~115 comptes ; 1 table, 1 module de banque (120 entrées), 1 module de règle, 3 routes membre + 1 route admin, 1 section profil + 2 modes (à la suite, ceci ou cela), 1 bloc de fiche, 1 ajout à l'admin des signalements.
 
 ## Constitution Check
 
@@ -47,7 +49,7 @@ au signalement côté admin, retrait journalisé dans `ModerationLog`.
 | II. Français, copie inclusive | Banque relue par l'opérateur ; aucune question qui suppose un corps, une mobilité, une situation (« sortir », « voyager » évités ou ouverts). | ✅ |
 | III. Vie privée | Voile à la sérialisation, recalculé à chaque lecture ; lectrice en échec → tout voilé ; refus des contacts à l'écriture ; garde de non-fuite par route ; export et cascade (FR-013). | ✅ |
 | IV. Design System | Pas de composant de base nouveau : Input multiligne, Button, TagButton, ligne voilée de la spec 008 (`IntentionLine`) comme modèle. | ✅ |
-| V. Le pixel juge | Prototype (section profil, fiche avec réponses visibles / voilées / saisie en place, remplacement à 5) **à valider avant l'UI**. | ⏳ gate avant UI |
+| V. Le pixel juge | Prototype (section profil par thèmes, « Répondre à la suite », pastilles + précision, « Ceci ou cela », fiche en commun d'abord / voilées / saisie en place) **à valider avant l'UI**. | ⏳ gate avant UI |
 | VI. Ticket = maille | 3 user stories → 3 issues ; un lot = une PR. | ✅ |
 | Migrations additives à la main | `CREATE TABLE profile_answers` + index + contrainte d'unicité. | ✅ |
 | Effets post-persist best-effort | Aucun effet de bord (pas de notification à la réponse). | ✅ |
@@ -76,8 +78,8 @@ prisma/
 src/lib/
 ├── contact.ts            # extrait de pseudo.ts : contientUnContact (pseudo, réponses, #443)
 ├── pseudo.ts             # importe contact.ts
-├── questions.ts          # banque : clé stable, intitulé, état (proposée / retirée)
-└── answers.ts            # answersFor (miroir), validateAnswer, ANSWERS_MAX = 5
+├── questions.ts          # banque : clé, thème, format, options, intitulé, aide, état
+└── answers.ts            # answersFor (miroir, tri « en commun d'abord »), validateAnswer (par format)
 
 src/app/api/
 ├── users/me/answers/route.ts          # GET (les miennes), PUT (créer/modifier par clé), DELETE
@@ -86,7 +88,9 @@ src/app/api/
 └── admin/answers/[id]/route.ts        # PATCH retrait (ModerationLog)
 
 src/components/
-├── ProfileAnswers.tsx                 # section du profil : choisir, répondre, retirer
+├── ProfileAnswers.tsx                 # section du profil : thèmes, « Répondre à la suite », retirer
+├── ThisOrThat.tsx                     # mode « Ceci ou cela »
+├── AnswerInput.tsx                    # saisie selon le format (pastilles + précision, texte)
 ├── AnswerBlock.tsx                    # fiche : réponse / voilée + saisie en place
 └── ProfileModal.tsx                   # intègre AnswerBlock
 

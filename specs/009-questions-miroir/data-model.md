@@ -5,7 +5,11 @@
 | Champ | Type | Règle |
 |---|---|---|
 | `key` | string ASCII `[a-z-]+` | stable, unique, jamais réutilisée pour un autre sens |
+| `theme` | string | `quotidien` · `culture` · `rire` · `liens` · `valeurs` · `envies` · `souvenirs` · `habitudes` · `rencontre` · `ceci-ou-cela` |
+| `format` | `ouverte` \| `choix` \| `ceci-ou-cela` | voir FR-002b |
+| `options` | `{ key, label }[]` | 2–5 pour `choix`, exactement 2 pour `ceci-ou-cela` ; clés stables |
 | `label` | string | intitulé affiché, reformulable |
+| `hint` | string? | aide à la saisie (ex. question `habitudes`) |
 | `retired` | boolean? | retirée : plus proposée, réponses existantes affichées |
 
 ## ProfileAnswer (table `profile_answers`)
@@ -15,12 +19,13 @@
 | `id` | uuid | PK |
 | `userId` | uuid | FK `users.id`, **cascade** |
 | `questionKey` | text | clé de la banque (validée à l'écriture) |
-| `text` | text | 1–300 après normalisation (R6), sans contact |
+| `choice` | text? | clé d'option, obligatoire pour `choix` et `ceci-ou-cela`, interdite pour `ouverte` |
+| `text` | text? | `ouverte` : 1–300 ; `choix` : 0–300 (précision) ; `ceci-ou-cela` : vide. Normalisé (R6), sans contact |
 | `status` | text | `published` (défaut) · `removed` (modération) |
 | `createdAt` / `updatedAt` | timestamptz | |
 
-Contraintes : `UNIQUE (userId, questionKey)` ; index `(userId)`. Au plus
-**5** réponses `published` par membre (vérifié en transaction à l'écriture).
+Contraintes : `UNIQUE (userId, questionKey)` ; index `(userId)`. Pas de
+limite de nombre : une réponse par question, borné par la banque.
 Réécrire une réponse `removed` la repasse en `published` (nouveau texte).
 
 ## État de lecture (dérivé, jamais stocké)
@@ -29,10 +34,10 @@ Pour une lectrice L et une réponse publiée R de P :
 
 | L = P | L a une réponse **publiée** à `R.questionKey` | Sérialisé |
 |---|---|---|
-| oui | — | `{ key, label, text }` |
-| non | oui | `{ key, label, text }` |
-| non | non | `{ key, label, veiled: true }` |
-| non | inconnu (lecture en échec) | `{ key, label, veiled: true }` |
+| oui | — | `{ key, label, format, choice?, text? }` |
+| non | oui | `{ key, label, format, choice?, text? }` |
+| non | non | `{ key, label, format, veiled: true }` (ni choix ni texte) |
+| non | inconnu (lecture en échec) | `{ key, label, format, veiled: true }` |
 
 Réponses `removed` de P : jamais envoyées à autrui ; envoyées à P avec
 `status: 'removed'`.
