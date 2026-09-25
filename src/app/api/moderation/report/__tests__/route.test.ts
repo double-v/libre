@@ -96,3 +96,13 @@ describe('POST /api/moderation/report — signal de faux profil (spec 006, #443)
     expect(enregistrerSignal).not.toHaveBeenCalled();
   });
 });
+
+describe('POST /api/moderation/report — « semble avoir moins de 18 ans » (#437)', () => {
+  it('motif accepté, signal fort pour la file, aucun retrait automatique', async () => {
+    fakeDb.report.create.mockResolvedValue({ id: 'r7', reporterId: ME, reportedId: REPORTED, reason: 'minor', status: 'pending' });
+    const res = await POST(req({ reportedId: REPORTED, reason: 'minor' }));
+    expect(res.status).toBe(201);
+    expect(enregistrerSignal).toHaveBeenCalledWith({ userId: REPORTED, type: 'signalement_mineur', force: 'fort', cle: 'r7' });
+    expect(JSON.stringify(fakeDb)).not.toContain('retraitAt');
+  });
+});

@@ -10,6 +10,7 @@
 import { getDb } from '@/lib/db';
 import { deletePhoto, isR2Configured } from '@/lib/r2';
 import { seuil, type BilanRetention, type RegleId } from './regles';
+import { effacerCompte } from '@/lib/suppression-compte';
 
 const SINGLETON = 'singleton';
 
@@ -95,6 +96,23 @@ function regles(now: Date): Record<RegleId, Regle> {
 
     empreintesBannies: async () =>
       (await db.bannedPhotoFingerprint.deleteMany({ where: { bannedAt: { lt: seuil('empreintesBannies', now) } } })).count,
+
+    // Le compte entier part, par le même chemin qu'une suppression voulue
+    // (R2 compris). Jamais pendant qu'un selfie attend notre examen.
+    retraitsSansSelfie: async () => {
+      const echus = await db.user.findMany({
+        where: {
+          retraitAt: { lt: seuil('retraitsSansSelfie', now) },
+          isBanned: false,
+          isVerified: false,
+          verificationRequests: { none: { status: 'pending' } },
+        },
+        select: { id: true },
+        take: 50,
+      });
+      for (const u of echus) await effacerCompte(u.id);
+      return echus.length;
+    },
 
     // La preuve du consentement reste (type, version, date) ; seule la trace
     // technique s'efface.

@@ -70,4 +70,8 @@ describe('dansLaFile', () => {
     expect(dansLaFile([s('contact_photo', 'fort', '2026-09-20')], t('2026-09-21'))).toBe(false);
     expect(dansLaFile([s('contact_photo', 'fort', '2026-09-22')], t('2026-09-21'))).toBe(true);
   });
+
+  it('un signalement « semble mineur » suffit, même faible (#437)', () => {
+    expect(dansLaFile([s('signalement_mineur', 'faible')], null)).toBe(true);
+  });
 });

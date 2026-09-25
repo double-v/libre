@@ -6,7 +6,8 @@ import { PRACTICES_VISIBILITY_VALUES } from '@/lib/profile-visibility';
 import { SENSITIVITY_LEVELS, SENSITIVITY_THRESHOLDS } from '@/lib/photo-sensitivity';
 import { validatePseudo } from '@/lib/pseudo';
 
-const VALID_REPORT_REASONS = ['harassment', 'spam', 'fake', 'inappropriate', 'other'] as const;
+// `minor` (#437) : le filet communautaire sur l'âge, faute de preuve d'âge gratuite.
+const VALID_REPORT_REASONS = ['harassment', 'spam', 'fake', 'minor', 'inappropriate', 'other'] as const;
 
 const MIN_AGE = 18;
 

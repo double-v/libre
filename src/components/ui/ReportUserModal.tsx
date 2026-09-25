@@ -22,6 +22,7 @@ const REASONS = [
   { value: 'harassment', label: 'Harcèlement ou intimidation' },
   { value: 'inappropriate', label: 'Contenu inapproprié' },
   { value: 'fake', label: 'Faux profil' },
+  { value: 'minor', label: 'Semble avoir moins de 18 ans' },
   { value: 'spam', label: 'Spam ou arnaque' },
   { value: 'other', label: 'Autre' },
 ] as const;

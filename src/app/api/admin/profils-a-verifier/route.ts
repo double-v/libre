@@ -29,6 +29,8 @@ export async function GET() {
         photos: (c.profile?.photos ?? []).map(photoUrl),
         derniereDecision: c.profileReview,
         forts: recents.filter((s) => s.force === 'fort').length,
+        // #437 : un doute sur l'âge passe avant tout le reste.
+        ageEnDoute: recents.some((s) => s.type === 'signalement_mineur'),
         dernierSignal: recents[0]?.createdAt ?? null,
         signaux: c.profileSignals.map((s) => ({
           ...s,
@@ -38,7 +40,7 @@ export async function GET() {
         })),
       };
     })
-    .sort((a, b) => b.forts - a.forts || (b.dernierSignal?.getTime() ?? 0) - (a.dernierSignal?.getTime() ?? 0));
+    .sort((a, b) => Number(b.ageEnDoute) - Number(a.ageEnDoute) || b.forts - a.forts || (b.dernierSignal?.getTime() ?? 0) - (a.dernierSignal?.getTime() ?? 0));
 
   return NextResponse.json({ profils });
 }

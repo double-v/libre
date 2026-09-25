@@ -34,6 +34,8 @@ export interface ProfilRow {
   email: string;
   inscritLe: string;
   enRetrait: boolean;
+  /** #437 : âge mis en doute par un signalement — traité en priorité. */
+  ageEnDoute?: boolean;
   bio: string;
   photos: string[];
   derniereDecision: { decision: string; decidedAt: string } | null;
@@ -54,12 +56,13 @@ export default function AdminProfilCard({ p, onDecision }: { p: ProfilRow; onDec
   }
 
   return (
-    <Card as="article" variant="profile" aria-label={`Profil à vérifier : ${p.displayName}`}>
+    <Card as="article" variant="profile" aria-label={`Profil à vérifier : ${p.displayName}`} className={p.ageEnDoute ? 'ring-2 ring-error' : undefined}>
       <div className="grid gap-4">
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <b className="text-base text-content">{p.displayName}</b>
           <span className="text-sm text-muted">{p.email}</span>
           <span className="text-sm tabular-nums text-muted">Inscrit le {date(p.inscritLe)}</span>
+          {p.ageEnDoute && <Tag variant="refused" size="sm">Âge mis en doute</Tag>}
           {p.enRetrait && <Tag variant="pending" size="sm">En retrait</Tag>}
         </div>
         {p.derniereDecision && (

@@ -3,6 +3,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { choiceLabels, questionByKey } from '@/lib/questions';
 
+const MOTIFS: Record<string, string> = {
+  harassment: 'Harcèlement ou intimidation',
+  inappropriate: 'Contenu inapproprié',
+  fake: 'Faux profil',
+  minor: 'Semble avoir moins de 18 ans',
+  spam: 'Spam ou arnaque',
+  other: 'Autre',
+};
+
 interface ReportRow {
   id: string;
   reason: string;
@@ -61,7 +70,8 @@ export default function AdminReportsPage() {
       const res = await fetch(`/api/admin/reports?${params}`);
       if (!res.ok) throw new Error();
       const data = await res.json();
-      setReports(data.reports);
+      // « Semble mineur » (#437) en tête : c'est le signalement qui n'attend pas.
+      setReports([...data.reports].sort((a: ReportRow, b: ReportRow) => Number(b.reason === 'minor') - Number(a.reason === 'minor')));
       setTotal(data.total);
     } catch {
       // handled below
@@ -147,7 +157,7 @@ export default function AdminReportsPage() {
                     <span className="text-muted"> signalé par </span>
                     <span className="font-medium">{r.reporter.displayName}</span>
                   </p>
-                  <p className="mt-1 text-sm font-medium text-coral dark:text-coral-light">{r.reason}</p>
+                  <p className="mt-1 text-sm font-medium text-coral dark:text-coral-light">{MOTIFS[r.reason] ?? r.reason}</p>
                   {r.description && <p className="mt-1 text-sm text-muted">{r.description}</p>}
                   <p className="mt-1 text-xs text-muted">{new Date(r.createdAt).toLocaleDateString('fr-FR')}</p>
                 </div>

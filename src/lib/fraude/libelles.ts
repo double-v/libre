@@ -10,6 +10,7 @@ export const LIBELLES_SIGNAL: Record<string, string> = {
   photo_bannie: 'Photo d’un compte banni',
   photo_recuperee: 'Photo au format d’un réseau social',
   signalement_faux: 'Signalé comme faux profil',
+  signalement_mineur: 'Signalé comme semblant avoir moins de 18 ans',
 };
 
 export const LIBELLES_DECISION: Record<string, string> = {
