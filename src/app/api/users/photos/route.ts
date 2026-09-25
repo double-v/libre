@@ -135,6 +135,14 @@ export async function DELETE(request: Request) {
     } catch (err) {
       console.error('[photos] nettoyage de la classification échoué pour', photoKey, err);
     }
+
+    // L'empreinte part avec la photo (spec 006, #445) : une photo retirée ne
+    // doit plus faire signaler un autre compte.
+    try {
+      await getDb().photoFingerprint.deleteMany({ where: { photoKey } });
+    } catch {
+      // Best-effort, comme ci-dessus.
+    }
     }
 
     return NextResponse.json({ photos: updated.photos }, { status: 200 });

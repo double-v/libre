@@ -24,6 +24,7 @@ const fakeDb = {
   message: { updateMany: vi.fn(async () => ({ count: 6 })) },
   profileReview: { findMany: vi.fn<(args: unknown) => Promise<unknown[]>>(async () => []) },
   profileSignal: { deleteMany: vi.fn(async () => ({ count: 2 })) },
+  bannedPhotoFingerprint: { deleteMany: vi.fn(async () => ({ count: 3 })) },
   retentionState: { updateMany: vi.fn(), create: vi.fn(), upsert: vi.fn(), findUnique: vi.fn() },
 };
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => fakeDb }));
@@ -98,6 +99,12 @@ describe('purgerRetention — seuils', () => {
     expect(fakeDb.profileReview.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { decision: 'rien', decidedAt: { lt: il_y_a(365) } } }));
     expect(fakeDb.profileSignal.deleteMany).toHaveBeenCalledWith({ where: { userId: 'u1', createdAt: { lte: decidedAt } } });
     expect(bilan.signauxTranches).toBe(2);
+  });
+
+  it('empreintes des bannis : un an après le bannissement (spec 006)', async () => {
+    const bilan = await purgerRetention(NOW);
+    expect(fakeDb.bannedPhotoFingerprint.deleteMany).toHaveBeenCalledWith({ where: { bannedAt: { lt: il_y_a(365) } } });
+    expect(bilan.empreintesBannies).toBe(3);
   });
 
   it('selfies : résolus + 30 j → ligne effacée et objet R2 aussi, sauf si c’est encore une photo du profil', async () => {

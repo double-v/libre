@@ -90,11 +90,11 @@
 **Goal**: empreinte à l'ajout, comparaison aux autres comptes et aux bannis, rétention 1 an.
 **Independent Test**: bannir un compte, ajouter sa photo recompressée et recadrée de 10 % à un autre → signal `photo_bannie`.
 
-- [ ] T028 [US3] Migration `photo_fingerprints` et `banned_photo_fingerprints` selon data-model.md
-- [ ] T029 [P] [US3] Test puis `src/lib/fraude/empreinte.ts` : `empreinte(buffer) → bigint` (dHash 9×8 via `sharp`), `distance(a, b)`, `SEUIL = 8` ; tests : recompression, recadrage 5 % et 10 % ≤ 8, image différente > 8 (images générées, research.md R2)
-- [ ] T030 [US3] `analyserPhoto` : enregistrer l'empreinte, comparer aux empreintes des **autres** comptes (signal `photo_reutilisee` fort sur les deux comptes, `autreUserId` croisé) et aux bannies (`photo_bannie` fort) ; suppression d'une photo → suppression de son empreinte (`DELETE src/app/api/users/photos/route.ts`) ; tests
-- [ ] T031 [US3] Décision `banni` (T020) → copie des empreintes du compte dans `banned_photo_fingerprints` ; règle de rétention `empreintesBannies` (1 an) dans `regles.ts` + `purge.ts` ; tests
-- [ ] T032 [US3] Rattrapage (T025) : calculer aussi les empreintes des photos existantes
+- [x] T028 [US3] Migration `photo_fingerprints` et `banned_photo_fingerprints` selon data-model.md
+- [x] T029 [P] [US3] Test puis `src/lib/fraude/empreinte.ts` : `empreinte(buffer) → bigint` (dHash 9×8 via `sharp`), `distance(a, b)`, `SEUIL = 8` ; tests : recompression, recadrage 5 % et 10 % ≤ 8, image différente > 8 (images générées, research.md R2)
+- [x] T030 [US3] `analyserPhoto` : enregistrer l'empreinte, comparer aux empreintes des **autres** comptes (signal `photo_reutilisee` fort sur les deux comptes, `autreUserId` croisé) et aux bannies (`photo_bannie` fort) ; suppression d'une photo → suppression de son empreinte (`DELETE src/app/api/users/photos/route.ts`) ; tests
+- [x] T031 [US3] Décision `banni` (T020) → copie des empreintes du compte dans `banned_photo_fingerprints` ; règle de rétention `empreintesBannies` (1 an) dans `regles.ts` + `purge.ts` ; tests
+- [x] T032 [US3] Rattrapage (T025) : calculer aussi les empreintes des photos existantes
 
 **Checkpoint** : bannir sert au-delà d'une fois.
 

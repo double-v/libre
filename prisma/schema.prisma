@@ -31,6 +31,7 @@ model User {
   profile              Profile?
   profileAnswers       ProfileAnswer[]
   profileSignals       ProfileSignal[]
+  photoFingerprints    PhotoFingerprint[]
   profileReview        ProfileReview?       @relation("ProfileReviewSubject")
   profileReviewsDecided ProfileReview[]     @relation("ProfileReviewDecider")
   userKey              UserKey?
@@ -202,6 +203,32 @@ model ProfileReview {
   decider User? @relation("ProfileReviewDecider", fields: [decidedBy], references: [id], onDelete: SetNull)
 
   @@map("profile_reviews")
+}
+
+/// Empreinte (dHash 64 bits) d'une photo en ligne (spec 006, US3). Part avec
+/// la photo et avec le compte.
+model PhotoFingerprint {
+  photoKey  String   @id
+  userId    String   @db.Uuid
+  hash      BigInt
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("photo_fingerprints")
+}
+
+/// Empreinte retenue d'un compte banni (FR-018) : ni photo ni clé étrangère,
+/// elle survit à la suppression du compte, puis part après un an.
+model BannedPhotoFingerprint {
+  id           String   @id @default(uuid()) @db.Uuid
+  hash         BigInt
+  bannedUserId String   @db.Uuid
+  bannedAt     DateTime @default(now())
+
+  @@index([bannedAt])
+  @@map("banned_photo_fingerprints")
 }
 
 model SiteConfig {

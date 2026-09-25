@@ -22,6 +22,17 @@ describe('page Confidentialité — faux profils', () => {
     expect(screen.getByText(/aucune sanction automatique/).textContent).toMatch(/un membre de l.équipe, qui décide lui-même/);
   });
 
+  it('les empreintes : un nombre, pas l’image ; celles des bannis gardées un an', () => {
+    render(<Confidentialite />);
+    expect(screen.getByText(/une empreinte de chaque photo/).textContent).toMatch(/ne permet pas de reconstituer/);
+    // Ce que la base garde vraiment : un entier, jamais d'image.
+    const schema = read('prisma/schema.prisma');
+    const modele = schema.slice(schema.indexOf('model BannedPhotoFingerprint'), schema.indexOf('}', schema.indexOf('model BannedPhotoFingerprint')));
+    expect(modele).toMatch(/hash\s+BigInt/);
+    expect(modele).not.toMatch(/photoKey|url|Bytes/);
+    expect(read('src/lib/retention/regles.ts')).toMatch(/empreintesBannies[^\n]*jours: 365/);
+  });
+
   it('la lecture des photos n’appelle aucun service extérieur', () => {
     const src = read('src/lib/fraude/lecture-photo.ts');
     expect(src).not.toMatch(/https?:\/\//);
@@ -30,8 +41,10 @@ describe('page Confidentialité — faux profils', () => {
 
   it('les décisions passent par un admin, jamais par un signal', () => {
     expect(read('src/app/api/admin/profils-a-verifier/[userId]/route.ts')).toMatch(/requireAdmin\(\)/);
+    // Lire `isBanned` pour filtrer est permis ; écrire une sanction ne l'est pas.
     for (const f of ['src/lib/fraude/signaux.ts', 'src/lib/fraude/analyse.ts']) {
-      expect(read(f), f).not.toMatch(/isBanned|retraitAt/);
+      expect(read(f), f).not.toMatch(/data:\s*\{[^}]*(isBanned|retraitAt)/);
+      expect(read(f), f).not.toMatch(/user\.update/);
     }
   });
 });

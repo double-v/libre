@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Tag from '@/components/ui/Tag';
@@ -21,6 +22,8 @@ export interface SignalRow {
   force: 'faible' | 'fort' | string;
   extrait: string | null;
   photo: string | null;
+  /** Compte qui porte la même photo (spec 006, US3) — le lien survit à sa suppression. */
+  autreUserId?: string | null;
   createdAt: string;
   nouveau: boolean;
 }
@@ -79,6 +82,11 @@ export default function AdminProfilCard({ p, onDecision }: { p: ProfilRow; onDec
                     <span className="font-medium">{LIBELLES_SIGNAL[s.type] ?? s.type}</span>
                   </div>
                   {s.extrait && <p className="mt-1.5 break-words font-mono text-xs text-content">« {s.extrait} »</p>}
+                  {s.autreUserId && (
+                    <Link href={`/admin/users/${s.autreUserId}`} className="mt-1.5 inline-block text-xs font-semibold text-coral-dark underline underline-offset-2 hover:no-underline dark:text-coral-light">
+                      Voir l’autre compte
+                    </Link>
+                  )}
                   <p className="mt-1 text-xs text-muted">
                     Le {date(s.createdAt)}
                     {!s.nouveau && ' · déjà vu lors de la décision précédente'}

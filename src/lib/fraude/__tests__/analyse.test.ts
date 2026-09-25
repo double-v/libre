@@ -5,10 +5,23 @@ vi.mock('../lecture-photo', () => ({ __esModule: true, lireTexte }));
 const enregistrerSignal = vi.fn(async () => true);
 vi.mock('../signaux', () => ({ __esModule: true, enregistrerSignal }));
 
+const empreinte = vi.fn(async () => BigInt(0));
+vi.mock('../empreinte', async (orig) => ({ ...(await orig<typeof import('../empreinte')>()), empreinte }));
+const fakeDb = {
+  photoFingerprint: { upsert: vi.fn(), findMany: vi.fn(async () => [] as unknown[]) },
+  bannedPhotoFingerprint: { findMany: vi.fn(async () => [] as unknown[]) },
+};
+vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => fakeDb }));
+
 const { analyserPhoto } = await import('../analyse');
 const img = Buffer.from('img');
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  lireTexte.mockResolvedValue('');
+  fakeDb.photoFingerprint.findMany.mockResolvedValue([]);
+  fakeDb.bannedPhotoFingerprint.findMany.mockResolvedValue([]);
+});
 
 describe('analyserPhoto (#443)', () => {
   it('le cas du 2026-09-24 : un identifiant Telegram sur la photo lève un signal fort', async () => {
@@ -55,5 +68,42 @@ describe('analyserTexteProfil (#444, rattrapage)', () => {
     const { analyserTexteProfil } = await import('../analyse');
     await analyserTexteProfil({ userId: 'u1', displayName: 'Camille', bio: 'J’aime la mer.' });
     expect(enregistrerSignal).not.toHaveBeenCalled();
+  });
+});
+
+describe('analyserPhoto — même photo ailleurs (#445)', () => {
+  it('enregistre l’empreinte de la photo', async () => {
+    empreinte.mockResolvedValue(BigInt(42));
+    await analyserPhoto({ userId: 'u1', photoKey: 'p/1.webp', buffer: img });
+    expect(fakeDb.photoFingerprint.upsert).toHaveBeenCalledWith({ where: { photoKey: 'p/1.webp' }, update: { hash: BigInt(42) }, create: { photoKey: 'p/1.webp', userId: 'u1', hash: BigInt(42) } });
+  });
+
+  it('même photo sur un autre compte : un signal fort sur chacun, qui pointe l’autre', async () => {
+    empreinte.mockResolvedValue(BigInt(0b1010));
+    fakeDb.photoFingerprint.findMany.mockResolvedValue([
+      { userId: 'u2', photoKey: 'p/2.webp', hash: BigInt(0b1011) }, // distance 1
+      { userId: 'u3', photoKey: 'p/3.webp', hash: BigInt(-1) }, // très loin
+    ]);
+    await analyserPhoto({ userId: 'u1', photoKey: 'p/1.webp', buffer: img });
+    expect(fakeDb.photoFingerprint.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { userId: { not: 'u1' }, user: { isBanned: false } } }));
+    expect(enregistrerSignal).toHaveBeenCalledWith({ userId: 'u1', type: 'photo_reutilisee', force: 'fort', photoKey: 'p/1.webp', autreUserId: 'u2' });
+    expect(enregistrerSignal).toHaveBeenCalledWith({ userId: 'u2', type: 'photo_reutilisee', force: 'fort', photoKey: 'p/2.webp', autreUserId: 'u1' });
+    expect(enregistrerSignal).toHaveBeenCalledTimes(2);
+  });
+
+  it('photo d’un compte banni : signal fort', async () => {
+    empreinte.mockResolvedValue(BigInt(0));
+    fakeDb.bannedPhotoFingerprint.findMany.mockResolvedValue([{ bannedUserId: 'b1', hash: BigInt(0b111) }]);
+    await analyserPhoto({ userId: 'u1', photoKey: 'p/1.webp', buffer: img });
+    expect(enregistrerSignal).toHaveBeenCalledWith({ userId: 'u1', type: 'photo_bannie', force: 'fort', photoKey: 'p/1.webp', autreUserId: 'b1' });
+  });
+
+  it('une empreinte qui échoue n’empêche pas la lecture du texte', async () => {
+    empreinte.mockRejectedValue(new Error('format'));
+    lireTexte.mockResolvedValue('Telegram : @lola_privee75');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await analyserPhoto({ userId: 'u1', photoKey: 'p/1.webp', buffer: img });
+    expect(enregistrerSignal).toHaveBeenCalledWith(expect.objectContaining({ type: 'contact_photo' }));
+    warn.mockRestore();
   });
 });
