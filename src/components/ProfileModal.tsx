@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import OnlineIndicator from '@/components/OnlineIndicator';
 import VerificationBadge from '@/components/VerificationBadge';
 import { PublicTrustBadge } from '@/components/PublicTrustBadge';
@@ -81,10 +81,21 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null,
   // Après une réponse donnée sur la fiche (spec 009) : relire la fiche sans
   // repasser par l'état de chargement, pour que la réponse de l'autre
   // apparaisse sur place. Le serveur reste seul juge du voile.
+  // La fiche affichée à cet instant : une relecture qui arrive après un
+  // changement de fiche (ou une fermeture) est ignorée (revue PR #466).
+  const ficheCourante = useRef<{ userId: string; open: boolean }>({ userId, open });
+  useEffect(() => {
+    ficheCourante.current = { userId, open };
+  }, [userId, open]);
+
   const reloadProfile = useCallback(async () => {
+    const demande = userId;
     try {
-      const res = await fetch(`/api/users/${userId}`);
-      if (res.ok) setProfile(await res.json());
+      const res = await fetch(`/api/users/${demande}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const { userId: actuel, open: ouverte } = ficheCourante.current;
+      if (ouverte && actuel === demande) setProfile(data);
     } catch {
       // La fiche reste telle quelle ; la prochaine ouverture relira tout.
     }

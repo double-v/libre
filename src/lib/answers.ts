@@ -141,6 +141,9 @@ export function answersFor(opts: {
     }
     if (a.status !== 'published') continue;
     const visible = opts.viewerKeys?.has(q.key) === true;
+    // Question retirée de la banque : lisible par qui y avait répondu, mais on
+    // n'invite personne à y répondre — la réponse serait refusée.
+    if (q.retired && !visible) continue;
     out.push(
       visible
         ? { rank: order, a: { ...base, choices: a.choices, text: a.text } }

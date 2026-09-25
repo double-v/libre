@@ -128,7 +128,8 @@ async function signaler() {
 }
 async function lireSignalements() {
   const { GET } = await import('@/app/api/admin/reports/route');
-  return (await (await GET(new NextRequest('http://x/api/admin/reports?status=pending'))).json()).reports as Array<Record<string, any>>;
+  type Lu = { answersSnapshot: unknown; reported: { profileAnswers: Array<{ text: string; removedAt: string | null }> } };
+  return (await (await GET(new NextRequest('http://x/api/admin/reports?status=pending'))).json()).reports as Lu[];
 }
 
 beforeEach(() => {
@@ -178,7 +179,7 @@ describe('la preuve d’un signalement ne s’efface pas', () => {
       { questionKey: 'fait-rire', choices: [], text: 'Texte injurieux.' },
       { questionKey: 'chanson', choices: [], text: 'Une chanson.' },
     ]);
-    expect(r.reported.profileAnswers.map((a: { text: string }) => a.text)).toEqual(['Texte poli.']);
+    expect(r.reported.profileAnswers.map((a) => a.text)).toEqual(['Texte poli.']);
   });
 
   it('ne copie pas une réponse déjà retirée par la modération', async () => {

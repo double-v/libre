@@ -64,7 +64,7 @@ export default function ProfileAnswers() {
     return [...(answers ?? [])].sort((a, b) => rank(a.key) - rank(b.key));
   }, [answers]);
   const texts = ordered.filter((a) => a.format !== 'ceci-ou-cela');
-  const pairs = ordered.filter((a) => a.format === 'ceci-ou-cela' && a.status !== 'removed');
+  const pairs = ordered.filter((a) => a.format === 'ceci-ou-cela');
 
   if (mode.kind === 'suite') {
     return <QuestionFlow theme={mode.theme} answeredKeys={answered} onAnswered={upsert} onStop={() => setMode({ kind: 'liste' })} />;
@@ -191,12 +191,50 @@ export default function ProfileAnswers() {
         <div>
           <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Mes choix « Ceci ou cela »</div>
           <div className="flex flex-wrap gap-2">
-            {pairs.map((a) => (
-              <span key={a.key} className="rounded-full bg-blush px-3 py-1 text-sm text-content dark:bg-coral/10">
-                {choiceLabels(a.key, a.choices).join(' · ')}
-              </span>
-            ))}
+            {pairs.map((a) => {
+              const q = questionByKey(a.key);
+              const retire = a.status === 'removed';
+              const choix = retire ? 'retiré' : choiceLabels(a.key, a.choices).join(' · ');
+              return (
+                <button
+                  key={a.key}
+                  type="button"
+                  aria-expanded={editing === a.key}
+                  aria-label={`${q?.label ?? a.key} : ${choix}`}
+                  onClick={() => setEditing(editing === a.key ? null : a.key)}
+                  className={`min-h-11 rounded-full px-3 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-coral ${
+                    retire ? 'bg-fill-subtle text-muted line-through' : 'bg-blush text-content dark:bg-coral/10'
+                  }`}
+                >
+                  {retire ? q?.label : choix}
+                </button>
+              );
+            })}
           </div>
+          {pairs.map((a) => {
+            const q = questionByKey(a.key);
+            if (editing !== a.key || !q) return null;
+            const retire = a.status === 'removed';
+            return (
+              <div key={a.key} className="mt-2 rounded-2xl bg-fill-subtle p-3">
+                {retire && (
+                  <div className="mb-2 text-sm text-muted">Ce choix a été retiré par la modération. Tu peux en faire un autre.</div>
+                )}
+                <AnswerInput
+                  question={q}
+                  initial={retire ? undefined : { choices: a.choices, text: '' }}
+                  onSaved={(saved) => {
+                    upsert(saved);
+                    setEditing(null);
+                  }}
+                  onCancel={() => setEditing(null)}
+                />
+                <Button type="button" variant="ghost" className="mt-1" onClick={() => void retirer(a.key)}>
+                  Retirer ma réponse
+                </Button>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
