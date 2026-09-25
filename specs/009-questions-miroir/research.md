@@ -15,6 +15,8 @@
 Critères : ouvertes, légères, sans thème sensible (santé, politique, religion,
 sexualité, argent, corps), sans supposer une mobilité, un corps ou une
 situation ; écriture inclusive sobre (·e) comme ailleurs dans l'app.
+Typographie : **espace insécable** (U+00A0) avant « ? » dans le code, sinon
+le point d'interrogation part seul à la ligne sur mobile (vu au prototype).
 
 | Clé | Intitulé |
 |---|---|
