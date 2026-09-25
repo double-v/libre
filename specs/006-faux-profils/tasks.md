@@ -18,17 +18,17 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Pour chaque issue, créer le worktree `/home/w/projects/.worktrees/getlibre/<branche>/` depuis `libre/main` ; `.env` copié, `node_modules` en liens durs (`cp -al`), `npx prisma generate`, `npx vitest run` vert au départ
+- [x] T001 Pour chaque issue, créer le worktree `/home/w/projects/.worktrees/getlibre/<branche>/` depuis `libre/main` ; `.env` copié, `node_modules` en liens durs (`cp -al`), `npx prisma generate`, `npx vitest run` vert au départ
 - [x] T002 Ouvrir une issue GitHub par user story sur `double-v/libre` (US1, US2, US4, US3, US5), corps = la story de spec.md + lien vers `specs/006-faux-profils/` ; noter les numéros en tête de ce fichier
 
 ---
 
 ## Phase 2: Foundational (livrée avec US2)
 
-- [ ] T003 Ajouter à `package.json` les dépendances `tesseract.js@7.0.0` et `@tesseract.js-data/eng@1.0.0`, et greffer au `package-lock.json` avec `jq` les entrées exactes produites dans un bac à sable npm (liste en research.md R5) — **ne jamais lancer `npm install` dans le dépôt** ; vérifier `npm ci --dry-run` sans `EUSAGE` et que `git diff package-lock.json` ne supprime aucune ligne `libc`
-- [ ] T004 Ajouter les modèles `ProfileSignal` (`profile_signals`) et le champ `User.retraitAt` dans `prisma/schema.prisma` selon data-model.md ; écrire à la main `prisma/migrations/20260925100000_profile_signals/migration.sql` (table, index unique `(userId, cle)`, FK cascade, colonne nullable) ; `npx prisma generate` — jamais `migrate dev`
-- [ ] T005 [P] Test puis module pur `src/lib/fraude/signaux.ts` : `enregistrerSignal({ userId, type, force, extrait?, photoKey?, autreUserId? })` (upsert sur `cle` = type + contenu normalisé, `extrait` tronqué à 200) et `dansLaFile(signaux, decidedAt)` (règle de data-model.md : un fort, ou deux, ou un `signalement_faux`, postérieurs à la décision ; `photo_recuperee` seul ne compte pas) — tests dans `src/lib/fraude/__tests__/signaux.test.ts`
-- [ ] T006 [P] Test de non-fuite `src/__tests__/signaux-never-leak.test.ts` (patron `city-label-never-leaks.test.ts`) : aucune route lue par un autre membre ne sélectionne `retraitAt` ni `profileSignals` ; le membre lui-même ne reçoit que `retrait: boolean`
+- [x] T003 Ajouter à `package.json` les dépendances `tesseract.js@7.0.0` et `@tesseract.js-data/eng@1.0.0`, et greffer au `package-lock.json` avec `jq` les entrées exactes produites dans un bac à sable npm (liste en research.md R5) — **ne jamais lancer `npm install` dans le dépôt** ; vérifier `npm ci --dry-run` sans `EUSAGE` et que `git diff package-lock.json` ne supprime aucune ligne `libc`
+- [x] T004 Ajouter les modèles `ProfileSignal` (`profile_signals`) et le champ `User.retraitAt` dans `prisma/schema.prisma` selon data-model.md ; écrire à la main `prisma/migrations/20260925100000_profile_signals/migration.sql` (table, index unique `(userId, cle)`, FK cascade, colonne nullable) ; `npx prisma generate` — jamais `migrate dev`
+- [x] T005 [P] Test puis module pur `src/lib/fraude/signaux.ts` : `enregistrerSignal({ userId, type, force, extrait?, photoKey?, autreUserId? })` (upsert sur `cle` = type + contenu normalisé, `extrait` tronqué à 200) et `dansLaFile(signaux, decidedAt)` (règle de data-model.md : un fort, ou deux, ou un `signalement_faux`, postérieurs à la décision ; `photo_recuperee` seul ne compte pas) — tests dans `src/lib/fraude/__tests__/signaux.test.ts`
+- [x] T006 [P] Test de non-fuite `src/__tests__/signaux-never-leak.test.ts` (patron `city-label-never-leaks.test.ts`) : aucune route lue par un autre membre ne sélectionne `retraitAt` ni `profileSignals` ; le membre lui-même ne reçoit que `retrait: boolean`
 
 **Checkpoint** : signaux enregistrables et règle d'entrée en file testée.
 
@@ -53,12 +53,12 @@
 **Goal**: contact externe refusé à l'écriture du pseudo et de la bio, et lu sur les photos → signaux.
 **Independent Test**: bio « écris-moi sur t.me/xyz » → 400 avec la règle + signal ; photo « Telegram : @lola_privee75 » → signal `contact_photo`.
 
-- [ ] T011 [P] [US2] Test en tableau puis `src/lib/fraude/contact.ts` : `detecterContact(texte) → Array<{ type, extrait, force }>` selon research.md R3 — cas obligatoires : `@lola_privee75`, `t.me/xyz`, `t . m e / x y z`, `snap: lolaa.vip`, `telegram lola75`, `wa.me/33612345678`, `06 12 34 56 78`, `061234 56 78` (sortie OCR réelle), `+33 6 12 34 56 78`, `onlyfans.com/x` → fort ; `je n'ai pas Telegram`, `a@b.fr` → faible ; `@ bientôt`, `Paris 2024`, `j'aime le 06` → rien
-- [ ] T012 [US2] Tests puis refus à l'écriture : `src/app/api/users/profile/route.ts` (bio) et la mise à jour du pseudo (`src/app/api/users/me/route.ts`, inscription `src/app/api/auth/register/route.ts`) → contact **fort** : 400 `{ error: 'Les contacts se partagent dans la messagerie, une fois le match fait.', extrait }` + `enregistrerSignal(contact_bio|contact_pseudo, fort)` ; **faible** : enregistré + signal faible
+- [x] T011 [P] [US2] Test en tableau puis `src/lib/fraude/contact.ts` : `detecterContact(texte) → Array<{ type, extrait, force }>` selon research.md R3 — cas obligatoires : `@lola_privee75`, `t.me/xyz`, `t . m e / x y z`, `snap: lolaa.vip`, `telegram lola75`, `wa.me/33612345678`, `06 12 34 56 78`, `061234 56 78` (sortie OCR réelle), `+33 6 12 34 56 78`, `onlyfans.com/x` → fort ; `je n'ai pas Telegram`, `a@b.fr` → faible ; `@ bientôt`, `Paris 2024`, `j'aime le 06` → rien
+- [x] T012 [US2] Tests puis refus à l'écriture : `src/app/api/users/profile/route.ts` (bio) et la mise à jour du pseudo (`src/app/api/users/me/route.ts`, inscription `src/app/api/auth/register/route.ts`) → contact **fort** : 400 `{ error: 'Les contacts se partagent dans la messagerie, une fois le match fait.', extrait }` + `enregistrerSignal(contact_bio|contact_pseudo, fort)` ; **faible** : enregistré + signal faible
 - [ ] T013 [US2] Afficher l'`extrait` sous le champ en erreur dans les formulaires existants (profil, `/bienvenue`, inscription) — copie seulement, composants existants ; capture Playwright
-- [ ] T014 [P] [US2] Test puis `src/lib/fraude/lecture-photo.ts` : worker `tesseract.js` unique et paresseux (`langPath` vers `@tesseract.js-data/eng`, aucun réseau), `lireTexte(buffer) → string`, délai max 15 s puis abandon journalisé sans PII ; test avec l'image générée de research.md R1 (`sharp` + SVG) ; ajouter les fichiers du modèle à `outputFileTracingIncludes` de `next.config.ts` pour la route photos
-- [ ] T015 [US2] Tests puis `src/lib/fraude/analyse.ts` `analyserPhoto({ userId, photoKey, buffer })` : `lireTexte` → `detecterContact` → signal `contact_photo` (fort si motif fort) ; best-effort, ne jette jamais ; appelé dans `after()` de `POST src/app/api/users/photos/route.ts` avec le tampon déjà en mémoire — la réponse ne change pas (test)
-- [ ] T016 [US2] Signalement « Faux profil » : dans `src/app/api/moderation/report/route.ts`, motif `fake` → `enregistrerSignal(signalement_faux, fort, cle = reportId)` ; test
+- [x] T014 [P] [US2] Test puis `src/lib/fraude/lecture-photo.ts` : worker `tesseract.js` unique et paresseux (`langPath` vers `@tesseract.js-data/eng`, aucun réseau), `lireTexte(buffer) → string`, délai max 15 s puis abandon journalisé sans PII ; test avec l'image générée de research.md R1 (`sharp` + SVG) ; ajouter les fichiers du modèle à `outputFileTracingIncludes` de `next.config.ts` pour la route photos
+- [x] T015 [US2] Tests puis `src/lib/fraude/analyse.ts` `analyserPhoto({ userId, photoKey, buffer })` : `lireTexte` → `detecterContact` → signal `contact_photo` (fort si motif fort) ; best-effort, ne jette jamais ; appelé dans `after()` de `POST src/app/api/users/photos/route.ts` avec le tampon déjà en mémoire — la réponse ne change pas (test)
+- [x] T016 [US2] Signalement « Faux profil » : dans `src/app/api/moderation/report/route.ts`, motif `fake` → `enregistrerSignal(signalement_faux, fort, cle = reportId)` ; test
 
 **Checkpoint** : rejoué sur le cas du 2026-09-24, le compte porte un signal fort (SC-001, sans la file).
 

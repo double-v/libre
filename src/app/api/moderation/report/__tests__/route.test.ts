@@ -13,6 +13,8 @@ vi.mock('@/lib/auth', () => ({ authOptions: {} }));
 
 const fakeDb = { report: { create: vi.fn() } };
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => fakeDb }));
+const enregistrerSignal = vi.fn(async () => true);
+vi.mock('@/lib/fraude/signaux', () => ({ __esModule: true, enregistrerSignal }));
 
 const mockRateLimit = vi.fn();
 vi.mock('@/lib/rate-limit', () => ({
@@ -78,5 +80,19 @@ describe('POST /api/moderation/report — push admin', () => {
     const res = await POST(req({ reportedId: 'not-a-uuid', reason: 'spam' }));
     expect(res.status).toBe(400);
     expect(mockAfter).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/moderation/report — signal de faux profil (spec 006, #443)', () => {
+  it('un signalement « faux profil » devient un signal fort, dédupliqué par signalement', async () => {
+    fakeDb.report.create.mockResolvedValue({ id: 'r42', reporterId: ME, reportedId: REPORTED, reason: 'fake', status: 'pending' });
+    const res = await POST(req({ reportedId: REPORTED, reason: 'fake' }));
+    expect(res.status).toBe(201);
+    expect(enregistrerSignal).toHaveBeenCalledWith({ userId: REPORTED, type: 'signalement_faux', force: 'fort', cle: 'r42' });
+  });
+
+  it('un autre motif ne lève aucun signal', async () => {
+    await POST(req({ reportedId: REPORTED, reason: 'harassment' }));
+    expect(enregistrerSignal).not.toHaveBeenCalled();
   });
 });

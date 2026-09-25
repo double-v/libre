@@ -6,6 +6,9 @@ import { authOptions } from '@/lib/auth';
 import { profileUpdateSchema } from '@/lib/validators';
 import { photoSensitivityMap } from '@/lib/photo-veil';
 import { formatCityLabel } from '@/lib/geocoding';
+import { detecterContact } from '@/lib/fraude/contact';
+import { enregistrerSignal } from '@/lib/fraude/signaux';
+import { MESSAGE_CONTACT } from '@/lib/fraude/messages';
 import { aConsentementSensible, donnerConsentementSensible, porteDonneeSensible, traceConsentement } from '@/lib/consentement-sensible';
 
 export async function GET() {
@@ -73,6 +76,22 @@ export async function PUT(request: Request) {
     }
 
     const data = parsed.data;
+
+    // Contact externe dans la bio (spec 006, FR-020) : un moyen de contact
+    // utilisable refuse l'écriture — c'est le premier geste des faux profils
+    // pour sortir de l'app avant tout match. On montre le passage pour que la
+    // personne honnête corrige sans chercher. Un indice faible passe, noté.
+    if (data.bio) {
+      const contacts = detecterContact(data.bio);
+      const fort = contacts.find((c) => c.force === 'fort');
+      const repere = fort ?? contacts[0];
+      if (repere) {
+        await enregistrerSignal({ userId: session.user.id, type: 'contact_bio', force: repere.force, extrait: repere.extrait });
+      }
+      if (fort) {
+        return NextResponse.json({ error: MESSAGE_CONTACT, extrait: fort.extrait }, { status: 400 });
+      }
+    }
 
     // Art. 9 (#425) : aucune valeur d'orientation, de genre ou de pratiques ne
     // se persiste sans consentement explicite actif — donné avant, ou dans

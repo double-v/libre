@@ -33,7 +33,20 @@ const nextConfig: NextConfig = {
 
   // Prisma 7 + driver adapters must be externalized for Turbopack
   // Otherwise Turbopack wraps the module and PrismaClient breaks
-  serverExternalPackages: ['@prisma/client', '@prisma/adapter-pg', 'pg'],
+  // tesseract.js (spec 006) lance un worker_thread sur son propre script et
+  // charge un modèle local : il doit rester un vrai paquet de node_modules.
+  serverExternalPackages: ['@prisma/client', '@prisma/adapter-pg', 'pg', 'tesseract.js'],
+
+  // Le modèle OCR et le moteur WASM sont chargés par chemin, à l'exécution :
+  // le traçage ne les voit pas. On les embarque dans la fonction qui lit les
+  // photos (spec 006, #443).
+  outputFileTracingIncludes: {
+    '/api/users/photos': [
+      './node_modules/@tesseract.js-data/eng/4.0.0_best_int/**',
+      './node_modules/tesseract.js/src/**',
+      './node_modules/tesseract.js-core/**',
+    ],
+  },
 
   turbopack: {
     resolveAlias: {

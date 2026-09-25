@@ -257,6 +257,12 @@ Règles d'exposition :
   `src/lib/geocoding.ts`.
 - Parcours d'accueil (spec 005) : `Profile.onboardingStep` est **privé** lui
   aussi — même garde de non-fuite. Le serveur garde le max (jamais de recul).
+- Faux profils (spec 006) : `User.retraitAt` et `ProfileSignal` sont **privés**
+  (même garde). Contact externe **fort** refusé à l'écriture de la bio
+  (`src/lib/fraude/contact.ts`) ; le pseudo garde sa règle (#459,
+  `src/lib/contact.ts`). Texte des photos lu par `tesseract.js` dans `after()`,
+  modèle embarqué, aucun réseau : le paquet reste dans `serverExternalPackages`
+  et ses fichiers dans `outputFileTracingIncludes`.
 - Réciprocité miroir (spec 008) : l'intention d'autrui (`relationshipType`)
   est **voilée** pour une lectrice qui n'a pas déclaré la sienne — clé omise,
   `relationshipTypeVeiled: true` à la place. Décision unique `intentionFor`

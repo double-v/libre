@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { reportSchema } from '@/lib/validators';
 import { sendPushToAdmins, buildPayload } from '@/lib/push/server';
 import { rateLimit, limits } from '@/lib/rate-limit';
+import { enregistrerSignal } from '@/lib/fraude/signaux';
 
 export async function POST(request: Request) {
   try {
@@ -53,6 +54,12 @@ export async function POST(request: Request) {
         ...(answersSnapshot ? { answersSnapshot } : {}),
       },
     });
+
+    // « Faux profil » alimente la file « Profils à vérifier » (spec 006) : un
+    // signal par signalement, jamais bloquant pour la personne qui signale.
+    if (reason === 'fake') {
+      await enregistrerSignal({ userId: reportedId, type: 'signalement_faux', force: 'fort', cle: report.id });
+    }
 
     // #393 : prévenir les admins hors de l'app, après la réponse. Charge utile
     // sans motif ni identité (SC-006) — « quelque chose attend », c'est tout.

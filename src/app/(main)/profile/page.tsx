@@ -9,6 +9,7 @@ import TagButton from '@/components/TagButton';
 import TagSelector from '@/components/TagSelector';
 import PrivacyTip from '@/components/PrivacyTip';
 import ConsentSensibleField, { COPY_CONSENT_SENSIBLE } from '@/components/ConsentSensibleField';
+import { MESSAGE_CONTACT } from '@/lib/fraude/messages';
 import { porteDonneeSensible } from '@/lib/consentement-sensible-champs';
 import { SENSITIVITY_LABELS, SENSITIVITY_THRESHOLDS, THRESHOLD_LABELS } from '@/lib/photo-sensitivity';
 import ProfileGlance from '@/components/ProfileGlance';
@@ -110,6 +111,9 @@ export default function ProfilePage() {
   const [now, setNow] = useState(0);
 
   const [editBio, setEditBio] = useState('');
+  // Passage refusé dans la bio (spec 006, #443) : montré sous le champ pour
+  // qu'on corrige sans chercher.
+  const [bioRefus, setBioRefus] = useState<string | null>(null);
   const [editBirthDate, setEditBirthDate] = useState('');
   const [editGenderIdentity, setEditGenderIdentity] = useState('');
   const [editOrientation, setEditOrientation] = useState<string[]>([]);
@@ -177,7 +181,7 @@ export default function ProfilePage() {
       setEditBirthDate(profile?.birthDate ? profile.birthDate.split('T')[0] : '');
       setEditGenderIdentity(profile?.genderIdentity ?? '');
     }
-    if (section === 'bio') setEditBio(profile?.bio ?? '');
+    if (section === 'bio') { setEditBio(profile?.bio ?? ''); setBioRefus(null); }
     if (section === 'orientation') {
       setEditOrientation(profile?.orientation ?? []);
       setEditRelationshipType(profile?.relationshipType ?? []);
@@ -210,8 +214,14 @@ export default function ProfilePage() {
       });
       if (!res.ok) {
         const result = await res.json();
+        if (typeof result.extrait === 'string') {
+          // Le refus s'affiche sous le champ, pas en tête de page.
+          setBioRefus(result.extrait);
+          return;
+        }
         throw new Error(result.error === 'consent_required' ? COPY_CONSENT_SENSIBLE.requis : result.error || 'Erreur');
       }
+      setBioRefus(null);
       const result = await res.json();
       setProfile(result.profile);
       if (data.sensitiveConsent) setSensitiveConsent(true);
@@ -637,7 +647,12 @@ export default function ProfilePage() {
           <ProfileSection sectionId="bio" title="Bio" icon={<LinesIcon className="h-5 w-5" />} surface="blush" onEdit={() => startEdit('bio')} editing={editingSection === 'bio'} complete={profile.bio.length > 0} defaultOpen>
             {editingSection === 'bio' ? (
               <div className="mt-3 space-y-3">
-                <textarea rows={3} maxLength={500} value={editBio} onChange={(e) => setEditBio(e.target.value)} placeholder="Parle un peu de toi…" className={INPUT_CLASS} />
+                <textarea rows={3} maxLength={500} value={editBio} onChange={(e) => setEditBio(e.target.value)} placeholder="Parle un peu de toi…" className={INPUT_CLASS} aria-invalid={bioRefus ? true : undefined} aria-describedby={bioRefus ? 'bio-refus' : undefined} />
+                {bioRefus && (
+                  <p id="bio-refus" role="alert" className="text-sm text-red-600 dark:text-red-400">
+                    {MESSAGE_CONTACT} Passage concerné : « {bioRefus} ».
+                  </p>
+                )}
                 <p className="text-xs text-muted">{editBio.length}/500</p>
                 <EditActions saving={saving} onSave={() => saveSection({ bio: editBio })} onCancel={() => setEditingSection(null)} />
               </div>
