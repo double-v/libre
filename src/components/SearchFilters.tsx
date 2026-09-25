@@ -8,6 +8,9 @@ import {
   INTEREST_CATEGORIES,
 } from '@/lib/taxonomy';
 import Card from './ui/Card';
+import Link from 'next/link';
+import { buttonClassName } from './ui/Button';
+import { MIRROR_COPY, SEEKING_HREF } from '@/lib/onboarding';
 
 // Modèle de filtres de recherche partagé entre /discover et /profil (#235).
 // « genders/orientations » = qui je veux voir (préférences), distinct de
@@ -59,6 +62,12 @@ interface SearchFiltersProps {
   framed?: boolean;
   /** Bouton « Réinitialiser les filtres ». */
   showReset?: boolean;
+  /**
+   * La lectrice a-t-elle dit ce qu'elle cherche ? Sinon le serveur ignore le
+   * filtre par intention (spec 008) : le groupe reste lisible, inactif, et
+   * invite à se déclarer. Les choix enregistrés sont gardés.
+   */
+  intentionDeclared?: boolean;
 }
 
 const LABEL_CLASS =
@@ -71,6 +80,7 @@ export default function SearchFilters({
   onChange,
   framed = true,
   showReset = true,
+  intentionDeclared = true,
 }: SearchFiltersProps) {
   const toggle = <T,>(arr: T[], item: T): T[] =>
     arr.includes(item) ? arr.filter((v) => v !== item) : [...arr, item];
@@ -121,9 +131,18 @@ export default function SearchFilters({
               label={opt.charAt(0).toUpperCase() + opt.slice(1)}
               selected={value.relationshipTypes.includes(opt)}
               onClick={() => set({ relationshipTypes: toggle(value.relationshipTypes, opt) })}
+              disabled={!intentionDeclared}
             />
           ))}
         </div>
+        {!intentionDeclared && (
+          <div className="mt-2 flex flex-wrap items-center gap-x-1 text-sm text-muted">
+            <span>{MIRROR_COPY.intentionFilter}</span>
+            <Link href={SEEKING_HREF} className={buttonClassName('ghost', 'md', 'px-1')}>
+              Préciser
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Tranche d'âge */}

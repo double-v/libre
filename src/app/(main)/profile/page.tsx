@@ -719,7 +719,13 @@ export default function ProfilePage() {
             <p className="mt-1 text-xs text-muted">Qui souhaites-tu rencontrer ? Ces préférences filtrent aussi ta page Découvrir.</p>
             {editingSection === 'search' ? (
               <div className="mt-3 space-y-4">
-                <SearchFilters value={editSearchFilters} onChange={setEditSearchFilters} framed={false} />
+                {/* Filtre d'intention ignoré tant que la sienne n'est pas dite (spec 008). */}
+                <SearchFilters
+                  value={editSearchFilters}
+                  onChange={setEditSearchFilters}
+                  framed={false}
+                  intentionDeclared={profile.relationshipType.length > 0}
+                />
                 {consentField}
                 <EditActions
                   saving={saving}
