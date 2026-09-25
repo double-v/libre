@@ -77,10 +77,10 @@ export default function ProfileAnswers() {
 
   return (
     <div className="space-y-5">
-      <p className="text-sm leading-relaxed text-muted">
+      <div className="text-sm leading-relaxed text-muted">
         Réponds à quelques questions pour donner aux autres une bonne raison de t’écrire. Tu pourras lire leurs réponses
         aux questions auxquelles tu auras toi aussi répondu.
-      </p>
+      </div>
 
       <div className="grid gap-2">
         <button
@@ -114,7 +114,7 @@ export default function ProfileAnswers() {
       </div>
 
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Ou choisis un thème</p>
+        <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Ou choisis un thème</div>
         <div className="flex flex-wrap gap-2">
           {THEMES.filter((t) => t.key !== 'ceci-ou-cela').map((t) => (
             <Button key={t.key} type="button" variant="secondary" size="sm" className="min-h-11 rounded-full" onClick={() => setMode({ kind: 'suite', theme: t.key })}>
@@ -125,14 +125,14 @@ export default function ProfileAnswers() {
       </div>
 
       {loadError && (
-        <p role="alert" className="text-sm text-error">
+        <div role="alert" className="text-sm text-error">
           {loadError}
-        </p>
+        </div>
       )}
 
       {texts.length > 0 && (
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Mes réponses</p>
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Mes réponses</div>
           <ul className="space-y-2">
             {texts.map((a) => {
               const q = questionByKey(a.key);
@@ -140,7 +140,7 @@ export default function ProfileAnswers() {
               if (editing === a.key) {
                 return (
                   <li key={a.key} className="rounded-2xl bg-blush p-3 dark:bg-coral/10">
-                    <p className="mb-2 text-sm font-semibold text-coral-dark dark:text-coral-light">{q.label}</p>
+                    <div className="mb-2 text-sm font-semibold text-coral-dark dark:text-coral-light">{q.label}</div>
                     <AnswerInput
                       question={q}
                       initial={{ choices: a.choices, text: a.text }}
@@ -155,11 +155,11 @@ export default function ProfileAnswers() {
               }
               return (
                 <li key={a.key} className="rounded-2xl bg-blush p-3 dark:bg-coral/10">
-                  <p className="text-sm font-semibold text-coral-dark dark:text-coral-light">{q.label}</p>
+                  <div className="text-sm font-semibold text-coral-dark dark:text-coral-light">{q.label}</div>
                   {a.status === 'removed' ? (
-                    <p className="mt-1 rounded-lg bg-fill-subtle px-3 py-2 text-sm text-muted">
+                    <div className="mt-1 rounded-lg bg-fill-subtle px-3 py-2 text-sm text-muted">
                       Cette réponse a été retirée par la modération. Tu peux en écrire une autre.
-                    </p>
+                    </div>
                   ) : (
                     <>
                       {a.choices.length > 0 && (
@@ -169,7 +169,7 @@ export default function ProfileAnswers() {
                           ))}
                         </div>
                       )}
-                      {a.text && <p className="mt-1.5 whitespace-pre-line text-content">{a.text}</p>}
+                      {a.text && <div className="mt-1.5 whitespace-pre-line text-content">{a.text}</div>}
                     </>
                   )}
                   <div className="mt-1 flex flex-wrap gap-1">
@@ -189,7 +189,7 @@ export default function ProfileAnswers() {
 
       {pairs.length > 0 && (
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Mes choix « Ceci ou cela »</p>
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Mes choix « Ceci ou cela »</div>
           <div className="flex flex-wrap gap-2">
             {pairs.map((a) => (
               <span key={a.key} className="rounded-full bg-blush px-3 py-1 text-sm text-content dark:bg-coral/10">

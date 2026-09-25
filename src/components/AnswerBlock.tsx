@@ -60,7 +60,7 @@ export default function AnswerBlock({ answers, onAnswered }: { answers: Serializ
             {visibles.map((a) =>
               'choices' in a ? (
                 <li key={a.key} className="rounded-2xl bg-blush p-3 dark:bg-coral/10">
-                  <p className="text-sm font-semibold text-coral-dark dark:text-coral-light">{questionByKey(a.key)?.label ?? a.label}</p>
+                  <div className="text-sm font-semibold text-coral-dark dark:text-coral-light">{questionByKey(a.key)?.label ?? a.label}</div>
                   {a.choices.length > 0 && (
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
                       {choiceLabels(a.key, a.choices).map((l) => (
@@ -68,7 +68,7 @@ export default function AnswerBlock({ answers, onAnswered }: { answers: Serializ
                       ))}
                     </div>
                   )}
-                  {a.text && <p className="mt-1.5 whitespace-pre-line text-content">{a.text}</p>}
+                  {a.text && <div className="mt-1.5 whitespace-pre-line text-content">{a.text}</div>}
                 </li>
               ) : null,
             )}
@@ -100,7 +100,7 @@ export default function AnswerBlock({ answers, onAnswered }: { answers: Serializ
           </div>
           {pairs.some((a) => a.key === open) && open && (
             <div className="mt-2 rounded-2xl bg-fill-subtle p-3">
-              <p className="mb-2 text-sm text-muted">Réponds à cette question pour découvrir son choix.</p>
+              <div className="mb-2 text-sm text-muted">Réponds à cette question pour découvrir son choix.</div>
               {saisie(open)}
             </div>
           )}
@@ -113,7 +113,7 @@ export default function AnswerBlock({ answers, onAnswered }: { answers: Serializ
           <ul className="space-y-2">
             {montrees.map((a) => (
               <li key={a.key} className="rounded-2xl bg-fill-subtle p-3">
-                <p className="text-sm font-semibold text-coral-dark dark:text-coral-light">{questionByKey(a.key)?.label ?? a.label}</p>
+                <div className="text-sm font-semibold text-coral-dark dark:text-coral-light">{questionByKey(a.key)?.label ?? a.label}</div>
                 {open === a.key ? (
                   saisie(a.key)
                 ) : (
@@ -122,7 +122,7 @@ export default function AnswerBlock({ answers, onAnswered }: { answers: Serializ
                       <span className="block h-2 w-11/12 rounded-full bg-hairline" />
                       <span className="block h-2 w-2/3 rounded-full bg-hairline" />
                     </div>
-                    <p className="mt-2 text-sm text-muted">Réponds à cette question pour découvrir sa réponse.</p>
+                    <div className="mt-2 text-sm text-muted">Réponds à cette question pour découvrir sa réponse.</div>
                     <Button type="button" variant="ghost" className="-ml-2" onClick={() => setOpen(a.key)}>
                       Répondre à cette question
                     </Button>

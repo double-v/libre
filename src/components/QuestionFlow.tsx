@@ -36,9 +36,9 @@ export default function QuestionFlow({
   if (!current) {
     return (
       <div className="space-y-3">
-        <p className="text-sm text-muted">
+        <div className="text-sm text-muted">
           {theme ? 'Tu as répondu à toutes les questions de ce thème.' : 'Tu as répondu à toutes les questions proposées.'}
-        </p>
+        </div>
         <Button type="button" variant="secondary" onClick={onStop}>
           Revenir à mes questions
         </Button>
@@ -48,7 +48,7 @@ export default function QuestionFlow({
 
   return (
     <div className="space-y-3">
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted">{themeLabel(current.theme)}</p>
+      <div className="text-xs font-semibold uppercase tracking-wider text-muted">{themeLabel(current.theme)}</div>
       <h3 className="text-xl font-bold leading-snug text-content">{current.label}</h3>
       <AnswerInput
         key={current.key}

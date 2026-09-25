@@ -98,7 +98,7 @@ export default function AnswerInput({
     >
       {question.format === 'choix' && (
         <>
-          <p className="text-sm text-muted">{multiple ? 'Tu peux choisir plusieurs réponses.' : 'Choisis une réponse.'}</p>
+          <div className="text-sm text-muted">{multiple ? 'Tu peux choisir plusieurs réponses.' : 'Choisis une réponse.'}</div>
           <div className="flex flex-wrap gap-2" role="group" aria-label="Réponses proposées">
             {question.options!.map((o) => pastille(o.key, o.label))}
           </div>
@@ -144,9 +144,9 @@ export default function AnswerInput({
       )}
 
       {error && (
-        <p role="alert" className="text-sm text-error">
+        <div role="alert" className="text-sm text-error">
           {error}
-        </p>
+        </div>
       )}
 
       <div className="flex flex-wrap gap-2">

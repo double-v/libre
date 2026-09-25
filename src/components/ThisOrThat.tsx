@@ -35,7 +35,7 @@ export default function ThisOrThat({
   if (!pair) {
     return (
       <div className="space-y-3">
-        <p className="text-sm text-muted">Tu as répondu à toutes les questions « Ceci ou cela ».</p>
+        <div className="text-sm text-muted">Tu as répondu à toutes les questions « Ceci ou cela ».</div>
         <Button type="button" variant="secondary" onClick={onStop}>
           Revenir à mes questions
         </Button>
@@ -58,7 +58,7 @@ export default function ThisOrThat({
 
   return (
     <div className="space-y-4">
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted">Ceci ou cela</p>
+      <div className="text-xs font-semibold uppercase tracking-wider text-muted">Ceci ou cela</div>
       <h3 className="text-xl font-bold leading-snug text-content">Laquelle de ces deux réponses te ressemble le plus&nbsp;?</h3>
       <div className="flex items-center gap-3" role="group" aria-label={pair.label}>
         {pair.options!.map((o, i) => (
@@ -76,9 +76,9 @@ export default function ThisOrThat({
         ))}
       </div>
       {error && (
-        <p role="alert" className="text-sm text-error">
+        <div role="alert" className="text-sm text-error">
           {error}
-        </p>
+        </div>
       )}
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="secondary" onClick={() => setQueue((q) => [...q.slice(1), q[0]])}>
