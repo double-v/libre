@@ -13,6 +13,8 @@ model User {
   normalizedEmail   String    @unique @default("")
   emailVerified     DateTime?
   displayName       String
+  // Pseudo retiré par la règle (#459) : à choisir avant de continuer.
+  mustRenameDisplayName Boolean @default(false)
   passwordHash      String?
   deviceId          String?
   role              String    @default("USER")

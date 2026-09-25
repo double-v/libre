@@ -197,6 +197,9 @@ export const limits: Record<string, RateLimitPreset> = {
   squareMessage: { limit: 10, windowMs: 60_000 },
   squareReaction: { limit: 5, windowMs: 60_000 },
   squareReport: { limit: 3, windowMs: 3_600_000 },
+  // Renommage du pseudo (#459) : quelques essais pour trouver le bon, pas de
+  // quoi changer d'identité en boucle pour échapper aux signalements.
+  pseudo: { limit: 5, windowMs: 3_600_000 },
 };
 
 export function rateLimitHeaders(
