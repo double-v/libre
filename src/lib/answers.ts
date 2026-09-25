@@ -14,7 +14,15 @@ import { QUESTIONS, questionByKey, type QuestionFormat } from '@/lib/questions';
 
 export const ANSWER_MAX = 300;
 
-export type AnswerMotif = 'question' | 'choix' | 'texte-requis' | 'texte-interdit' | 'longueur' | 'contact' | 'caracteres';
+export type AnswerMotif =
+  | 'question'
+  | 'choix'
+  | 'texte-requis'
+  | 'texte-interdit'
+  | 'longueur'
+  | 'contact'
+  | 'caracteres'
+  | 'identique-retiree';
 
 /** Messages en phrases complètes (FR-011), sans accuser. */
 export const ANSWER_MESSAGES: Record<AnswerMotif, string> = {
@@ -25,7 +33,20 @@ export const ANSWER_MESSAGES: Record<AnswerMotif, string> = {
   longueur: `Ta réponse peut faire jusqu’à ${ANSWER_MAX} caractères.`,
   contact: 'Pas d’adresse e-mail, de lien ni de numéro dans une réponse : elle est visible par tout le monde.',
   caracteres: 'Ta réponse contient un caractère invisible ou non autorisé. Réécris-la sans copier-coller.',
+  'identique-retiree': 'Cette réponse a été retirée par la modération. Écris une réponse différente.',
 };
+
+/** Même réponse que celle retirée par la modération (choix dans n'importe quel ordre). */
+export function estLaReponseRetiree(
+  value: { choices: string[]; text: string },
+  removed: { removedText: string | null; removedChoices: string[]; removedAt: Date | null } | null,
+): boolean {
+  if (!removed?.removedAt) return false;
+  const memeTexte = value.text === normalizeAnswerText(removed.removedText ?? '');
+  const a = [...value.choices].sort().join('\u0000');
+  const b = [...removed.removedChoices].sort().join('\u0000');
+  return memeTexte && a === b;
+}
 
 export type AnswerInput = { choices?: unknown; text?: unknown };
 

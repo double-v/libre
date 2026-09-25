@@ -14,7 +14,7 @@ vi.mock('@/lib/rate-limit', () => ({
   limits: { answers: { limit: 120, windowMs: 3_600_000 } },
 }));
 
-const profileAnswer = { findMany: vi.fn(), upsert: vi.fn(), deleteMany: vi.fn() };
+const profileAnswer = { findMany: vi.fn(), findUnique: vi.fn(), upsert: vi.fn(), deleteMany: vi.fn() };
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => ({ profileAnswer }) }));
 
 const req = (method: string, body?: unknown, qs = '') =>
@@ -29,6 +29,7 @@ beforeEach(() => {
   mockGetServerSession.mockResolvedValue({ user: { id: ME } });
   mockRateLimit.mockResolvedValue({ success: true, remaining: 100, resetAt: Date.now() + 1000 });
   profileAnswer.findMany.mockResolvedValue([]);
+  profileAnswer.findUnique.mockResolvedValue(null);
   profileAnswer.upsert.mockImplementation(async ({ create }: { create: Record<string, unknown> }) => ({ id: 'a1', status: 'published', ...create }));
   profileAnswer.deleteMany.mockResolvedValue({ count: 1 });
 });

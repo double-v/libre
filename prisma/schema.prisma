@@ -141,6 +141,11 @@ model ProfileAnswer {
   choices     String[] @default([])
   text        String   @default("")
   status      String   @default("published")
+  /// Ce que la modération a retiré (revue PR #466) : une republication à
+  /// l'identique est refusée, une réécriture est signalée à l'admin.
+  removedText    String?
+  removedChoices String[] @default([])
+  removedAt      DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -295,6 +300,9 @@ model Report {
   reviewedBy  String?   @db.Uuid
   createdAt   DateTime  @default(now())
   resolvedAt  DateTime?
+  /// Réponses publiées du profil signalé, copiées au signalement (spec 009) :
+  /// la preuve ne s'efface pas si la personne modifie ou supprime ensuite.
+  answersSnapshot Json?
 
   reporter User  @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
   reported User  @relation("ReportsReceived", fields: [reportedId], references: [id], onDelete: Cascade)

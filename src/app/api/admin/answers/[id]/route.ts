@@ -27,11 +27,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     const answer = await getDb().profileAnswer.findUnique({
       where: { id },
-      select: { id: true, userId: true, questionKey: true },
+      select: { id: true, userId: true, questionKey: true, text: true, choices: true },
     });
     if (!answer) return NextResponse.json({ error: 'Réponse introuvable' }, { status: 404 });
 
-    await getDb().profileAnswer.update({ where: { id }, data: { status: 'removed' } });
+    // On garde ce qui est retiré : une republication à l'identique sera
+    // refusée, et une réécriture signalée à l'admin.
+    await getDb().profileAnswer.update({
+      where: { id },
+      data: { status: 'removed', removedText: answer.text, removedChoices: answer.choices, removedAt: new Date() },
+    });
     await getDb().moderationLog.create({
       data: {
         adminId: adminResult.userId,

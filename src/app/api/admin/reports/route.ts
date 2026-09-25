@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
             // à juger avec le signalement. Publiées seulement.
             profileAnswers: {
               where: { status: 'published' },
-              select: { id: true, questionKey: true, choices: true, text: true },
+              select: { id: true, questionKey: true, choices: true, text: true, removedAt: true },
             },
           },
         },

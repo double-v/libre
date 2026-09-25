@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { rateLimit, limits } from '@/lib/rate-limit';
-import { answersFor, validateAnswer } from '@/lib/answers';
+import { ANSWER_MESSAGES, answersFor, estLaReponseRetiree, validateAnswer } from '@/lib/answers';
 
 /**
  * Mes réponses aux questions de profil (spec 009, US1). Une réponse par
@@ -52,6 +52,22 @@ export async function PUT(request: Request) {
     if (!verdict.ok) return NextResponse.json({ error: verdict.message, motif: verdict.motif }, { status: 400 });
 
     const { choices, text } = verdict.value;
+
+    // Une réponse retirée par la modération ne revient pas à l'identique
+    // (revue PR #466) ; une réponse différente est republiée, et l'admin voit
+    // dans le signalement qu'elle a été réécrite après un retrait.
+    const existante = await getDb().profileAnswer.findUnique({
+      where: { userId_questionKey: { userId, questionKey: key } },
+      select: { status: true, removedText: true, removedChoices: true, removedAt: true },
+    });
+    if (estLaReponseRetiree({ choices, text }, existante)) {
+      return NextResponse.json(
+        { error: ANSWER_MESSAGES['identique-retiree'], motif: 'identique-retiree' },
+        { status: 400 },
+      );
+    }
+    if (existante?.status === 'removed') console.info('answers.rewrite_after_removal');
+
     const saved = await getDb().profileAnswer.upsert({
       where: { userId_questionKey: { userId, questionKey: key } },
       create: { userId, questionKey: key, choices, text },

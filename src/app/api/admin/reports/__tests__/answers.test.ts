@@ -20,7 +20,7 @@ describe('GET /api/admin/reports — réponses du profil signalé', () => {
     const include = report.findMany.mock.calls[0][0].include;
     expect(include.reported.select.profileAnswers).toEqual({
       where: { status: 'published' },
-      select: { id: true, questionKey: true, choices: true, text: true },
+      select: { id: true, questionKey: true, choices: true, text: true, removedAt: true },
     });
   });
 });
