@@ -24,6 +24,14 @@ export interface SensitivePhotoProps {
    * qu'elles sélectionnent qui offre la révélation.
    */
   revealable?: boolean;
+  /**
+   * Recadrer (`cover`, défaut) ou montrer la photo entière (`contain`). Les
+   * photos gardent leur format d'origine au téléversement : dans un cadre dont
+   * le rapport ne correspond pas, `cover` coupe. La fiche profil veut la photo
+   * entière (#456) ; vignettes et cartes gardent le recadrage, qui y est un
+   * choix de mise en page.
+   */
+  fit?: 'cover' | 'contain';
   className?: string;
 }
 
@@ -64,6 +72,7 @@ export default function SensitivePhoto({
   veiled = false,
   badge,
   revealable = true,
+  fit = 'cover',
   className = '',
 }: SensitivePhotoProps) {
   const [revealed, setRevealed] = useState(false);
@@ -87,7 +96,7 @@ export default function SensitivePhoto({
       {/* eslint-disable-next-line @next/next/no-img-element -- le proxy redirige
           vers une URL R2 signée à TTL court, que le cache de next/image mettrait
           en défaut (même raison que AdminUserPhotos). */}
-      <img src={src} alt={showVeil ? `${alt} (floutée)` : alt} className="h-full w-full object-cover" />
+      <img src={src} alt={showVeil ? `${alt} (floutée)` : alt} className={`h-full w-full ${fit === 'contain' ? 'object-contain' : 'object-cover'}`} />
 
       {showVeil && revealable && (
         <span className="absolute inset-0 flex items-center justify-center">
