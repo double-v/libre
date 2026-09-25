@@ -627,7 +627,7 @@ export const QUESTIONS: readonly Question[] = [
   {
     "key": "journee-parfaite",
     "theme": "envies",
-    "label": "Une journée parfaite, de bout en bout ?",
+    "label": "Une journée parfaite, du matin au soir ?",
     "format": "ouverte"
   },
   {
@@ -937,7 +937,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "mer-montagne",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Mer ou Montagne",
+    "label": "Mer ou montagne",
     "options": [
       {
         "key": "mer",
@@ -953,7 +953,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "chat-chien",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Chat ou Chien",
+    "label": "Chat ou chien",
     "options": [
       {
         "key": "chat",
@@ -969,7 +969,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "sale-sucre",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Salé ou Sucré",
+    "label": "Salé ou sucré",
     "options": [
       {
         "key": "sale",
@@ -985,7 +985,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "livre-film",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Livre ou Film",
+    "label": "Livre ou film",
     "options": [
       {
         "key": "livre",
@@ -1001,7 +1001,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "lever-coucher",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Lever de soleil ou Coucher de soleil",
+    "label": "Lever de soleil ou coucher de soleil",
     "options": [
       {
         "key": "lever-de-soleil",
@@ -1017,7 +1017,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "ville-campagne",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Ville ou Campagne",
+    "label": "Ville ou campagne",
     "options": [
       {
         "key": "ville",
@@ -1033,7 +1033,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "ete-hiver",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Été ou Hiver",
+    "label": "Été ou hiver",
     "options": [
       {
         "key": "ete",
@@ -1049,7 +1049,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "karaoke-blindtest",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Karaoké ou Blind test",
+    "label": "Karaoké ou blind test",
     "options": [
       {
         "key": "karaoke",
@@ -1065,7 +1065,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "pizza-sushi",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Pizza ou Sushi",
+    "label": "Pizza ou sushi",
     "options": [
       {
         "key": "pizza",
@@ -1081,7 +1081,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "spoilers",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Spoilers : jamais ou Spoilers : m’en fiche",
+    "label": "Spoilers : jamais ou spoilers : m’en fiche",
     "options": [
       {
         "key": "spoilers-jamais",
@@ -1097,7 +1097,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "dessert-fromage",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Dessert ou Fromage",
+    "label": "Dessert ou fromage",
     "options": [
       {
         "key": "dessert",
@@ -1113,7 +1113,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "pluie-soleil",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Pluie ou Soleil",
+    "label": "Pluie ou soleil",
     "options": [
       {
         "key": "pluie",
@@ -1129,7 +1129,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "serie-longue-courte",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Série à rallonge ou Mini-série",
+    "label": "Série à rallonge ou mini-série",
     "options": [
       {
         "key": "serie-a-rallonge",
@@ -1145,7 +1145,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "gagner-participer",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Jouer pour gagner ou Jouer pour jouer",
+    "label": "Jouer pour gagner ou jouer pour jouer",
     "options": [
       {
         "key": "jouer-pour-gagner",
@@ -1161,7 +1161,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "papier-numerique",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Livre papier ou Liseuse",
+    "label": "Livre papier ou liseuse",
     "options": [
       {
         "key": "livre-papier",
@@ -1177,7 +1177,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "brunch-diner",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Brunch ou Dîner",
+    "label": "Brunch ou dîner",
     "options": [
       {
         "key": "brunch",
@@ -1193,7 +1193,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "matin-bavard",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Matin silencieux ou Matin bavard",
+    "label": "Matin silencieux ou matin bavard",
     "options": [
       {
         "key": "matin-silencieux",
@@ -1209,7 +1209,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "mots-croises-sudoku",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Mots croisés ou Sudoku",
+    "label": "Mots croisés ou sudoku",
     "options": [
       {
         "key": "mots-croises",
@@ -1225,7 +1225,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "classique-nouveaute",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Classiques ou Nouveautés",
+    "label": "Classiques ou nouveautés",
     "options": [
       {
         "key": "classiques",
@@ -1241,7 +1241,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "groupe-comite",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Grande tablée ou Petit comité",
+    "label": "Grande tablée ou petit comité",
     "options": [
       {
         "key": "grande-tablee",
@@ -1257,7 +1257,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "garder-jeter",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Tout garder ou Tout jeter",
+    "label": "Tout garder ou tout jeter",
     "options": [
       {
         "key": "tout-garder",
@@ -1273,7 +1273,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "recette-au-pif",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Recette ou Au pif",
+    "label": "Recette ou au pif",
     "options": [
       {
         "key": "recette",
@@ -1289,7 +1289,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "leve-tot-grasse-mat",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Lève-tôt ou Grasse matinée",
+    "label": "Lève-tôt ou grasse matinée",
     "options": [
       {
         "key": "leve-tot",
@@ -1305,7 +1305,7 @@ export const QUESTIONS: readonly Question[] = [
     "key": "message-long-court",
     "theme": "ceci-ou-cela",
     "format": "ceci-ou-cela",
-    "label": "Messages longs ou Messages courts",
+    "label": "Messages longs ou messages courts",
     "options": [
       {
         "key": "messages-longs",

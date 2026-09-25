@@ -22,7 +22,9 @@
 > telles quelles, 7 rejetées (`compliment`, `generosite`, `geste-inconnu`,
 > `lieu-enfance`, `message-garde`, `proches-disent`, `rencontre-marquante` —
 > « trop déclaratif », « cliché », « faible valeur »), 7 reformulées ci-dessous,
-> 2 gardées sans avis (`tout-le-temps`, `tenir-a-quelquun`). Goût relevé :
+> 2 gardées sans avis (`tout-le-temps`, `tenir-a-quelquun`). Retouche d'implémentation : `journee-parfaite` dit « du matin au soir »
+> au lieu de « de bout en bout », expression réservée par la garde des
+> promesses de chiffrement (#337). Goût relevé :
 > pas d'auto-éloge ni de souvenir sentimental ; oui au ludique et au clivant
 > léger (« unpopular opinion »).
 
@@ -143,7 +145,7 @@ vocabulaire à tout le monde, de 18 à 79 ans (demande de l'opérateur).
 | `pas-encore-ose` | Une chose que tu n'as pas encore osé faire ? | ouverte |
 | `collection` | Ce que tu collectionnes, ou aimerais collectionner ? | ouverte |
 | `creer` | Ce que tu aimes créer, fabriquer, bricoler ? | ouverte |
-| `journee-parfaite` | Une journée parfaite, de bout en bout ? | ouverte |
+| `journee-parfaite` | Une journée parfaite, du matin au soir ? | ouverte |
 
 **Souvenirs (`souvenirs`)**
 

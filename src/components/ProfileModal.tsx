@@ -8,6 +8,8 @@ import { isOnline, formatLastSeen } from '@/lib/time';
 import SensitivePhoto from '@/components/ui/SensitivePhoto';
 import ReportUserModal from '@/components/ui/ReportUserModal';
 import IntentionLine from '@/components/IntentionLine';
+import AnswerBlock from '@/components/AnswerBlock';
+import type { SerializedAnswer } from '@/lib/answers';
 
 interface PublicProfile {
   id: string;
@@ -26,6 +28,8 @@ interface PublicProfile {
   relationshipType?: string[] | null;
   /** Intention voilée pour la lectrice (spec 008) : la valeur n'est pas envoyée. */
   relationshipTypeVeiled?: boolean;
+  /** Réponses aux questions, déjà passées au miroir par le serveur (spec 009). */
+  answers?: SerializedAnswer[];
   publicKey?: string | null;
   /** Band du user, si dispo côté API (cf. #59 — TODO enrichir /api/users/[id] ). */
   trustBand?: 'newcomer' | 'member' | 'trusted' | 'anchor' | null;
@@ -73,6 +77,18 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null,
   const [error, setError] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState(0);
   const [safetyOpen, setSafetyOpen] = useState(false);
+
+  // Après une réponse donnée sur la fiche (spec 009) : relire la fiche sans
+  // repasser par l'état de chargement, pour que la réponse de l'autre
+  // apparaisse sur place. Le serveur reste seul juge du voile.
+  const reloadProfile = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/users/${userId}`);
+      if (res.ok) setProfile(await res.json());
+    } catch {
+      // La fiche reste telle quelle ; la prochaine ouverture relira tout.
+    }
+  }, [userId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -276,6 +292,13 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null,
                 <p className="whitespace-pre-line text-sm text-muted">
                   {profile.bio}
                 </p>
+              </div>
+            )}
+
+            {/* Réponses aux questions, en miroir (spec 009) */}
+            {profile.answers && profile.answers.length > 0 && (
+              <div className="px-4 pb-4">
+                <AnswerBlock answers={profile.answers} onAnswered={() => void reloadProfile()} />
               </div>
             )}
 
