@@ -24,7 +24,11 @@ export const ORIENTATION_OPTIONS = ['hétéro', 'homo', 'bi', 'pan', 'ace', 'aut
 // Type de relation : déclaré sur le profil ET critère de recherche (#409).
 // Une seule liste pour que le filtre ne puisse jamais viser une valeur que
 // personne ne peut déclarer.
-export const RELATIONSHIP_TYPE_OPTIONS = ['libre', 'poly', 'casual', 'sérieux', 'autre'] as const;
+// « je verrai en chemin » (spec 008) : dire qu'on ne sait pas encore est une
+// réponse, qui lève le voile de l'intention en miroir comme les autres. Valeur
+// dédiée plutôt qu'un « autre » élargi : « autre » garde son sens, une
+// intention précise hors de cette liste.
+export const RELATIONSHIP_TYPE_OPTIONS = ['libre', 'poly', 'casual', 'sérieux', 'autre', 'je verrai en chemin'] as const;
 
 // ─── Centres d'intérêt ────────────────────────────────────────────────────────
 
