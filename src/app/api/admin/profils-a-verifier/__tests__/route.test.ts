@@ -68,6 +68,16 @@ describe('GET /api/admin/profils-a-verifier', () => {
     expect(body.profils[0].photos[0]).toBe('/api/photos/photos%2Fa.webp');
   });
 
+  it('âge mis en doute : en tête, devant plus d’indices forts (#437)', async () => {
+    fakeDb.user.findMany.mockResolvedValue([
+      compte(U1, [sig('contact_photo', 'fort', '21'), sig('photo_bannie', 'fort', '22')]),
+      compte(U2, [sig('signalement_mineur', 'fort', '20')]),
+    ]);
+    const body = await (await GET()).json();
+    expect(body.profils.map((p: { userId: string }) => p.userId)).toEqual([U2, U1]);
+    expect(body.profils[0].ageEnDoute).toBe(true);
+  });
+
   it('un profil tranché ne revient que sur un signal postérieur à la décision', async () => {
     const decision = { decision: 'rien', decidedAt: new Date('2026-09-22') };
     fakeDb.user.findMany.mockResolvedValue([

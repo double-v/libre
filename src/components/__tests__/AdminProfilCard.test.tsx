@@ -42,4 +42,10 @@ describe('<AdminProfilCard /> (#444)', () => {
     expect(screen.getByText('Même photo sur un autre compte')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Voir l’autre compte' })).toHaveAttribute('href', '/admin/users/u9');
   });
+
+  it('âge mis en doute : marqué et distinct (#437)', () => {
+    render(<AdminProfilCard p={{ ...p, ageEnDoute: true }} onDecision={vi.fn()} />);
+    expect(screen.getByText('Âge mis en doute')).toBeInTheDocument();
+    expect(screen.getByRole('article')).toHaveClass('ring-error');
+  });
 });

@@ -60,6 +60,12 @@ export async function POST(request: Request) {
     if (reason === 'fake') {
       await enregistrerSignal({ userId: reportedId, type: 'signalement_faux', force: 'fort', cle: report.id });
     }
+    // « Semble mineur » (#437) : en tête de la même file. Pas de retrait
+    // automatique — il serait détournable pour masquer un adulte ; l'admin
+    // décide, et « Demander une vérification » met le compte en retrait.
+    if (reason === 'minor') {
+      await enregistrerSignal({ userId: reportedId, type: 'signalement_mineur', force: 'fort', cle: report.id });
+    }
 
     // #393 : prévenir les admins hors de l'app, après la réponse. Charge utile
     // sans motif ni identité (SC-006) — « quelque chose attend », c'est tout.

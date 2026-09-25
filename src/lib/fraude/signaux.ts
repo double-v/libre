@@ -13,7 +13,9 @@ export type TypeSignal =
   | 'photo_reutilisee'
   | 'photo_bannie'
   | 'photo_recuperee'
-  | 'signalement_faux';
+  | 'signalement_faux'
+  /** #437 : âge mis en doute par un membre — traité en priorité. */
+  | 'signalement_mineur';
 
 export type ForceSignal = 'faible' | 'fort';
 
@@ -93,7 +95,7 @@ export function dansLaFile(
   if (recents.every((s) => s.type === 'photo_recuperee')) return false;
   return (
     recents.some((s) => s.force === 'fort') ||
-    recents.some((s) => s.type === 'signalement_faux') ||
+    recents.some((s) => s.type === 'signalement_faux' || s.type === 'signalement_mineur') ||
     recents.length >= 2
   );
 }

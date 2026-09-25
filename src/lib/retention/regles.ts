@@ -21,7 +21,7 @@ export interface RegleRetention {
   /** Âge au-delà duquel la ligne est purgée, en jours, à compter de `depuis`. */
   jours: number;
   /** Ce que mesure l'âge. */
-  depuis: 'création' | 'résolution' | 'expiration' | 'effacement' | 'décision' | 'bannissement';
+  depuis: 'création' | 'résolution' | 'expiration' | 'effacement' | 'décision' | 'bannissement' | 'mise en retrait';
 }
 
 export const REGLES_RETENTION = [
@@ -43,6 +43,9 @@ export const REGLES_RETENTION = [
   { id: 'signauxTranches', donnees: 'Indices de faux profil sur un dossier clos sans suite', duree: '1 an après la décision « rien à signaler »', jours: 365, depuis: 'décision' },
   // Spec 006 : ce qu'on garde d'un compte banni pour reconnaître ses photos.
   { id: 'empreintesBannies', donnees: 'Empreintes des photos d’un compte banni (aucune photo)', duree: '1 an après le bannissement', jours: 365, depuis: 'bannissement' },
+  // #437 : un compte masqué pour vérification qui ne se fait jamais vérifier
+  // ne reste pas indéfiniment en base.
+  { id: 'retraitsSansSelfie', donnees: 'Compte masqué pour vérification, jamais vérifié (compte entier)', duree: '90 jours après la mise en retrait, sauf selfie en cours d’examen', jours: 90, depuis: 'mise en retrait' },
   { id: 'consentTrace', donnees: 'Trace technique du consentement (adresse IP, navigateur)', duree: '3 ans — le consentement lui-même est conservé', jours: 3 * 365, depuis: 'création' },
 ] as const satisfies readonly RegleRetention[];
 

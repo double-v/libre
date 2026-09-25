@@ -4,6 +4,7 @@ import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
 import { adminBanSchema } from '@/lib/validators';
 import { retenirEmpreintesBannies } from '@/lib/fraude/bannissement';
+import { effacerCompte } from '@/lib/suppression-compte';
 
 export async function GET(
   request: NextRequest,
@@ -115,7 +116,9 @@ export async function DELETE(
   if (!isAdminSession(adminResult)) return adminResult;
   const { id } = await params;
 
-  await getDb().user.delete({ where: { id } });
+  // Même chemin que la suppression par le membre : les photos sur R2 partent
+  // aussi (#437 — la suppression admin laissait des objets orphelins).
+  await effacerCompte(id);
 
   await getDb().moderationLog.create({
     data: {
