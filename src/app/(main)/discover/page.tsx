@@ -565,7 +565,9 @@ export default function DiscoverPage() {
           ) : !cursor ? (
             <LaunchNote
               texte={profilIncomplet ? LAUNCH_COPY.finDeFeed : LAUNCH_COPY.finDeFeedComplet}
-              profilIncomplet={profilIncomplet}
+              // La carte de relance porte déjà le geste juste en dessous :
+              // un second bouton « Compléter » ferait doublon.
+              profilIncomplet={profilIncomplet && !(segment === 'pourtoi' && nudgeKind)}
             />
           ) : null}
 

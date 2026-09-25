@@ -172,8 +172,10 @@ function MainShell({ children }: { children: React.ReactNode }) {
       {session?.user?.id && <MatchDialog userId={session.user.id} />}
 
       {/* /pseudo (#459) : une seule action, et le bouton flottant recouvrait
-          « Enregistrer » sur mobile. Le lien « Signaler » du bandeau bêta reste. */}
-      {!pathname.startsWith('/pseudo') && <FeedbackButton />}
+          « Enregistrer » sur mobile. Même chose dans une conversation (#339) :
+          ancré juste au-dessus de la tab bar, il tombe pile sur « Envoyer ».
+          Le lien « Signaler » de la bannière reste. */}
+      {!pathname.startsWith('/pseudo') && !pleinEcran && <FeedbackButton />}
       <ToastHost />
     </div>
   );
