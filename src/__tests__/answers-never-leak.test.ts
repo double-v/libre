@@ -7,7 +7,6 @@
  * dans le JSON sérialisé de la fiche.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { NextRequest } from 'next/server';
 import { randomUUID } from 'crypto';
 
 const SENTINEL = 'SENTINELLE-REPONSE';
