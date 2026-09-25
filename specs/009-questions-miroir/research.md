@@ -314,15 +314,22 @@ vocabulaire à tout le monde, de 18 à 79 ans (demande de l'opérateur).
 
 ## R7 — Modération
 
-- **Decision** : `/admin/reports` affiche, pour un signalement, les réponses
-  publiées **actuelles** du profil signalé (pas un instantané au moment du
-  signalement : plus simple, et une réponse réécrite depuis est de toute façon
-  celle que les autres lisent) ; bouton « Retirer » → `PATCH
-  /api/admin/answers/[id]` (`status: 'removed'`), journalisé dans
-  `ModerationLog` (`action: 'REMOVE_ANSWER'`, `reason` = clé de question, jamais
-  le texte). L'autrice voit « Cette réponse a été retirée par la modération. »
-  dans son profil et peut la réécrire.
-- **Rationale** : réutilise signalement et journal existants (#321/#322).
+- **Decision** (amendée après la revue de la PR #466) :
+  - **Preuve figée** : au signalement, les réponses publiées du profil
+    signalé sont copiées dans `reports.answersSnapshot` (best-effort). L'admin
+    voit « au moment du signalement » et « aujourd'hui » : la personne signalée
+    ne peut plus effacer la preuve en modifiant ou supprimant ses réponses.
+  - **Retrait** : `PATCH /api/admin/answers/[id]` passe la réponse `removed`
+    et garde `removedText`, `removedChoices`, `removedAt`. Journal
+    `ModerationLog` (`REMOVE_ANSWER`, `reason` = clé, jamais le texte).
+  - **Republication** : l'identique (texte normalisé et mêmes choix) est
+    refusé (`identique-retiree`) ; une réponse différente est publiée et
+    marquée « Réécrite après un retrait » dans l'admin.
+  - L'autrice voit « Cette réponse a été retirée par la modération » (ou « Ce
+    choix… » pour une paire) et peut en écrire une autre.
+- **Rationale** : réutilise signalement et journal existants (#321/#322) ; la
+  revue a montré qu'un retrait s'annulait en renvoyant le même texte et que la
+  preuve pouvait disparaître avant la revue.
 
 ## R8 — Mesure (SC-002, SC-003)
 
