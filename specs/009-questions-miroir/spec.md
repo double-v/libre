@@ -226,7 +226,12 @@ concerné voit qu'elle a été retirée.
 - **FR-010**: Aucune fonctionnalité MUST NOT devenir inaccessible faute de
   réponse : répondre reste facultatif.
 - **FR-011**: Les copies MUST être en français, au tutoiement, sans chiffre de
-  compte ni comparaison aux autres membres.
+  compte ni comparaison aux autres membres, et rédigées en **phrases
+  complètes**, compréhensibles par des membres de 18 à 79 ans : pas de style
+  télégraphique (« Deux options, un toucher »), pas de verbe réservé au
+  tactile (« touche » → « choisis »), des boutons qui disent l'action entière
+  (« Passer cette question », « Arrêter pour le moment »). Retour opérateur
+  du 2026-09-25.
 - **FR-012**: La règle MUST être couverte par un test de non-fuite **par
   route** qui expose les réponses (principe III, corollaire #328).
 - **FR-013**: Les réponses MUST être incluses dans l'export des données
