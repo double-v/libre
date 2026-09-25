@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { canSeePractices, intentionFor } from '@/lib/profile-visibility';
 import { veiledPhotoKeys } from '@/lib/photo-veil';
 import { answersFor } from '@/lib/answers';
+import { estVisible, selectVisibilite } from '@/lib/fraude/visibilite';
 
 export async function GET(
   request: Request,
@@ -25,7 +26,7 @@ export async function GET(
         displayName: true,
         isVerified: true,
         lastActive: true,
-        isBanned: true,
+        ...selectVisibilite,
         profile: {
           select: {
             bio: true,
@@ -55,7 +56,8 @@ export async function GET(
       },
     });
 
-    if (!user || user.isBanned) {
+    // Ni banni, ni en retrait (spec 006) — sauf pour soi-même.
+    if (!user || (!estVisible(user) && user.id !== session.user.id)) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 

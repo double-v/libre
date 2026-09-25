@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { geolocUpdateSchema } from '@/lib/validators';
 import { haversineDistance, roundDistance, isWithinRadius } from '@/lib/geoloc';
 import { rateLimit, limits } from '@/lib/rate-limit';
+import { estVisible } from '@/lib/fraude/visibilite';
 
 const CROSSING_RADIUS_M = 500;
 const CROSSING_COOLDOWN_H = 24;
@@ -107,8 +108,8 @@ export async function POST(request: Request) {
     for (const otherProfile of otherProfiles) {
       const otherUserId = otherProfile.userId;
 
-      // Skip banned users
-      if (otherProfile.user.isBanned) continue;
+      // Ni banni, ni en retrait (spec 006) : pas de croisement enregistré.
+      if (!estVisible(otherProfile.user)) continue;
 
       // Skip invisible users — they are not visible to others
       if (otherProfile.invisibleMode) continue;

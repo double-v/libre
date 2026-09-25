@@ -115,8 +115,10 @@ function userOf(id: string, name: string) {
     lastActive: new Date(),
     userKey: null,
     userKeyHistory: [],
-    // Spec 006 : privés, sur TOUS les comptes.
-    retraitAt: new Date('2026-09-25'),
+    // Spec 006 : privés, sur TOUS les comptes. `retraitAt` est présent mais
+    // nul — un compte en retrait n'est pas montré du tout (#444) ; la clé,
+    // elle, ne doit jamais apparaître.
+    retraitAt: null,
     profileSignals: [{ type: 'contact_photo', force: 'fort', extrait: SENTINEL_SIGNAL, cle: SENTINEL_SIGNAL }],
   };
   user.profile = profileOf(id, user);

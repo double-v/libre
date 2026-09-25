@@ -27,6 +27,7 @@ vi.mock('next-auth', () => ({
 }));
 
 const fakeDb = {
+  user: { findUnique: vi.fn(async (): Promise<{ retraitAt: Date | null }> => ({ retraitAt: null })) },
   conversation: {
     findUnique: vi.fn(),
   },
@@ -382,5 +383,15 @@ describe('GET /api/chat/[conversationId]/messages', () => {
     expect(fakeDb.message.findMany).toHaveBeenLastCalledWith(
       expect.objectContaining({ take: 2 }),
     );
+  });
+});
+
+describe('POST /api/chat/[conversationId]/messages — compte en retrait (spec 006, #444)', () => {
+  it('403 verification_requise, aucun message écrit', async () => {
+    fakeDb.user.findUnique.mockResolvedValueOnce({ retraitAt: new Date() });
+    const res = await POST(postRequest({ content: 'ciphertext' }), makeParams());
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({ error: 'verification_requise' });
+    expect(fakeDb.message.create).not.toHaveBeenCalled();
   });
 });

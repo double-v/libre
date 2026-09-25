@@ -109,3 +109,13 @@ describe('POST /api/likes — push sur match', () => {
     await expect(Promise.all(afterTasks)).resolves.toBeDefined();
   });
 });
+
+describe('POST /api/likes — compte en retrait (spec 006, #444)', () => {
+  it('403 verification_requise, aucun like créé', async () => {
+    fakeDb.user.findUnique.mockResolvedValueOnce({ retraitAt: new Date() });
+    const res = await POST(req());
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({ error: 'verification_requise' });
+    expect(fakeDb.like.create).not.toHaveBeenCalled();
+  });
+});

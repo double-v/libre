@@ -79,6 +79,20 @@ function regles(now: Date): Record<RegleId, Regle> {
         data: { content: '' },
       })).count,
 
+    // Seuls les indices antérieurs à la décision partent : un signal plus
+    // récent a rouvert le dossier et appartient à la décision suivante.
+    signauxTranches: async () => {
+      const closes = await db.profileReview.findMany({
+        where: { decision: 'rien', decidedAt: { lt: seuil('signauxTranches', now) } },
+        select: { userId: true, decidedAt: true },
+      });
+      let total = 0;
+      for (const c of closes) {
+        total += (await db.profileSignal.deleteMany({ where: { userId: c.userId, createdAt: { lte: c.decidedAt } } })).count;
+      }
+      return total;
+    },
+
     // La preuve du consentement reste (type, version, date) ; seule la trace
     // technique s'efface.
     consentTrace: async () =>

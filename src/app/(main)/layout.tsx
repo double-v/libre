@@ -15,6 +15,7 @@ import { UnreadProvider, useUnread } from '@/hooks/useUnread';
 const MatchDialog = dynamic(() => import('@/components/MatchDialog'), { ssr: false });
 const FeedbackButton = dynamic(() => import('@/components/FeedbackButton'), { ssr: false });
 const ConsentAvenantBanner = dynamic(() => import('@/components/ConsentAvenantBanner'), { ssr: false });
+const RetraitNotice = dynamic(() => import('@/components/RetraitNotice'), { ssr: false });
 const ToastHost = dynamic(() => import('@/components/ui/Toast'), { ssr: false });
 
 // Clé neuve avec la copie de démarrage (#346) : qui avait fermé l'ancienne
@@ -126,6 +127,9 @@ function MainShell({ children }: { children: React.ReactNode }) {
             {/* Avenant art. 9 (#425) : seulement connecté, et seulement pour
                 un compte qui porte déjà des données sensibles sans consentement. */}
             {session?.user?.id && <ConsentAvenantBanner />}
+            {/* Mise en retrait (spec 006) : seulement connecté ; l'avis se
+                charge lui-même et ne dit rien d'un soupçon. */}
+            {session?.user?.id && <RetraitNotice />}
           </>
         }
       />

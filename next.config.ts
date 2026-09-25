@@ -41,6 +41,11 @@ const nextConfig: NextConfig = {
   // le traçage ne les voit pas. On les embarque dans la fonction qui lit les
   // photos (spec 006, #443).
   outputFileTracingIncludes: {
+    '/api/admin/profils-a-verifier/analyse': [
+      './node_modules/@tesseract.js-data/eng/4.0.0_best_int/**',
+      './node_modules/tesseract.js/src/**',
+      './node_modules/tesseract.js-core/**',
+    ],
     '/api/users/photos': [
       './node_modules/@tesseract.js-data/eng/4.0.0_best_int/**',
       './node_modules/tesseract.js/src/**',

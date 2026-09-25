@@ -4,6 +4,7 @@ import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { gardeFeature } from '@/lib/features-server';
 import { intentionFor } from '@/lib/profile-visibility';
+import { estVisible, selectVisibilite } from '@/lib/fraude/visibilite';
 
 export async function GET() {
   // Interrupteur admin (#418)
@@ -53,7 +54,7 @@ export async function GET() {
           select: {
             id: true,
             displayName: true,
-            isBanned: true,
+            ...selectVisibilite,
             isVerified: true,
             profile: {
               select: {
@@ -72,7 +73,7 @@ export async function GET() {
           select: {
             id: true,
             displayName: true,
-            isBanned: true,
+            ...selectVisibilite,
             isVerified: true,
             profile: {
               select: {
@@ -96,7 +97,7 @@ export async function GET() {
       .filter((e) => {
         const isUserA = e.userA === userId;
         const other = isUserA ? e.userBRel : e.userARel;
-        if (other.isBanned) return false;
+        if (!estVisible(other)) return false;
         if (blockedIds.has(other.id)) return false;
         if (likedIds.has(other.id)) return false;
         if (other.profile?.invisibleMode) return false;

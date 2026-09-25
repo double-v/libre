@@ -8,6 +8,7 @@ import ThemeMenu from '@/components/ui/ThemeMenu';
 import HeartMark from '@/components/ui/HeartMark';
 import CountChip from '@/components/ui/CountChip';
 import { countAdminQueues, type AdminQueues } from '@/lib/admin-queues';
+import { compterProfilsAVerifier } from '@/lib/fraude/file';
 
 // `queue` relie l'entrée à sa file de travail (#391) : le layout compte et
 // pose un `CountChip` à côté — le chiffre est légitime ici, surface admin.
@@ -18,6 +19,7 @@ const adminNavItems: Array<{ href: string; label: string; icon: string; queue?: 
   { href: '/admin/feedback', label: 'Retours', icon: 'feedback', queue: 'feedback' },
   { href: '/admin/journal', label: 'Journal', icon: 'journal' },
   { href: '/admin/circle/alerts', label: 'Alertes Cercle', icon: 'alert' },
+  { href: '/admin/profils', label: 'Profils à vérifier', icon: 'shield', queue: 'profils' },
   { href: '/admin/verifications', label: 'Vérifications', icon: 'verifications', queue: 'verifications' },
   { href: '/admin/appearance', label: 'Apparence', icon: 'palette' },
   { href: '/admin/features', label: 'Fonctionnalités', icon: 'toggle' },
@@ -45,6 +47,8 @@ function SidebarIcon({ icon }: { icon: string }) {
       return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>;
     case 'verifications':
       return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
+    case 'shield':
+      return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4M12 16h.01"/></svg>;
     case 'logs':
       return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>;
     case 'square':
@@ -141,7 +145,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   // Files de travail (R7) : comptées ici, en serveur, sans HTTP. Un échec de
   // comptage ne ferme pas l'administration (`countAdminQueues` le confine à sa file).
-  const queues = await countAdminQueues(getDb());
+  const queues = await countAdminQueues(getDb(), compterProfilsAVerifier);
 
   return (
     <div className="flex min-h-screen">

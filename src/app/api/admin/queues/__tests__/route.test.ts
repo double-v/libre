@@ -16,7 +16,7 @@ vi.mock('next-auth', () => ({
 }));
 
 const fakeDb = {
-  user: { findUnique: vi.fn() },
+  user: { findUnique: vi.fn(), findMany: vi.fn(async () => []) },
   report: { count: vi.fn() },
   verificationRequest: { count: vi.fn() },
   feedback: { count: vi.fn() },
@@ -46,6 +46,7 @@ describe('GET /api/admin/queues', () => {
     expect(fakeDb.report.count).not.toHaveBeenCalled();
     expect(fakeDb.verificationRequest.count).not.toHaveBeenCalled();
     expect(fakeDb.feedback.count).not.toHaveBeenCalled();
+    expect(fakeDb.user.findMany).not.toHaveBeenCalled();
   });
 
   it('renvoie 404 sans session', async () => {
@@ -62,7 +63,7 @@ describe('GET /api/admin/queues', () => {
 
     const res = await GET();
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ reports: 2, verifications: 0, feedback: 5 });
+    expect(await res.json()).toEqual({ reports: 2, verifications: 0, feedback: 5, profils: 0 });
 
     expect(fakeDb.report.count).toHaveBeenCalledWith({ where: { status: 'pending' } });
     expect(fakeDb.verificationRequest.count).toHaveBeenCalledWith({ where: { status: 'pending' } });

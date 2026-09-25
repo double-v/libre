@@ -307,3 +307,11 @@ describe('GET /api/discover — filtre d\'âge et profils sans date de naissance
     expect(where.OR).toBeUndefined();
   });
 });
+
+describe('GET /api/discover — comptes en retrait (spec 006, #444)', () => {
+  it('ni banni, ni en retrait : la clause porte les deux', async () => {
+    await GET(makeRequest('tab=all'));
+    const where = fakeDb.profile.findMany.mock.calls[0][0].where;
+    expect(where.user).toMatchObject({ isBanned: false, retraitAt: null });
+  });
+});
