@@ -81,6 +81,40 @@ export const NUDGE_COPY: Record<MissingKind, { title: string; body: string; cta:
   },
 };
 
+/**
+ * Invitations de la réciprocité miroir (spec 008) : « tu vois ce que tu
+ * montres ». Copie validée au prototype le 2026-09-25 ; même charte que la
+ * relance — aucun chiffre, aucune comparaison.
+ */
+export const MIRROR_COPY = {
+  /** Fiche : l'intention de la personne lue est voilée pour toi. */
+  intentionProfile: 'Dis ce que tu cherches pour lire ce que cherchent les autres.',
+  /** Filtres : le groupe « Type de relation » est inactif. */
+  intentionFilter: 'Dis ce que tu cherches pour filtrer sur ce critère.',
+  /** « Pour toi » : aucune position, donc aucune distance. */
+  distance: 'Partage où tu es pour voir les distances.',
+} as const;
+
+/** Où l'on dit ce que l'on cherche : même ancre que la carte de relance. */
+export const SEEKING_HREF = '/profile#profile-section-seeking';
+
+/**
+ * Faut-il le bandeau « Partage où tu es pour voir les distances » en tête de
+ * « Pour toi » (spec 008) ? Une seule invitation par écran : pas si la carte
+ * de relance dit déjà « Indique où tu es », ni si l'encart du filtre de
+ * distance (même geste) est affiché. L'absence de position de l'autre
+ * personne ne compte pas : ce n'est pas à la lectrice d'agir.
+ */
+export function shouldInviteDistance(opts: {
+  hasPosition: boolean;
+  nudgeKind: MissingKind | null;
+  geolocBannerShown: boolean;
+}): boolean {
+  if (opts.hasPosition) return false;
+  if (opts.nudgeKind === 'position') return false;
+  return !opts.geolocBannerShown;
+}
+
 /** Lecture `localStorage` tolérante : navigation privée, stockage bloqué ⇒ null. */
 export function readStoredDate(key: string): Date | null {
   try {

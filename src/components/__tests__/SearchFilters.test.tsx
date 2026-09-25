@@ -10,6 +10,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import SearchFilters, { EMPTY_SEARCH_FILTERS, hasActiveFilters } from '../SearchFilters';
+import { MIRROR_COPY } from '@/lib/onboarding';
 
 describe('<SearchFilters />', () => {
   it('emits the toggled gender on click', () => {
@@ -91,5 +92,26 @@ describe('<SearchFilters />', () => {
     expect(hasActiveFilters({ ...EMPTY_SEARCH_FILTERS, relationshipTypes: ['libre'] })).toBe(true);
     expect(hasActiveFilters({ ...EMPTY_SEARCH_FILTERS, ageMin: 25 })).toBe(true);
     expect(hasActiveFilters({ ...EMPTY_SEARCH_FILTERS, distanceKm: 25 })).toBe(true);
+  });
+  // Spec 008 : sans intention déclarée, le filtre par intention est ignoré par
+  // le serveur ; l'écran le dit au lieu de faire semblant.
+  it('rend le groupe « Type de relation » inactif tant que l\'intention n\'est pas dite', () => {
+    const onChange = vi.fn();
+    const value = { ...EMPTY_SEARCH_FILTERS, relationshipTypes: ['sérieux'] };
+    render(<SearchFilters value={value} onChange={onChange} intentionDeclared={false} />);
+    const chip = screen.getByRole('button', { name: 'Sérieux' });
+    expect(chip).toBeDisabled();
+    // Le choix enregistré est conservé, pas effacé.
+    expect(chip).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(chip);
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByText(MIRROR_COPY.intentionFilter)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Préciser' })).toHaveAttribute('href', '/profile#profile-section-seeking');
+  });
+
+  it('propose « Je verrai en chemin » quand l\'intention est dite', () => {
+    render(<SearchFilters value={EMPTY_SEARCH_FILTERS} onChange={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Je verrai en chemin' })).toBeEnabled();
+    expect(screen.queryByText(MIRROR_COPY.intentionFilter)).toBeNull();
   });
 });

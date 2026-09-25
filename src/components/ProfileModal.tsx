@@ -7,6 +7,7 @@ import { PublicTrustBadge } from '@/components/PublicTrustBadge';
 import { isOnline, formatLastSeen } from '@/lib/time';
 import SensitivePhoto from '@/components/ui/SensitivePhoto';
 import ReportUserModal from '@/components/ui/ReportUserModal';
+import IntentionLine from '@/components/IntentionLine';
 
 interface PublicProfile {
   id: string;
@@ -22,7 +23,9 @@ interface PublicProfile {
   photos?: string[];
   /** Clés servies floutées à ce lecteur (#330), calculées côté serveur. */
   veiledPhotos?: string[];
-  relationshipType?: string | null;
+  relationshipType?: string[] | null;
+  /** Intention voilée pour la lectrice (spec 008) : la valeur n'est pas envoyée. */
+  relationshipTypeVeiled?: boolean;
   publicKey?: string | null;
   /** Band du user, si dispo côté API (cf. #59 — TODO enrichir /api/users/[id] ). */
   trustBand?: 'newcomer' | 'member' | 'trusted' | 'anchor' | null;
@@ -261,11 +264,10 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null,
                 />
               </div>
 
-              {profile.relationshipType && (
-                <p className="mt-0.5 text-sm text-muted">
-                  {profile.relationshipType}
-                </p>
-              )}
+              <IntentionLine
+                relationshipType={profile.relationshipType}
+                veiled={profile.relationshipTypeVeiled}
+              />
             </div>
 
             {/* Bio */}

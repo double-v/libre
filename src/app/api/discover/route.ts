@@ -4,7 +4,7 @@ import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { haversineDistance } from '@/lib/geoloc';
 import { boundingBox, distanceBucket, type DistanceBucket } from '@/lib/discover-distance';
-import { canSeePractices } from '@/lib/profile-visibility';
+import { canSeePractices, hasDeclaredIntention } from '@/lib/profile-visibility';
 import { veiledPhotoKeys } from '@/lib/photo-veil';
 import { rateLimit, limits } from '@/lib/rate-limit';
 
@@ -113,20 +113,27 @@ export async function GET(request: NextRequest) {
     const ageMaxBirthDate = new Date(now - ageMaxFilter * 365.25 * 24 * 60 * 60 * 1000);
     const ageMinBirthDate = new Date(now - ageMinFilter * 365.25 * 24 * 60 * 60 * 1000);
 
+    // Profil de la lectrice : position (onglet « À proximité ») et intention.
+    // Lu avant le filtre, qui en dépend.
+    const myProfile = await getDb().profile.findUnique({ where: { userId } });
+
+    // Intention en miroir (spec 008, research R3) : sans intention déclarée, le
+    // filtre est ignoré — sinon filtrer « sérieux » révélerait l'intention
+    // voilée de chaque profil renvoyé. Pas d'erreur : rien ne se bloque.
+    const intentionFilter = hasDeclaredIntention(myProfile?.relationshipType) ? relationshipTypeFilter : [];
+
     const filterWhere = {
       ...(genderFilter.length > 0 ? { genderIdentity: { in: genderFilter } } : {}),
       ...(orientationFilter.length > 0 ? { orientation: { hasSome: orientationFilter } } : {}),
       ...(interestsFilter.length > 0 ? { interests: { hasSome: interestsFilter } } : {}),
       // Strict comme l'orientation : un profil qui n'a rien déclaré sort du
       // feed dès que le filtre est actif (#409).
-      ...(relationshipTypeFilter.length > 0 ? { relationshipType: { hasSome: relationshipTypeFilter } } : {}),
+      ...(intentionFilter.length > 0 ? { relationshipType: { hasSome: intentionFilter } } : {}),
       ...(ageMinFilter > 18 || ageMaxFilter < 99
         ? { birthDate: { gte: ageMaxBirthDate, lte: ageMinBirthDate } }
         : {}),
     };
 
-    // Get current user's profile for nearby tab
-    const myProfile = await getDb().profile.findUnique({ where: { userId } });
     const hasGeoloc = !!myProfile && !(myProfile.lastKnownLat === 0 && myProfile.lastKnownLng === 0);
 
     // Get blocked user IDs

@@ -54,7 +54,9 @@ beforeEach(() => {
   fakeDb.like.findMany.mockResolvedValue([]);
   fakeDb.match.findMany.mockResolvedValue([]);
   fakeDb.profile.findMany.mockResolvedValue([]);
-  fakeDb.profile.findUnique.mockResolvedValue({ userId: ME_ID, lastKnownLat: null, lastKnownLng: null });
+  // La lectrice a dit ce qu'elle cherche : sans ça, le filtre est ignoré
+  // (intention en miroir, spec 008) — cas couvert par `intention-never-leaks`.
+  fakeDb.profile.findUnique.mockResolvedValue({ userId: ME_ID, lastKnownLat: null, lastKnownLng: null, relationshipType: ['sérieux'] });
 });
 
 describe('GET /api/discover — filtre type de relation (#409)', () => {
