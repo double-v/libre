@@ -25,8 +25,8 @@ US1 #452, US2 #453, US3 #454.
 
 **Purpose**: aucune invitation n'est codée avant validation sur pixels.
 
-- [ ] T001 Construire le prototype des trois surfaces (invitation dans la fiche `ProfileModal`, groupe « Type de relation » inactif dans `SearchFilters`, ligne d'invitation distance en tête de « Pour toi »), clair/sombre × mobile/desktop, avec les tokens existants de `src/app/globals.css`, et le publier sur proto-server sous `getlibre/feat-008-reciprocite-miroir/`
-- [ ] T002 Faire valider le prototype par l'opérateur et reporter l'URL validée + la copie définitive dans `specs/008-reciprocite-miroir/plan.md` (ligne « V. Le pixel juge » → ✅) et dans `specs/008-reciprocite-miroir/contracts/profile-intention.md`
+- [x] T001 Construire le prototype des trois surfaces (invitation dans la fiche `ProfileModal`, groupe « Type de relation » inactif dans `SearchFilters`, ligne d'invitation distance en tête de « Pour toi »), clair/sombre × mobile/desktop, avec les tokens existants de `src/app/globals.css`, et le publier sur proto-server sous `getlibre/feat-008-reciprocite-miroir/`
+- [x] T002 Faire valider le prototype par l'opérateur et reporter l'URL validée + la copie définitive dans `specs/008-reciprocite-miroir/plan.md` (ligne « V. Le pixel juge » → ✅) et dans `specs/008-reciprocite-miroir/contracts/profile-intention.md`
 
 **Checkpoint**: prototype validé — les tâches UI (T012, T013, T020, T024) peuvent démarrer ; les tâches serveur n'en dépendent pas.
 
@@ -93,7 +93,7 @@ US1 #452, US2 #453, US3 #454.
 **Independent Test**: quickstart scénario 5.
 
 - [ ] T019 [P] [US3] Test d'une fonction pure `shouldInviteDistance({ hasPosition, nudgeKind, nudgeVisible })` dans `src/lib/__tests__/onboarding.test.ts` : pas de position + carte absente ou autre manque → true ; carte visible sur `position` → false ; position présente → false
-- [ ] T020 [US3] Implémenter `shouldInviteDistance` dans `src/lib/onboarding.ts` (même règle de position que `deriveMissing`) et rendre la ligne d'invitation une seule fois en tête du segment « Pour toi » dans `src/app/(main)/discover/page.tsx`, lien `/profile#profile-section-position`, jamais sur « À proximité » ni sur une carte
+- [ ] T020 [US3] Implémenter `shouldInviteDistance` dans `src/lib/onboarding.ts` (même règle de position que `deriveMissing`) et rendre la ligne d'invitation une seule fois en tête du segment « Pour toi » dans `src/app/(main)/discover/page.tsx`, actions de l'encart géoloc existant (`handleActivateGeoloc`, `geoFallbackBlock`), pas de doublon avec l'encart « filtre de distance », jamais sur « À proximité » ni sur une carte
 - [ ] T021 [US3] Ajouter la copie de l'invitation distance à côté de `NUDGE_COPY` dans `src/lib/onboarding.ts` et l'inclure dans le test de copie existant (sans chiffre, sans référence aux autres)
 
 **Checkpoint**: quickstart 5 passe.

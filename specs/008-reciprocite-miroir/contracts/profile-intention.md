@@ -38,7 +38,11 @@ voilé. `relationshipTypeVeiled` n'apparaît jamais à `false`.
 
 ## Côté interface
 
-- `relationshipTypeVeiled` → ligne d'invitation : « Dis ce que tu cherches
-  pour lire ce que cherchent les autres » + lien `Préciser` vers
-  `/profile#profile-section-seeking`. Copie définitive fixée au prototype.
+- `relationshipTypeVeiled` → sous le nom : une barre muette (`bg-fill-subtle`,
+  décorative, `aria-hidden`), la phrase « Dis ce que tu cherches pour lire ce
+  que cherchent les autres. » et le lien `Préciser` (ghost, ≥ 44 px) vers
+  `/profile#profile-section-seeking`. Copie **validée au prototype le
+  2026-09-25**.
+- Filtres, groupe « Type de relation » inactif : « Dis ce que tu cherches pour
+  filtrer sur ce critère. » + `Préciser`.
 - `relationshipType: []` → rien (comme aujourd'hui).

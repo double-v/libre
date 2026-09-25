@@ -24,6 +24,8 @@ Affichée **une fois** en tête du segment si et seulement si :
   position), **et**
 - la carte de relance n'est pas en train d'afficher `position`.
 
-Copie : « Partage où tu es pour voir les distances » + lien vers
-`/profile#profile-section-position`. Jamais affichée sur « À proximité »
+Copie : « Partage où tu es pour voir les distances. » + les deux actions de
+l'encart géoloc existant (« Activer ma géolocalisation », « Choisir une
+ville »), même style blush. Pas affichée si l'encart « filtre de distance »
+existant l'est déjà. Jamais affichée sur « À proximité »
 (état vide existant) ni sur une carte individuelle.

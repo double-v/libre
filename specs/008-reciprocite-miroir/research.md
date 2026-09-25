@@ -56,8 +56,12 @@ Décisions de phase 0, relevées sur le code au 2026-09-25.
 - **Decision** : une seule ligne en tête de « Pour toi », affichée si la
   lectrice n'a ni `lastGeolocAt` ni `cityLabel` **et** si la carte de relance
   n'affiche pas déjà `position` (`nudgeKind !== 'position'` ou carte écartée).
-  Lien vers `/profile#profile-section-position` (ancre déjà utilisée par
-  `NUDGE_COPY.position`).
+  **Amendé au prototype (2026-09-25)** : la ligne reprend l'encart géoloc
+  existant du feed (fond blush, `text-coral-dark`) et ses deux actions,
+  « Activer ma géolocalisation » (`handleActivateGeoloc`) et « Choisir une
+  ville » (`geoFallbackBlock`), plutôt qu'un lien vers le profil : l'action se
+  fait sur place. Elle ne s'affiche pas quand l'encart « filtre de distance »
+  existant est déjà là.
 - **Rationale** : FR-010 (une occurrence par écran) ; la carte de relance dit
   déjà la même chose quand `position` est le premier manque.
 - **Alternatives** : une mention par carte (rejeté, FR-010) ; ne rien faire

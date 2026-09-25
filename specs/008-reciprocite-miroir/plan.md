@@ -48,7 +48,7 @@ migration, aucune route nouvelle.
 | II. Français, copie inclusive | Copies tutoyées, sans chiffre ni mention d'autres membres ; « je verrai en chemin » fait écho à « Croisements en chemin ». | ✅ |
 | III. Vie privée | Voile appliqué **à la sérialisation** ; échec de lecture du profil lectrice → voilé ; filtre neutralisé côté serveur (anti-déduction) ; test de non-fuite **par route** (FR-014). Position : aucun changement. | ✅ |
 | IV. Design System | Pas de composant de base nouveau : l'invitation d'intention réutilise le style des lignes de `ProfileModal`, celle de distance réutilise la ligne d'info existante du feed (`nearbyReason`) — à confirmer au prototype. | ✅ |
-| V. Le pixel juge | Prototype des deux invitations (fiche + filtre + ligne de feed, clair/sombre, mobile/desktop) **à valider par l'opérateur avant T-UI**. | ⏳ gate avant implémentation UI |
+| V. Le pixel juge | Prototype **validé par l'opérateur le 2026-09-25** : `http://192.168.1.116:8101/getlibre/feat-008-reciprocite-miroir/index.html` (fiche voilée / visible / rien à dévoiler / « je verrai en chemin » ; filtres inactifs ; bandeau distance ; clair/sombre, 390/1080 ; cibles 44 px et non-recouvrement mesurés sur 5 points). | ✅ |
 | VI. Ticket = maille | 3 user stories → 3 issues ; un lot = une branche tampon = une PR (préférence opérateur). | ✅ |
 | Migrations additives à la main | Aucune migration. | ✅ |
 | Effets post-persist best-effort | Aucun effet de bord ajouté. | ✅ |
