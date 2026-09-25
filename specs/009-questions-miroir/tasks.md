@@ -102,7 +102,7 @@ US1 #461, US2 #462, US3 #463, US4 #465.
 - [x] T022 [P] `CLAUDE.md` (section Sécurité : règle miroir des réponses, garde `answers-never-leak`, contact partagé `contact.ts`), `DESIGN.md` (motif pastilles + précision, « Ceci ou cela »), CGU : clause « ne pas promouvoir ni proposer de produits illicites dans les réponses »
 - [x] T023 Gates : `npx vitest run`, `npm run lint`, `npx next build` sur base locale (sorties dans le scratchpad)
 - [x] T024 E2E pixels (base locale) : quickstart 1–7, clair/sombre, 390/1080, plusieurs points par élément
-- [ ] T025 Noter la date de mise en ligne dans `spec.md` pour la lecture SC-002/SC-003 à J+30
+- [x] T025 Noter la date de mise en ligne dans `spec.md` pour la lecture SC-002/SC-003 à J+30
 
 ---
 

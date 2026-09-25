@@ -8,6 +8,8 @@
 
 **Issues** : #461 (US1), #462 (US2), #463 (US3), #465 (US4)
 
+**Mise en ligne** : 2026-09-25 (PR #466, déploiement vérifié en production). Annoncée au journal le même jour (« Des questions pour se découvrir »). Lecture de SC-002, SC-003 et SC-006 à J+30, le 2026-10-25, sur le bloc « answers » des statistiques admin. La spec 008 étant en ligne depuis le même jour, les deux effets se lisent sur la même fenêtre.
+
 **Input**: User description: "Spec 009 — questions de profil en miroir (#5 du brainstorm réciprocité du 2026-09-25) : une banque de questions ouvertes ; la réponse d'une personne reste voilée tant que tu n'as pas répondu à la même question. Enrichit les profils sans rien demander de sensible et donne des points d'accroche pour le premier message."
 
 ## Contexte
