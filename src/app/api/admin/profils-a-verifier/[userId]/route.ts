@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
+import { retenirEmpreintesBannies } from '@/lib/fraude/bannissement';
 
 const DECISIONS = ['rien', 'verification', 'banni'] as const;
 type Decision = (typeof DECISIONS)[number];
@@ -47,6 +48,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       await db.user.update({ where: { id: userId }, data: { retraitAt: maintenant } });
     } else if (decision === 'banni') {
       await db.user.update({ where: { id: userId }, data: { isBanned: true } });
+      await retenirEmpreintesBannies(userId);
     } else {
       await db.user.update({ where: { id: userId }, data: { retraitAt: null } });
     }

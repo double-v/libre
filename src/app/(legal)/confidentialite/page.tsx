@@ -170,7 +170,10 @@ export default function ConfidentialitePage() {
           <strong>Lutte contre les faux profils</strong>{' '}: nous recherchons, dans le texte de votre
           profil (pseudo, bio) et dans le texte écrit sur vos photos, les moyens de contact extérieurs à
           Libre (lien, identifiant de messagerie, numéro de téléphone). Cette lecture se fait sur nos
-          serveurs : vos photos ne sont transmises à aucun tiers pour cela.
+          serveurs : vos photos ne sont transmises à aucun tiers pour cela. Nous calculons aussi une
+          empreinte de chaque photo, c&apos;est-à-dire un nombre qui ne permet pas de reconstituer
+          l&apos;image, pour reconnaître une même photo publiée sur plusieurs comptes. Les empreintes
+          d&apos;un compte banni sont conservées un an.
         </li>
         <li><strong>Amélioration du service</strong>{' '}: feedback utilisateur (avec votre consentement)</li>
         <li><strong>Obligations légales</strong>{' '}: conservation des logs de modération si requis par la loi</li>

@@ -36,4 +36,10 @@ describe('<AdminProfilCard /> (#444)', () => {
     render(<AdminProfilCard p={{ ...p, enRetrait: true }} onDecision={vi.fn()} />);
     expect(screen.getByRole('button', { name: 'Demander une vérification' })).toBeDisabled();
   });
+
+  it('même photo ailleurs : lien vers l’autre compte (#445)', () => {
+    render(<AdminProfilCard p={{ ...p, signaux: [{ type: 'photo_reutilisee', force: 'fort', extrait: null, photo: null, autreUserId: 'u9', createdAt: '2026-09-25T00:00:00Z', nouveau: true }] }} onDecision={vi.fn()} />);
+    expect(screen.getByText('Même photo sur un autre compte')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Voir l’autre compte' })).toHaveAttribute('href', '/admin/users/u9');
+  });
 });

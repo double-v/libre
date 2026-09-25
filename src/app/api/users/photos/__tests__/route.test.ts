@@ -28,6 +28,7 @@ vi.mock('@/lib/r2', () => ({
 }));
 
 const fakeDb = {
+  photoFingerprint: { deleteMany: vi.fn() },
   profile: {
     findUnique: vi.fn(),
     update: vi.fn(),
@@ -139,5 +140,14 @@ describe('DELETE /api/users/photos', () => {
 
     expect(res.status).toBe(200);
     expect(mockDeletePhoto).toHaveBeenCalledWith(PHOTO_KEY);
+  });
+
+  it('supprime aussi l’empreinte de la photo (#445)', async () => {
+    const key = 'u/p.webp';
+    fakeDb.profile.findUnique.mockResolvedValue({ photos: [key] });
+    fakeDb.profile.update.mockResolvedValue({ photos: [] });
+    mockGetServerSession.mockResolvedValue({ user: { id: 'u' } });
+    await DELETE(new Request('http://localhost/api/users/photos', { method: 'DELETE', body: JSON.stringify({ photoKey: key }) }));
+    expect(fakeDb.photoFingerprint.deleteMany).toHaveBeenCalledWith({ where: { photoKey: key } });
   });
 });

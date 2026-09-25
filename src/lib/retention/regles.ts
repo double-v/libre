@@ -21,7 +21,7 @@ export interface RegleRetention {
   /** Âge au-delà duquel la ligne est purgée, en jours, à compter de `depuis`. */
   jours: number;
   /** Ce que mesure l'âge. */
-  depuis: 'création' | 'résolution' | 'expiration' | 'effacement' | 'décision';
+  depuis: 'création' | 'résolution' | 'expiration' | 'effacement' | 'décision' | 'bannissement';
 }
 
 export const REGLES_RETENTION = [
@@ -41,6 +41,8 @@ export const REGLES_RETENTION = [
   { id: 'messagesEffaces', donnees: 'Messages effacés par leur auteur (contenu chiffré)', duree: '30 jours après l’effacement', jours: 30, depuis: 'effacement' },
   // Spec 006 : un dossier clos « rien à signaler » ne garde pas ses indices.
   { id: 'signauxTranches', donnees: 'Indices de faux profil sur un dossier clos sans suite', duree: '1 an après la décision « rien à signaler »', jours: 365, depuis: 'décision' },
+  // Spec 006 : ce qu'on garde d'un compte banni pour reconnaître ses photos.
+  { id: 'empreintesBannies', donnees: 'Empreintes des photos d’un compte banni (aucune photo)', duree: '1 an après le bannissement', jours: 365, depuis: 'bannissement' },
   { id: 'consentTrace', donnees: 'Trace technique du consentement (adresse IP, navigateur)', duree: '3 ans — le consentement lui-même est conservé', jours: 3 * 365, depuis: 'création' },
 ] as const satisfies readonly RegleRetention[];
 

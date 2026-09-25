@@ -93,6 +93,9 @@ function regles(now: Date): Record<RegleId, Regle> {
       return total;
     },
 
+    empreintesBannies: async () =>
+      (await db.bannedPhotoFingerprint.deleteMany({ where: { bannedAt: { lt: seuil('empreintesBannies', now) } } })).count,
+
     // La preuve du consentement reste (type, version, date) ; seule la trace
     // technique s'efface.
     consentTrace: async () =>

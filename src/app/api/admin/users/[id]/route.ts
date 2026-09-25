@@ -3,6 +3,7 @@ import { photoSensitivityMap } from '@/lib/photo-veil';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
 import { adminBanSchema } from '@/lib/validators';
+import { retenirEmpreintesBannies } from '@/lib/fraude/bannissement';
 
 export async function GET(
   request: NextRequest,
@@ -91,6 +92,8 @@ export async function PATCH(
     where: { id },
     data: { isBanned: banned },
   });
+  // Ses photos ne pourront pas revenir sur un autre compte (spec 006).
+  if (banned) await retenirEmpreintesBannies(id);
 
   await getDb().moderationLog.create({
     data: {

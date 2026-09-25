@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
 import { adminHandleReportSchema } from '@/lib/validators';
+import { retenirEmpreintesBannies } from '@/lib/fraude/bannissement';
 
 export async function PATCH(
   request: NextRequest,
@@ -39,6 +40,8 @@ export async function PATCH(
       where: { id: report.reportedId },
       data: { isBanned: true },
     });
+    // Ses photos ne pourront pas revenir sur un autre compte (spec 006).
+    await retenirEmpreintesBannies(report.reportedId);
   }
 
   await getDb().moderationLog.create({
