@@ -105,7 +105,7 @@ US1 #452, US2 #453, US3 #454.
 - [x] T022 [P] Documenter la règle dans `CLAUDE.md` (section Sécurité, une ligne : intention voilée pour une lectrice non déclarée, garde `intention-never-leaks.test.ts`) et la copie dans `DESIGN.md` si un motif d'invitation y est ajouté
 - [x] T023 Gates : `npx vitest run`, `npm run lint`, `npm run build` dans le worktree (sortie redirigée dans le scratchpad, lecture au `grep`)
 - [x] T024 E2E pixels (local, chromium en cache, jamais Neon) : quickstart 1–6 ; échantillonner plusieurs points de chaque invitation, clair/sombre, 390 px et 1080 px
-- [ ] T025 Noter dans `specs/008-reciprocite-miroir/spec.md` la date de mise en ligne et la ligne de base relevée le 2026-10-11 (bloc onboarding des stats admin) pour la lecture SC-002/SC-003 à J+30
+- [x] T025 Noter dans `specs/008-reciprocite-miroir/spec.md` la date de mise en ligne et la ligne de base relevée le 2026-10-11 (bloc onboarding des stats admin) pour la lecture SC-002/SC-003 à J+30
 
 ---
 

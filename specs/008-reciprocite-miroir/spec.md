@@ -8,6 +8,8 @@
 
 **Issues** : #452 (US1), #453 (US2), #454 (US3)
 
+**Mise en ligne** : 2026-09-25 (PR #458), **avant** la relecture J+21 de la spec 005 initialement visée. La ligne de base du 2026-10-11 inclura donc déjà l'effet de cette spec : SC-002/SC-003 se liront ensemble avec la spec 005, sauf historique antérieur au 2026-09-25 dans les statistiques admin.
+
 **Input**: User description: "Réciprocité miroir sur l'intention et la distance. Principe : « tu vois ce que tu montres », pour donner envie de compléter son profil sans rien bloquer ni punir. Règle A — « Ce que je cherche » en miroir. Règle B — Distance en miroir. Hors périmètre : questions de profil en miroir (spec suivante), photos, présence, accusés de lecture."
 
 ## Contexte
