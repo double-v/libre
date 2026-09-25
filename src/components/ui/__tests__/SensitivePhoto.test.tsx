@@ -83,4 +83,21 @@ describe('<SensitivePhoto />', () => {
     // Le propriétaire voit net : pas de voile, donc pas de bouton.
     expect(screen.queryByRole('button')).toBeNull();
   });
+  // #456 : la fiche montre la photo entière, quel que soit son format ; les
+  // vignettes et cartes gardent le recadrage, qui y est un choix de mise en page.
+  it('recadre par défaut et montre la photo entière en mode « contain »', () => {
+    const { rerender } = render(<SensitivePhoto photoKey="p.jpg" alt="Camille" />);
+    expect(screen.getByRole('img', { name: 'Camille' })).toHaveClass('object-cover');
+
+    rerender(<SensitivePhoto photoKey="p.jpg" alt="Camille" fit="contain" />);
+    const img = screen.getByRole('img', { name: 'Camille' });
+    expect(img).toHaveClass('object-contain');
+    expect(img).not.toHaveClass('object-cover');
+  });
+
+  it('garde le voile en mode « contain »', () => {
+    render(<SensitivePhoto photoKey="p.jpg" alt="Camille" veiled fit="contain" />);
+    expect(screen.getByRole('img', { name: 'Camille (floutée)' })).toHaveClass('object-contain');
+    expect(screen.getByRole('button', { name: /voir/i })).toBeInTheDocument();
+  });
 });

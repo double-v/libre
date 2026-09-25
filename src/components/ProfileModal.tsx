@@ -187,18 +187,23 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null,
 
         {profile && !loading && !error && (
           <div>
-            {/* Photo section */}
-            <div className="relative h-72 w-full">
+            {/* Photo section — entière, jamais rognée (#456). Les photos gardent
+                leur format d'origine : un cadre à hauteur fixe en `cover`
+                coupait le haut et le bas d'autant plus que la fenêtre était
+                large. Cadre portrait (le format courant), plafonné pour que le
+                nom reste visible ; un autre format laisse des bandes `sunken`. */}
+            <div className="relative aspect-[4/5] max-h-[60vh] w-full overflow-hidden rounded-t-2xl bg-sunken">
               {mainPhoto ? (
                 <SensitivePhoto
                   photoKey={mainPhoto}
                   alt={profile.displayName}
                   size="fill"
+                  fit="contain"
                   veiled={veiled.has(mainPhoto)}
-                  className="rounded-t-2xl"
+                  className="rounded-t-2xl bg-sunken"
                 />
               ) : (
-                <div className="flex h-72 w-full items-center justify-center rounded-t-2xl bg-gradient-to-br from-blush to-coral/20">
+                <div className="flex h-full w-full items-center justify-center rounded-t-2xl bg-gradient-to-br from-blush to-coral/20">
                   <span className="text-7xl font-bold text-coral">{initials}</span>
                 </div>
               )}
