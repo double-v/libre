@@ -26,6 +26,7 @@ model User {
   skin              String? // Skin choisi par l'utilisateur (cf. #224). null = défaut du site / localStorage.
 
   profile              Profile?
+  profileAnswers       ProfileAnswer[]
   userKey              UserKey?
   userKeyHistory       UserKeyHistory[]
   sentLikes            Like[]                @relation("SentLikes")
@@ -126,6 +127,28 @@ model Profile {
   // sans index, chaque page de feed refait un seq scan de la table profils.
   @@index([lastKnownLat, lastKnownLng])
   @@map("profiles")
+}
+
+/// Réponse d'un membre à une question de la banque (spec 009). La banque vit
+/// dans le code (`src/lib/questions.ts`) : `questionKey` et les clés de
+/// `choices` en sont des clés stables. Une réponse par question, sans limite
+/// de nombre. `status` : `published` ou `removed` (modération, US3) — une
+/// réponse retirée n'est jamais envoyée à autrui et ne lève aucun voile.
+model ProfileAnswer {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  questionKey String
+  choices     String[] @default([])
+  text        String   @default("")
+  status      String   @default("published")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionKey])
+  @@index([userId])
+  @@map("profile_answers")
 }
 
 model SiteConfig {
