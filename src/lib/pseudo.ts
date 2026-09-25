@@ -15,6 +15,8 @@
  * trompent l'œil (espaces de largeur nulle, inversion du sens d'écriture).
  */
 
+import { contientUnContact } from '@/lib/contact';
+
 export const PSEUDO_MIN = 2;
 export const PSEUDO_MAX = 30;
 
@@ -49,26 +51,12 @@ export function normalizePseudo(raw: string): string {
 const PERMIS = /^[\p{L}\p{M}\p{N} '’._-]+$/u;
 const A_UN_SIGNE = /[\p{L}\p{N}]/u;
 
-// Domaines usuels : « marie.l » passe, « camille.fr » non.
-const TLD = '(?:com|fr|net|org|io|me|be|ch|app|co|info|biz|xyz|eu|uk|de|es|it|link|ly|gg|tv|to|so|sh|live)';
-const DOMAINE = new RegExp(`[\\p{L}\\p{N}_-]\\.${TLD}(?![\\p{L}\\p{N}])`, 'iu');
-const LIEN = /(?:https?:\/\/|www\.)/i;
-
-/** Un moyen de contact : e-mail, `@réseau`, lien, domaine, numéro. */
-function contientUnContact(p: string): boolean {
-  if (p.includes('@')) return true;
-  if (LIEN.test(p) || DOMAINE.test(p)) return true;
-  // « 06 12 34 56 78 » : on recolle les chiffres séparés avant de compter.
-  const recolle = p.replace(/(?<=\d)[\s._-]+(?=\d)/g, '');
-  return /\d{6,}/.test(recolle);
-}
-
 export function validatePseudo(raw: string): PseudoVerdict {
   const value = normalizePseudo(raw);
   const longueur = [...value].length;
   const refus = (motif: PseudoMotif): PseudoVerdict => ({ ok: false, motif, message: PSEUDO_MESSAGES[motif] });
   if (longueur < PSEUDO_MIN || longueur > PSEUDO_MAX) return refus('longueur');
-  if (contientUnContact(value)) return refus('contact');
+  if (contientUnContact(value, 'pseudo')) return refus('contact');
   if (!PERMIS.test(value) || !A_UN_SIGNE.test(value)) return refus('caracteres');
   return { ok: true, value };
 }

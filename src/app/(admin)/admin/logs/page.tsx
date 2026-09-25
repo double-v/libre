@@ -19,6 +19,7 @@ const actionLabels: Record<string, string> = {
   APPROVE_VERIFICATION: 'Vérification approuvée',
   REJECT_VERIFICATION: 'Vérification refusée',
   DISMISS_REPORT: 'Signalement ignoré',
+  REMOVE_ANSWER: 'Réponse retirée',
 };
 
 export default function AdminLogsPage() {

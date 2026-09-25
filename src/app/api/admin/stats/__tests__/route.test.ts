@@ -161,6 +161,18 @@ describe('GET /api/admin/stats — forme de la réponse', () => {
     expect(data.analytics.genderDistribution).toEqual([]);
     expect(data.analytics.ageDistribution).toEqual([]);
   });
+
+  // Spec 009 : lecture de SC-002, SC-003 et SC-006 sur la surface admin.
+  it('expose le bloc « answers » des questions en miroir', async () => {
+    fakeDb.$queryRaw.mockImplementation(async (strings: TemplateStringsArray) =>
+      strings.join('').includes('profile_answers')
+        ? [{ active: BigInt(40), with_answer: BigInt(12), choices_only: BigInt(5), matches: BigInt(8), matches_shared: BigInt(3) }]
+        : [],
+    );
+    const { GET } = await import('../route');
+    const body = await (await GET()).json();
+    expect(body.analytics.answers).toEqual({ active30d: 40, withAnswer: 12, choicesOnly: 5, matches30d: 8, matchesSharingQuestion: 3 });
+  });
 });
 
 function setupHarmlessMocks() {

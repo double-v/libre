@@ -31,6 +31,18 @@ export async function POST(request: Request) {
     const { reportedId, reason, description } = parsed.data;
     const reporterId = session.user.id;
 
+    // Réponses aux questions du profil signalé, copiées maintenant (spec 009,
+    // revue PR #466) : la personne signalée ne peut plus effacer la preuve.
+    // Best-effort : un échec de lecture n'empêche jamais de signaler.
+    const answersSnapshot = await Promise.resolve()
+      .then(() =>
+        getDb().profileAnswer.findMany({
+          where: { userId: reportedId, status: 'published' },
+          select: { questionKey: true, choices: true, text: true },
+        }),
+      )
+      .catch(() => null);
+
     const report = await getDb().report.create({
       data: {
         reporterId,
@@ -38,6 +50,7 @@ export async function POST(request: Request) {
         reason,
         description,
         status: 'pending',
+        ...(answersSnapshot ? { answersSnapshot } : {}),
       },
     });
 

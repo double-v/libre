@@ -51,6 +51,7 @@ const fakeDb = {
     findMany: vi.fn(),
     count: vi.fn(),
     groupBy: vi.fn(),
+    create: vi.fn().mockResolvedValue({}),
   },
   photoModeration: {
     count: vi.fn(),
@@ -72,6 +73,10 @@ const fakeDb = {
     upsert: vi.fn(),
   },
   pushSubscription: { count: vi.fn().mockResolvedValue(0) },
+  profileAnswer: {
+    findUnique: vi.fn().mockResolvedValue({ id: 'a1', userId: 'u-2', questionKey: 'fait-rire' }),
+    update: vi.fn().mockResolvedValue({}),
+  },
   $queryRaw: vi.fn(),
 };
 vi.mock('@/lib/db', () => ({
@@ -89,6 +94,7 @@ vi.mock('@/lib/site-themes', () => ({
 const { GET: getStats } = await import('@/app/api/admin/stats/route');
 const { GET: getLogs } = await import('@/app/api/admin/logs/route');
 const { GET: getReports } = await import('@/app/api/admin/reports/route');
+const { PATCH: patchAnswer } = await import('@/app/api/admin/answers/[id]/route');
 const { GET: getSiteConfig, PUT: putSiteConfig } = await import(
   '@/app/api/admin/site-config/route'
 );
@@ -141,6 +147,14 @@ describe('Admin access control — canonical requireAdmin() routes', () => {
       run: () =>
         getReports(
           new NextRequest('http://x/api/admin/reports?page=1&perPage=20'),
+        ),
+    },
+    {
+      name: 'PATCH /api/admin/answers/[id]',
+      run: () =>
+        patchAnswer(
+          new Request('http://x/api/admin/answers/0b6f9c7e-3a51-4d0e-9a7c-2f1d8e4b6a10', { method: 'PATCH', body: JSON.stringify({ status: 'removed' }) }),
+          { params: Promise.resolve({ id: '0b6f9c7e-3a51-4d0e-9a7c-2f1d8e4b6a10' }) },
         ),
     },
   ];

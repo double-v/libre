@@ -26,6 +26,7 @@ import Image from 'next/image';
 import { INTEREST_CATEGORIES, PRACTICE_CATEGORIES, GENDER_OPTIONS, RELATIONSHIP_TYPE_OPTIONS } from '@/lib/taxonomy';
 import SiteShell from '@/components/ui/SiteShell';
 import ProfilePositionCard from '@/components/ProfilePositionCard';
+import ProfileAnswers from '@/components/ProfileAnswers';
 
 interface ProfileData {
   userId: string;
@@ -643,6 +644,14 @@ export default function ProfilePage() {
             ) : (
               <p className="mt-2 text-sm text-muted">{profile.bio || <span className="italic">Quelques mots sur toi — ce que tu aimes, ce que tu cherches ici.</span>}</p>
             )}
+          </ProfileSection>
+
+          {/* Questions en miroir (spec 009) : répondre donne de quoi t'écrire et
+              ouvre la lecture des réponses des autres aux mêmes questions. */}
+          <ProfileSection sectionId="questions" title="Mes questions" icon={<SparkIcon className="h-5 w-5" />} status="optional" defaultOpen>
+            <div className="mt-3">
+              <ProfileAnswers />
+            </div>
           </ProfileSection>
 
           {/* Identité */}

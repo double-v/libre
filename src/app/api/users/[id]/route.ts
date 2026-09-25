@@ -4,6 +4,7 @@ import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { canSeePractices, intentionFor } from '@/lib/profile-visibility';
 import { veiledPhotoKeys } from '@/lib/photo-veil';
+import { answersFor } from '@/lib/answers';
 
 export async function GET(
   request: Request,
@@ -106,6 +107,14 @@ export async function GET(
           relationshipType: user.profile.relationshipType,
         }),
       );
+      // Réponses aux questions, en miroir question par question (spec 009) :
+      // le texte ou le choix d'une réponse ne part que si la lectrice a une
+      // réponse publiée à la même question. Ses réponses illisibles →
+      // `undefined` → tout voilé ; celles de la personne illisibles → aucune
+      // réponse, mais la fiche reste lisible. L'échec ferme, sans tout casser.
+      const serialized = await lireReponses(user.id, session.user.id, isSelf);
+      if (serialized.length > 0) publicProfile.answers = serialized;
+
       publicProfile.veiledPhotos = await veiledPhotoKeys({
         keys: user.profile.photos,
         viewerThreshold: viewer?.photoSensitivityOptIn,
@@ -147,4 +156,29 @@ export async function GET(
       { status: 500 },
     );
   }
+}
+
+async function lireReponses(personId: string, viewerId: string, isSelf: boolean) {
+  const db = getDb();
+  // Deux lectures indépendantes, en parallèle, chacune avec son propre échec :
+  // celles de la personne illisibles → aucune réponse ; celles de la lectrice
+  // illisibles → `undefined` → tout voilé.
+  // `Promise.resolve().then(…)` : une erreur levée avant même la requête
+  // (client indisponible) suit le même chemin qu'un échec de lecture.
+  const [answers, viewerKeys] = await Promise.all([
+    Promise.resolve()
+      .then(() => db.profileAnswer.findMany({
+        where: { userId: personId },
+        select: { id: true, questionKey: true, choices: true, text: true, status: true },
+      }))
+      .catch(() => null),
+    isSelf
+      ? Promise.resolve(undefined)
+      : Promise.resolve()
+          .then(() => db.profileAnswer.findMany({ where: { userId: viewerId, status: 'published' }, select: { questionKey: true } }))
+          .then((mine) => new Set(mine.map((a) => a.questionKey)))
+          .catch(() => undefined),
+  ]);
+  if (!answers) return [];
+  return answersFor({ isSelf, viewerKeys, answers });
 }

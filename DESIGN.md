@@ -1217,6 +1217,30 @@ que la carte de parrainage : une cellule non-profil dans la grille.
   dès que l'élément manquant est renseigné.
 - **Où** : `tab === 'all'`, page 1, avant les profils. Nulle part ailleurs.
 
+### Questions en miroir (`AnswerInput`, `AnswerBlock`, `ProfileAnswers`) — spec 009
+
+- **Trois formats, une annonce écrite.** *Choix* : pastilles de 44 px
+  (`min-h-11`, `rounded-full`, coral plein quand choisie) ; sous l'intitulé,
+  « Choisis une réponse. » ou « Tu peux choisir plusieurs réponses. » — jamais
+  une nuance visuelle seule (rond/carré) pour dire unique ou multiple. Une
+  option exclusive (« Aucun des quatre ») retire les autres. La précision
+  reste repliée derrière « Ajouter quelques mots (facultatif) » jusqu'au choix.
+  *Ouverte* : `Input` multiligne, aide de la question en `hint`. *Ceci ou
+  cela* : deux grandes pastilles (`min-h-16`, `rounded-2xl`) séparées de « ou ».
+- **Deux entrées ludiques avant toute liste** (profil) : cartes `bg-sunken`
+  « Répondre aux questions une par une » et « Jouer à « Ceci ou cela » »,
+  chacune avec une phrase complète qui dit ce qui va se passer. Aucun
+  compteur, aucune jauge, aucune série ; « Passer cette question » et
+  « Arrêter pour le moment » toujours visibles.
+- **Fiche** : réponses aux mêmes questions en cartes `bg-blush` d'abord,
+  « Ceci ou cela » en ligne compacte, puis au plus trois cartes voilées
+  (`bg-fill-subtle`, deux barres `bg-hairline` décoratives, « Réponds à cette
+  question pour découvrir sa réponse. », bouton « Répondre à cette question »),
+  le reste replié derrière « Voir toutes ses réponses ». Aucun nombre.
+- **Copie** : phrases complètes, lisibles de 18 à 79 ans ; « choisis », pas
+  « touche » ; boutons qui disent l'action entière (FR-011). Espace insécable
+  avant « ? » dans la banque.
+
 ## Responsive
 
 | Breakpoint | Width | Key Changes |

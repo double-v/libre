@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { choiceLabels, questionByKey } from '@/lib/questions';
 
 interface ReportRow {
   id: string;
@@ -9,7 +10,40 @@ interface ReportRow {
   status: string;
   createdAt: string;
   reporter: { id: string; displayName: string };
-  reported: { id: string; displayName: string; isBanned: boolean };
+  reported: {
+    id: string;
+    displayName: string;
+    isBanned: boolean;
+    profileAnswers?: { id: string; questionKey: string; choices: string[]; text: string; removedAt?: string | null }[];
+  };
+  /** Réponses copiées au moment du signalement (spec 009) : la preuve. */
+  answersSnapshot?: { questionKey: string; choices: string[]; text: string }[] | null;
+}
+
+/** Réponse lisible par l'admin : intitulé, choix en clair, texte. */
+function AnswerForReview({ a, onRemove }: { a: { id?: string; questionKey: string; choices: string[]; text: string; removedAt?: string | null }; onRemove?: (id: string) => void }) {
+  const q = questionByKey(a.questionKey);
+  const choix = choiceLabels(a.questionKey, a.choices).join(' · ');
+  return (
+    <li className="flex items-start justify-between gap-3 rounded-lg bg-fill-subtle p-3">
+      <div className="min-w-0">
+        <div className="text-xs font-semibold text-muted">
+          {q?.label ?? a.questionKey}
+          {a.removedAt && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">Réécrite après un retrait</span>}
+        </div>
+        {choix && <div className="mt-0.5 text-sm font-medium text-content">{choix}</div>}
+        {a.text && <div className="mt-0.5 whitespace-pre-line text-sm text-content">{a.text}</div>}
+      </div>
+      {onRemove && a.id && (
+      <button
+        onClick={() => onRemove(a.id!)}
+        className="shrink-0 rounded-md border border-red-300 bg-red-50 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
+      >
+        Retirer cette réponse
+      </button>
+      )}
+    </li>
+  );
 }
 
 export default function AdminReportsPage() {
@@ -35,6 +69,22 @@ export default function AdminReportsPage() {
       setLoading(false);
     }
   }, [status, page]);
+
+  // Spec 009 (US3) : retirer une réponse publique jugée inappropriée.
+  const removeAnswer = async (id: string) => {
+    setActionError('');
+    try {
+      const res = await fetch(`/api/admin/answers/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'removed' }),
+      });
+      if (!res.ok) throw new Error();
+      await fetchReports();
+    } catch {
+      setActionError('Impossible de retirer cette réponse. Réessaie.');
+    }
+  };
 
   useEffect(() => {
     // Fetch au montage : IIFE async → aucun setState synchrone dans le corps
@@ -103,6 +153,26 @@ export default function AdminReportsPage() {
                 </div>
                 {r.reported.isBanned && <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">Banni</span>}
               </div>
+              {r.answersSnapshot && r.answersSnapshot.length > 0 && (
+                <div className="mt-3">
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Ses réponses au moment du signalement</p>
+                  <ul className="space-y-2">
+                    {r.answersSnapshot.map((a) => (
+                      <AnswerForReview key={a.questionKey} a={a} />
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {r.reported.profileAnswers && r.reported.profileAnswers.length > 0 && (
+                <div className="mt-3">
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Ses réponses aujourd’hui</p>
+                  <ul className="space-y-2">
+                    {r.reported.profileAnswers.map((a) => (
+                      <AnswerForReview key={a.id} a={a} onRemove={(id) => void removeAnswer(id)} />
+                    ))}
+                  </ul>
+                </div>
+              )}
               {status === 'pending' && (
                 <div className="mt-3 flex gap-2">
                   <button onClick={() => handleAction(r.id, 'DISMISS_REPORT')} className="rounded-md border border-hairline-strong px-3 py-1 text-xs font-medium text-muted hover:bg-fill-subtle">
