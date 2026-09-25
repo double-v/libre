@@ -16,7 +16,19 @@ export async function GET(request: NextRequest) {
       where: { status },
       include: {
         reporter: { select: { id: true, displayName: true } },
-        reported: { select: { id: true, displayName: true, isBanned: true } },
+        reported: {
+          select: {
+            id: true,
+            displayName: true,
+            isBanned: true,
+            // Réponses aux questions (spec 009, FR-009) : texte libre public,
+            // à juger avec le signalement. Publiées seulement.
+            profileAnswers: {
+              where: { status: 'published' },
+              select: { id: true, questionKey: true, choices: true, text: true },
+            },
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * perPage,

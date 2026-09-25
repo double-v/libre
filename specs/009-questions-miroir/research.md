@@ -313,7 +313,9 @@ vocabulaire à tout le monde, de 18 à 79 ans (demande de l'opérateur).
 ## R7 — Modération
 
 - **Decision** : `/admin/reports` affiche, pour un signalement, les réponses
-  publiées du profil signalé ; bouton « Retirer » → `PATCH
+  publiées **actuelles** du profil signalé (pas un instantané au moment du
+  signalement : plus simple, et une réponse réécrite depuis est de toute façon
+  celle que les autres lisent) ; bouton « Retirer » → `PATCH
   /api/admin/answers/[id]` (`status: 'removed'`), journalisé dans
   `ModerationLog` (`action: 'REMOVE_ANSWER'`, `reason` = clé de question, jamais
   le texte). L'autrice voit « Cette réponse a été retirée par la modération. »
