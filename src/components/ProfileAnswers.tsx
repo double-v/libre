@@ -5,18 +5,12 @@ import Button from '@/components/ui/Button';
 import AnswerInput from '@/components/AnswerInput';
 import QuestionFlow from '@/components/QuestionFlow';
 import ThisOrThat from '@/components/ThisOrThat';
-import { questionByKey, THEMES } from '@/lib/questions';
+import { choiceLabels, questionByKey, THEMES } from '@/lib/questions';
 import { removeAnswer } from '@/lib/answers-client';
 import type { SerializedAnswer } from '@/lib/answers';
 
 type Mine = Extract<SerializedAnswer, { choices: string[] }>;
 type Mode = { kind: 'liste' } | { kind: 'suite'; theme?: string } | { kind: 'ceci' };
-
-/** Libellés des choix d'une réponse, dans l'ordre de la banque. */
-export function choiceLabels(key: string, choices: readonly string[]): string[] {
-  const q = questionByKey(key);
-  return (q?.options ?? []).filter((o) => choices.includes(o.key)).map((o) => o.label);
-}
 
 /**
  * « Mes questions » dans le profil (spec 009, US1/US4). Deux portes d'entrée

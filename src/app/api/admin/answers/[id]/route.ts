@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Retirer une réponse aux questions de profil (spec 009, US3). La réponse
  * n'est pas supprimée : elle passe `removed`, ne sort plus vers personne et
@@ -15,6 +17,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   try {
     const { id } = await params;
+    // Colonne @db.Uuid : un identifiant malformé ferait lever Prisma (500).
+    // C'est une réponse introuvable, pas une panne.
+    if (!UUID.test(id)) return NextResponse.json({ error: 'Réponse introuvable' }, { status: 404 });
     const body = (await request.json().catch(() => ({}))) as { status?: unknown };
     if (body.status !== 'removed') {
       return NextResponse.json({ error: 'Seul le retrait est possible ici.' }, { status: 400 });

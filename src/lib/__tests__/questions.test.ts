@@ -5,7 +5,7 @@
  * de sa cohérence (clés stables et uniques, formats bien formés, typographie).
  */
 import { describe, it, expect } from 'vitest';
-import { QUESTIONS, THEMES, proposedQuestions, questionByKey } from '../questions';
+import { QUESTIONS, THEMES, choiceLabels, proposedQuestions, questionByKey } from '../questions';
 
 const KEY = /^[a-z0-9-]+$/;
 
@@ -63,5 +63,10 @@ describe('banque de questions', () => {
   it('propose les questions non retirées, par thème', () => {
     expect(proposedQuestions('rire').every((q) => q.theme === 'rire' && !q.retired)).toBe(true);
     expect(proposedQuestions().length).toBe(QUESTIONS.filter((q) => !q.retired).length);
+  });
+
+  it('traduit les choix en libellés dans l’ordre de la banque, clés inconnues ignorées', () => {
+    expect(choiceLabels('cafe-the', ['tisane', 'cafe', 'inconnue'])).toEqual(['Café', 'Tisane']);
+    expect(choiceLabels('disparue', ['x'])).toEqual([]);
   });
 });

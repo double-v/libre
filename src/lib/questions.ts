@@ -1330,3 +1330,13 @@ export function proposedQuestions(theme?: string): Question[] {
   return QUESTIONS.filter((q) => !q.retired && (theme === undefined || q.theme === theme));
 }
 
+/**
+ * Libellés des choix d'une réponse, dans l'ordre de la banque (et non dans
+ * l'ordre de saisie) ; une clé inconnue est ignorée. Utilisé par le profil,
+ * la fiche et l'admin : une seule traduction clé → libellé.
+ */
+export function choiceLabels(key: string, choices: readonly string[]): string[] {
+  const q = questionByKey(key);
+  return (q?.options ?? []).filter((o) => choices.includes(o.key)).map((o) => o.label);
+}
+

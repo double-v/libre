@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { questionByKey } from '@/lib/questions';
+import { choiceLabels, questionByKey } from '@/lib/questions';
 
 interface ReportRow {
   id: string;
@@ -21,7 +21,7 @@ interface ReportRow {
 /** Réponse lisible par l'admin : intitulé, choix en clair, texte. */
 function AnswerForReview({ a, onRemove }: { a: { id: string; questionKey: string; choices: string[]; text: string }; onRemove: (id: string) => void }) {
   const q = questionByKey(a.questionKey);
-  const choix = a.choices.map((c) => q?.options?.find((o) => o.key === c)?.label ?? c).join(' · ');
+  const choix = choiceLabels(a.questionKey, a.choices).join(' · ');
   return (
     <li className="flex items-start justify-between gap-3 rounded-lg bg-fill-subtle p-3">
       <div className="min-w-0">

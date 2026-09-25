@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import Button from '@/components/ui/Button';
 import AnswerInput from '@/components/AnswerInput';
-import { choiceLabels } from '@/components/ProfileAnswers';
-import { questionByKey } from '@/lib/questions';
+import { choiceLabels, questionByKey } from '@/lib/questions';
 import type { SerializedAnswer } from '@/lib/answers';
 
 const INVITATIONS = 3;

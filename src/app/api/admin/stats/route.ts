@@ -246,6 +246,7 @@ async function computeAnalytics(totalUsers: number): Promise<AnalyticsStats> {
     moderationActions.map((row) => [row.action, row._count.action]),
   );
 
+  const [onboarding, answers] = await Promise.all([computeOnboarding(cutoff30d), computeAnswers(cutoff30d)]);
   return {
     profileFill: {
       totalProfiles,
@@ -273,8 +274,8 @@ async function computeAnalytics(totalUsers: number): Promise<AnalyticsStats> {
       active7d,
       active30d,
     },
-    onboarding: await computeOnboarding(cutoff30d),
-    answers: await computeAnswers(cutoff30d),
+    onboarding,
+    answers,
     moderation: {
       bansLast30d: moderationMap['BAN'] ?? 0,
       unbansLast30d: moderationMap['UNBAN'] ?? 0,

@@ -14,7 +14,8 @@ const profileAnswer = { findUnique: vi.fn(), update: vi.fn() };
 const moderationLog = { create: vi.fn() };
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => ({ profileAnswer, moderationLog }) }));
 
-const call = async (body: unknown, id = 'a1') => {
+const ID = '0b6f9c7e-3a51-4d0e-9a7c-2f1d8e4b6a10';
+const call = async (body: unknown, id = ID) => {
   const { PATCH } = await import('../route');
   return PATCH(new Request(`http://x/api/admin/answers/${id}`, { method: 'PATCH', body: JSON.stringify(body) }), {
     params: Promise.resolve({ id }),
@@ -24,7 +25,11 @@ const call = async (body: unknown, id = 'a1') => {
 beforeEach(() => {
   vi.clearAllMocks();
   mockRequireAdmin.mockResolvedValue({ userId: 'admin-1', role: 'ADMIN' });
-  profileAnswer.findUnique.mockResolvedValue({ id: 'a1', userId: 'u-2', questionKey: 'fait-rire', text: 'TEXTE-SECRET', status: 'published' });
+  // Comme Prisma sur une colonne @db.Uuid : un identifiant malformé lève.
+  profileAnswer.findUnique.mockImplementation(async ({ where }: { where: { id: string } }) => {
+    if (!/^[0-9a-f-]{36}$/i.test(where.id)) throw new Error('Inconsistent column data: Error creating UUID');
+    return { id: where.id, userId: 'u-2', questionKey: 'fait-rire', text: 'TEXTE-SECRET', status: 'published' };
+  });
   profileAnswer.update.mockResolvedValue({});
   moderationLog.create.mockResolvedValue({});
 });
@@ -33,7 +38,7 @@ describe('PATCH /api/admin/answers/[id]', () => {
   it('retire la réponse et journalise la clé de question, jamais le texte', async () => {
     const res = await call({ status: 'removed' });
     expect(res.status).toBe(200);
-    expect(profileAnswer.update).toHaveBeenCalledWith({ where: { id: 'a1' }, data: { status: 'removed' } });
+    expect(profileAnswer.update).toHaveBeenCalledWith(expect.objectContaining({ where: { id: ID } }));
     const log = moderationLog.create.mock.calls[0][0].data;
     expect(log).toEqual({ adminId: 'admin-1', targetUserId: 'u-2', action: 'REMOVE_ANSWER', reason: 'fait-rire' });
     expect(JSON.stringify(moderationLog.create.mock.calls)).not.toContain('TEXTE-SECRET');
@@ -53,6 +58,12 @@ describe('PATCH /api/admin/answers/[id]', () => {
     const { NextResponse } = await import('next/server');
     mockRequireAdmin.mockResolvedValue(NextResponse.json({ error: 'Not found' }, { status: 404 }));
     expect((await call({ status: 'removed' })).status).toBe(404);
+    expect(profileAnswer.update).not.toHaveBeenCalled();
+  });
+
+  it('répond 404 (pas 500) à un identifiant malformé', async () => {
+    const res = await call({ status: 'removed' }, 'abc');
+    expect(res.status).toBe(404);
     expect(profileAnswer.update).not.toHaveBeenCalled();
   });
 });

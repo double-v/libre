@@ -160,26 +160,25 @@ export async function GET(
 
 async function lireReponses(personId: string, viewerId: string, isSelf: boolean) {
   const db = getDb();
-  let answers;
-  try {
-    answers = await db.profileAnswer.findMany({
-      where: { userId: personId },
-      select: { id: true, questionKey: true, choices: true, text: true, status: true },
-    });
-  } catch {
-    return [];
-  }
-  let viewerKeys: Set<string> | undefined;
-  if (!isSelf) {
-    try {
-      const mine = await db.profileAnswer.findMany({
-        where: { userId: viewerId, status: 'published' },
-        select: { questionKey: true },
-      });
-      viewerKeys = new Set(mine.map((a) => a.questionKey));
-    } catch {
-      viewerKeys = undefined;
-    }
-  }
+  // Deux lectures indépendantes, en parallèle, chacune avec son propre échec :
+  // celles de la personne illisibles → aucune réponse ; celles de la lectrice
+  // illisibles → `undefined` → tout voilé.
+  // `Promise.resolve().then(…)` : une erreur levée avant même la requête
+  // (client indisponible) suit le même chemin qu'un échec de lecture.
+  const [answers, viewerKeys] = await Promise.all([
+    Promise.resolve()
+      .then(() => db.profileAnswer.findMany({
+        where: { userId: personId },
+        select: { id: true, questionKey: true, choices: true, text: true, status: true },
+      }))
+      .catch(() => null),
+    isSelf
+      ? Promise.resolve(undefined)
+      : Promise.resolve()
+          .then(() => db.profileAnswer.findMany({ where: { userId: viewerId, status: 'published' }, select: { questionKey: true } }))
+          .then((mine) => new Set(mine.map((a) => a.questionKey)))
+          .catch(() => undefined),
+  ]);
+  if (!answers) return [];
   return answersFor({ isSelf, viewerKeys, answers });
 }
