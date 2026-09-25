@@ -21,7 +21,7 @@ export interface RegleRetention {
   /** Âge au-delà duquel la ligne est purgée, en jours, à compter de `depuis`. */
   jours: number;
   /** Ce que mesure l'âge. */
-  depuis: 'création' | 'résolution' | 'expiration' | 'effacement';
+  depuis: 'création' | 'résolution' | 'expiration' | 'effacement' | 'décision';
 }
 
 export const REGLES_RETENTION = [
@@ -39,6 +39,8 @@ export const REGLES_RETENTION = [
   // signalé — l'escrow le rend lisible par le service, d'où une fenêtre courte
   // (décision opérateur du 2026-09-24, #202). La pierre tombale, elle, reste.
   { id: 'messagesEffaces', donnees: 'Messages effacés par leur auteur (contenu chiffré)', duree: '30 jours après l’effacement', jours: 30, depuis: 'effacement' },
+  // Spec 006 : un dossier clos « rien à signaler » ne garde pas ses indices.
+  { id: 'signauxTranches', donnees: 'Indices de faux profil sur un dossier clos sans suite', duree: '1 an après la décision « rien à signaler »', jours: 365, depuis: 'décision' },
   { id: 'consentTrace', donnees: 'Trace technique du consentement (adresse IP, navigateur)', duree: '3 ans — le consentement lui-même est conservé', jours: 3 * 365, depuis: 'création' },
 ] as const satisfies readonly RegleRetention[];
 

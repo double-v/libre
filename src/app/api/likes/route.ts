@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { likeSchema } from '@/lib/validators';
 import { pusher, getUserChannel } from '@/lib/pusher';
 import { sendPushToUser, buildPayload } from '@/lib/push/server';
+import { refusSiRetrait } from '@/lib/fraude/retrait';
 
 const DAILY_LIKE_LIMIT = 50;
 
@@ -27,6 +28,10 @@ export async function POST(request: Request) {
 
     const { likedId } = parsed.data;
     const likerId = session.user.id;
+
+    // Compte en retrait (spec 006) : il attend sa vérification par selfie.
+    const retrait = await refusSiRetrait(likerId);
+    if (retrait) return retrait;
 
     // Cannot like yourself
     if (likerId === likedId) {

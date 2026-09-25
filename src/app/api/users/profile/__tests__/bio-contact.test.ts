@@ -61,3 +61,14 @@ describe('PUT /api/users/profile — contact externe dans la bio (#443)', () => 
     expect(enregistrerSignal).not.toHaveBeenCalled();
   });
 });
+
+describe('GET /api/users/profile — mise en retrait (#444)', () => {
+  it('renvoie retrait: true à l’intéressé, jamais la date', async () => {
+    const { GET } = await import('../route');
+    fakeDb.user.findUnique.mockResolvedValue({ displayName: 'Lola', isVerified: false, mustRenameDisplayName: false, retraitAt: new Date('2026-09-25'), profile: null });
+    const body = await (await GET()).json();
+    expect(body.retrait).toBe(true);
+    expect(JSON.stringify(body)).not.toContain('retraitAt');
+    expect(JSON.stringify(body)).not.toContain('2026-09-25');
+  });
+});

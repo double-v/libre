@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { haversineDistance } from '@/lib/geoloc';
 import { rateLimit, limits } from '@/lib/rate-limit';
 import { intentionFor } from '@/lib/profile-visibility';
+import { estVisible, selectVisibilite } from '@/lib/fraude/visibilite';
 
 export async function GET() {
   try {
@@ -39,7 +40,7 @@ export async function GET() {
       include: {
         user: {
           select: {
-            isBanned: true,
+            ...selectVisibilite,
             displayName: true,
             isVerified: true,
           },
@@ -76,8 +77,8 @@ export async function GET() {
     for (const otherProfile of otherProfiles) {
       const otherUserId = otherProfile.userId;
 
-      // Skip banned users
-      if (otherProfile.user.isBanned) continue;
+      // Ni banni, ni en retrait (spec 006).
+      if (!estVisible(otherProfile.user)) continue;
 
       // Skip invisible users
       if (otherProfile.invisibleMode) continue;

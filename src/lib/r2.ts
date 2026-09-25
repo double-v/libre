@@ -163,6 +163,19 @@ export async function deletePhoto(key: string): Promise<void> {
  * Renvoie la clé du dérivé. Lève si la génération échoue : l'appelant ne doit
  * surtout pas classer une photo qu'il ne saurait pas flouter.
  */
+/** Relire une photo depuis R2 (rattrapage de l'analyse, spec 006). */
+export async function lirePhoto(key: string): Promise<Buffer> {
+  const client = getR2Client();
+  if (!client) {
+    throw new Error('Stockage non configuré.');
+  }
+  const objet = await client.send(new GetObjectCommand({ Bucket: process.env.R2_BUCKET_NAME!, Key: key }));
+  if (!objet.Body) {
+    throw new Error('Photo introuvable dans le stockage.');
+  }
+  return Buffer.from(await objet.Body.transformToByteArray());
+}
+
 export async function generateBlurredDerivative(key: string): Promise<string> {
   const client = getR2Client();
   if (!client) {

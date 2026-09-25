@@ -42,7 +42,9 @@ export async function PATCH(
   if (isApproved) {
     await getDb().user.update({
       where: { id: verification.userId },
-      data: { isVerified: true },
+      // Le badge approuvé lève la mise en retrait (spec 006, #444) : c'est
+      // exactement ce que « Demander une vérification » attendait.
+      data: { isVerified: true, retraitAt: null },
     });
   }
 

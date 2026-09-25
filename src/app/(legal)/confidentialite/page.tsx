@@ -137,6 +137,11 @@ export default function ConfidentialitePage() {
             <td>Art. 6(1)(f)</td>
           </tr>
           <tr>
+            <td>Lutte contre les faux profils</td>
+            <td>Intérêt légitime (protéger les utilisateurs des arnaques)</td>
+            <td>Art. 6(1)(f)</td>
+          </tr>
+          <tr>
             <td>Anti-robot (Turnstile, deviceId)</td>
             <td>Intérêt légitime (prévention des abus)</td>
             <td>Art. 6(1)(f)</td>
@@ -161,6 +166,12 @@ export default function ConfidentialitePage() {
         <li><strong>Fournir le service</strong>{' '}: inscription, profil, découverte, match, messagerie chiffrée</li>
         <li><strong>Géolocalisation</strong>{' '}: afficher les célibataires à proximité (uniquement si activé)</li>
         <li><strong>Modération et sécurité</strong>{' '}: vérification d&apos;identité, signalement, anti-spam/anti-bot</li>
+        <li>
+          <strong>Lutte contre les faux profils</strong>{' '}: nous recherchons, dans le texte de votre
+          profil (pseudo, bio) et dans le texte écrit sur vos photos, les moyens de contact extérieurs à
+          Libre (lien, identifiant de messagerie, numéro de téléphone). Cette lecture se fait sur nos
+          serveurs : vos photos ne sont transmises à aucun tiers pour cela.
+        </li>
         <li><strong>Amélioration du service</strong>{' '}: feedback utilisateur (avec votre consentement)</li>
         <li><strong>Obligations légales</strong>{' '}: conservation des logs de modération si requis par la loi</li>
       </ul>
@@ -370,6 +381,11 @@ export default function ConfidentialitePage() {
         L&apos;algorithme de découverte se contente de filtrer par localisation, âge et préférences
         déclarées — il ne note pas les utilisateurs, ne prédit pas de comportement et ne prend
         aucune décision automatisée produisant des effets juridiques.
+      </p>
+      <p>
+        Les indices de faux profil ne déclenchent aucune sanction automatique. Ils peuvent seulement
+        placer un profil dans une liste examinée par un membre de l&apos;équipe, qui décide lui-même :
+        ne rien faire, demander une vérification par selfie, ou bannir le compte.
       </p>
 
       {/* ─── 12. Mineurs ─── */}

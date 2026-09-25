@@ -114,3 +114,17 @@ describe('GET /api/users/[id] — pratiques (#328)', () => {
     expect(body).not.toHaveProperty('practices');
   });
 });
+
+describe('GET /api/users/[id] — compte en retrait (spec 006, #444)', () => {
+  it('404 pour les autres, comme un compte banni', async () => {
+    fakeDb.user.findUnique.mockResolvedValue({ ...userWith('everyone'), retraitAt: new Date() });
+    expect((await request(OTHER_ID)).status).toBe(404);
+  });
+
+  it('lisible par soi-même', async () => {
+    fakeDb.user.findUnique.mockResolvedValue({ ...userWith('everyone', ME_ID), retraitAt: new Date() });
+    const res = await request(ME_ID);
+    expect(res.status).toBe(200);
+    expect(JSON.stringify(await res.json())).not.toContain('retraitAt');
+  });
+});

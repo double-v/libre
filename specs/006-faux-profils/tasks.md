@@ -69,17 +69,17 @@
 **Goal**: file admin, trois décisions, mise en retrait, compteur, rattrapage.
 **Independent Test**: un profil avec un signal fort apparaît ; « Rien à signaler » le retire ; « Demander une vérification » le retire de Découvrir ; approuver son badge l'y remet.
 
-- [ ] T017 [US4] Migration `ProfileReview` (`profile_reviews`) selon data-model.md (`prisma/migrations/20260926100000_profile_reviews/migration.sql`)
-- [ ] T018 [P] [US4] Test puis `src/lib/fraude/visibilite.ts` `visiblePourAutrui = { isBanned: false, retraitAt: null }` ; l'appliquer à toutes les requêtes qui listent des profils à d'autres membres (`src/app/api/discover`, `geoloc/nearby`, `geoloc/crossings`, `users/[id]` → 404, `circle/contacts`, et toute autre trouvée par `grep isBanned`) ; garde `src/__tests__/visibilite-gardes.test.ts` (patron `features-gardes.test.ts`) qui échoue si une route listant des profils n'utilise pas le fragment
-- [ ] T019 [US4] Tests puis refus 403 `verification_requise` pour un membre en retrait : envoi de message (`src/app/api/chat/[conversationId]/messages/route.ts`) et like (`src/app/api/likes/route.ts`)
-- [ ] T020 [US4] Tests puis routes `src/app/api/admin/profils-a-verifier/route.ts` (liste, ordre de data-model.md, e-mail masqué, photos via `photoUrl`) et `…/[userId]/route.ts` (décisions ; `verification` → `retraitAt = now()` ; `banni` → chemin de bannissement existant ; journal `PROFILE_REVIEW_*`)
-- [ ] T021 [US4] Badge approuvé → `retraitAt = null` dans `src/app/api/admin/verifications/[id]/route.ts` ; test
-- [ ] T022 [US4] Compteur : `profils` dans `src/lib/admin-queues.ts`, `GET /api/admin/queues`, `useAdminQueues`, entrée « Profils à vérifier » dans `adminNavItems` de `src/app/(admin)/layout.tsx`
+- [x] T017 [US4] Migration `ProfileReview` (`profile_reviews`) selon data-model.md (`prisma/migrations/20260926100000_profile_reviews/migration.sql`)
+- [x] T018 [P] [US4] Test puis `src/lib/fraude/visibilite.ts` `visiblePourAutrui = { isBanned: false, retraitAt: null }` ; l'appliquer à toutes les requêtes qui listent des profils à d'autres membres (`src/app/api/discover`, `geoloc/nearby`, `geoloc/crossings`, `users/[id]` → 404, `circle/contacts`, et toute autre trouvée par `grep isBanned`) ; garde `src/__tests__/visibilite-gardes.test.ts` (patron `features-gardes.test.ts`) qui échoue si une route listant des profils n'utilise pas le fragment
+- [x] T019 [US4] Tests puis refus 403 `verification_requise` pour un membre en retrait : envoi de message (`src/app/api/chat/[conversationId]/messages/route.ts`) et like (`src/app/api/likes/route.ts`)
+- [x] T020 [US4] Tests puis routes `src/app/api/admin/profils-a-verifier/route.ts` (liste, ordre de data-model.md, e-mail masqué, photos via `photoUrl`) et `…/[userId]/route.ts` (décisions ; `verification` → `retraitAt = now()` ; `banni` → chemin de bannissement existant ; journal `PROFILE_REVIEW_*`)
+- [x] T021 [US4] Badge approuvé → `retraitAt = null` dans `src/app/api/admin/verifications/[id]/route.ts` ; test
+- [x] T022 [US4] Compteur : `profils` dans `src/lib/admin-queues.ts`, `GET /api/admin/queues`, `useAdminQueues`, entrée « Profils à vérifier » dans `adminNavItems` de `src/app/(admin)/layout.tsx`
 - [ ] T023 [US4] Prototype HTML de `/admin/profils` et de l'invitation membre en retrait, clair/sombre ; **validation opérateur avant T024**
 - [ ] T024 [US4] Page `src/app/(admin)/admin/profils/page.tsx` + carte (réutilise `AdminPhotoSearch`, `Tag`, `Button`, `Card`) ; composant `src/components/RetraitNotice.tsx` (lien `/verify`, aucune mention de soupçon) affiché dans le layout `(main)` quand `retrait: true` ; `GET /api/users/profile` renvoie `retrait` au seul intéressé ; tests composants
-- [ ] T025 [US4] Rattrapage FR-011 : `POST src/app/api/admin/profils-a-verifier/analyse/route.ts` (lot de 10 profils non analysés : bio/pseudo + photos relues depuis R2) + bouton sur la page ; test
-- [ ] T026 [US4] Rétention : règle `signauxTranches` (1 an après décision « rien ») dans `src/lib/retention/regles.ts` + `purge.ts` + tests ; §5 se met à jour seul
-- [ ] T027 [US4] Politique `src/app/(legal)/confidentialite/page.tsx` : finalité « lutte contre la fraude et les faux profils » (intérêt légitime), données traitées (texte du profil et des photos, empreintes), aucune décision automatique ; test de présence
+- [x] T025 [US4] Rattrapage FR-011 : `POST src/app/api/admin/profils-a-verifier/analyse/route.ts` (lot de 10 profils non analysés : bio/pseudo + photos relues depuis R2) + bouton sur la page ; test
+- [x] T026 [US4] Rétention : règle `signauxTranches` (1 an après décision « rien ») dans `src/lib/retention/regles.ts` + `purge.ts` + tests ; §5 se met à jour seul
+- [x] T027 [US4] Politique `src/app/(legal)/confidentialite/page.tsx` : finalité « lutte contre la fraude et les faux profils » (intérêt légitime), données traitées (texte du profil et des photos, empreintes), aucune décision automatique ; test de présence
 
 **Checkpoint** : la file transforme les signaux en décisions humaines journalisées.
 

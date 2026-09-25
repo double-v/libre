@@ -17,7 +17,7 @@ import { hasPendingQueues, type AdminQueues } from '@/lib/admin-queues';
  * ni de chargé pour un membre. Les compteurs sont gardés à zéro par défaut ;
  * l'app membre n'affiche qu'une présence, les nombres sont pour le layout admin.
  */
-const EMPTY: AdminQueues = { reports: 0, verifications: 0, feedback: 0 };
+const EMPTY: AdminQueues = { reports: 0, verifications: 0, feedback: 0, profils: 0 };
 
 export function useAdminQueues({ enabled }: { enabled: boolean }): { hasPending: boolean } {
   const pathname = usePathname();
@@ -31,7 +31,7 @@ export function useAdminQueues({ enabled }: { enabled: boolean }): { hasPending:
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => {
           if (cancelled || !d) return;
-          setQueues({ reports: d.reports ?? 0, verifications: d.verifications ?? 0, feedback: d.feedback ?? 0 });
+          setQueues({ reports: d.reports ?? 0, verifications: d.verifications ?? 0, feedback: d.feedback ?? 0, profils: d.profils ?? 0 });
         })
         .catch(() => {
           // Réseau : on garde l'état précédent, la prochaine navigation corrigera.

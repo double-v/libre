@@ -22,6 +22,8 @@ const fakeDb = {
   safetyCheckin: { deleteMany: vi.fn(async () => ({ count: 1 })) },
   consent: { updateMany: vi.fn(async () => ({ count: 4 })) },
   message: { updateMany: vi.fn(async () => ({ count: 6 })) },
+  profileReview: { findMany: vi.fn<(args: unknown) => Promise<unknown[]>>(async () => []) },
+  profileSignal: { deleteMany: vi.fn(async () => ({ count: 2 })) },
   retentionState: { updateMany: vi.fn(), create: vi.fn(), upsert: vi.fn(), findUnique: vi.fn() },
 };
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => fakeDb }));
@@ -87,6 +89,15 @@ describe('purgerRetention — seuils', () => {
       data: { content: '' },
     });
     expect(bilan.messagesEffaces).toBe(6);
+  });
+
+  it('signaux d’un dossier clos « rien » depuis 1 an : seuls ceux d’avant la décision partent (spec 006)', async () => {
+    const decidedAt = new Date(NOW.getTime() - 400 * 24 * 3600 * 1000);
+    fakeDb.profileReview.findMany.mockResolvedValue([{ userId: 'u1', decidedAt }]);
+    const bilan = await purgerRetention(NOW);
+    expect(fakeDb.profileReview.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { decision: 'rien', decidedAt: { lt: il_y_a(365) } } }));
+    expect(fakeDb.profileSignal.deleteMany).toHaveBeenCalledWith({ where: { userId: 'u1', createdAt: { lte: decidedAt } } });
+    expect(bilan.signauxTranches).toBe(2);
   });
 
   it('selfies : résolus + 30 j → ligne effacée et objet R2 aussi, sauf si c’est encore une photo du profil', async () => {

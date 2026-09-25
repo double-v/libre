@@ -31,6 +31,8 @@ model User {
   profile              Profile?
   profileAnswers       ProfileAnswer[]
   profileSignals       ProfileSignal[]
+  profileReview        ProfileReview?       @relation("ProfileReviewSubject")
+  profileReviewsDecided ProfileReview[]     @relation("ProfileReviewDecider")
   userKey              UserKey?
   userKeyHistory       UserKeyHistory[]
   sentLikes            Like[]                @relation("SentLikes")
@@ -185,6 +187,21 @@ model ProfileSignal {
   @@unique([userId, cle])
   @@index([createdAt])
   @@map("profile_signals")
+}
+
+/// Dernière décision sur un profil de la file « à vérifier » (spec 006, US4).
+/// Les signaux antérieurs à `decidedAt` ne remettent pas le profil en file.
+model ProfileReview {
+  userId    String   @id @db.Uuid
+  /// rien · verification · banni
+  decision  String
+  decidedAt DateTime @default(now())
+  decidedBy String?  @db.Uuid
+
+  user    User  @relation("ProfileReviewSubject", fields: [userId], references: [id], onDelete: Cascade)
+  decider User? @relation("ProfileReviewDecider", fields: [decidedBy], references: [id], onDelete: SetNull)
+
+  @@map("profile_reviews")
 }
 
 model SiteConfig {

@@ -42,3 +42,18 @@ describe('analyserPhoto (#443)', () => {
     warn.mockRestore();
   });
 });
+
+describe('analyserTexteProfil (#444, rattrapage)', () => {
+  it('signale une bio et un pseudo déjà en ligne, sans rien refuser', async () => {
+    const { analyserTexteProfil } = await import('../analyse');
+    await analyserTexteProfil({ userId: 'u1', displayName: 'lola@gmail.com', bio: 'Écris-moi sur t.me/lola' });
+    expect(enregistrerSignal).toHaveBeenCalledWith(expect.objectContaining({ type: 'contact_bio', force: 'fort', extrait: 't.me/lola' }));
+    expect(enregistrerSignal).toHaveBeenCalledWith(expect.objectContaining({ type: 'contact_pseudo', force: 'fort' }));
+  });
+
+  it('rien sur un profil ordinaire', async () => {
+    const { analyserTexteProfil } = await import('../analyse');
+    await analyserTexteProfil({ userId: 'u1', displayName: 'Camille', bio: 'J’aime la mer.' });
+    expect(enregistrerSignal).not.toHaveBeenCalled();
+  });
+});

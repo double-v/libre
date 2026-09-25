@@ -39,7 +39,7 @@ describe('PATCH /api/admin/verifications/[id]', () => {
       where: { id: 'v1' },
       data: expect.objectContaining({ status: 'approved', rejectReason: null, reviewedBy: 'admin' }),
     }));
-    expect(fakeDb.user.update).toHaveBeenCalledWith({ where: { id: 'u1' }, data: { isVerified: true } });
+    expect(fakeDb.user.update).toHaveBeenCalledWith({ where: { id: 'u1' }, data: { isVerified: true, retraitAt: null } });
     expect(fakeDb.moderationLog.create).toHaveBeenCalled();
   });
 

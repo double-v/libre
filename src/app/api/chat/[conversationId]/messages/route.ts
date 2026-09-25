@@ -8,6 +8,7 @@ import { rateLimit, limits } from '@/lib/rate-limit';
 import { verifyParticipant } from '@/lib/chat-access';
 import { hadUnreadBefore } from '@/lib/chat-unread';
 import { sendPushToUser, buildPayload } from '@/lib/push/server';
+import { refusSiRetrait } from '@/lib/fraude/retrait';
 
 // Pagination par curseur (#200) — évite de charger/déchiffrer tout le fil.
 const DEFAULT_PAGE_SIZE = 50;
@@ -106,6 +107,10 @@ export async function POST(
 
     const { conversationId } = await params;
     const userId = session.user.id;
+
+    // Compte en retrait (spec 006) : il attend sa vérification par selfie.
+    const retrait = await refusSiRetrait(userId);
+    if (retrait) return retrait;
 
     const result = await verifyParticipant(conversationId, userId);
     if ('error' in result) {

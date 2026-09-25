@@ -7,6 +7,7 @@ import { boundingBox, distanceBucket, type DistanceBucket } from '@/lib/discover
 import { canSeePractices, hasDeclaredIntention } from '@/lib/profile-visibility';
 import { veiledPhotoKeys } from '@/lib/photo-veil';
 import { rateLimit, limits } from '@/lib/rate-limit';
+import { visiblePourAutrui } from '@/lib/fraude/visibilite';
 
 const PAGE_SIZE = 20;
 const ONLINE_THRESHOLD_MS = 15 * 60 * 1000;
@@ -174,7 +175,8 @@ export async function GET(request: NextRequest) {
     const baseWhere = {
       user: {
         id: { not: userId },
-        isBanned: false,
+        // Ni banni, ni en retrait (spec 006).
+        ...visiblePourAutrui,
       },
       invisibleMode: false,
       userId: { notIn: excludeIds },

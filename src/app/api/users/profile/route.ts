@@ -20,7 +20,7 @@ export async function GET() {
 
     const user = await getDb().user.findUnique({
       where: { id: session.user.id },
-      select: { displayName: true, isVerified: true, mustRenameDisplayName: true, profile: true },
+      select: { displayName: true, isVerified: true, mustRenameDisplayName: true, retraitAt: true, profile: true },
     });
 
     if (!user) {
@@ -44,6 +44,9 @@ export async function GET() {
         isVerified: user.isVerified,
         // Pseudo retiré par la règle (#459) : Découvrir envoie vers /pseudo.
         mustRenameDisplayName: user.mustRenameDisplayName,
+        // Mise en retrait (spec 006) : un booléen, jamais la date — l'app
+        // invite à se faire vérifier, sans rien dire d'un soupçon.
+        retrait: user.retraitAt !== null && user.retraitAt !== undefined,
         photoSensitivity,
         sensitiveConsent,
       },
