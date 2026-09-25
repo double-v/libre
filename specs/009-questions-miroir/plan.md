@@ -49,7 +49,7 @@ au signalement côté admin, retrait journalisé dans `ModerationLog`.
 | II. Français, copie inclusive | Banque relue par l'opérateur ; aucune question qui suppose un corps, une mobilité, une situation (« sortir », « voyager » évités ou ouverts). | ✅ |
 | III. Vie privée | Voile à la sérialisation, recalculé à chaque lecture ; lectrice en échec → tout voilé ; refus des contacts à l'écriture ; garde de non-fuite par route ; export et cascade (FR-013). | ✅ |
 | IV. Design System | Pas de composant de base nouveau : Input multiligne, Button, TagButton, ligne voilée de la spec 008 (`IntentionLine`) comme modèle. | ✅ |
-| V. Le pixel juge | Prototype (section profil par thèmes, « Répondre à la suite », pastilles + précision, « Ceci ou cela », fiche en commun d'abord / voilées / saisie en place) **à valider avant l'UI**. | ⏳ gate avant UI |
+| V. Le pixel juge | Prototype **validé par l'opérateur le 2026-09-25** : `http://192.168.1.116:8101/getlibre/feat-009-questions-miroir/index.html` (profil, « une par une », choix unique / multiple / texte, « Ceci ou cela », fiche en commun d'abord et saisie en place ; copie en phrases complètes, FR-011). | ✅ |
 | VI. Ticket = maille | 3 user stories → 3 issues ; un lot = une PR. | ✅ |
 | Migrations additives à la main | `CREATE TABLE profile_answers` + index + contrainte d'unicité. | ✅ |
 | Effets post-persist best-effort | Aucun effet de bord (pas de notification à la réponse). | ✅ |

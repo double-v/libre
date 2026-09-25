@@ -19,8 +19,8 @@ US1 #461, US2 #462, US3 #463, US4 #465.
 ## Phase 1: Setup — gate visuel et banque
 
 - [x] T001 Faire valider par l'opérateur la banque initiale de `research.md` (R1) ; reporter la version validée dans `specs/009-questions-miroir/research.md`
-- [ ] T002 Construire le prototype (section « Mes questions » par thèmes ; « Répondre à la suite » ; pastilles + « Tu veux préciser ? » ; « Ceci ou cela » ; fiche : en commun d'abord, voilées, saisie en place, « Voir toutes ses réponses » ; mention « retirée par la modération »), clair/sombre × 390/1080, tokens existants ; publier sur proto-server sous `getlibre/feat-009-questions-miroir/`
-- [ ] T003 Faire valider le prototype ; reporter URL et copie dans `plan.md` (ligne V → ✅) et `contracts/answers-api.md`
+- [x] T002 Construire le prototype (section « Mes questions » par thèmes ; « Répondre à la suite » ; pastilles + « Tu veux préciser ? » ; « Ceci ou cela » ; fiche : en commun d'abord, voilées, saisie en place, « Voir toutes ses réponses » ; mention « retirée par la modération »), clair/sombre × 390/1080, tokens existants ; publier sur proto-server sous `getlibre/feat-009-questions-miroir/`
+- [x] T003 Faire valider le prototype ; reporter URL et copie dans `plan.md` (ligne V → ✅) et `contracts/answers-api.md`
 
 **Checkpoint**: T001 et T003 validés — l'UI (T018–T021, T025) peut démarrer ; le serveur n'en dépend pas (sauf T005 pour la liste).
 
