@@ -6,6 +6,8 @@
 
 **Status**: Draft
 
+**Issues** : #461 (US1), #462 (US2), #463 (US3)
+
 **Input**: User description: "Spec 009 — questions de profil en miroir (#5 du brainstorm réciprocité du 2026-09-25) : une banque de questions ouvertes ; la réponse d'une personne reste voilée tant que tu n'as pas répondu à la même question. Enrichit les profils sans rien demander de sensible et donne des points d'accroche pour le premier message."
 
 ## Contexte

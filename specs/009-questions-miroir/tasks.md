@@ -9,7 +9,8 @@ description: "Task list — 009 Questions de profil en miroir"
 
 **Tests**: demandés — FR-012 exige une garde de non-fuite par route ; TDD.
 
-**Organization**: une phase par user story ; une issue par user story.
+**Organization**: une phase par user story ; une issue par user story —
+US1 #461, US2 #462, US3 #463.
 
 ## Format: `[ID] [P?] [Story] Description`
 
