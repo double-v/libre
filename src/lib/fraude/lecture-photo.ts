@@ -12,7 +12,26 @@ import { createWorker, type Worker } from 'tesseract.js';
  * vit : l'initialisation coûte ≈ 0,4 s, une lecture ≈ 0,3 s. Tout échec rend
  * une chaîne vide — l'analyse est un indice, jamais une condition.
  */
-const DELAI_MAX_MS = 15_000;
+const DELAI_MAX_MS = 10_000;
+
+/**
+ * Largeur de lecture. Mesuré (free tier Vercel, chaque seconde de CPU
+ * compte) : une photo de téléphone 3024×4032 lue telle quelle dépasse 15 s
+ * sans rien lire ; réduite à 1000 px en niveaux de gris, ≈ 0,4 s en tout et
+ * le texte incrusté est lu. Un texte écrit pour être lu sur un écran de
+ * téléphone reste lisible à cette taille.
+ */
+const LARGEUR_LECTURE = 1000;
+
+/** Orientation EXIF appliquée, réduction, niveaux de gris ; PNG peu compressé (rapide). */
+function preparer(image: Buffer): Promise<Buffer> {
+  return sharp(image)
+    .rotate()
+    .resize({ width: LARGEUR_LECTURE, withoutEnlargement: true })
+    .greyscale()
+    .png({ compressionLevel: 1 })
+    .toBuffer();
+}
 
 let worker: Promise<Worker> | null = null;
 
@@ -50,11 +69,11 @@ function obtenirWorker(): Promise<Worker> {
 export async function lireTexte(image: Buffer): Promise<string> {
   let minuteur: ReturnType<typeof setTimeout> | undefined;
   try {
-    // Le moteur n'aime pas les formats qu'il ne connaît pas : un tampon qui
-    // n'est pas une image s'arrête ici, sans réveiller le worker.
-    await sharp(image).metadata();
+    // Préparée avant tout : un tampon qui n'est pas une image s'arrête ici,
+    // sans réveiller le worker.
+    const pret = await preparer(image);
     const w = await obtenirWorker();
-    const lecture = w.recognize(image).then((r) => r.data.text ?? '');
+    const lecture = w.recognize(pret).then((r) => r.data.text ?? '');
     const delai = new Promise<never>((_, rejeter) => {
       minuteur = setTimeout(() => rejeter(new Error('delai')), DELAI_MAX_MS);
     });

@@ -40,16 +40,30 @@ const nextConfig: NextConfig = {
   // Le modèle OCR et le moteur WASM sont chargés par chemin, à l'exécution :
   // le traçage ne les voit pas. On les embarque dans la fonction qui lit les
   // photos (spec 006, #443).
+  // Free tier : ne pas embarquer ce qui ne sert pas. Sous Node, seules les
+  // variantes LSTM du moteur sont chargées (mode par défaut, un `.wasm` lu
+  // sur disque) ; les `.wasm.js` sont pour le navigateur. 8,4 Mo au lieu de 44.
+  outputFileTracingExcludes: Object.fromEntries(
+    ['/api/users/photos', '/api/admin/profils-a-verifier/analyse'].map((route) => [
+      route,
+      [
+        './node_modules/tesseract.js-core/*.wasm.js',
+        './node_modules/tesseract.js-core/tesseract-core.wasm',
+        './node_modules/tesseract.js-core/tesseract-core-simd.wasm',
+        './node_modules/tesseract.js-core/tesseract-core-relaxedsimd.wasm',
+        './node_modules/@tesseract.js-data/eng/4.0.0/**',
+      ],
+    ]),
+  ),
+
   outputFileTracingIncludes: {
     '/api/admin/profils-a-verifier/analyse': [
       './node_modules/@tesseract.js-data/eng/4.0.0_best_int/**',
       './node_modules/tesseract.js/src/**',
-      './node_modules/tesseract.js-core/**',
     ],
     '/api/users/photos': [
       './node_modules/@tesseract.js-data/eng/4.0.0_best_int/**',
       './node_modules/tesseract.js/src/**',
-      './node_modules/tesseract.js-core/**',
     ],
   },
 
