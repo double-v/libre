@@ -4,6 +4,7 @@ import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { haversineDistance } from '@/lib/geoloc';
 import { rateLimit, limits } from '@/lib/rate-limit';
+import { intentionFor } from '@/lib/profile-visibility';
 
 export async function GET() {
   try {
@@ -106,7 +107,12 @@ export async function GET() {
           bio: otherProfile.bio,
           genderIdentity: otherProfile.genderIdentity,
           orientation: otherProfile.orientation,
-          relationshipType: otherProfile.relationshipType,
+          // Intention en miroir (spec 008) : voilée si la lectrice n'a pas dit la sienne.
+          ...intentionFor({
+            isSelf: false,
+            viewerIntention: myProfile.relationshipType,
+            relationshipType: otherProfile.relationshipType,
+          }),
           interests: otherProfile.interests,
           photos: otherProfile.photos,
         },

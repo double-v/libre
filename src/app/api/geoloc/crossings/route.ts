@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { gardeFeature } from '@/lib/features-server';
+import { intentionFor } from '@/lib/profile-visibility';
 
 export async function GET() {
   // Interrupteur admin (#418)
@@ -32,6 +33,13 @@ export async function GET() {
       select: { likedId: true },
     });
     const likedIds = new Set(likes.map((l) => l.likedId));
+
+    // Intention en miroir (spec 008) : il faut savoir si la lectrice a dit la
+    // sienne. Profil introuvable → `undefined` → voilé (l'échec ferme).
+    const viewer = await getDb().profile.findUnique({
+      where: { userId },
+      select: { relationshipType: true },
+    });
 
     const encounters = await getDb().encounter.findMany({
       where: {
@@ -101,7 +109,13 @@ export async function GET() {
           id: other.id,
           displayName: other.displayName,
           isVerified: other.isVerified,
-          profile: other.profile,
+          profile: other.profile && (() => {
+            const { relationshipType, ...rest } = other.profile;
+            return {
+              ...rest,
+              ...intentionFor({ isSelf: false, viewerIntention: viewer?.relationshipType, relationshipType }),
+            };
+          })(),
           distanceM: e.distanceM,
           happenedAt: e.happenedAt,
         };

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
-import { canSeePractices } from '@/lib/profile-visibility';
+import { canSeePractices, intentionFor } from '@/lib/profile-visibility';
 import { veiledPhotoKeys } from '@/lib/photo-veil';
 
 export async function GET(
@@ -84,7 +84,6 @@ export async function GET(
       publicProfile.bio = user.profile.bio;
       publicProfile.genderIdentity = user.profile.genderIdentity;
       publicProfile.orientation = user.profile.orientation;
-      publicProfile.relationshipType = user.profile.relationshipType;
       publicProfile.interests = user.profile.interests;
       publicProfile.photos = user.profile.photos;
 
@@ -94,8 +93,19 @@ export async function GET(
         ? null
         : await getDb().profile.findUnique({
             where: { userId: session.user.id },
-            select: { photoSensitivityOptIn: true },
+            select: { photoSensitivityOptIn: true, relationshipType: true },
           });
+
+      // Intention en miroir (spec 008) : voilée tant que la lectrice n'a pas
+      // dit la sienne. Lectrice introuvable → voilée : l'échec ferme.
+      Object.assign(
+        publicProfile,
+        intentionFor({
+          isSelf,
+          viewerIntention: viewer?.relationshipType,
+          relationshipType: user.profile.relationshipType,
+        }),
+      );
       publicProfile.veiledPhotos = await veiledPhotoKeys({
         keys: user.profile.photos,
         viewerThreshold: viewer?.photoSensitivityOptIn,
