@@ -257,6 +257,13 @@ Règles d'exposition :
   `src/lib/geocoding.ts`.
 - Parcours d'accueil (spec 005) : `Profile.onboardingStep` est **privé** lui
   aussi — même garde de non-fuite. Le serveur garde le max (jamais de recul).
+- Réciprocité miroir (spec 008) : l'intention d'autrui (`relationshipType`)
+  est **voilée** pour une lectrice qui n'a pas déclaré la sienne — clé omise,
+  `relationshipTypeVeiled: true` à la place. Décision unique `intentionFor`
+  (`src/lib/profile-visibility.ts`) ; le filtre d'intention de Découvrir est
+  ignoré dans ce cas (sinon il sert à deviner). « je verrai en chemin » compte
+  comme une déclaration. Garde par route : `src/__tests__/intention-never-leaks.test.ts`
+  — y ajouter toute route qui sérialise l'intention d'autrui.
 
 ## Notifications (spec 003, #389–#393)
 

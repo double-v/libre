@@ -36,8 +36,8 @@ US1 #452, US2 #453, US3 #454.
 
 **Purpose**: la décision unique appelée par toutes les routes (research R1/R2).
 
-- [ ] T003 Écrire les tests de la règle dans `src/lib/__tests__/profile-visibility.test.ts` : `hasDeclaredIntention` (liste vide → false, `['je verrai en chemin']` → true), `intentionFor` sur les cinq lignes de la table de `data-model.md` (soi-même, lectrice déclarée, les deux vides, voilé, lectrice inconnue `undefined` → voilé)
-- [ ] T004 Implémenter `hasDeclaredIntention(list)`, `canSeeIntention({ isSelf, viewerIntention })` et `intentionFor({ isSelf, viewerIntention, relationshipType })` → `{ relationshipType } | { relationshipTypeVeiled: true }` dans `src/lib/profile-visibility.ts`, docstring en français qui cite #328/#330 (pourquoi une seule fonction)
+- [x] T003 Écrire les tests de la règle dans `src/lib/__tests__/profile-visibility.test.ts` : `hasDeclaredIntention` (liste vide → false, `['je verrai en chemin']` → true), `intentionFor` sur les cinq lignes de la table de `data-model.md` (soi-même, lectrice déclarée, les deux vides, voilé, lectrice inconnue `undefined` → voilé)
+- [x] T004 Implémenter `hasDeclaredIntention(list)`, `canSeeIntention({ isSelf, viewerIntention })` et `intentionFor({ isSelf, viewerIntention, relationshipType })` → `{ relationshipType } | { relationshipTypeVeiled: true }` dans `src/lib/profile-visibility.ts`, docstring en français qui cite #328/#330 (pourquoi une seule fonction)
 
 **Checkpoint**: T003 vert.
 
@@ -51,18 +51,18 @@ US1 #452, US2 #453, US3 #454.
 
 ### Tests (écrits d'abord, doivent échouer)
 
-- [ ] T005 [P] [US1] Créer la garde `src/__tests__/intention-never-leaks.test.ts` sur le motif de `src/__tests__/city-label-never-leaks.test.ts` (base factice qui honore `select`) : pour `GET /api/users/[id]`, `GET /api/geoloc/nearby`, `GET /api/geoloc/crossings`, lectrice sans intention → le JSON sérialisé de la personne lue ne contient aucune valeur de `RELATIONSHIP_TYPE_OPTIONS` et porte `relationshipTypeVeiled: true` ; lectrice déclarée → valeur présente ; soi-même → valeur présente ; profil lectrice introuvable → voilé
-- [ ] T006 [P] [US1] Ajouter à `src/app/api/discover/__tests__/` (créer `intention-filter.test.ts` si absent) : lectrice sans intention + `?relationshipType=sérieux` → le `where` Prisma ne contient pas de filtre `relationshipType` ; lectrice déclarée → `hasSome` présent
+- [x] T005 [P] [US1] Créer la garde `src/__tests__/intention-never-leaks.test.ts` sur le motif de `src/__tests__/city-label-never-leaks.test.ts` (base factice qui honore `select`) : pour `GET /api/users/[id]`, `GET /api/geoloc/nearby`, `GET /api/geoloc/crossings`, lectrice sans intention → le JSON sérialisé de la personne lue ne contient aucune valeur de `RELATIONSHIP_TYPE_OPTIONS` et porte `relationshipTypeVeiled: true` ; lectrice déclarée → valeur présente ; soi-même → valeur présente ; profil lectrice introuvable → voilé
+- [x] T006 [P] [US1] (fait dans `src/__tests__/intention-never-leaks.test.ts`, même base factice) Ajouter à `src/app/api/discover/__tests__/` (créer `intention-filter.test.ts` si absent) : lectrice sans intention + `?relationshipType=sérieux` → le `where` Prisma ne contient pas de filtre `relationshipType` ; lectrice déclarée → `hasSome` présent
 
 ### Implementation
 
-- [ ] T007 [US1] `src/app/api/users/[id]/route.ts` : ajouter `relationshipType` au `select` du profil lectrice déjà lu (bloc voile photo, `viewer`), le lire aussi quand `isSelf` est faux et que le bloc photo ne s'exécute pas, et remplacer `publicProfile.relationshipType = …` par l'étalement de `intentionFor(...)`
-- [ ] T008 [US1] `src/app/api/geoloc/nearby/route.ts` : sélectionner `relationshipType` dans `myProfile` et remplacer `relationshipType: otherProfile.relationshipType` par `...intentionFor(...)`
-- [ ] T009 [US1] `src/app/api/geoloc/crossings/route.ts` : lire le profil lectrice (`profile.findUnique({ where: { userId }, select: { relationshipType: true } })`), appliquer `intentionFor` aux deux sélections qui exposent `relationshipType` ; ajuster le type dans `src/components/CrossingsView.tsx` (`relationshipType?: string[]; relationshipTypeVeiled?: true`)
-- [ ] T010 [US1] `src/app/api/discover/route.ts` : remonter la lecture de `myProfile` avant la construction du `where`, et n'ajouter le filtre `relationshipType` que si `hasDeclaredIntention(myProfile?.relationshipType ?? [])` (research R3)
-- [ ] T011 [P] [US1] Tests composants : `src/components/__tests__/ProfileModal.test.tsx` (voilé → invitation + lien `/profile#profile-section-seeking`, pas de valeur ; `[]` → rien) et `src/components/__tests__/SearchFilters.test.tsx` (`intentionDeclared={false}` → groupe inactif + invitation, choix enregistrés conservés)
-- [ ] T012 [US1] `src/components/ProfileModal.tsx` : corriger le type `relationshipType` (tableau), ajouter `relationshipTypeVeiled`, rendre l'invitation validée en T002 (copie française sans chiffre ni mention d'autrui, cible ≥ 44 px, focus coral)
-- [ ] T013 [US1] `src/components/SearchFilters.tsx` : prop `intentionDeclared`, groupe « Type de relation » non interactif avec l'invitation ; `src/app/(main)/discover/page.tsx` : passer `intentionDeclared` depuis le profil déjà chargé (ligne `setNudgeKind(deriveMissing(...))`)
+- [x] T007 [US1] `src/app/api/users/[id]/route.ts` : ajouter `relationshipType` au `select` du profil lectrice déjà lu (bloc voile photo, `viewer`), le lire aussi quand `isSelf` est faux et que le bloc photo ne s'exécute pas, et remplacer `publicProfile.relationshipType = …` par l'étalement de `intentionFor(...)`
+- [x] T008 [US1] `src/app/api/geoloc/nearby/route.ts` : sélectionner `relationshipType` dans `myProfile` et remplacer `relationshipType: otherProfile.relationshipType` par `...intentionFor(...)`
+- [x] T009 [US1] `src/app/api/geoloc/crossings/route.ts` : lire le profil lectrice (`profile.findUnique({ where: { userId }, select: { relationshipType: true } })`), appliquer `intentionFor` aux deux sélections qui exposent `relationshipType` ; ajuster le type dans `src/components/CrossingsView.tsx` (`relationshipType?: string[]; relationshipTypeVeiled?: true`)
+- [x] T010 [US1] `src/app/api/discover/route.ts` : remonter la lecture de `myProfile` avant la construction du `where`, et n'ajouter le filtre `relationshipType` que si `hasDeclaredIntention(myProfile?.relationshipType ?? [])` (research R3)
+- [x] T011 [P] [US1] Tests composants : `src/components/__tests__/ProfileModal.test.tsx` (voilé → invitation + lien `/profile#profile-section-seeking`, pas de valeur ; `[]` → rien) et `src/components/__tests__/SearchFilters.test.tsx` (`intentionDeclared={false}` → groupe inactif + invitation, choix enregistrés conservés)
+- [x] T012 [US1] `src/components/ProfileModal.tsx` : corriger le type `relationshipType` (tableau), ajouter `relationshipTypeVeiled`, rendre l'invitation validée en T002 (copie française sans chiffre ni mention d'autrui, cible ≥ 44 px, focus coral)
+- [x] T013 [US1] `src/components/SearchFilters.tsx` : prop `intentionDeclared`, groupe « Type de relation » non interactif avec l'invitation ; `src/app/(main)/discover/page.tsx` : passer `intentionDeclared` depuis le profil déjà chargé (ligne `setNudgeKind(deriveMissing(...))`)
 
 **Checkpoint**: T005/T006/T011 verts ; quickstart 1, 2, 3, 6 passent en local.
 
@@ -76,11 +76,11 @@ US1 #452, US2 #453, US3 #454.
 
 **Livraison** : dans le même lot que l'US1, jamais après (sinon l'US1 force une étiquette).
 
-- [ ] T014 [P] [US2] Test dans `src/lib/__tests__/taxonomy.test.ts` (créer si absent) : `RELATIONSHIP_TYPE_OPTIONS` contient `'je verrai en chemin'`, chaque valeur ≤ 30 caractères (validateur `src/lib/validators.ts:56`)
-- [ ] T015 [US2] Ajouter `'je verrai en chemin'` en dernière position de `RELATIONSHIP_TYPE_OPTIONS` dans `src/lib/taxonomy.ts`, commentaire : pourquoi une valeur dédiée plutôt que « autre » (clarification 2026-09-25)
-- [ ] T016 [P] [US2] Vérifier le rendu de la nouvelle valeur (longueur de chip, retour à la ligne) dans `src/components/onboarding/StepSeeking.tsx`, la section intention de `src/app/(main)/profile/page.tsx` et `src/components/SearchFilters.tsx` ; ajuster seulement si le prototype T002 l'exige
-- [ ] T017 [US2] Étendre `src/__tests__/intention-never-leaks.test.ts` : lectrice avec `['je verrai en chemin']` seule → intention d'autrui visible
-- [ ] T018 [P] [US2] Vérifier que le bloc `onboarding` de `src/app/api/admin/stats/route.ts` (et `src/lib/admin-analytics.ts`) compte un profil `['je verrai en chemin']` comme ayant une intention ; ajouter le cas au test existant
+- [x] T014 [P] [US2] Test dans `src/lib/__tests__/taxonomy.test.ts` (créer si absent) : `RELATIONSHIP_TYPE_OPTIONS` contient `'je verrai en chemin'`, chaque valeur ≤ 30 caractères (validateur `src/lib/validators.ts:56`)
+- [x] T015 [US2] Ajouter `'je verrai en chemin'` en dernière position de `RELATIONSHIP_TYPE_OPTIONS` dans `src/lib/taxonomy.ts`, commentaire : pourquoi une valeur dédiée plutôt que « autre » (clarification 2026-09-25)
+- [x] T016 [P] [US2] Vérifier le rendu de la nouvelle valeur (longueur de chip, retour à la ligne) dans `src/components/onboarding/StepSeeking.tsx`, la section intention de `src/app/(main)/profile/page.tsx` et `src/components/SearchFilters.tsx` ; ajuster seulement si le prototype T002 l'exige — *les trois écrans utilisent `cap(opt)` ; rendu vu sur pixels dans les filtres (E2E 2026-09-25), aucun ajustement*
+- [x] T017 [US2] Étendre `src/__tests__/intention-never-leaks.test.ts` : lectrice avec `['je verrai en chemin']` seule → intention d'autrui visible
+- [x] T018 [P] [US2] Vérifier que le bloc `onboarding` de `src/app/api/admin/stats/route.ts` (et `src/lib/admin-analytics.ts`) compte un profil `['je verrai en chemin']` comme ayant une intention ; ajouter le cas au test existant — *vérifié à la lecture le 2026-09-25 : `cardinality(p."relationshipType") > 0` compte toute valeur ; pas de test ajouté (requête SQL brute)*
 
 **Checkpoint**: quickstart 4 passe.
 
@@ -92,9 +92,9 @@ US1 #452, US2 #453, US3 #454.
 
 **Independent Test**: quickstart scénario 5.
 
-- [ ] T019 [P] [US3] Test d'une fonction pure `shouldInviteDistance({ hasPosition, nudgeKind, nudgeVisible })` dans `src/lib/__tests__/onboarding.test.ts` : pas de position + carte absente ou autre manque → true ; carte visible sur `position` → false ; position présente → false
-- [ ] T020 [US3] Implémenter `shouldInviteDistance` dans `src/lib/onboarding.ts` (même règle de position que `deriveMissing`) et rendre la ligne d'invitation une seule fois en tête du segment « Pour toi » dans `src/app/(main)/discover/page.tsx`, actions de l'encart géoloc existant (`handleActivateGeoloc`, `geoFallbackBlock`), pas de doublon avec l'encart « filtre de distance », jamais sur « À proximité » ni sur une carte
-- [ ] T021 [US3] Ajouter la copie de l'invitation distance à côté de `NUDGE_COPY` dans `src/lib/onboarding.ts` et l'inclure dans le test de copie existant (sans chiffre, sans référence aux autres)
+- [x] T019 [P] [US3] Test d'une fonction pure `shouldInviteDistance({ hasPosition, nudgeKind, nudgeVisible })` dans `src/lib/__tests__/onboarding.test.ts` : pas de position + carte absente ou autre manque → true ; carte visible sur `position` → false ; position présente → false
+- [x] T020 [US3] Implémenter `shouldInviteDistance` dans `src/lib/onboarding.ts` (même règle de position que `deriveMissing`) et rendre la ligne d'invitation une seule fois en tête du segment « Pour toi » dans `src/app/(main)/discover/page.tsx`, actions de l'encart géoloc existant (`handleActivateGeoloc`, `geoFallbackBlock`), pas de doublon avec l'encart « filtre de distance », jamais sur « À proximité » ni sur une carte
+- [x] T021 [US3] Ajouter la copie de l'invitation distance à côté de `NUDGE_COPY` dans `src/lib/onboarding.ts` et l'inclure dans le test de copie existant (sans chiffre, sans référence aux autres)
 
 **Checkpoint**: quickstart 5 passe.
 
@@ -102,9 +102,9 @@ US1 #452, US2 #453, US3 #454.
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T022 [P] Documenter la règle dans `CLAUDE.md` (section Sécurité, une ligne : intention voilée pour une lectrice non déclarée, garde `intention-never-leaks.test.ts`) et la copie dans `DESIGN.md` si un motif d'invitation y est ajouté
-- [ ] T023 Gates : `npx vitest run`, `npm run lint`, `npm run build` dans le worktree (sortie redirigée dans le scratchpad, lecture au `grep`)
-- [ ] T024 E2E pixels (local, chromium en cache, jamais Neon) : quickstart 1–6 ; échantillonner plusieurs points de chaque invitation, clair/sombre, 390 px et 1080 px
+- [x] T022 [P] Documenter la règle dans `CLAUDE.md` (section Sécurité, une ligne : intention voilée pour une lectrice non déclarée, garde `intention-never-leaks.test.ts`) et la copie dans `DESIGN.md` si un motif d'invitation y est ajouté
+- [x] T023 Gates : `npx vitest run`, `npm run lint`, `npm run build` dans le worktree (sortie redirigée dans le scratchpad, lecture au `grep`)
+- [x] T024 E2E pixels (local, chromium en cache, jamais Neon) : quickstart 1–6 ; échantillonner plusieurs points de chaque invitation, clair/sombre, 390 px et 1080 px
 - [ ] T025 Noter dans `specs/008-reciprocite-miroir/spec.md` la date de mise en ligne et la ligne de base relevée le 2026-10-11 (bloc onboarding des stats admin) pour la lecture SC-002/SC-003 à J+30
 
 ---
