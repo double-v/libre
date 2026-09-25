@@ -34,3 +34,33 @@ describe('contientUnContact — texte', () => {
     'Le café, c’est sacré.',
   ])('laisse passer « %s »', (s) => expect(contientUnContact(s, 'texte')).toBe(false));
 });
+
+// Revue de la PR #466 : les canaux de sortie des faux profils (spec 006).
+describe('contientUnContact — messageries et réseaux, dans tous les modes', () => {
+  it.each([
+    'écris-moi sur t.me/marie_92',
+    'wa.me/33612345678',
+    'mon insta : instagram.com/marie',
+    'snapchat.com/add/marie',
+    'retrouve-moi sur telegram.me/marie',
+    'marie.me/contact',
+  ])('repère « %s » en mode texte', (s) => expect(contientUnContact(s, 'texte')).toBe(true));
+
+  it.each(['t.me/marie', 'wa.me/336'])('repère « %s » en mode pseudo', (s) => expect(contientUnContact(s, 'pseudo')).toBe(true));
+});
+
+// Revue de la PR #466 : un nombre français n'est pas un numéro de téléphone.
+describe('contientUnContact — nombres honnêtes dans un texte', () => {
+  it.each([
+    'J’ai roulé 100 000 km à vélo.',
+    'Né le 12.05.1990, à la mer.',
+    'Un million, soit 1 000 000, c’est beaucoup.',
+    'Rendez-vous le 03-04-2025.',
+  ])('laisse passer « %s »', (s) => expect(contientUnContact(s, 'texte')).toBe(false));
+
+  it.each(['appelle le 06 12 34 56 78', 'au 0612345678', 'sur le +33 6 12 34 56 78', 'au 06.12.34.56.78'])(
+    'repère un vrai numéro : « %s »',
+    (s) => expect(contientUnContact(s, 'texte')).toBe(true),
+  );
+});
+
