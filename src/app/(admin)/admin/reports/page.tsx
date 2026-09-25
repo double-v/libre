@@ -27,12 +27,12 @@ function AnswerForReview({ a, onRemove }: { a: { id?: string; questionKey: strin
   return (
     <li className="flex items-start justify-between gap-3 rounded-lg bg-fill-subtle p-3">
       <div className="min-w-0">
-        <p className="text-xs font-semibold text-muted">
+        <div className="text-xs font-semibold text-muted">
           {q?.label ?? a.questionKey}
           {a.removedAt && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">Réécrite après un retrait</span>}
-        </p>
-        {choix && <p className="mt-0.5 text-sm font-medium text-content">{choix}</p>}
-        {a.text && <p className="mt-0.5 whitespace-pre-line text-sm text-content">{a.text}</p>}
+        </div>
+        {choix && <div className="mt-0.5 text-sm font-medium text-content">{choix}</div>}
+        {a.text && <div className="mt-0.5 whitespace-pre-line text-sm text-content">{a.text}</div>}
       </div>
       {onRemove && a.id && (
       <button
