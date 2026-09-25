@@ -192,6 +192,12 @@ export default function DiscoverPage() {
         if (res.ok) {
           const data = await res.json();
           const p = data.profile;
+          // Pseudo retiré par la règle (#459) : il faut en choisir un avant
+          // tout le reste — les autres voient « Membre » d'ici là.
+          if (data.mustRenameDisplayName) {
+            router.replace('/pseudo');
+            return; // filtersReady reste faux : le feed ne part pas
+          }
           // Parcours d'accueil (spec 005) : tant qu'il n'est pas terminé, on y
           // envoie avant de charger le feed — c'est la seule porte d'entrée
           // fiable, l'inscription ne connectant pas (vérification e-mail).

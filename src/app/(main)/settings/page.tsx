@@ -13,6 +13,7 @@ import AppearanceSettings from '@/components/AppearanceSettings';
 import SiteShell from '@/components/ui/SiteShell';
 import Input from '@/components/ui/Input';
 import VerificationSettings from '@/components/verification/VerificationSettings';
+import PseudoSettings from '@/components/PseudoSettings';
 
 interface Profile {
   userId: string;
@@ -32,6 +33,8 @@ export default function SettingsPage() {
   // la réponse arrivée, pour ne pas le demander à un compte OAuth qui n'en a pas.
   const [hasPassword, setHasPassword] = useState<boolean | null>(null);
   const [error, setError] = useState('');
+  // Pseudo (#459) : null tant qu'il n'est pas lu, pour ne pas monter la section vide.
+  const [displayName, setDisplayName] = useState<string | null>(null);
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -45,6 +48,7 @@ export default function SettingsPage() {
       }
       const data = await res.json();
       setProfile(data.profile);
+      setDisplayName(data.displayName ?? '');
     } catch {
       setError('Impossible de charger les paramètres');
     } finally {
@@ -175,6 +179,9 @@ export default function SettingsPage() {
       )}
 
       <div className="space-y-6">
+        {/* Pseudo (#459) — en tête : c'est l'identité, avant l'apparence */}
+        {displayName !== null && <PseudoSettings initial={displayName} />}
+
         <AppearanceSettings />
 
         {/* Libre (spec 007, US4 ; maquette T014, écran 5) : le journal et le
