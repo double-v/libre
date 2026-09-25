@@ -12,6 +12,8 @@ import {
   mustOnboard,
   nextStep,
   NUDGE_COPY,
+  MIRROR_COPY,
+  shouldInviteDistance,
   ONBOARDING_DONE,
   type OnboardingProfile,
 } from '../onboarding';
@@ -74,5 +76,41 @@ describe('NUDGE_COPY — charte', () => {
   });
   it.each(kinds)('%s : mène à une section du profil', (kind) => {
     expect(NUDGE_COPY[kind].href).toMatch(/^\/profile#profile-section-/);
+  });
+});
+
+/** Invitations de la réciprocité miroir (spec 008) : même charte que la relance. */
+describe('MIRROR_COPY — charte', () => {
+  it.each(Object.entries(MIRROR_COPY))('%s : aucun chiffre, aucune référence comptée aux autres', (_k, text) => {
+    expect(text).not.toMatch(/\d/);
+    expect(text.toLowerCase()).not.toMatch(/personnes|membres|likes?\b|t'attend/);
+  });
+});
+
+/**
+ * Bandeau distance (spec 008, #454) : une seule invitation, et seulement
+ * quand rien d'autre à l'écran ne dit déjà la même chose.
+ */
+describe('shouldInviteDistance', () => {
+  const base = { hasPosition: false, nudgeKind: null, geolocBannerShown: false } as const;
+
+  it('invite une lectrice sans position', () => {
+    expect(shouldInviteDistance(base)).toBe(true);
+  });
+
+  it('se tait quand la lectrice a une position', () => {
+    expect(shouldInviteDistance({ ...base, hasPosition: true })).toBe(false);
+  });
+
+  it('se tait quand la carte de relance parle déjà de la position', () => {
+    expect(shouldInviteDistance({ ...base, nudgeKind: 'position' })).toBe(false);
+  });
+
+  it('reste là quand la carte de relance parle d\'autre chose', () => {
+    expect(shouldInviteDistance({ ...base, nudgeKind: 'photo' })).toBe(true);
+  });
+
+  it('se tait quand l\'encart « filtre de distance » est déjà affiché', () => {
+    expect(shouldInviteDistance({ ...base, geolocBannerShown: true })).toBe(false);
   });
 });

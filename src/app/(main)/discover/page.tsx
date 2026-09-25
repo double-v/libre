@@ -12,7 +12,8 @@ import SiteShell from '@/components/ui/SiteShell';
 import { classifyGeolocError, fuzzedPosition, geolocFailureMessage, geolocFallbackPrompt, geolocUpdateMessage } from '@/lib/geoloc-client';
 import CityPicker from '@/components/ui/CityPicker';
 import { defaultSaveCity } from '@/components/ProfilePositionCard';
-import { deriveMissing, isNudgeDismissed, mustOnboard, writeStoredDate, NUDGE_DISMISS_KEY, type MissingKind } from '@/lib/onboarding';
+import { deriveMissing, isNudgeDismissed, mustOnboard, shouldInviteDistance, writeStoredDate, MIRROR_COPY, NUDGE_DISMISS_KEY, type MissingKind } from '@/lib/onboarding';
+import { hasDeclaredIntention } from '@/lib/profile-visibility';
 import ProfileNudgeCard from '@/components/ProfileNudgeCard';
 import { useFeatures } from '@/hooks/useFeatures';
 
@@ -78,6 +79,11 @@ export default function DiscoverPage() {
   // ou null. Décidé une fois au chargement du profil, écartable 7 jours par
   // appareil.
   const [nudgeKind, setNudgeKind] = useState<MissingKind | null>(null);
+  // Réciprocité miroir (spec 008). Optimistes jusqu'au chargement du profil :
+  // mieux vaut ne rien montrer une fraction de seconde que faire clignoter une
+  // invitation chez qui a déjà tout renseigné.
+  const [intentionDeclared, setIntentionDeclared] = useState(true);
+  const [hasPosition, setHasPosition] = useState(true);
   const [users, setUsers] = useState<DiscoveredUser[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -201,6 +207,9 @@ export default function DiscoverPage() {
             return; // filtersReady reste faux : le feed ne part pas
           }
           if (p) {
+            setIntentionDeclared(hasDeclaredIntention(p.relationshipType));
+            // Même règle que la relance : une ville saisie vaut une position.
+            setHasPosition(!!(p.lastGeolocAt || p.cityLabel));
             if (!isNudgeDismissed()) {
               setNudgeKind(deriveMissing({ ...p, photos: p.photos ?? [], relationshipType: p.relationshipType ?? [] }));
             }
@@ -279,6 +288,7 @@ export default function DiscoverPage() {
             return;
           }
           setGeoFallback(null);
+          setHasPosition(true);
           await fetchPage(true);
         } catch {
           setGeoError('Impossible d\'enregistrer ta position, réessaie plus tard.');
@@ -303,6 +313,7 @@ export default function DiscoverPage() {
       await defaultSaveCity(city);
       setGeoError('');
       setGeoFallback(null);
+      setHasPosition(true);
       await fetchPage(true);
     } catch {
       setGeoError('Impossible d’enregistrer ta ville, réessaie plus tard.');
@@ -406,9 +417,39 @@ export default function DiscoverPage() {
       {/* Filters (collapsible) — feed segments only */}
       {isFeed && showFilters && (
         <div className="mb-4">
-          <SearchFilters value={filters} onChange={handleFilterChange} />
+          <SearchFilters value={filters} onChange={handleFilterChange} intentionDeclared={intentionDeclared} />
         </div>
       )}
+
+      {/* Distance en miroir (spec 008, #454) : sans position, aucune distance
+          ne peut se calculer. Une seule invitation, dans le motif de l'encart
+          ci-dessous, et jamais en doublon avec lui ni avec la carte de relance. */}
+      {segment === 'pourtoi' &&
+        shouldInviteDistance({
+          hasPosition,
+          nudgeKind,
+          geolocBannerShown: nearbyReason === 'geoloc_required',
+        }) && (
+          <div className="mb-4 rounded-xl bg-blush p-3 text-sm text-coral-dark dark:bg-coral/10 dark:text-coral-light">
+            <p className="mb-2">{MIRROR_COPY.distance}</p>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" size="sm" onClick={handleActivateGeoloc} loading={geoRequesting}>
+                Activer ma géolocalisation
+              </Button>
+              {!geoFallback && (
+                <Button type="button" size="sm" variant="secondary" onClick={() => setGeoFallback(geolocFallbackPrompt('unsupported'))}>
+                  Choisir une ville
+                </Button>
+              )}
+            </div>
+            {geoError && (
+              <p role="alert" className="mt-2 text-red-600 dark:text-red-400">
+                {geoError}
+              </p>
+            )}
+            {geoFallbackBlock}
+          </div>
+        )}
 
       {/* Filtre posé mais géoloc absente : le feed part complet, on explique
           pourquoi la distance ne mord pas plutôt que de rendre une page vide. */}
