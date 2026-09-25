@@ -5,6 +5,8 @@ import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { rateLimit, limits } from '@/lib/rate-limit';
 import { pseudoSchema } from '@/lib/validators';
+import { normalizePseudo, validatePseudo } from '@/lib/pseudo';
+import { enregistrerSignal } from '@/lib/fraude/signaux';
 
 const bodySchema = z.object({ displayName: pseudoSchema });
 
@@ -29,8 +31,16 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const parsed = bodySchema.safeParse(await request.json().catch(() => ({})));
+    const body = await request.json().catch(() => ({}));
+    const parsed = bodySchema.safeParse(body);
     if (!parsed.success) {
+      // Un contact dans le pseudo est déjà refusé par la règle (#459) ; il
+      // devient aussi un indice pour la modération (spec 006, #443).
+      const brut = typeof body?.displayName === 'string' ? body.displayName : '';
+      const verdict = validatePseudo(brut);
+      if (!verdict.ok && verdict.motif === 'contact') {
+        await enregistrerSignal({ userId: session.user.id, type: 'contact_pseudo', force: 'fort', extrait: normalizePseudo(brut) });
+      }
       return NextResponse.json(
         { error: parsed.error.issues[0]?.message ?? 'Pseudo invalide' },
         { status: 400 },

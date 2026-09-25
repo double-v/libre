@@ -21,6 +21,8 @@ vi.mock('@/lib/rate-limit', () => ({
 
 const update = vi.fn();
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => ({ user: { update } }) }));
+const enregistrerSignal = vi.fn(async () => true);
+vi.mock('@/lib/fraude/signaux', () => ({ __esModule: true, enregistrerSignal }));
 
 const req = (body: unknown) =>
   new Request('http://localhost/api/users/me/pseudo', {
@@ -78,5 +80,19 @@ describe('PATCH /api/users/me/pseudo', () => {
     await PATCH(req({ displayName: 'Camille', role: 'ADMIN', isVerified: true }));
     const data = update.mock.calls[0][0].data;
     expect(Object.keys(data).sort()).toEqual(['displayName', 'mustRenameDisplayName']);
+  });
+
+  it('un contact dans le pseudo lève un signal fort (spec 006, #443)', async () => {
+    const { PATCH } = await import('../route');
+    expect((await PATCH(req({ displayName: '@lola_privee75' }))).status).toBe(400);
+    expect(enregistrerSignal).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: ME, type: 'contact_pseudo', force: 'fort', extrait: '@lola_privee75' }),
+    );
+  });
+
+  it('un pseudo refusé pour une autre raison ne lève aucun signal', async () => {
+    const { PATCH } = await import('../route');
+    expect((await PATCH(req({ displayName: 'x' }))).status).toBe(400);
+    expect(enregistrerSignal).not.toHaveBeenCalled();
   });
 });

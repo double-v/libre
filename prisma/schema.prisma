@@ -21,12 +21,16 @@ model User {
   createdAt         DateTime  @default(now())
   isVerified        Boolean   @default(false)
   isBanned          Boolean   @default(false)
+  /// Mise en retrait (spec 006) : posée par la décision « vérification »,
+  /// levée par le badge selfie. Privée — jamais lue par autrui.
+  retraitAt         DateTime?
   squareBannedUntil DateTime? @map("square_banned_until")
   lastActive        DateTime  @updatedAt
   skin              String? // Skin choisi par l'utilisateur (cf. #224). null = défaut du site / localStorage.
 
   profile              Profile?
   profileAnswers       ProfileAnswer[]
+  profileSignals       ProfileSignal[]
   userKey              UserKey?
   userKeyHistory       UserKeyHistory[]
   sentLikes            Like[]                @relation("SentLikes")
@@ -154,6 +158,33 @@ model ProfileAnswer {
   @@unique([userId, questionKey])
   @@index([userId])
   @@map("profile_answers")
+}
+
+/// Indice de faux profil (spec 006). Jamais lu par une route destinée aux
+/// membres ; part avec le compte.
+model ProfileSignal {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  /// contact_pseudo · contact_bio · contact_photo · photo_reutilisee ·
+  /// photo_bannie · photo_recuperee · signalement_faux
+  type        String
+  /// faible · fort
+  force       String
+  /// Le passage repéré (≤ 200), jamais la bio entière.
+  extrait     String?
+  photoKey    String?
+  /// Sans clé étrangère : le lien survit à la suppression de l'autre compte.
+  autreUserId String?  @db.Uuid
+  /// Déduplication : le même signal sur le même contenu ne rouvre pas un
+  /// dossier tranché (FR-016).
+  cle         String
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cle])
+  @@index([createdAt])
+  @@map("profile_signals")
 }
 
 model SiteConfig {

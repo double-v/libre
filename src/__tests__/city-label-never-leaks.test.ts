@@ -1,6 +1,8 @@
 /**
  * Garde — le nom de ville saisi à la main ne sort jamais vers autrui (#402,
- * spec 004, SC-003).
+ * spec 004, SC-003). Même garde pour la modération des faux profils (spec 006,
+ * #443) : la mise en retrait (`retraitAt`) et les signaux (`profileSignals`)
+ * ne sont lus que par l'admin.
  *
  * `cityLabel` et `positionSource` sont privés : « le nom de ta ville n'est
  * visible que par toi » est une promesse affichée, donc adossée à un test par
@@ -17,6 +19,7 @@ import { NextRequest } from 'next/server';
 import { randomUUID } from 'crypto';
 
 const SENTINEL = 'SENTINELLE-VILLE';
+const SENTINEL_SIGNAL = 'SENTINELLE-SIGNAL';
 
 const mockGetServerSession = vi.fn();
 vi.mock('next-auth', () => ({
@@ -112,6 +115,9 @@ function userOf(id: string, name: string) {
     lastActive: new Date(),
     userKey: null,
     userKeyHistory: [],
+    // Spec 006 : privés, sur TOUS les comptes.
+    retraitAt: new Date('2026-09-25'),
+    profileSignals: [{ type: 'contact_photo', force: 'fort', extrait: SENTINEL_SIGNAL, cle: SENTINEL_SIGNAL }],
   };
   user.profile = profileOf(id, user);
   return user;
@@ -167,7 +173,14 @@ async function bodyText(res: Response): Promise<string> {
   return res.text();
 }
 
-describe('cityLabel / positionSource / onboardingStep ne sortent jamais vers autrui (#402, spec 005)', () => {
+/** Les champs privés de la spec 006, en plus de la ville. */
+function sansSignaux(text: string, cas = '') {
+  expect(text, cas).not.toContain(SENTINEL_SIGNAL);
+  expect(text, cas).not.toContain('retraitAt');
+  expect(text, cas).not.toContain('profileSignals');
+}
+
+describe('cityLabel / positionSource / onboardingStep / retraitAt / signaux ne sortent jamais vers autrui (#402, spec 005, spec 006)', () => {
   it('GET /api/users/[id]', async () => {
     const { GET } = await import('@/app/api/users/[id]/route');
     const text = await bodyText(
@@ -177,6 +190,7 @@ describe('cityLabel / positionSource / onboardingStep ne sortent jamais vers aut
     expect(text).not.toContain(SENTINEL);
     expect(text).not.toContain('positionSource');
     expect(text).not.toContain('onboardingStep');
+    sansSignaux(text);
   });
 
   it('GET /api/discover (tab all, nearby, et filtre de distance)', async () => {
@@ -187,6 +201,7 @@ describe('cityLabel / positionSource / onboardingStep ne sortent jamais vers aut
       expect(text, q).not.toContain(SENTINEL);
       expect(text, q).not.toContain('positionSource');
       expect(text, q).not.toContain('onboardingStep');
+      sansSignaux(text, q);
     }
   });
 
@@ -197,6 +212,7 @@ describe('cityLabel / positionSource / onboardingStep ne sortent jamais vers aut
     expect(text).not.toContain(SENTINEL);
     expect(text).not.toContain('positionSource');
     expect(text).not.toContain('onboardingStep');
+    sansSignaux(text);
   });
 
   it('GET /api/geoloc/crossings', async () => {
@@ -206,6 +222,7 @@ describe('cityLabel / positionSource / onboardingStep ne sortent jamais vers aut
     expect(text).not.toContain(SENTINEL);
     expect(text).not.toContain('positionSource');
     expect(text).not.toContain('onboardingStep');
+    sansSignaux(text);
   });
 
   it('GET /api/matches', async () => {
@@ -215,5 +232,6 @@ describe('cityLabel / positionSource / onboardingStep ne sortent jamais vers aut
     expect(text).not.toContain(SENTINEL);
     expect(text).not.toContain('positionSource');
     expect(text).not.toContain('onboardingStep');
+    sansSignaux(text);
   });
 });

@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { uploadPhoto, deletePhoto, isR2Configured, generateBlurredDerivative } from '@/lib/r2';
 import { isSensitivityLevel } from '@/lib/photo-sensitivity';
 import { rateLimit, limits } from '@/lib/rate-limit';
+import { analyserPhoto } from '@/lib/fraude/analyse';
 
 export async function POST(request: Request) {
   try {
@@ -38,6 +39,7 @@ export async function POST(request: Request) {
     }
 
     const key = await uploadPhoto(file, session.user.id);
+    const userId = session.user.id;
 
     // Auto-déclaration (#332) : se classer soi-même est le chemin sain, la
     // modération a posteriori arrivant toujours après que quelqu'un a vu la
@@ -62,6 +64,18 @@ export async function POST(request: Request) {
       where: { userId: session.user.id },
       update: { photos: { push: key } },
       create: { userId: session.user.id, photos: [key] },
+    });
+
+    // Lecture du texte incrusté (spec 006, #443) : après la réponse, sur le
+    // tampon déjà en mémoire — rien n'est relu depuis R2, et un échec ne
+    // change rien pour le membre.
+    const buffer = Buffer.from(await file.arrayBuffer());
+    after(async () => {
+      try {
+        await analyserPhoto({ userId, photoKey: key, buffer });
+      } catch {
+        // `analyserPhoto` journalise déjà ; rien ne doit remonter d'ici.
+      }
     });
 
     return NextResponse.json({ photo: key, photos: updated.photos }, { status: 201 });
