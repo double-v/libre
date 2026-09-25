@@ -114,7 +114,8 @@ describe('GET /api/discover?tab=nearby (issue #137)', () => {
       },
     ]);
 
-    const res = await GET(makeRequest());
+    // Rayon explicite : sans filtre, « partout » n'a plus de plafond (#344).
+    const res = await GET(makeRequest('&distance=50'));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual({ users: [], nextCursor: null, reason: 'empty_feed' });

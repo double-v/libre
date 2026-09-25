@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { LAUNCH_COPY } from '@/lib/lancement';
 import { useSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import SiteNav from '@/components/ui/SiteNav';
@@ -16,7 +17,9 @@ const FeedbackButton = dynamic(() => import('@/components/FeedbackButton'), { ss
 const ConsentAvenantBanner = dynamic(() => import('@/components/ConsentAvenantBanner'), { ssr: false });
 const ToastHost = dynamic(() => import('@/components/ui/Toast'), { ssr: false });
 
-const BETA_DISMISSED_KEY = 'libre_beta_dismissed';
+// Clé neuve avec la copie de démarrage (#346) : qui avait fermé l'ancienne
+// bannière « bêta » lit une fois le nouveau message.
+const BETA_DISMISSED_KEY = 'libre_launch_dismissed';
 
 function BetaBanner({ onFeedback }: { onFeedback: () => void }) {
   const [dismissed, setDismissed] = useState(true);
@@ -35,10 +38,7 @@ function BetaBanner({ onFeedback }: { onFeedback: () => void }) {
 
   return (
     <div className="flex items-center justify-center gap-2 border-b border-coral/20 bg-sunken px-4 py-1.5 text-center text-xs text-coral-dark dark:border-coral/30 dark:text-coral-light">
-      <span className="mr-1 rounded-full bg-coral px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider text-white">
-        Bêta
-      </span>
-      <span>Libre est en version bêta — vos retours comptent !</span>
+      <span>{LAUNCH_COPY.banniere}</span>
       <button
         type="button"
         onClick={onFeedback}
@@ -53,7 +53,7 @@ function BetaBanner({ onFeedback }: { onFeedback: () => void }) {
           localStorage.setItem(BETA_DISMISSED_KEY, '1');
         }}
         className="ml-1 text-coral-dark/60 hover:text-coral-dark dark:text-coral-light/60 dark:hover:text-coral-light"
-        aria-label="Fermer la bannière bêta"
+        aria-label="Fermer ce message"
       >
         &times;
       </button>
@@ -79,6 +79,11 @@ function MainShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   // Tunnels sans tab bar : parcours d'accueil (spec 005), renommage imposé (#459).
   const estTunnel = pathname.startsWith('/bienvenue') || pathname.startsWith('/pseudo');
+  // Une conversation occupe exactement l'écran (#339) : le fil défile, pas la
+  // page, et le champ de saisie reste au-dessus de la tab bar. La hauteur est
+  // bornée ici, là où l'on connaît tout ce qui s'empile (bandeaux, SiteNav,
+  // tab bar) — la page du chat se contente de remplir `main`.
+  const pleinEcran = pathname.startsWith('/chat/');
   const { data: session } = useSession();
   const { hasUnread } = useUnread();
   const features = useFeatures();
@@ -105,7 +110,7 @@ function MainShell({ children }: { children: React.ReactNode }) {
   }, [session?.user?.id]);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className={pleinEcran ? 'flex h-dvh flex-col overflow-hidden' : 'flex min-h-screen flex-col'}>
       {/* Shell unifié (#280, épic #273), amendé desktop par #347 : la nav du haut
           est le SiteNav partagé (variante connectée résolue via session), en
           largeur « content » — l'app connectée adopte la colonne de la home au
@@ -125,7 +130,7 @@ function MainShell({ children }: { children: React.ReactNode }) {
         }
       />
 
-      <main id="main-content" role="main" className="flex-1 pb-nav">{children}</main>
+      <main id="main-content" role="main" className={pleinEcran ? 'min-h-0 flex-1 pb-nav' : 'flex-1 pb-nav'}>{children}</main>
 
       {/* Label distinct de la nav du haut (SiteNav = « Navigation principale »)
           pour ne pas dupliquer le landmark : la tab bar navigue entre sections.
@@ -167,8 +172,10 @@ function MainShell({ children }: { children: React.ReactNode }) {
       {session?.user?.id && <MatchDialog userId={session.user.id} />}
 
       {/* /pseudo (#459) : une seule action, et le bouton flottant recouvrait
-          « Enregistrer » sur mobile. Le lien « Signaler » du bandeau bêta reste. */}
-      {!pathname.startsWith('/pseudo') && <FeedbackButton />}
+          « Enregistrer » sur mobile. Même chose dans une conversation (#339) :
+          ancré juste au-dessus de la tab bar, il tombe pile sur « Envoyer ».
+          Le lien « Signaler » de la bannière reste. */}
+      {!pathname.startsWith('/pseudo') && !pleinEcran && <FeedbackButton />}
       <ToastHost />
     </div>
   );

@@ -407,7 +407,7 @@ export default function ChatConversationPage() {
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-4rem)] max-w-lg flex-col">
+    <div className="mx-auto flex h-full max-w-lg flex-col">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-hairline p-4">
         <div

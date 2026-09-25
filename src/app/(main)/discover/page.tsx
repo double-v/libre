@@ -16,6 +16,10 @@ import { deriveMissing, isNudgeDismissed, mustOnboard, shouldInviteDistance, wri
 import { hasDeclaredIntention } from '@/lib/profile-visibility';
 import ProfileNudgeCard from '@/components/ProfileNudgeCard';
 import { useFeatures } from '@/hooks/useFeatures';
+import Link from 'next/link';
+import Card from '@/components/ui/Card';
+import { buttonClassName } from '@/components/ui/Button';
+import { LAUNCH_COPY, LAUNCH_JOURNAL_HREF, LAUNCH_PROFILE_HREF } from '@/lib/lancement';
 
 // Onglet unique de découverte : un seul écran, trois façons de rencontrer.
 // « Pour toi » = feed algorithmique, « À proximité » = rayon géoloc,
@@ -65,6 +69,32 @@ function buildUrl(tab: FeedTab, cursor?: string, filters?: SearchFiltersValue): 
   return `/api/discover?${params}`;
 }
 
+/**
+ * Note de démarrage (#346) : en tête du feed quand il est vide ou fini. Elle
+ * remplace « Tu as tout vu — N personnes » : le nombre affichait la petite
+ * taille de la base sans rien en dire. Composée de `Card` et `Button` du DS.
+ */
+function LaunchNote({ texte, profilIncomplet }: { texte: string; profilIncomplet: boolean }) {
+  return (
+    <Card as="section" variant="filter" aria-labelledby="launch-note-title" className="animate-fade-in mb-4">
+      <h2 id="launch-note-title" className="text-lg font-semibold text-content">
+        {LAUNCH_COPY.titre}
+      </h2>
+      <p className="mt-1 max-w-reading text-sm leading-relaxed text-muted">{texte}</p>
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+        {profilIncomplet && (
+          <Link href={LAUNCH_PROFILE_HREF} className={buttonClassName('primary', 'md')}>
+            {LAUNCH_COPY.ctaProfil}
+          </Link>
+        )}
+        <Link href={LAUNCH_JOURNAL_HREF} className={buttonClassName(profilIncomplet ? 'secondary' : 'primary', 'md')}>
+          {LAUNCH_COPY.ctaJournal}
+        </Link>
+      </div>
+    </Card>
+  );
+}
+
 export default function DiscoverPage() {
   const [segment, setSegment] = useState<Segment>('pourtoi');
   const features = useFeatures();
@@ -79,6 +109,9 @@ export default function DiscoverPage() {
   // ou null. Décidé une fois au chargement du profil, écartable 7 jours par
   // appareil.
   const [nudgeKind, setNudgeKind] = useState<MissingKind | null>(null);
+  // Indépendant de la relance écartée (#346) : la note de démarrage propose de
+  // compléter le profil tant qu'il manque quelque chose, et seulement alors.
+  const [profilIncomplet, setProfilIncomplet] = useState(false);
   // Réciprocité miroir (spec 008). Optimistes jusqu'au chargement du profil :
   // mieux vaut ne rien montrer une fraction de seconde que faire clignoter une
   // invitation chez qui a déjà tout renseigné.
@@ -216,8 +249,10 @@ export default function DiscoverPage() {
             setIntentionDeclared(hasDeclaredIntention(p.relationshipType));
             // Même règle que la relance : une ville saisie vaut une position.
             setHasPosition(!!(p.lastGeolocAt || p.cityLabel));
+            const manque = deriveMissing({ ...p, photos: p.photos ?? [], relationshipType: p.relationshipType ?? [] });
+            setProfilIncomplet(manque !== null);
             if (!isNudgeDismissed()) {
-              setNudgeKind(deriveMissing({ ...p, photos: p.photos ?? [], relationshipType: p.relationshipType ?? [] }));
+              setNudgeKind(manque);
             }
             setFilters({
               genders: p.searchGenders ?? [],
@@ -376,6 +411,13 @@ export default function DiscoverPage() {
   };
 
   const visibleUsers = users.filter((u) => !passedIds.has(u.userId));
+  // Le vide dit d'où il vient : un rayon, des filtres, ou juste le démarrage.
+  const texteVide =
+    filters.distanceKm !== null
+      ? LAUNCH_COPY.videRayon(filters.distanceKm)
+      : hasActiveFilters(filters)
+        ? LAUNCH_COPY.videFiltres
+        : LAUNCH_COPY.vide;
 
   return (
     <SiteShell className="py-6 md:pb-section md:pt-11">
@@ -512,25 +554,21 @@ export default function DiscoverPage() {
           {geoFallbackBlock}
         </div>
       ) : nearbyReason === 'empty_feed' ? (
-        <div className="animate-fade-in mx-auto max-w-reading rounded-xl border border-hairline bg-surface p-6 text-center">
-          <p className="text-muted">
-            {filters.distanceKm !== null
-              ? `Personne dans un rayon de ${filters.distanceKm} km. Élargis ta distance ou reviens plus tard.`
-              : 'Personne à découvrir pour le moment. Reviens plus tard.'}
-          </p>
-        </div>
+        <LaunchNote texte={texteVide} profilIncomplet={profilIncomplet} />
       ) : (
         <>
-          {/* Dire où on en est du feed : sans ça, une rangée complétée par des
-              vignettes d'attente laisserait croire qu'il reste des profils. */}
+          {/* Dire où on en est du feed (#346) : sans ça, une rangée complétée
+              par des vignettes d'attente laisserait croire qu'il reste des
+              profils — et un feed court, que le service est mort. */}
           {visibleUsers.length === 0 ? (
-            <p className="mb-4 text-center text-muted">
-              Personne {segment === 'nearby' ? 'à proximité' : 'à découvrir'} pour le moment
-            </p>
+            <LaunchNote texte={texteVide} profilIncomplet={profilIncomplet} />
           ) : !cursor ? (
-            <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
-              Tu as tout vu — {visibleUsers.length} personne{visibleUsers.length > 1 ? 's' : ''}
-            </p>
+            <LaunchNote
+              texte={profilIncomplet ? LAUNCH_COPY.finDeFeed : LAUNCH_COPY.finDeFeedComplet}
+              // La carte de relance porte déjà le geste juste en dessous :
+              // un second bouton « Compléter » ferait doublon.
+              profilIncomplet={profilIncomplet && !(segment === 'pourtoi' && nudgeKind)}
+            />
           ) : null}
 
           <div className="grid gap-grid md:grid-cols-2 lg:grid-cols-3">

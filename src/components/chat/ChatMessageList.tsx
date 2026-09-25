@@ -242,7 +242,7 @@ export default function ChatMessageList({
 
   if (messages.length === 0) {
     return (
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto p-4">
         <p className="text-center text-sm text-muted">Commencez la conversation !</p>
       </div>
     );
@@ -250,7 +250,7 @@ export default function ChatMessageList({
 
   return (
     <Virtuoso<ChatMessage, HeaderContext>
-      className="flex-1"
+      className="min-h-0 flex-1"
       aria-live="polite"
       aria-label="Messages de la conversation"
       data={messages}
