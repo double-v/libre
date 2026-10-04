@@ -161,30 +161,9 @@ Le remote canonique s'appelle **`libre`** (`git@github.com:double-v/libre.git`).
 Toujours pousser vers `libre`, pas vers `origin` (ancienne URL). Si `origin`
 est encore présent, ne l'utilise pas.
 
-## Stack
+## Déploiement
 
-- **Framework** : Next.js 16 App Router (React 19, Server Components par défaut).
-- **Styling** : Tailwind CSS v4 (`@theme` dans `src/app/globals.css`).
-- **Base de données** : PostgreSQL + PostGIS (driver Prisma 7 avec adapter `@prisma/adapter-pg`).
-- **Auth** : NextAuth.js 4, JWT strategy, custom Prisma adapter.
-- **Temps réel** : Pusher (canaux privés authentifiés).
-- **Stockage fichiers** : Cloudflare R2 via `@aws-sdk/client-s3`.
-- **Tests** : Vitest + Testing Library + Playwright.
-- **Déploiement** : Vercel + Neon.
-
-## Commandes
-
-```bash
-npm install
-# configurer .env d'abord (voir .env.example)
-npx prisma generate
-npx prisma migrate dev
-npm run dev        # http://localhost:3000
-npm run build      # prod : migrate + generate + build
-npm run lint       # ESLint 9
-npx vitest run     # tests unitaires + intégration
-npx playwright test # E2E
-```
+Vercel + Neon. Configurer `.env` d'abord (voir `.env.example`).
 
 ## Lecture obligatoire avant de coder
 
@@ -335,22 +314,3 @@ Règles d'exposition :
   `src/__tests__/features-gardes.test.ts` — y ajouter toute nouvelle route.
 - Pages : le proxy renvoie `/square` et `/crossings` vers `/en-pause` ; la
   copie membre est unique (`COPY_EN_PAUSE`), jamais « désactivé par l'admin ».
-
-## Base de données
-
-- Prisma 7 avec adapter natif PostgreSQL (`@prisma/adapter-pg`).
-- Client généré dans `src/generated/` (git-ignoré).
-- Migration automatique en production : `prisma migrate deploy`.
-
-## Tests
-
-```bash
-npx vitest run       # unitaires / intégration
-npx playwright test  # E2E navigateur
-```
-
-## Conventions de commit et PR
-
-- Français, préfixe `feat(#NN)`, `fix(#NN)`, `docs(rex)`.
-- Corriger `Closes #N` dans le corps de la PR.
-- Toujours merger via review opérateur, sauf hotfix autorisé.
