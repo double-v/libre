@@ -19,7 +19,7 @@ import { useFeatures } from '@/hooks/useFeatures';
 import Link from 'next/link';
 import Card from '@/components/ui/Card';
 import { buttonClassName } from '@/components/ui/Button';
-import { LAUNCH_COPY, LAUNCH_JOURNAL_HREF, LAUNCH_PROFILE_HREF } from '@/lib/lancement';
+import { LAUNCH_COPY, LAUNCH_FAQ_HREF, LAUNCH_JOURNAL_HREF, LAUNCH_PROFILE_HREF } from '@/lib/lancement';
 
 // Onglet unique de découverte : un seul écran, trois façons de rencontrer.
 // « Pour toi » = feed algorithmique, « À proximité » = rayon géoloc,
@@ -74,7 +74,7 @@ function buildUrl(tab: FeedTab, cursor?: string, filters?: SearchFiltersValue): 
  * remplace « Tu as tout vu — N personnes » : le nombre affichait la petite
  * taille de la base sans rien en dire. Composée de `Card` et `Button` du DS.
  */
-function LaunchNote({ texte, profilIncomplet }: { texte: string; profilIncomplet: boolean }) {
+function LaunchNote({ texte, profilIncomplet, vide = false }: { texte: string; profilIncomplet: boolean; vide?: boolean }) {
   return (
     <Card as="section" variant="filter" aria-labelledby="launch-note-title" className="animate-fade-in mb-4">
       <h2 id="launch-note-title" className="text-lg font-semibold text-content">
@@ -91,6 +91,13 @@ function LaunchNote({ texte, profilIncomplet }: { texte: string; profilIncomplet
           {LAUNCH_COPY.ctaJournal}
         </Link>
       </div>
+      {/* Seulement quand rien ne s'affiche : en fin de feed, la personne a vu
+          des profils, la question ne se pose pas. */}
+      {vide && (
+        <Link href={LAUNCH_FAQ_HREF} className="mt-3 inline-block text-sm text-coral hover:underline">
+          {LAUNCH_COPY.ctaFaq}
+        </Link>
+      )}
     </Card>
   );
 }
@@ -554,14 +561,14 @@ export default function DiscoverPage() {
           {geoFallbackBlock}
         </div>
       ) : nearbyReason === 'empty_feed' ? (
-        <LaunchNote texte={texteVide} profilIncomplet={profilIncomplet} />
+        <LaunchNote texte={texteVide} profilIncomplet={profilIncomplet} vide />
       ) : (
         <>
           {/* Dire où on en est du feed (#346) : sans ça, une rangée complétée
               par des vignettes d'attente laisserait croire qu'il reste des
               profils — et un feed court, que le service est mort. */}
           {visibleUsers.length === 0 ? (
-            <LaunchNote texte={texteVide} profilIncomplet={profilIncomplet} />
+            <LaunchNote texte={texteVide} profilIncomplet={profilIncomplet} vide />
           ) : !cursor ? (
             <LaunchNote
               texte={profilIncomplet ? LAUNCH_COPY.finDeFeed : LAUNCH_COPY.finDeFeedComplet}

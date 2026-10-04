@@ -300,7 +300,10 @@ function CercleTab({
           Tu n&apos;as pas encore de Cercle
         </h2>
         <p className="mb-4 text-sm text-muted">
-          C&apos;est ton filet de sécurité pour tes futures rencontres.
+          {/* Pas de « filet de sécurité » tant que les alertes du check-in ne
+              partent pas (#476) : la promesse doit être adossée au code. */}
+          Choisis jusqu&apos;à cinq membres de confiance. Le check-in, qui les préviendra si tu ne
+          reviens pas d&apos;un rendez-vous, est en pause pour le moment.
         </p>
         <button
           type="button"

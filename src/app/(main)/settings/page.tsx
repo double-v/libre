@@ -366,15 +366,16 @@ export default function SettingsPage() {
         {/* Informations légales — regroupées ici (remplace l'ancien footer
             flottant global au-dessus de la tab bar, cf. refonte chrome mobile). */}
         <section className="rounded-xl border border-hairline bg-surface p-4 sm:p-5">
-          <h2 className="text-lg font-semibold text-content">Informations légales</h2>
+          <h2 className="text-lg font-semibold text-content">Aide et informations légales</h2>
           <p className="mt-1 text-sm text-muted">
-            Les documents qui encadrent Libre.
+            Les réponses aux questions fréquentes et les documents qui encadrent Libre.
           </p>
           <ul className="mt-3 divide-y divide-gray-200 dark:divide-gray-700">
             {[
               { href: '/cgu', label: "Conditions d'utilisation" },
               { href: '/confidentialite', label: 'Politique de confidentialité' },
               { href: '/mentions-legales', label: 'Mentions légales' },
+              { href: '/faq', label: 'Foire aux questions' },
             ].map((link) => (
               <li key={link.href}>
                 <a

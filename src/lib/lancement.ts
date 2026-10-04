@@ -26,9 +26,12 @@ export const LAUNCH_COPY = {
     `Personne dans un rayon de ${km} km pour le moment. Les inscriptions arrivent peu à peu : élargis la distance pour voir plus de monde.`,
   ctaProfil: 'Compléter mon profil',
   ctaJournal: 'Lire où en est Libre',
+  /** Vide : les causes possibles sont détaillées dans la FAQ (#476). */
+  ctaFaq: 'Pourquoi je ne vois personne ?',
   /** Bannière du shell connecté : remplace « version bêta ». */
   banniere: 'Libre vient d’ouvrir. Les inscriptions arrivent peu à peu, et tes retours nous aident à avancer.',
 } as const;
 
 export const LAUNCH_PROFILE_HREF = '/profile';
 export const LAUNCH_JOURNAL_HREF = '/journal';
+export const LAUNCH_FAQ_HREF = '/faq#aucun-profil';

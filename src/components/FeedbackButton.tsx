@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 
 type Category = 'bug' | 'suggestion' | 'question';
@@ -71,7 +72,7 @@ export default function FeedbackButton() {
         <div className="mb-2 w-72 rounded-xl border border-hairline bg-surface p-4 shadow-lg">
           {submitted ? (
             <p className="py-4 text-center text-sm text-coral">
-              Merci pour votre retour !
+              Merci pour ton retour.
             </p>
           ) : (
             <form onSubmit={handleSubmit}>
@@ -88,6 +89,17 @@ export default function FeedbackButton() {
                   &times;
                 </button>
               </div>
+
+              {/* Rappel de la FAQ (#476) : un retour ne permet pas encore de
+                  répondre, une question déjà traitée y trouve sa réponse
+                  tout de suite. */}
+              <p className="mb-3 text-xs text-muted">
+                Une question ? La réponse est peut-être déjà dans la{' '}
+                <Link href="/faq" className="text-coral hover:underline" onClick={() => setOpen(false)}>
+                  foire aux questions
+                </Link>
+                .
+              </p>
 
               <div className="mb-3 flex gap-2">
                 {(['bug', 'suggestion', 'question'] as Category[]).map((cat) => (
@@ -115,10 +127,10 @@ export default function FeedbackButton() {
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder={
                   category === 'bug'
-                    ? 'Décrivez le problème...'
+                    ? 'Décris le problème…'
                     : category === 'suggestion'
-                      ? 'Votre idée...'
-                      : 'Votre question...'
+                      ? 'Ton idée…'
+                      : 'Ta question…'
                 }
                 className="mb-3 h-24 w-full resize-none rounded-lg border border-hairline bg-fill-subtle p-2 text-sm text-content focus:border-coral focus:outline-none dark:placeholder:text-muted"
                 required
@@ -135,7 +147,7 @@ export default function FeedbackButton() {
                 disabled={submitting || message.trim().length < 5}
                 className="w-full rounded-lg bg-coral px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-terracotta disabled:opacity-50"
               >
-                {submitting ? 'Envoi...' : 'Envoyer'}
+                {submitting ? 'Envoi…' : 'Envoyer'}
               </button>
             </form>
           )}

@@ -9,7 +9,7 @@ describe('LobbyFooter', () => {
       'Conditions générales d’utilisation': '/cgu',
       'Politique de confidentialité': '/confidentialite',
       'Mentions légales': '/mentions-legales',
-      FAQ: '/faq/session-expiree',
+      FAQ: '/faq', // #476 : la FAQ générale, qui renvoie elle-même à « session expirée »
     };
     for (const [name, href] of Object.entries(expected)) {
       expect(screen.getByRole('link', { name })).toHaveAttribute('href', href);
