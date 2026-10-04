@@ -58,3 +58,43 @@ describe('<ManifestoPage /> — shell migration (#278)', () => {
     );
   });
 });
+
+/**
+ * Le manifeste est public et indexé : il ne promet que ce qui existe (#494).
+ * Aucun don n'est collecté et aucun budget n'a été publié tant que la page de
+ * dons (#10) n'est pas livrée. Si elle l'est, ce test changera avec la copie.
+ */
+describe('<ManifestoPage /> — ne promet que ce qui existe (#494)', () => {
+  it('ne prétend ni recevoir des dons ni publier un budget', () => {
+    const { container } = render(<ManifestoPage />);
+    const texte = container.textContent ?? '';
+    expect(texte).not.toMatch(/beaucoup de dons/i);
+    expect(texte).not.toMatch(/Des dons, c.est tout/i);
+    expect(texte).not.toMatch(/Budget publié/i);
+    expect(texte).not.toMatch(/frais juridiques/i);
+    expect(texte).not.toMatch(/surplus/i);
+  });
+
+  it('dit l’état réel : offres gratuites, bénévolat, dons pas encore ouverts', () => {
+    const { container } = render(<ManifestoPage />);
+    const texte = container.textContent ?? '';
+    expect(texte).toMatch(/offres gratuites/i);
+    expect(texte).toMatch(/bénévolement/i);
+    expect(texte).toMatch(/pas encore/i);
+  });
+
+  it('ne promet pas une suppression « en un clic » (le mot de passe est demandé)', () => {
+    const { container } = render(<ManifestoPage />);
+    expect(container.textContent).not.toMatch(/en un clic/i);
+  });
+});
+
+it('#494 — les pages légales ne décrivent ni collectif ni association en cours', async () => {
+  const { readFileSync } = await import('node:fs');
+  for (const page of ['mentions-legales', 'confidentialite', 'cgu']) {
+    const source = readFileSync(`src/app/(legal)/${page}/page.tsx`, 'utf-8');
+    expect(source, page).not.toMatch(/collectif Libre/i);
+    expect(source, page).not.toMatch(/en cours de constitution/i);
+    expect(source, page).not.toMatch(/par des bénévoles/i);
+  }
+});

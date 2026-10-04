@@ -33,8 +33,9 @@ export default function ConfidentialitePage() {
         <li>Contact DPO : <a href="mailto:dpo@getlibre.fr">dpo@getlibre.fr</a></li>
       </ul>
       <p>
-        Libre n&apos;est pas encore immatriculé en tant qu&apos;association. Le projet est porté par des bénévoles
-        agissant en leur nom personnel. Le responsable de facto peut être joint à l&apos;adresse ci-dessus.
+        Libre n&apos;est pas une association : c&apos;est un projet personnel, porté bénévolement par une personne
+        physique, qui est responsable du traitement de vos données. Une association pourra être créée si
+        d&apos;autres personnes rejoignent le projet. Le responsable peut être joint à l&apos;adresse ci-dessus.
       </p>
 
       {/* ─── 2. Données collectées ─── */}

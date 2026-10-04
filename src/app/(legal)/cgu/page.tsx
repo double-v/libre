@@ -134,7 +134,7 @@ export default function CGUPage() {
       {/* ─── 8. Limitation de responsabilité ─── */}
       <h2>8. Limitation de responsabilité</h2>
       <p>
-        Libre est un service gratuit fourni par des bénévoles. L&apos;Éditeur ne peut garantir :
+        Libre est un service gratuit, conçu et maintenu bénévolement. L&apos;Éditeur ne peut garantir :
       </p>
       <ul>
         <li>La pertinence ou la véracité des profils</li>

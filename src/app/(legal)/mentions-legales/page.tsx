@@ -23,8 +23,8 @@ export default function MentionsLegalesPage() {
       <h2>Éditeur du site</h2>
       <ul>
         <li><strong>Nom</strong>{' '}: Libre</li>
-        <li><strong>Statut</strong>{' '}: Projet à but non lucratif (association en cours de constitution)</li>
-        <li><strong>Responsable de la publication</strong>{' '}: Le collectif Libre</li>
+        <li><strong>Statut</strong>{' '}: Projet personnel à but non lucratif. Une association pourra être créée si d&apos;autres personnes rejoignent le projet.</li>
+        <li><strong>Responsable de la publication</strong>{' '}: la personne qui porte le projet, joignable à l&apos;adresse ci-dessous</li>
         <li><strong>E-mail</strong>{' '}: <a href="mailto:contact@getlibre.fr">contact@getlibre.fr</a></li>
       </ul>
 
@@ -86,7 +86,7 @@ export default function MentionsLegalesPage() {
       {/* ─── Crédits ─── */}
       <h2>Crédits</h2>
       <ul>
-        <li>Conception et développement : collectif Libre</li>
+        <li>Conception et développement : Libre, bénévolement</li>
         <li>Police d&apos;écriture : système (sans serif)</li>
         <li>Icônes : Emoji natifs du système</li>
       </ul>
