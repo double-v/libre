@@ -1306,3 +1306,29 @@ input::placeholder, textarea::placeholder {
     scroll-behavior: auto !important;
   }
 }
+/* Texte long des pages légales et de la FAQ (#479).
+   Les pages enveloppent leur contenu dans `.prose`, mais le plugin
+   typographie n'est pas installé : le preflight de Tailwind ramenait alors
+   h1, h2 et h3 à la taille du texte, retirait les puces des listes et
+   laissait les tableaux sans bordure. Plutôt qu'une dépendance, on pose ici
+   l'échelle de DESIGN.md (h1 `text-2xl` gras, h2 `text-xl` gras, h3 `text-lg`
+   semi-gras) avec les tokens du thème, donc clair/sombre et skins compris.
+   `@layer components` + `:where()` : une classe utilitaire posée sur un
+   élément de la page garde toujours le dernier mot. */
+@layer components {
+  .prose { @apply text-content; }
+  .prose :where(h1) { @apply mb-6 text-2xl font-bold leading-tight text-content; }
+  .prose :where(h2) { @apply mb-3 mt-10 text-xl font-bold leading-snug text-content; }
+  .prose :where(h3) { @apply mb-2 mt-6 text-lg font-semibold leading-snug text-content; }
+  .prose :where(ul) { @apply mb-5 list-disc pl-5; }
+  .prose :where(ol) { @apply mb-5 list-decimal pl-5; }
+  .prose :where(li) { @apply my-1.5 pl-1; }
+  .prose :where(li)::marker { color: var(--muted); }
+  .prose :where(a) { @apply text-coral-dark underline underline-offset-2 dark:text-coral-light; }
+  .prose :where(strong) { @apply font-semibold text-content; }
+  /* Bloc défilant : à 390 px, trois colonnes de texte ne tiennent pas. */
+  .prose :where(table) { @apply my-4 block w-full overflow-x-auto border-collapse text-sm; }
+  .prose :where(th, td) { @apply min-w-24 border-b border-hairline px-3 py-2 text-left align-top; }
+  .prose :where(th) { @apply font-semibold text-content; }
+  .prose :where(hr) { @apply my-8 border-hairline; }
+}

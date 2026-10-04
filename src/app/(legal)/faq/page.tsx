@@ -227,28 +227,24 @@ const CERCLE: Qr[] = [
 function renderQr({ id, q, a }: Qr) {
   return (
     <section key={q} id={id} className="scroll-mt-24">
-      <h3 className="mb-2 mt-6 text-lg font-semibold text-content">{q}</h3>
+      <h3>{q}</h3>
       {a}
     </section>
   );
 }
 
-const titreSection = 'mb-2 mt-10 text-2xl font-semibold text-content';
-
 export default function FaqPage() {
   return (
     <article className="prose prose-gray dark:prose-invert max-w-none">
-      {/* `prose` est sans effet (pas de plugin typographie) : les titres
-          prennent leur hiérarchie ici, sinon tout s'affiche à la même taille. */}
-      <h1 className="mb-6 text-3xl font-bold text-content">Foire aux questions</h1>
+      <h1>Foire aux questions</h1>
 
-      <h2 className={titreSection}>Découvrir des profils</h2>
+      <h2>Découvrir des profils</h2>
       {DECOUVRIR.map(renderQr)}
 
-      <h2 className={titreSection}>Ta vie privée et ton compte</h2>
+      <h2>Ta vie privée et ton compte</h2>
       {VIE_PRIVEE.map(renderQr)}
 
-      <h2 className={titreSection}>Le Cercle de Confiance</h2>
+      <h2>Le Cercle de Confiance</h2>
       {CERCLE.map(renderQr)}
 
       <hr />
