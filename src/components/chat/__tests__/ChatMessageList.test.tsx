@@ -9,7 +9,7 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import ChatMessageList, { MessageRow, type ChatMessage } from '../ChatMessageList';
+import ChatMessageList, { MessageRow, RappelArnaque, type ChatMessage } from '../ChatMessageList';
 import { buildShareContactMessage } from '@/lib/shareContact';
 
 const base: ChatMessage = {
@@ -102,5 +102,32 @@ describe('ChatMessageList — état vide', () => {
       />,
     );
     expect(screen.getByText('Commencez la conversation !')).toBeInTheDocument();
+  });
+});
+
+describe('ChatMessageList — rappel anti-arnaque (#369)', () => {
+  it('ouvre une conversation vide par le rappel, avant l’invitation à écrire', () => {
+    render(
+      <ChatMessageList
+        messages={[]}
+        otherUserName="Camille"
+        firstItemIndex={0}
+        hasOlder={false}
+        loadingOlder={false}
+        onLoadOlder={() => {}}
+        onDelete={() => {}}
+      />,
+    );
+    const rappel = screen.getByRole('note', { name: 'Prudence' });
+    expect(rappel).toHaveTextContent('Libre ne te demandera jamais d’argent.');
+    expect(rappel).toHaveTextContent(/PCS, Transcash, Neosurf/);
+    expect(rappel).toHaveTextContent(/menu ⋯/);
+  });
+});
+
+describe('RappelArnaque', () => {
+  it('ne se ferme pas : aucun bouton', () => {
+    render(<RappelArnaque />);
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 });

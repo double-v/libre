@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Virtuoso } from 'react-virtuoso';
 import ShareContactNotice from '@/components/ShareContactNotice';
+import Alert from '@/components/ui/Alert';
 import { isShareContactMessage } from '@/lib/shareContact';
 
 /**
@@ -63,12 +64,38 @@ function formatTime(dateStr: string): string {
 }
 
 /**
+ * Rappel anti-arnaque (#369) : premier élément de chaque conversation, avant
+ * le premier message. Il défile avec l'historique, ne se ferme pas et ne
+ * mémorise rien. Aucun scan des messages : c'est de la prévention, pas de la
+ * détection. Les coupons nommés sont ceux de l'arnaque réelle de la spec 006.
+ */
+export function RappelArnaque() {
+  return (
+    <Alert variant="info" role="note" label="Prudence">
+      <p>
+        Libre ne te demandera jamais d’argent. Personne ici n’a de raison de te demander un
+        virement, des coupons (PCS, Transcash, Neosurf), un code reçu par SMS ou un mot de passe.
+      </p>
+      <p className="mt-1.5">Si on te le demande, tu peux signaler cette personne depuis le menu ⋯.</p>
+    </Alert>
+  );
+}
+
+/**
  * En-tête de la liste : chargement des messages plus anciens (bouton → skeleton).
  * Composant stable (module scope) lu via le `context` de Virtuoso — évite un
  * remount de l'en-tête à chaque render.
  */
 function LoadOlderHeader({ context }: { context?: HeaderContext }) {
-  if (!context?.hasOlder) return <div className="h-4" aria-hidden="true" />;
+  // Plus rien d'ancien à charger : on est au début de la conversation, c'est
+  // là que vit le rappel (#369).
+  if (!context?.hasOlder) {
+    return (
+      <div className="px-4 pt-4 pb-2">
+        <RappelArnaque />
+      </div>
+    );
+  }
   const { loadingOlder, onLoadOlder } = context;
   return (
     <div className="px-4 pt-4 pb-2">
@@ -242,7 +269,8 @@ export default function ChatMessageList({
 
   if (messages.length === 0) {
     return (
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+        <RappelArnaque />
         <p className="text-center text-sm text-muted">Commencez la conversation !</p>
       </div>
     );

@@ -106,3 +106,11 @@ describe('POST /api/moderation/report — « semble avoir moins de 18 ans » (#4
     expect(JSON.stringify(fakeDb)).not.toContain('retraitAt');
   });
 });
+
+describe('POST /api/moderation/report — motif arnaque (#369)', () => {
+  it('accepte « scam », distinct de « spam »', async () => {
+    const res = await POST(req({ reportedId: REPORTED, reason: 'scam' }));
+    expect(res.status).toBe(201);
+    expect(fakeDb.report.create.mock.calls[0][0].data.reason).toBe('scam');
+  });
+});

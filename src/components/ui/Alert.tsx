@@ -12,6 +12,13 @@ export interface AlertProps {
   onDismiss?: () => void;
   /** Optional icon override. Defaults to an inline SVG matched to the variant. */
   icon?: ReactNode;
+  /**
+   * « note » pour un rappel permanent (#369) : `alert` le ferait annoncer par
+   * les lecteurs d'écran à chaque affichage, comme une erreur.
+   */
+  role?: 'alert' | 'note';
+  /** Nom accessible quand il n'y a pas de titre visible. */
+  label?: string;
   children: ReactNode;
 }
 
@@ -96,6 +103,8 @@ export default function Alert({
   title,
   onDismiss,
   icon,
+  role = 'alert',
+  label,
   children,
 }: AlertProps) {
   const titleId = useId();
@@ -103,9 +112,10 @@ export default function Alert({
 
   return (
     <div
-      role="alert"
-      aria-live="polite"
+      role={role}
+      aria-live={role === 'alert' ? 'polite' : undefined}
       aria-labelledby={hasTitle ? titleId : undefined}
+      aria-label={!hasTitle ? label : undefined}
       className={`${baseClasses} ${variantClasses[variant]}`}
     >
       <span className="shrink-0 pt-0.5">
