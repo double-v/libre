@@ -15,6 +15,9 @@ const fakeDb = {
 };
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => fakeDb }));
 
+const mockRevalidatePath = vi.fn();
+vi.mock('next/cache', () => ({ revalidatePath: mockRevalidatePath }));
+
 const { GET, PUT } = await import('@/app/api/admin/features/route');
 const { invaliderFeatures, getFeatures } = await import('@/lib/features-server');
 
@@ -64,6 +67,17 @@ describe('/api/admin/features', () => {
     expect(fakeDb.moderationLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ action: 'SET_FEATURES', reason: 'allumees: journal_comments' }),
     });
+  });
+
+  it('PUT régénère la FAQ, dont la section Cercle suit checkin (#483)', async () => {
+    await put({ checkin: false, crossings: true, square: true, journal_comments: false });
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/faq');
+  });
+
+  it('PUT réussit même si la régénération de la FAQ échoue', async () => {
+    mockRevalidatePath.mockImplementationOnce(() => { throw new Error('hors contexte'); });
+    const res = await put({ checkin: false, crossings: true, square: true, journal_comments: false });
+    expect(res.status).toBe(200);
   });
 
   it('PUT refuse un corps qui ne porte pas tous les booléens', async () => {

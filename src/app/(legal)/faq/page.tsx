@@ -1,5 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getFeatures } from '@/lib/features-server';
+
+/**
+ * La section Cercle suit l'interrupteur `checkin` (#483) : la page est
+ * régénérée au plus tard chaque minute, et tout de suite quand l'admin change
+ * un interrupteur (`PUT /api/admin/features` → `revalidatePath('/faq')`).
+ */
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: 'FAQ — Libre',
@@ -183,10 +191,10 @@ const VIE_PRIVEE: Qr[] = [
   },
 ];
 
-// Le check-in est coupé (`featuresDisabled` : checkin, #480) tant que les alertes ne
-// partent pas pour de vrai : `notifyContactExpired` est un stub et
-// l'expiration n'a lieu qu'à la lecture par la personne elle-même. Rouvrir le
-// check-in, c'est réécrire ces deux réponses.
+// Section affichée seulement quand le check-in est activé (#483) : décision
+// opérateur, la FAQ ne parle pas de sa pause. Tant que #480 n'est pas livré,
+// aucune alerte ne part et les contacts ne sont pas prévenus — d'où une
+// réponse honnête sur les contacts, et aucune promesse d'alerte ici.
 const CERCLE: Qr[] = [
   {
     id: 'cercle',
@@ -201,11 +209,6 @@ const CERCLE: Qr[] = [
           </Link>
           .
         </p>
-        <p>
-          Le check-in, qui doit prévenir ton Cercle si tu ne reviens pas d’un rendez-vous, est{' '}
-          <strong>en pause</strong>. Nous terminons l’envoi des alertes avant de le rouvrir : un filet
-          de sécurité qui ne préviendrait personne serait pire que pas de filet du tout.
-        </p>
       </>
     ),
   },
@@ -214,9 +217,8 @@ const CERCLE: Qr[] = [
     q: 'Mes contacts savent-ils qu’ils sont dans mon cercle ?',
     a: (
       <p>
-        Pas encore : ajouter quelqu’un à ton Cercle ne le prévient pas aujourd’hui. Avant de rouvrir
-        le check-in, nous ferons en sorte que chaque contact le sache, car une alerte n’a de sens que
-        si la personne s’attend à la recevoir.
+        Pas encore : ajouter quelqu’un à ton Cercle ne le prévient pas aujourd’hui. Pense à le lui dire
+        toi-même, pour que la personne sache qu’elle compte pour toi.
       </p>
     ),
   },
@@ -233,7 +235,8 @@ function renderQr({ id, q, a }: Qr) {
   );
 }
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const { checkin } = await getFeatures();
   return (
     <article className="prose prose-gray dark:prose-invert max-w-none">
       <h1>Foire aux questions</h1>
@@ -244,8 +247,12 @@ export default function FaqPage() {
       <h2>Ta vie privée et ton compte</h2>
       {VIE_PRIVEE.map(renderQr)}
 
-      <h2>Le Cercle de Confiance</h2>
-      {CERCLE.map(renderQr)}
+      {checkin && (
+        <>
+          <h2>Le Cercle de Confiance</h2>
+          {CERCLE.map(renderQr)}
+        </>
+      )}
 
       <hr />
       <p className="text-sm text-muted">
