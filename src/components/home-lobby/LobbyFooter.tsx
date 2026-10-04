@@ -15,7 +15,7 @@ const LEGAL_LINKS = [
   { href: '/cgu', label: 'Conditions générales d’utilisation' },
   { href: '/confidentialite', label: 'Politique de confidentialité' },
   { href: '/mentions-legales', label: 'Mentions légales' },
-  { href: '/faq/session-expiree', label: 'FAQ' },
+  { href: '/faq', label: 'FAQ' },
 ];
 
 export default function LobbyFooter() {

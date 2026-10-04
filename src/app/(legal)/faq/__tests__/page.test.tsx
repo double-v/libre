@@ -49,4 +49,36 @@ describe('<FaqPage />', () => {
     const link = screen.getByRole('link', { name: /session expirée/i });
     expect(link).toHaveAttribute('href', '/faq/session-expiree');
   });
+
+  // #476 : la question est arrivée par le formulaire de retour, qui ne permet
+  // pas encore de répondre. Elle doit être joignable par ancre et dire les
+  // vraies causes, sans chiffre (même charte que LAUNCH_COPY).
+  describe('« Je ne vois aucun profil »', () => {
+    it('est joignable par l’ancre #aucun-profil', () => {
+      const { container } = render(<FaqPage />);
+      const section = container.querySelector('#aucun-profil');
+      expect(section).not.toBeNull();
+      expect(section).toHaveTextContent(/Je ne vois aucun profil, pourquoi/);
+    });
+
+    it('nomme les causes réelles : filtres, position, profils déjà aimés, ouverture récente', () => {
+      const { container } = render(<FaqPage />);
+      const texte = container.querySelector('#aucun-profil')!.textContent!;
+      expect(texte).toMatch(/filtres/i);
+      expect(texte).toMatch(/position/i);
+      expect(texte).toMatch(/aimée/i);
+      expect(texte).toMatch(/vient d.ouvrir/i);
+    });
+
+    it('envoie vers le profil pour saisir sa ville', () => {
+      const { container } = render(<FaqPage />);
+      const lien = container.querySelector('#aucun-profil a[href="/profile"]');
+      expect(lien).not.toBeNull();
+    });
+
+    it('ne donne aucun chiffre', () => {
+      const { container } = render(<FaqPage />);
+      expect(container.querySelector('#aucun-profil')!.textContent).not.toMatch(/\d/);
+    });
+  });
 });

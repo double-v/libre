@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 
 type Category = 'bug' | 'suggestion' | 'question';
@@ -88,6 +89,17 @@ export default function FeedbackButton() {
                   &times;
                 </button>
               </div>
+
+              {/* Rappel de la FAQ (#476) : un retour ne permet pas encore de
+                  répondre, une question déjà traitée y trouve sa réponse
+                  tout de suite. */}
+              <p className="mb-3 text-xs text-muted">
+                Une question ? La réponse est peut-être déjà dans la{' '}
+                <Link href="/faq" className="text-coral hover:underline" onClick={() => setOpen(false)}>
+                  foire aux questions
+                </Link>
+                .
+              </p>
 
               <div className="mb-3 flex gap-2">
                 {(['bug', 'suggestion', 'question'] as Category[]).map((cat) => (
