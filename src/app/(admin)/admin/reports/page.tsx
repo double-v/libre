@@ -8,7 +8,9 @@ const MOTIFS: Record<string, string> = {
   inappropriate: 'Contenu inapproprié',
   fake: 'Faux profil',
   minor: 'Semble avoir moins de 18 ans',
-  spam: 'Spam ou arnaque',
+  scam: 'Arnaque ou demande d’argent',
+  // Avant #369 (octobre 2026), « spam » couvrait aussi les arnaques.
+  spam: 'Spam ou publicité (ou arnaque, signalements anciens)',
   other: 'Autre',
 };
 

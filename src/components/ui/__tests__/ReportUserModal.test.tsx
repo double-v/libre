@@ -75,7 +75,7 @@ describe('<ReportUserModal /> — signalement', () => {
     const { user } = setup();
 
     await user.click(screen.getByRole('button', { name: /Signaler ce profil/i }));
-    await user.click(screen.getByRole('button', { name: 'Spam ou arnaque' }));
+    await user.click(screen.getByRole('button', { name: 'Spam ou publicité' }));
     await user.click(screen.getByRole('button', { name: 'Signaler' }));
 
     await waitFor(() => expect(toastSpy).toHaveBeenCalled());
@@ -170,5 +170,57 @@ describe('<ReportUserModal /> — accessibilité', () => {
     const { onClose, user } = setup();
     await user.keyboard('{Escape}');
     expect(onClose).toHaveBeenCalled();
+  });
+});
+
+describe('<ReportUserModal /> — arnaques (#369)', () => {
+  it('sépare « Arnaque ou demande d’argent » de « Spam ou publicité », sans présélection', async () => {
+    const { user } = setup();
+    await user.click(screen.getByRole('button', { name: /Signaler ce profil/i }));
+    const arnaque = screen.getByRole('button', { name: 'Arnaque ou demande d’argent' });
+    const spam = screen.getByRole('button', { name: 'Spam ou publicité' });
+    expect(arnaque).toHaveAttribute('aria-pressed', 'false');
+    expect(spam).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.queryByRole('button', { name: /Spam ou arnaque/ })).not.toBeInTheDocument();
+  });
+
+  it('poste le motif « scam »', async () => {
+    const fetchMock = mockFetch(201, { report: { id: 'r-1' } });
+    const { user } = setup();
+    await user.click(screen.getByRole('button', { name: /Signaler ce profil/i }));
+    await user.click(screen.getByRole('button', { name: 'Arnaque ou demande d’argent' }));
+    await user.click(screen.getByRole('button', { name: 'Signaler' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).reason).toBe('scam');
+  });
+
+  it('depuis une conversation : ouvre directement le signalement et dit ce que permet le §9.1', () => {
+    setup({ depuisConversation: true });
+    expect(screen.getByRole('heading', { name: 'Signaler Camille' })).toBeInTheDocument();
+    expect(screen.getByText(/Nous ne lisons pas vos messages/)).toBeInTheDocument();
+    expect(screen.getByText(/Cet accès est enregistré/)).toBeInTheDocument();
+  });
+
+  it('hors conversation : pas de phrase sur les messages', async () => {
+    const { user } = setup();
+    await user.click(screen.getByRole('button', { name: /Signaler ce profil/i }));
+    expect(screen.queryByText(/Nous ne lisons pas vos messages/)).not.toBeInTheDocument();
+  });
+
+  it('après un signalement pour arnaque : une ligne de prudence, et seulement dans ce cas', async () => {
+    mockFetch(201, { report: { id: 'r-1' } });
+    const { user } = setup({ depuisConversation: true });
+    await user.click(screen.getByRole('button', { name: 'Arnaque ou demande d’argent' }));
+    await user.click(screen.getByRole('button', { name: 'Signaler' }));
+    expect(await screen.findByText(/N’envoie rien en attendant/)).toBeInTheDocument();
+  });
+
+  it('pas de ligne de prudence pour un autre motif', async () => {
+    mockFetch(201, { report: { id: 'r-1' } });
+    const { user } = setup({ depuisConversation: true });
+    await user.click(screen.getByRole('button', { name: 'Faux profil' }));
+    await user.click(screen.getByRole('button', { name: 'Signaler' }));
+    await screen.findByRole('heading', { name: /C.est envoyé/ });
+    expect(screen.queryByText(/N’envoie rien en attendant/)).not.toBeInTheDocument();
   });
 });

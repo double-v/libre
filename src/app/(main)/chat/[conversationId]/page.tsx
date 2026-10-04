@@ -12,6 +12,7 @@ import { useEncryptedChat } from '@/hooks/useEncryptedChat';
 import ShareContactButton from '@/components/ShareContactButton';
 import { mergeMessages, etatDeLecture, avertissementChiffrement } from '@/lib/chat-messages';
 import ProfileModal from '@/components/ProfileModal';
+import ReportUserModal from '@/components/ui/ReportUserModal';
 import { CheckinButton } from '@/components/CheckinButton';
 import ChatMessageList from '@/components/chat/ChatMessageList';
 import Alert from '@/components/ui/Alert';
@@ -93,6 +94,7 @@ export default function ChatConversationPage() {
   const features = useFeatures();
   const [checkinModal, setCheckinModal] = useState(false);
   const [checkinActif, setCheckinActif] = useState(false);
+  const [signalement, setSignalement] = useState(false);
   // Les clés du pair sont lues par le déchiffrement via cette ref, pas via
   // l'état : `loadConversation` les pose puis déchiffre dans la foulée, et une
   // fermeture sur l'état verrait encore `null`. Les passer en dépendance
@@ -459,6 +461,19 @@ export default function ChatConversationPage() {
                     Activer un check-in de sécurité
                   </button>
                 )}
+                {/* Signaler à un geste (#369) : avant, il fallait ouvrir la
+                    fiche du profil. Séparé des autres actions. */}
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    fermer();
+                    setSignalement(true);
+                  }}
+                  className="mt-1 flex min-h-[44px] w-full items-center rounded-control border-t border-hairline px-3 text-left text-sm font-medium text-terracotta hover:bg-fill-subtle focus-visible:outline-none focus-visible:shadow-focus dark:text-coral-light"
+                >
+                  Signaler {otherUser.displayName}
+                </button>
               </>
             )}
           </ActionMenu>
@@ -551,6 +566,15 @@ export default function ChatConversationPage() {
         // échouerait. On repart vers la liste.
         onBlocked={() => router.replace('/messages')}
       />
+      {signalement && otherUser && (
+        <ReportUserModal
+          userId={otherUser.id}
+          displayName={otherUser.displayName}
+          depuisConversation
+          onClose={() => setSignalement(false)}
+          onBlocked={() => router.replace('/messages')}
+        />
+      )}
     </div>
   );
 }
