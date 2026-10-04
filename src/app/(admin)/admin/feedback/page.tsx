@@ -11,6 +11,9 @@ interface FeedbackRow {
   userAgent: string | null;
   status: string;
   createdAt: string;
+  reply: string | null;
+  repliedAt: string | null;
+  replyReadAt: string | null;
   user: { id: string; displayName: string } | null;
 }
 
@@ -28,8 +31,81 @@ const categoryStyles: Record<string, string> = {
 
 const statusLabels: Record<string, string> = {
   open: 'À traiter',
+  replied: 'Répondus',
   resolved: 'Traités',
 };
+
+const REPLY_MAX = 2000;
+
+function dateCourte(iso: string): string {
+  return new Date(iso).toLocaleDateString('fr-FR');
+}
+
+/**
+ * Réponse à un retour (#477), reproduite du prototype validé. Une seule
+ * réponse, non modifiable : le texte dit ce que la personne recevra (une
+ * notification sans contenu) avant qu'on envoie.
+ */
+function ReplyForm({ feedback, onSent }: { feedback: FeedbackRow; onSent: () => void }) {
+  const [reply, setReply] = useState('');
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState('');
+  const fieldId = `reply-${feedback.id}`;
+  const name = feedback.user?.displayName ?? '';
+
+  const send = async () => {
+    setSending(true);
+    setError('');
+    try {
+      const res = await fetch(`/api/admin/feedback/${feedback.id}/reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reply }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(data?.error ?? 'Envoi impossible');
+        return;
+      }
+      onSent();
+    } catch {
+      setError('Envoi impossible');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="mt-3 flex flex-col gap-1.5">
+      <label htmlFor={fieldId} className="text-sm font-semibold text-content">
+        Ta réponse à {name}
+      </label>
+      <textarea
+        id={fieldId}
+        value={reply}
+        onChange={(e) => setReply(e.target.value)}
+        maxLength={REPLY_MAX}
+        className="h-28 w-full resize-y rounded-lg border border-hairline-strong bg-surface p-2.5 text-sm text-content focus:border-coral focus:outline-none"
+      />
+      <div className="text-xs text-muted">
+        {name} reçoit un e-mail et, si les notifications sont activées sur son appareil, une notification,
+        sans le texte de la réponse. La réponse se lit dans Paramètres › Mes retours. Une réponse envoyée
+        ne se modifie plus, et le retour passe en « Répondus ».
+      </div>
+      {error && <div className="text-xs text-red-600 dark:text-red-400">{error}</div>}
+      <div>
+        <button
+          type="button"
+          onClick={send}
+          disabled={sending || reply.trim().length === 0}
+          className="rounded-md bg-terracotta px-3 py-1.5 text-xs font-medium text-white hover:bg-coral-dark disabled:opacity-50"
+        >
+          {sending ? 'Envoi…' : 'Envoyer la réponse'}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminFeedbackPage() {
   const [items, setItems] = useState<FeedbackRow[]>([]);
@@ -155,13 +231,27 @@ export default function AdminFeedbackPage() {
                 </div>
               </div>
 
+              {f.reply !== null && f.repliedAt ? (
+                <div className="mt-3 rounded-[10px] bg-sunken px-3.5 py-2.5">
+                  <div className="text-xs font-semibold text-coral-dark dark:text-coral-light">
+                    Ta réponse · envoyée le {dateCourte(f.repliedAt)}
+                    {f.replyReadAt ? ` · lue le ${dateCourte(f.replyReadAt)}` : ' · pas encore lue'}
+                  </div>
+                  <div className="mt-0.5 whitespace-pre-wrap break-words text-sm text-content">{f.reply}</div>
+                </div>
+              ) : f.user ? (
+                <ReplyForm feedback={f} onSent={fetchFeedback} />
+              ) : (
+                <div className="mt-2 text-xs text-muted">Envoyé sans compte : impossible de répondre.</div>
+              )}
+
               <div className="mt-3 flex gap-2">
-                {f.status === 'open' ? (
+                {f.status !== 'resolved' ? (
                   <button
                     onClick={() => handleStatus(f.id, 'resolved')}
                     className="rounded-md border border-hairline-strong px-3 py-1 text-xs font-medium text-muted hover:bg-fill-subtle"
                   >
-                    Marquer traité
+                    {f.user && f.reply === null ? 'Marquer traité sans répondre' : 'Marquer traité'}
                   </button>
                 ) : (
                   <button

@@ -74,6 +74,8 @@ describe('buildPayload — rien qui identifie ou révèle (SC-006)', () => {
     ['match', buildPayload('match', secrets)],
     ['admin-report', buildPayload('admin-report', secrets)],
     ['admin-feedback', buildPayload('admin-feedback', secrets)],
+    // #477 : ni le texte de la réponse ni celui du retour.
+    ['feedback-reply', buildPayload('feedback-reply', { ...secrets, reply: 'RÉPONSE-SENTINELLE' })],
   ] as const;
 
   for (const [kind, payload] of cases) {
@@ -97,6 +99,12 @@ describe('buildPayload — rien qui identifie ou révèle (SC-006)', () => {
     const x = buildPayload('match', {});
     expect(x.url).toBe('/messages');
     expect(x.tag).toBe('match');
+  });
+
+  it('feedback-reply : ouvre « Mes retours », sans le texte de la réponse (#477)', () => {
+    const p = buildPayload('feedback-reply', { reply: 'RÉPONSE-SENTINELLE' });
+    expect(p.url).toBe('/settings/retours');
+    expect(JSON.stringify(p)).not.toContain('RÉPONSE-SENTINELLE');
   });
 
   it('admin : ouvre la file concernée', () => {

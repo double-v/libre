@@ -13,6 +13,7 @@ import { DEFAUTS, type Features } from '@/lib/features';
 import NotificationDot from './NotificationDot';
 import { useUnread } from '@/hooks/useUnread';
 import { useAdminQueues } from '@/hooks/useAdminQueues';
+import { useFeedbackReply } from '@/hooks/useFeedbackReply';
 
 /**
  * SiteNav — nav unique du shell unifié (#276, épic #273).
@@ -59,6 +60,8 @@ export interface SiteNavViewProps {
   features?: Features;
   /** Pastille sur l'accès Administration (#391) — résolue par le wrapper via `useAdminQueues`. Sans effet si `!isAdmin`. */
   hasAdminPending?: boolean;
+  /** Pastille sur Paramètres : l'équipe a répondu à un retour (#477) — résolue par le wrapper via `useFeedbackReply`. */
+  hasFeedbackReply?: boolean;
   /** Route courante, pour l'état actif des sections (résolue par `SiteNav`). */
   pathname?: string;
 }
@@ -96,6 +99,7 @@ export function SiteNavView({
   showSections = false,
   hasUnreadMessages = false,
   hasAdminPending = false,
+  hasFeedbackReply = false,
   pathname = '',
   features = DEFAUTS,
 }: SiteNavViewProps) {
@@ -157,7 +161,10 @@ export function SiteNavView({
                   </Link>
                 )}
                 <Link href="/settings" aria-label="Paramètres" title="Paramètres" className={iconLinkClass}>
-                  <GearIcon />
+                  <span className="relative">
+                    <GearIcon />
+                    {hasFeedbackReply && <NotificationDot aria-label="L’équipe t’a répondu" />}
+                  </span>
                 </Link>
               </>
             ) : (
@@ -206,6 +213,7 @@ export default function SiteNav({
   const resolvedIsAdmin = isAdmin ?? session?.user?.role?.toUpperCase() === 'ADMIN';
   // FR-013 : un non-admin ne charge rien — c'est `enabled` qui le garantit, pas le rendu.
   const { hasPending: hasAdminPending } = useAdminQueues({ enabled: resolvedIsAdmin });
+  const { hasReply: hasFeedbackReply } = useFeedbackReply({ enabled: status === 'authenticated' });
 
   return (
     <SiteNavView
@@ -217,6 +225,7 @@ export default function SiteNav({
       hasUnreadMessages={hasUnread}
       features={features}
       hasAdminPending={hasAdminPending}
+      hasFeedbackReply={hasFeedbackReply}
       pathname={pathname ?? currentPath ?? ''}
     />
   );

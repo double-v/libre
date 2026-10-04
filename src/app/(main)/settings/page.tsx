@@ -14,6 +14,9 @@ import SiteShell from '@/components/ui/SiteShell';
 import Input from '@/components/ui/Input';
 import VerificationSettings from '@/components/verification/VerificationSettings';
 import PseudoSettings from '@/components/PseudoSettings';
+import NotificationDot from '@/components/ui/NotificationDot';
+import { useFeedbackReply } from '@/hooks/useFeedbackReply';
+import { MES_RETOURS_HREF } from '@/lib/feedback-reply';
 
 interface Profile {
   userId: string;
@@ -22,6 +25,7 @@ interface Profile {
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { hasReply: hasFeedbackReply } = useFeedbackReply({ enabled: true });
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [invisibleToggling, setInvisibleToggling] = useState(false);
@@ -368,9 +372,28 @@ export default function SettingsPage() {
         <section className="rounded-xl border border-hairline bg-surface p-4 sm:p-5">
           <h2 className="text-lg font-semibold text-content">Aide et informations légales</h2>
           <p className="mt-1 text-sm text-muted">
-            Les réponses aux questions fréquentes et les documents qui encadrent Libre.
+            Tes échanges avec l’équipe, les réponses aux questions fréquentes et les documents qui encadrent Libre.
           </p>
           <ul className="mt-3 divide-y divide-gray-200 dark:divide-gray-700">
+            {/* Mes retours (#477) : la réponse de l'équipe se lit ici. Présence
+                seule (point + phrase), jamais de nombre. */}
+            <li>
+              <Link
+                href={MES_RETOURS_HREF}
+                className="flex min-h-11 items-center gap-2 py-3 text-sm font-medium text-muted transition-colors hover:text-coral dark:hover:text-coral-light"
+              >
+                <span className="flex flex-1 flex-col">
+                  <span>Mes retours</span>
+                  {hasFeedbackReply && (
+                    <span className="text-xs font-semibold text-coral-dark dark:text-coral-light">L’équipe t’a répondu.</span>
+                  )}
+                </span>
+                {hasFeedbackReply && <NotificationDot inline aria-label="Nouvelle réponse" />}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="text-muted">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </Link>
+            </li>
             {[
               { href: '/cgu', label: "Conditions d'utilisation" },
               { href: '/confidentialite', label: 'Politique de confidentialité' },

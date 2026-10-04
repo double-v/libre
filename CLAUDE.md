@@ -297,6 +297,12 @@ Règles d'exposition :
   retour) est planifié après la réponse et ne change jamais son statut ; sans
   `VAPID_PRIVATE_KEY`, no-op journalisé. Journaux sans PII (`push.send.failed`
   avec kind + statut, jamais d'endpoint ni d'identifiant).
+- **Réponse aux retours (#477)** : une seule réponse par retour, jamais
+  modifiée (`POST /api/admin/feedback/[id]/reply`, écriture conditionnée à
+  `reply: null`). Elle ne se lit que dans Paramètres › Mes retours : le push
+  `feedback-reply` et l'e-mail ne portent ni son texte ni celui du retour.
+  Non-lu dérivé de `replyReadAt`, point sur la roue dentée (`useFeedbackReply`).
+  Statut `replied` = clos pour la purge de rétention.
 
 ## Parcours d'accueil (spec 005, #135/#342/#343/#411)
 

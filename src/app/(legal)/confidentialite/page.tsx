@@ -175,7 +175,12 @@ export default function ConfidentialitePage() {
           l&apos;image, pour reconnaître une même photo publiée sur plusieurs comptes. Les empreintes
           d&apos;un compte banni sont conservées un an.
         </li>
-        <li><strong>Amélioration du service</strong>{' '}: feedback utilisateur (avec votre consentement)</li>
+        <li>
+          <strong>Amélioration du service et réponse à vos retours</strong>{' '}: feedback utilisateur (avec
+          votre consentement). Quand vous envoyez un retour en étant connecté·e, l&apos;équipe peut y
+          répondre ; la réponse se lit dans l&apos;application (Paramètres › Mes retours), et nous vous
+          prévenons par e-mail, sans recopier ni votre message ni la réponse.
+        </li>
         <li><strong>Obligations légales</strong>{' '}: conservation des logs de modération si requis par la loi</li>
       </ul>
       <p>
