@@ -125,8 +125,9 @@ export default function TrustHowItWorksPage() {
         </h2>
         <p className="text-sm text-muted">
           Ton Cercle, ce sont les personnes que tu choisis comme contacts de confiance. Le déclarer
-          renforce ton niveau et pose un filet de sécurité : tu n’es jamais seul·e derrière l’écran.
-          Tu gardes la main — tu ajoutes et retires qui tu veux, quand tu veux.
+          renforce ton niveau. Tu gardes la main : tu ajoutes et retires qui tu veux, quand tu veux.
+          Le check-in, qui préviendra ton Cercle si tu ne reviens pas d’un rendez-vous, est en
+          pause le temps que nous terminions l’envoi des alertes.
         </p>
       </section>
 

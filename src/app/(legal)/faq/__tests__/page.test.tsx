@@ -1,69 +1,59 @@
 /**
- * Tests — page FAQ publique « Cercle de Confiance » (issue #63).
+ * Tests — page FAQ publique (#63, refondue en #476).
  *
- * Le ticket supposait une page /faq existante à compléter ; elle n'existe pas
- * (seul /faq/session-expiree existe). On crée donc la page générale et on
- * verrouille : les 5 Q/R du Cercle, le lien vers /trust/how-it-works (route
- * réelle — le ticket citait /settings/trust/how-it-works, inexistant), et le
- * renvoi vers la FAQ « session expirée » existante (non régressée).
+ * La FAQ promettait une alerte de check-in jamais envoyée (notify.ts est un
+ * stub), des contacts « au courant » qui ne sont jamais prévenus et une
+ * position relevée « seulement au check-in ». Ces tests verrouillent les
+ * réponses vraies, et surtout l'absence de la promesse d'alerte tant que le
+ * check-in est en pause.
  */
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import FaqPage from '../page';
 
+function section(container: HTMLElement, id: string): string {
+  const el = container.querySelector(`#${id}`);
+  expect(el, id).not.toBeNull();
+  return el!.textContent!;
+}
+
 describe('<FaqPage />', () => {
-  it('affiche les 5 questions du Cercle de Confiance', () => {
+  it('range les questions en trois sections', () => {
     render(<FaqPage />);
-    const questions = [
-      /C.est quoi le Cercle de Confiance/i,
-      /Mes contacts savent-ils qu.ils sont dans mon cercle/i,
-      /si j.active un check-in et que je ne reviens pas/i,
-      /gardez ma position/i,
-      /contacts qui ne sont pas sur Libre/i,
-    ];
-    for (const q of questions) {
-      expect(screen.getByText(q)).toBeInTheDocument();
+    for (const titre of [/Découvrir des profils/, /Ta vie privée et ton compte/, /Le Cercle de Confiance/]) {
+      expect(screen.getByRole('heading', { level: 2, name: titre })).toBeInTheDocument();
     }
   });
 
-  it('la réponse Q1 pointe vers la page « Comment ça marche » du Cercle', () => {
-    render(<FaqPage />);
-    const link = screen.getByRole('link', { name: /Comment (ça|ca) marche/i });
-    expect(link).toHaveAttribute('href', '/trust/how-it-works');
+  it('donne une ancre à chaque question, pour y envoyer quelqu’un directement', () => {
+    const { container } = render(<FaqPage />);
+    const ids = [...container.querySelectorAll('section[id]')].map((s) => s.id);
+    expect(ids).toEqual([
+      'aucun-profil',
+      'intention-cachee',
+      'reponses-cachees',
+      'photos-floues',
+      'position',
+      'messages',
+      'badge-verifie',
+      'mon-compte',
+      'cercle',
+      'cercle-contacts',
+    ]);
   });
 
-  it('répond sur l’alerte silencieuse et la position (non conservée en continu)', () => {
-    render(<FaqPage />);
-    expect(screen.getByText(/alerte silencieuse/i)).toBeInTheDocument();
-    expect(screen.getByText(/jamais en continu/i)).toBeInTheDocument();
+  it('ne donne aucun chiffre sur la fréquentation', () => {
+    const { container } = render(<FaqPage />);
+    // Seuls « §9.1 », « 30 jours » (selfie) et « cinq » (en lettres) sont attendus.
+    const texte = container.textContent!.replace('§9.1', '').replace('30 jours', '');
+    expect(texte).not.toMatch(/\d/);
   });
 
-  it('annonce l’ouverture aux contacts hors Libre en V2 (opt-in)', () => {
-    render(<FaqPage />);
-    expect(screen.getByText(/V2/)).toBeInTheDocument();
-    expect(screen.getByText(/opt-in explicite/i)).toBeInTheDocument();
-  });
-
-  it('préserve l’accès à la FAQ « session expirée » existante', () => {
-    render(<FaqPage />);
-    const link = screen.getByRole('link', { name: /session expirée/i });
-    expect(link).toHaveAttribute('href', '/faq/session-expiree');
-  });
-
-  // #476 : la question est arrivée par le formulaire de retour, qui ne permet
-  // pas encore de répondre. Elle doit être joignable par ancre et dire les
-  // vraies causes, sans chiffre (même charte que LAUNCH_COPY).
   describe('« Je ne vois aucun profil »', () => {
-    it('est joignable par l’ancre #aucun-profil', () => {
-      const { container } = render(<FaqPage />);
-      const section = container.querySelector('#aucun-profil');
-      expect(section).not.toBeNull();
-      expect(section).toHaveTextContent(/Je ne vois aucun profil, pourquoi/);
-    });
-
     it('nomme les causes réelles : filtres, position, profils déjà aimés, ouverture récente', () => {
       const { container } = render(<FaqPage />);
-      const texte = container.querySelector('#aucun-profil')!.textContent!;
+      const texte = section(container, 'aucun-profil');
+      expect(texte).toMatch(/Je ne vois aucun profil, pourquoi/);
       expect(texte).toMatch(/filtres/i);
       expect(texte).toMatch(/position/i);
       expect(texte).toMatch(/aimée/i);
@@ -72,13 +62,53 @@ describe('<FaqPage />', () => {
 
     it('envoie vers le profil pour saisir sa ville', () => {
       const { container } = render(<FaqPage />);
-      const lien = container.querySelector('#aucun-profil a[href="/profile"]');
-      expect(lien).not.toBeNull();
+      expect(container.querySelector('#aucun-profil a[href="/profile"]')).not.toBeNull();
+    });
+  });
+
+  it('explique la réciprocité : intention et réponses se lisent quand on a donné les siennes', () => {
+    const { container } = render(<FaqPage />);
+    expect(section(container, 'intention-cachee')).toMatch(/Je verrai en chemin/);
+    expect(section(container, 'reponses-cachees')).toMatch(/répondu à\s+cette question/);
+  });
+
+  it('dit la vérité sur la position : la dernière, arrondie, sans suivi continu', () => {
+    const { container } = render(<FaqPage />);
+    const texte = section(container, 'position');
+    expect(texte).toMatch(/dernière/);
+    expect(texte).toMatch(/arrondie/);
+    expect(texte).not.toMatch(/check-in/i);
+  });
+
+  it('dit que l’équipe peut techniquement lire un message, et renvoie aux CGU §9.1', () => {
+    const { container } = render(<FaqPage />);
+    expect(section(container, 'messages')).toMatch(/capacité technique/);
+    expect(container.querySelector('#messages a[href="/cgu"]')).not.toBeNull();
+  });
+
+  describe('Cercle de Confiance', () => {
+    it('présente le check-in comme en pause, sans promettre d’alerte', () => {
+      const { container } = render(<FaqPage />);
+      const texte = section(container, 'cercle') + section(container, 'cercle-contacts');
+      expect(texte).toMatch(/en pause/);
+      expect(texte).not.toMatch(/alerte silencieuse|reçoivent une alerte|est alerté/i);
     });
 
-    it('ne donne aucun chiffre', () => {
+    it('ne prétend pas que les contacts sont prévenus', () => {
       const { container } = render(<FaqPage />);
-      expect(container.querySelector('#aucun-profil')!.textContent).not.toMatch(/\d/);
+      expect(section(container, 'cercle-contacts')).toMatch(/Pas encore/);
     });
+
+    it('pointe vers la page « Comment ça marche » du Cercle', () => {
+      render(<FaqPage />);
+      const link = screen.getByRole('link', { name: /Comment (ça|ca) marche/i });
+      expect(link).toHaveAttribute('href', '/trust/how-it-works');
+    });
+  });
+
+  it('préserve l’accès à la FAQ « session expirée »', () => {
+    render(<FaqPage />);
+    const link = screen.getByRole('link', { name: /session expirée/i });
+    expect(link).toHaveAttribute('href', '/faq/session-expiree');
   });
 });
