@@ -22,11 +22,25 @@ describe('jeton de geste', () => {
     expect(await lireJetonGeste(jeton, U1)).toEqual({ geste: 'pouce', tirage: 2 });
   });
 
+  /**
+   * Altère la signature au milieu, là où chaque caractère base64url porte 6 bits
+   * utiles (#485). Remplacer la fin par « xx » échouait environ une fois sur
+   * 1024 : le dernier caractère d'une signature HS256 ne porte que 4 bits, les
+   * 2 autres sont du bourrage ignoré au décodage, donc une fin déjà en « xw »,
+   * « xx », « xy » ou « xz » laissait la signature intacte.
+   */
+  function alterer(jeton: string): string {
+    const [entete, contenu, signature] = jeton.split('.');
+    const i = Math.floor(signature.length / 2);
+    const autre = signature[i] === 'A' ? 'B' : 'A';
+    return [entete, contenu, signature.slice(0, i) + autre + signature.slice(i + 1)].join('.');
+  }
+
   it('refuse le jeton d’un autre membre, un jeton altéré ou un geste inconnu', async () => {
     const { signerJetonGeste, lireJetonGeste } = await import('../jeton-geste');
     const jeton = await signerJetonGeste({ userId: U1, geste: 'pouce', tirage: 1 });
     expect(await lireJetonGeste(jeton, U2)).toBeNull();
-    expect(await lireJetonGeste(jeton.slice(0, -2) + 'xx', U1)).toBeNull();
+    expect(await lireJetonGeste(alterer(jeton), U1)).toBeNull();
     const faux = await signerJetonGeste({ userId: U1, geste: 'inconnu', tirage: 1 });
     expect(await lireJetonGeste(faux, U1)).toBeNull();
   });
