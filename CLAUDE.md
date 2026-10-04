@@ -235,6 +235,31 @@ Règles d'exposition :
 - **`data-lobby`** : marqueur home-only pour l'ambiance always-dark. La garde
   `lobby-confinement.test.ts` (#282) échoue si elle fuit hors de la home.
 
+## Données des membres hors de portée des agents IA (règle gravée, 2026-10-05)
+
+Décision de l'opérateur, non négociable : **aucune donnée personnelle d'un
+membre n'entre dans le contexte d'un agent IA**, quel que soit le fournisseur
+du modèle (Anthropic ou autre) ou le harnais (Claude Code, opencode…). Ce que
+l'agent lit part chez le fournisseur ; la vie privée des membres ne se négocie
+pas contre le confort du développement.
+
+- **Interdit dans le contexte** : lignes de base, profils, pseudos, e-mails,
+  bios, réponses, villes, positions, photos, messages (même chiffrés),
+  identifiants de membres, journaux de prod bruts qui en contiennent.
+- **Permis** : des **agrégats** (comptes, taux, distributions) calculés par un
+  script, dont **seul le résultat** sort. Toute case inférieure à 5 s'affiche
+  « < 5 » : sur une petite base, un petit nombre ré-identifie.
+- **Comment** : jamais de `findMany` imprimé, de `SELECT *`, de dump ni de
+  `console.log` d'un objet membre. Le script compte en base ou en mémoire et
+  n'imprime que des nombres. Les journaux Vercel se filtrent et se comptent,
+  jamais ne se lisent en brut.
+- **Déboguer le cas d'un membre** : l'opérateur regarde lui-même dans l'admin ;
+  l'agent travaille sur des données factices, ou sur ce que l'opérateur lui
+  rapporte en le décrivant.
+- **Outillage** : les vues statistiques de suivi passent par des scripts ou
+  des skills d'agrégation anonymisée, conçus pour ne rien laisser sortir
+  d'autre que des agrégats.
+
 ## Sécurité
 
 - Messagerie chiffrée de bout en bout : ECDH P-256 + AES-256-GCM entre les appareils.
