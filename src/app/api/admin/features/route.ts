@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
 import { FEATURES, configDepuisFeatures, type Features } from '@/lib/features';
@@ -54,6 +55,13 @@ export async function PUT(request: NextRequest) {
       },
     });
     invaliderFeatures();
+    // La FAQ montre ou masque la section Cercle selon `checkin` (#483) : on la
+    // régénère tout de suite plutôt qu'attendre sa minute d'ISR.
+    try {
+      revalidatePath('/faq');
+    } catch (err) {
+      console.error('features.revalidate.failed', err instanceof Error ? err.message : 'unknown');
+    }
 
     return NextResponse.json(features, { status: 200 });
   } catch (error) {
