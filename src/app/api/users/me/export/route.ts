@@ -121,7 +121,7 @@ export async function GET() {
       }),
       getDb().feedback.findMany({
         where: { userId },
-        select: { category: true, message: true, status: true, createdAt: true },
+        select: { category: true, message: true, status: true, createdAt: true, reply: true, repliedAt: true },
       }),
       getDb().consent.findMany({
         where: { userId },

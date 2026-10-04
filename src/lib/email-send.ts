@@ -95,3 +95,50 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
     throw error;
   }
 }
+
+/**
+ * Prévient l'auteur d'un retour que l'équipe a répondu (#477).
+ *
+ * Volontairement vide de contenu : ni le texte de la réponse, ni celui du
+ * retour, ni le pseudo — une boîte partagée ne doit rien apprendre. Le lien
+ * mène à « Mes retours », derrière la connexion. Envoyé même sans push : c'est
+ * la suite d'une demande du membre, pas une sollicitation.
+ */
+export async function sendFeedbackReplyEmail(to: string, url: string) {
+  const resend = getResend();
+  if (!resend) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[DEV] feedback-reply email skipped (no RESEND_API_KEY)');
+    } else {
+      console.error('[email] RESEND_API_KEY missing in production — feedback-reply email NOT sent');
+    }
+    return;
+  }
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to,
+    subject: 'L’équipe Libre t’a répondu',
+    html: `
+      <div style="max-width:480px;margin:0 auto;font-family:sans-serif;padding:24px">
+        <p style="font-size:16px;color:#333;margin:0 0 16px">Bonjour,</p>
+        <p style="font-size:16px;color:#333;margin:0 0 24px">
+          Tu nous as envoyé un retour depuis Libre, et l’équipe t’a répondu. Pour lire la réponse, ouvre Libre.
+        </p>
+        <a href="${url}"
+           style="display:inline-block;background:#c0563f;color:#fff;padding:12px 24px;border-radius:9999px;text-decoration:none;font-size:16px;font-weight:600">
+          Lire la réponse
+        </a>
+        <p style="font-size:13px;color:#666;margin:24px 0 0">
+          Tu reçois cet e-mail parce que tu nous as écrit depuis l’application. Nous ne t’écrirons pas pour autre chose.
+        </p>
+      </div>
+    `,
+  });
+
+  if (error) {
+    // Sans destinataire ni contenu dans le journal : le motif suffit.
+    console.error('[email] feedback-reply failed', { name: (error as { name?: string }).name ?? 'unknown' });
+    throw error;
+  }
+}

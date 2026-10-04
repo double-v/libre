@@ -18,7 +18,7 @@ import { getDb } from '@/lib/db';
  * toute façon un bundle navigateur.)
  */
 
-export type PushKind = 'message' | 'match' | 'admin-report' | 'admin-feedback';
+export type PushKind = 'message' | 'match' | 'admin-report' | 'admin-feedback' | 'feedback-reply';
 
 /** Charge utile lue par `public/sw.js` (contracts/events.md). Jamais de contenu ni de nom. */
 export interface PushPayload {
@@ -47,12 +47,16 @@ export function buildPayload(kind: PushKind, ctx: { conversationId?: string } & 
       return { kind, title: 'Nouveau signalement', body: 'Un signalement attend.', url: '/admin/reports', tag: 'admin-reports' };
     case 'admin-feedback':
       return { kind, title: 'Nouveau retour', body: 'Un retour attend.', url: '/admin/feedback', tag: 'admin-feedback' };
+    // #477 : ni le texte de la réponse ni celui du retour — l'écran verrouillé
+    // ne doit rien dire de plus que « il y a une réponse ».
+    case 'feedback-reply':
+      return { kind, title: 'L’équipe t’a répondu', body: 'Ouvre « Mes retours » pour lire la réponse.', url: '/settings/retours', tag: 'feedback-reply' };
   }
 }
 
 const DAY = 24 * 3600;
 /** Un message ou un match n'a plus de sens après un jour ; une file admin attend. */
-const TTL: Record<PushKind, number> = { message: DAY, match: DAY, 'admin-report': 7 * DAY, 'admin-feedback': 7 * DAY };
+const TTL: Record<PushKind, number> = { message: DAY, match: DAY, 'admin-report': 7 * DAY, 'admin-feedback': 7 * DAY, 'feedback-reply': 7 * DAY };
 
 interface StoredSubscription {
   id: string;

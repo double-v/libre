@@ -13,6 +13,7 @@ import SettingsPage from '../page';
 const mockPush = vi.fn();
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush, replace: vi.fn(), back: vi.fn() }),
+  usePathname: () => '/settings',
 }));
 
 const mockSignOut = vi.fn().mockResolvedValue(undefined);

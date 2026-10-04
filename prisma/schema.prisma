@@ -425,13 +425,25 @@ model Feedback {
   message   String
   url       String?
   userAgent String?
+  /// open | replied | resolved (| spam, purgé comme resolved).
   status    String   @default("open")
   createdAt DateTime @default(now())
+  /// Réponse de l'équipe (#477) : une seule par retour, jamais modifiée après
+  /// envoi. Lue par l'auteur seul, dans Paramètres › Mes retours ; jamais dans
+  /// une notification ni un e-mail.
+  reply       String?
+  repliedAt   DateTime?
+  /// Admin qui a répondu. Pas de relation : supprimer un compte admin ne doit
+  /// pas emporter les retours, et ce n'est pas une sanction (pas de ModerationLog).
+  repliedBy   String?   @db.Uuid
+  /// Le non-lu se dérive de cette date, il n'est jamais stocké (spec 003).
+  replyReadAt DateTime?
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([status])
   @@index([createdAt])
+  @@index([userId])
   @@map("feedback")
 }
 

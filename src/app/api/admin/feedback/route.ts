@@ -3,7 +3,7 @@ import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
 
 const CATEGORIES = ['bug', 'suggestion', 'question'] as const;
-const STATUSES = ['open', 'resolved'] as const;
+const STATUSES = ['open', 'replied', 'resolved'] as const;
 
 export async function GET(request: NextRequest) {
   const adminResult = await requireAdmin();

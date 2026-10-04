@@ -173,6 +173,11 @@ export const adminHandleFeedbackSchema = z.object({
   status: z.enum(['open', 'resolved']),
 });
 
+/** #477 : une réponse non vide, bornée comme le retour lui-même. */
+export const adminReplyFeedbackSchema = z.object({
+  reply: z.string().trim().min(1).max(2000),
+});
+
 // `reason` est requis ici, contrairement à adminBanSchema : un retrait de photo
 // est invisible pour la personne concernée, et indéfendable sans motif si elle
 // conteste. Le bannissement, lui, se voit.

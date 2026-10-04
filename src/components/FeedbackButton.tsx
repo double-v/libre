@@ -2,10 +2,15 @@
 
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { MES_RETOURS_HREF } from '@/lib/feedback-reply';
 
 type Category = 'bug' | 'suggestion' | 'question';
 
 export default function FeedbackButton() {
+  // Sans compte, le retour reste anonyme : on ne pourra pas y répondre (#477).
+  const { status } = useSession();
+  const connecte = status === 'authenticated';
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<Category>('bug');
   const [message, setMessage] = useState('');
@@ -55,10 +60,11 @@ export default function FeedbackButton() {
       }
       setSubmitted(true);
       setMessage('');
+      // Assez long pour suivre le lien « Mes retours » de la confirmation.
       setTimeout(() => {
         setSubmitted(false);
         setOpen(false);
-      }, 2000);
+      }, 6000);
     } catch {
       setError('Une erreur est survenue');
     } finally {
@@ -71,9 +77,18 @@ export default function FeedbackButton() {
       {open && (
         <div className="mb-2 w-72 rounded-xl border border-hairline bg-surface p-4 shadow-lg">
           {submitted ? (
-            <p className="py-4 text-center text-sm text-coral">
-              Merci pour ton retour.
-            </p>
+            <div className="py-2 text-center">
+              <div className="text-sm font-semibold text-coral-dark dark:text-coral-light">Merci pour ton retour.</div>
+              {connecte && (
+                <div className="mt-1 text-xs text-muted">
+                  Si nous te répondons, tu le verras dans{' '}
+                  <Link href={MES_RETOURS_HREF} className="text-coral-dark hover:underline dark:text-coral-light" onClick={() => setOpen(false)}>
+                    Mes retours
+                  </Link>
+                  .
+                </div>
+              )}
+            </div>
           ) : (
             <form onSubmit={handleSubmit}>
               <div className="mb-3 flex items-center justify-between">
@@ -137,6 +152,12 @@ export default function FeedbackButton() {
                 minLength={5}
                 maxLength={2000}
               />
+
+              <p className="mb-3 text-xs text-muted">
+                {connecte
+                  ? 'Si une réponse peut t’aider, l’équipe te l’écrira dans Paramètres, rubrique « Mes retours ».'
+                  : 'Tu n’es pas connecté·e : nous lirons ton message, mais nous ne pourrons pas te répondre.'}
+              </p>
 
               {error && (
                 <p className="mb-2 text-xs text-red-500">{error}</p>

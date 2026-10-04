@@ -61,10 +61,11 @@ describe('purgerRetention — seuils', () => {
     expect(fakeDb.report.deleteMany).toHaveBeenCalledWith({ where: { resolvedAt: { lt: il_y_a(365) } } });
   });
 
-  it('retours : clos (resolved/spam) et créés il y a plus d’un an — jamais les ouverts', async () => {
+  it('retours : clos (resolved/replied/spam) et créés il y a plus d’un an — jamais les ouverts', async () => {
     await purgerRetention(NOW);
+    // `replied` (#477) est clos : sans lui, un retour répondu ne serait jamais purgé.
     expect(fakeDb.feedback.deleteMany).toHaveBeenCalledWith({
-      where: { status: { in: ['resolved', 'spam'] }, createdAt: { lt: il_y_a(365) } },
+      where: { status: { in: ['resolved', 'replied', 'spam'] }, createdAt: { lt: il_y_a(365) } },
     });
   });
 

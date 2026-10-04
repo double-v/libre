@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { TOAST_EVENT, type ToastPayload } from '@/lib/toast';
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }), usePathname: () => '/settings' }));
 vi.mock('next-auth/react', () => ({ signOut: vi.fn() }));
 
 import SettingsPage from '@/app/(main)/settings/page';

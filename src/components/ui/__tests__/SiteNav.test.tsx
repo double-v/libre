@@ -262,6 +262,20 @@ describe('<SiteNavView /> — pastille d’accès admin (#391)', () => {
   });
 });
 
+describe('<SiteNavView /> — réponse de l’équipe (#477)', () => {
+  it('pose la pastille sur Paramètres quand l’équipe a répondu, sans nombre', () => {
+    render(<SiteNavView variant="authed" hasFeedbackReply />);
+    const dot = screen.getByRole('status', { name: 'L’équipe t’a répondu' });
+    expect(screen.getByRole('link', { name: 'Paramètres' })).toContainElement(dot);
+    expect(screen.getByRole('link', { name: 'Paramètres' }).textContent).toBe('');
+  });
+
+  it('aucune pastille sans réponse', () => {
+    render(<SiteNavView variant="authed" />);
+    expect(screen.queryByRole('status', { name: 'L’équipe t’a répondu' })).toBeNull();
+  });
+});
+
 describe('<SiteNav /> — files admin depuis la session (#391)', () => {
   beforeEach(() => {
     mockSession.mockReset();
