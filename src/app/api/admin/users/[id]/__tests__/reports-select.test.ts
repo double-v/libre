@@ -40,7 +40,7 @@ describe('GET /api/admin/users/[id] — signalements reçus', () => {
     // 1er appel : requireAdmin() vérifie le rôle. 2e : la requête de la fiche.
     fakeDb.user.findUnique
       .mockResolvedValueOnce({ role: 'ADMIN' })
-      .mockResolvedValueOnce({ id: 'u-1', reportsReceived: [], verificationRequests: [] });
+      .mockResolvedValueOnce({ id: 'u-1', reportsReceived: [], verificationRequests: [], profileSignals: [] });
 
     await GET(new NextRequest('http://x/api/admin/users/u-1'), {
       params: Promise.resolve({ id: 'u-1' }),
@@ -66,6 +66,7 @@ describe('GET /api/admin/users/[id] — signalements reçus', () => {
           },
         ],
         verificationRequests: [],
+        profileSignals: [],
       });
 
     const res = await GET(new NextRequest('http://x/api/admin/users/u-1'), {
@@ -76,5 +77,35 @@ describe('GET /api/admin/users/[id] — signalements reçus', () => {
     expect(res.status).toBe(200);
     expect(data.user.reportsReceived[0].reporter.displayName).toBe('Camille');
     expect(data.user.reportsReceived[0].description).toBe('messages insistants');
+  });
+});
+
+describe('GET /api/admin/users/[id] — indice de fiabilité (spec 010)', () => {
+  it('le niveau et chaque indice, avec la mention « peut être légitime » pour le contexte', async () => {
+    fakeDb.user.findUnique
+      .mockResolvedValueOnce({ role: 'ADMIN' })
+      .mockResolvedValueOnce({
+        id: 'u-1',
+        isVerified: false,
+        reportsReceived: [],
+        verificationRequests: [],
+        verifInviteeAt: new Date('2026-10-05'),
+        profileReview: null,
+        profileSignals: [
+          { type: 'likes_rafale', force: 'fort', createdAt: new Date('2026-10-05'), extrait: null, autreUserId: null },
+          { type: 'appareil_partage', force: 'faible', createdAt: new Date('2026-10-04'), extrait: null, autreUserId: 'u-2' },
+        ],
+      });
+    const res = await GET(new NextRequest('http://x/api/admin/users/u-1'), { params: Promise.resolve({ id: 'u-1' }) });
+    const body = await res.json();
+    expect(body.fiabilite.niveau).toBe('douteux');
+    expect(body.fiabilite.invitation).toEqual({ depuis: '2026-10-05T00:00:00.000Z' });
+    expect(body.fiabilite.indices.map((i: { type: string; legitimePossible: boolean }) => [i.type, i.legitimePossible])).toEqual([
+      ['likes_rafale', false],
+      ['appareil_partage', true],
+    ]);
+    // Les champs bruts ne doublent pas le bloc dérivé.
+    expect(body.user.profileSignals).toBeUndefined();
+    expect(body.user.verifInviteeAt).toBeUndefined();
   });
 });

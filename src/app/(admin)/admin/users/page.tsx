@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { NiveauFiabiliteTag, type Niveau } from '@/components/admin/AdminFiabilite';
 
 interface UserRow {
   id: string;
@@ -13,19 +14,33 @@ interface UserRow {
   createdAt: string;
   lastActive: string;
   photoCount: number;
+  niveau: Niveau;
+  signauxRecents: number;
 }
+
+// Spec 010, US3 : filtrer et trier par indice de fiabilité.
+const FILTRES: Array<{ valeur: '' | Niveau; libelle: string }> = [
+  { valeur: '', libelle: 'Tous' },
+  { valeur: 'douteux', libelle: 'Douteux' },
+  { valeur: 'a_surveiller', libelle: 'À surveiller' },
+  { valeur: 'fiable', libelle: 'Fiables' },
+];
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [niveau, setNiveau] = useState<'' | Niveau>('');
+  const [triFiabilite, setTriFiabilite] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(page), perPage: '20', search });
+      if (niveau) params.set('niveau', niveau);
+      if (triFiabilite) params.set('tri', 'fiabilite');
       const res = await fetch(`/api/admin/users?${params}`);
       if (!res.ok) throw new Error();
       const data = await res.json();
@@ -36,7 +51,7 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search]);
+  }, [page, search, niveau, triFiabilite]);
 
   useEffect(() => {
     // Fetch au montage : IIFE async → aucun setState synchrone dans le corps
@@ -56,6 +71,28 @@ export default function AdminUsersPage() {
         onChange={(e) => { setSearch(e.target.value); setPage(1); }}
         className="mb-4 w-full rounded-md border border-hairline-strong bg-surface px-3 py-2 text-content shadow-sm focus:border-coral focus:outline-none focus:ring-coral"
       />
+      <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filtrer par indice de fiabilité">
+        {FILTRES.map((f) => (
+          <button
+            key={f.valeur || 'tous'}
+            type="button"
+            aria-pressed={niveau === f.valeur}
+            onClick={() => { setNiveau(f.valeur); setPage(1); }}
+            className={`min-h-11 rounded-full px-4 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-coral ${niveau === f.valeur ? 'bg-coral text-white' : 'bg-fill-subtle text-content hover:bg-sunken'}`}
+          >
+            {f.libelle}
+          </button>
+        ))}
+        <label className="ml-auto inline-flex min-h-11 items-center gap-2 text-sm text-content">
+          <input
+            type="checkbox"
+            checked={triFiabilite}
+            onChange={(e) => { setTriFiabilite(e.target.checked); setPage(1); }}
+            className="h-4 w-4 accent-coral"
+          />
+          Les moins fiables d’abord
+        </label>
+      </div>
       {loading ? (
         <p className="text-muted">Chargement…</p>
       ) : (
@@ -68,6 +105,7 @@ export default function AdminUsersPage() {
                   <th className="px-3 py-2 font-medium text-muted">Email</th>
                   <th className="px-3 py-2 font-medium text-muted">Rôle</th>
                   <th className="px-3 py-2 font-medium text-muted">Statut</th>
+                  <th className="px-3 py-2 font-medium text-muted">Fiabilité</th>
                   <th className="px-3 py-2 font-medium text-muted">Inscrit</th>
                 </tr>
               </thead>
@@ -91,6 +129,10 @@ export default function AdminUsersPage() {
                       ) : (
                         <span className="text-muted">Actif</span>
                       )}
+                    </td>
+                    <td className="px-3 py-2">
+                      <NiveauFiabiliteTag niveau={u.niveau ?? 'fiable'} />
+                      {u.signauxRecents > 0 && <span className="ml-2 text-xs text-muted">{u.signauxRecents} indice{u.signauxRecents > 1 ? 's' : ''}</span>}
                     </td>
                     <td className="px-3 py-2 text-muted">{new Date(u.createdAt).toLocaleDateString('fr-FR')}</td>
                   </tr>

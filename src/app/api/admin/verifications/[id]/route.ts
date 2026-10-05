@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
 import { adminHandleVerificationSchema } from '@/lib/validators';
+import { enregistrerSignal } from '@/lib/fraude/signaux';
 
 export async function PATCH(
   request: NextRequest,
@@ -44,8 +45,16 @@ export async function PATCH(
       where: { id: verification.userId },
       // Le badge approuvé lève la mise en retrait (spec 006, #444) : c'est
       // exactement ce que « Demander une vérification » attendait.
-      data: { isVerified: true, retraitAt: null },
+      // Il lève aussi l'invitation automatique (spec 010, FR-019).
+      data: { isVerified: true, retraitAt: null, verifInviteeAt: null },
     });
+  } else {
+    // Spec 010, FR-019 : un selfie refusé après une invitation automatique
+    // fait entrer le compte dans la file — la suite revient à un humain.
+    const u = await getDb().user.findUnique({ where: { id: verification.userId }, select: { verifInviteeAt: true } });
+    if (u?.verifInviteeAt) {
+      await enregistrerSignal({ userId: verification.userId, type: 'verification_refusee', force: 'fort', cle: id });
+    }
   }
 
   await getDb().moderationLog.create({

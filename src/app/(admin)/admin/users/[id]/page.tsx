@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AdminUserPhotos from '@/components/admin/AdminUserPhotos';
 import AdminUserKeyState from '@/components/admin/AdminUserKeyState';
+import { AdminIndicesFiabilite, type IndiceFiabilite, type Niveau } from '@/components/admin/AdminFiabilite';
 
 interface UserDetail {
   id: string;
@@ -30,6 +31,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
   const [user, setUser] = useState<UserDetail | null>(null);
   // Classification des photos (#330), servie avec la fiche.
   const [photoSensitivity, setPhotoSensitivity] = useState<Record<string, string>>({});
+  const [fiabilite, setFiabilite] = useState<{ niveau: Niveau; invitation: { depuis: string } | null; indices: IndiceFiabilite[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [banReason, setBanReason] = useState('');
@@ -53,6 +55,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
         if (!cancelled) {
           setUser(data.user);
           setPhotoSensitivity(data.photoSensitivity ?? {});
+          setFiabilite(data.fiabilite ?? null);
         }
       } catch {
         if (!cancelled) setError('Impossible de charger l\'utilisateur');
@@ -105,6 +108,8 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
       </div>
 
       <h1 className="mb-6 text-2xl font-bold text-content">{user.displayName}</h1>
+
+      {fiabilite && <AdminIndicesFiabilite {...fiabilite} />}
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* User info */}

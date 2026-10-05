@@ -7,7 +7,8 @@ interface LogRow {
   action: string;
   reason: string | null;
   createdAt: string;
-  admin: { id: string; displayName: string };
+  /** null : action automatique (spec 010), sans auteur humain. */
+  admin: { id: string; displayName: string } | null;
   targetUser: { id: string; displayName: string };
 }
 
@@ -20,6 +21,7 @@ const actionLabels: Record<string, string> = {
   REJECT_VERIFICATION: 'Vérification refusée',
   DISMISS_REPORT: 'Signalement ignoré',
   REMOVE_ANSWER: 'Réponse retirée',
+  INVITE_VERIFICATION: 'Invitation à la vérification',
 };
 
 export default function AdminLogsPage() {
@@ -77,7 +79,7 @@ export default function AdminLogsPage() {
                 {logs.map((log) => (
                   <tr key={log.id} className="hover:bg-fill-subtle">
                     <td className="px-3 py-2 text-muted">{new Date(log.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
-                    <td className="px-3 py-2">{log.admin.displayName}</td>
+                    <td className="px-3 py-2">{log.admin?.displayName ?? 'Automatique'}</td>
                     <td className="px-3 py-2">{log.targetUser.displayName}</td>
                     <td className="px-3 py-2">
                       <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${

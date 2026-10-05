@@ -91,10 +91,15 @@ géocodage) ; le géocodage connaît le pays mais `Profile` ne le stocke pas.
 
 **Décision** : le client joint `fuseau` (`Intl.DateTimeFormat().resolvedOptions().timeZone`)
 **seulement** à l'enregistrement d'une ville manuelle. Le serveur calcule
-`fuseauIncoherent(tz, lat, lng)` : position dans les boîtes France
-métropolitaine + DROM-COM **et** fuseau hors liste (`Europe/*`, `Atlantic/Canary|Madeira|Azores`,
-`Africa/Ceuta`, fuseaux des DROM-COM). `UTC`/`Etc/*`/absent = indéterminé,
-aucun signal. Le fuseau n'est **jamais** écrit.
+`fuseauIncoherent(tz, pays)` : ville en France (le champ `country` du candidat
+de géocodage, « France » pour l'IGN, outre-mer compris) **et** fuseau hors
+liste (`Europe/*`, `Atlantic/Canary|Madeira|Azores`, `Africa/Ceuta`, fuseaux
+des DROM-COM). `UTC`/`Etc/*`/absent = indéterminé, aucun signal. Le fuseau
+n'est **jamais** écrit.
+
+*Mise en œuvre* : le pays du candidat suffit, sans boîtes géographiques ; il
+vient du client, mais un indice faible n'a pas besoin de plus — le falsifier
+ne sert qu'à **éviter** l'indice, ce que le fuseau permet déjà.
 
 **Vigilance (principe II)** : un fuseau lointain dit où est l'appareil, pas
 l'origine de la personne. Indice faible, jamais seul, et le libellé admin dit

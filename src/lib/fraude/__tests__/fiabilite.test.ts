@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { douteSerieux, niveauFiabilite, signauxRecents } from '../fiabilite';
+import { douteSerieux, fiabiliteParCompte, niveauFiabilite, signauxRecents } from '../fiabilite';
 
 const s = (type: string, force: 'fort' | 'faible', jour = 1) => ({ type, force, createdAt: new Date(2026, 9, jour) });
 
@@ -40,5 +40,30 @@ describe('signauxRecents', () => {
   });
   it('garde tout sans décision', () => {
     expect(signauxRecents([s('lexique_arnaque', 'fort')], null)).toHaveLength(1);
+  });
+});
+
+describe('fiabiliteParCompte', () => {
+  const sig = (userId: string, type: string, force: 'fort' | 'faible', jour = 5) => ({ userId, type, force, createdAt: new Date(2026, 9, jour) });
+
+  it('un niveau par compte signalé, avec le nombre de signaux non tranchés', () => {
+    const m = fiabiliteParCompte(
+      [sig('a', 'lexique_arnaque', 'fort'), sig('b', 'appareil_partage', 'faible'), sig('b', 'fuseau_incoherent', 'faible')],
+      new Map(),
+      new Set(),
+    );
+    expect(m.get('a')).toEqual({ niveau: 'douteux', signauxRecents: 1 });
+    expect(m.get('b')).toEqual({ niveau: 'a_surveiller', signauxRecents: 2 });
+    expect(m.has('c')).toBe(false);
+  });
+
+  it('applique la décision et le badge de chaque compte', () => {
+    const m = fiabiliteParCompte(
+      [sig('a', 'lexique_arnaque', 'fort', 1), sig('v', 'retour_banni', 'fort')],
+      new Map([['a', new Date(2026, 9, 3)]]),
+      new Set(['v']),
+    );
+    expect(m.get('a')).toEqual({ niveau: 'fiable', signauxRecents: 0 });
+    expect(m.get('v')?.niveau).toBe('a_surveiller');
   });
 });

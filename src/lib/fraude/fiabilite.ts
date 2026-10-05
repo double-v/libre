@@ -46,3 +46,36 @@ export function niveauFiabilite(recents: ReadonlyArray<Pick<SignalDate, 'type' |
   const brut = douteSerieux(recents) ? 2 : recents.length > 0 ? 1 : 0;
   return ORDRE[Math.max(0, brut - (isVerified ? 1 : 0))];
 }
+
+export interface FiabiliteCompte {
+  niveau: NiveauFiabilite;
+  /** Signaux non tranchés : départage les comptes d'un même niveau. */
+  signauxRecents: number;
+}
+
+export const RANG_NIVEAU: Record<NiveauFiabilite, number> = { douteux: 2, a_surveiller: 1, fiable: 0 };
+
+/**
+ * Niveau de chaque compte qui porte au moins un signal ; les autres sont
+ * « fiables » par défaut. Calculé en mémoire : à l'échelle de Libre (quelques
+ * centaines de comptes), une colonne dérivée coûterait plus qu'elle ne gagne
+ * et finirait désynchronisée d'une décision.
+ */
+export function fiabiliteParCompte(
+  signaux: ReadonlyArray<SignalDate & { userId: string }>,
+  decisions: ReadonlyMap<string, Date>,
+  verifies: ReadonlySet<string>,
+): Map<string, FiabiliteCompte> {
+  const parCompte = new Map<string, SignalDate[]>();
+  for (const s of signaux) {
+    const liste = parCompte.get(s.userId) ?? [];
+    liste.push(s);
+    parCompte.set(s.userId, liste);
+  }
+  const resultat = new Map<string, FiabiliteCompte>();
+  for (const [userId, liste] of parCompte) {
+    const recents = signauxRecents(liste, decisions.get(userId) ?? null);
+    resultat.set(userId, { niveau: niveauFiabilite(recents, verifies.has(userId)), signauxRecents: recents.length });
+  }
+  return resultat;
+}

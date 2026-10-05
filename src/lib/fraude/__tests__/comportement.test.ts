@@ -9,6 +9,8 @@ vi.mock('@/lib/db', () => ({
   getDb: () => ({ block: { findMany: blockFindMany }, like: { findMany: likeFindMany, count: likeCount }, user: { findUnique: userFindUnique } }),
 }));
 const enregistrerSignal = vi.fn();
+// Le second argument (options d'invitation) n'est pas l'objet de ces tests.
+const expectSignal = (attendu: unknown) => expect(enregistrerSignal.mock.calls.map((c: unknown[]) => c[0])).toContainEqual(attendu);
 vi.mock('../signaux', () => ({ enregistrerSignal }));
 
 const { verifierBlocages, verifierRythmeLikes, verifierProfilExpress, maxDansFenetre } = await import('../comportement');
@@ -22,7 +24,7 @@ describe('verifierBlocages (FR-001)', () => {
   it('3 bloqueurs anciens en 48 h → signal fort', async () => {
     blockFindMany.mockResolvedValue([{ blockerId: 'a' }, { blockerId: 'b' }, { blockerId: 'c' }]);
     await verifierBlocages('x', NOW);
-    expect(enregistrerSignal).toHaveBeenCalledWith({ userId: 'x', type: 'bloque_repetition', force: 'fort', cle: '2026-10-06' });
+    expectSignal({ userId: 'x', type: 'bloque_repetition', force: 'fort', cle: '2026-10-06' });
   });
 
   it('la requête ne compte que 48 h et des bloqueurs inscrits depuis 7 jours', async () => {
@@ -57,7 +59,7 @@ describe('verifierRythmeLikes (FR-005)', () => {
     userFindUnique.mockResolvedValue({ createdAt: min(120) });
     likeFindMany.mockResolvedValue([...rafale(15, 20), ...rafale(15, 600, 60)]);
     await verifierRythmeLikes('x', NOW);
-    expect(enregistrerSignal).toHaveBeenCalledWith({ userId: 'x', type: 'likes_rafale', force: 'fort', cle: '2026-10-06' });
+    expectSignal({ userId: 'x', type: 'likes_rafale', force: 'fort', cle: '2026-10-06' });
   });
 
   it('30 likes étalés sur la journée → rien', async () => {
@@ -86,7 +88,7 @@ describe('verifierProfilExpress (FR-008)', () => {
     userFindUnique.mockResolvedValue({ emailVerified: min(12), profile: { photos: ['p1'], bio: 'Bonjour' } });
     likeCount.mockResolvedValue(10);
     await verifierProfilExpress('x', NOW);
-    expect(enregistrerSignal).toHaveBeenCalledWith({ userId: 'x', type: 'profil_express', force: 'faible', cle: 'express' });
+    expectSignal({ userId: 'x', type: 'profil_express', force: 'faible', cle: 'express' });
   });
 
   it.each([

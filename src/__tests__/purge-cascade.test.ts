@@ -83,6 +83,11 @@ vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => fakeDb }));
 vi.mock('@/lib/auth', () => ({ __esModule: true, authOptions: {} }));
 vi.mock('@/lib/r2', () => ({ __esModule: true, deletePhoto: vi.fn(), isR2Configured: () => false }));
 vi.mock('next-auth', () => ({ __esModule: true, getServerSession: vi.fn(async () => ({ user: { id: ME } })) }));
+// after() (spec 010, blocages en rafale) : hors du sujet de ce test.
+vi.mock('next/server', async (importOriginal) => {
+  const orig = await importOriginal<typeof import('next/server')>();
+  return { ...orig, after: () => {} };
+});
 
 beforeEach(() => {
   vi.clearAllMocks();

@@ -3,6 +3,8 @@ import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
 import { lirePhoto, isR2Configured } from '@/lib/r2';
 import { analyserPhoto, analyserTexteProfil } from '@/lib/fraude/analyse';
+import { verifierBlocages } from '@/lib/fraude/comportement';
+import { appareilPartage } from '@/lib/fraude/inscription';
 
 const LOT = 10;
 
@@ -15,7 +17,12 @@ export const maxDuration = 60;
  * Pas de cron (plan Vercel, #427) : l'admin relance avec le curseur rendu,
  * et peut reprendre plus tard là où il s'est arrêté. Rejouer ne coûte rien :
  * un signal déjà vu ne se recrée pas.
+ *
+ * Spec 010 (FR-025) : relance aussi les blocages en rafale, l'appareil
+ * partagé et le lexique. **Aucune invitation** n'en part : le rattrapage
+ * alimente la file, sans inviter d'un coup tous les comptes anciens.
  */
+const SANS_INVITATION = { inviter: false } as const;
 export async function POST(request: NextRequest) {
   const adminResult = await requireAdmin();
   if (!isAdminSession(adminResult)) return adminResult;
@@ -25,7 +32,7 @@ export async function POST(request: NextRequest) {
 
   const comptes = await getDb().user.findMany({
     where: { isBanned: false, profile: { isNot: null }, ...(apres ? { id: { gt: apres } } : {}) },
-    select: { id: true, displayName: true, profile: { select: { bio: true, photos: true } } },
+    select: { id: true, displayName: true, deviceId: true, profile: { select: { bio: true, photos: true } } },
     orderBy: { id: 'asc' },
     take: LOT,
   });
@@ -34,11 +41,13 @@ export async function POST(request: NextRequest) {
   let photos = 0;
   let echecs = 0;
   for (const c of comptes) {
-    await analyserTexteProfil({ userId: c.id, displayName: c.displayName, bio: c.profile?.bio ?? '' });
+    await analyserTexteProfil({ userId: c.id, displayName: c.displayName, bio: c.profile?.bio ?? '' }, SANS_INVITATION);
+    await verifierBlocages(c.id, new Date(), SANS_INVITATION);
+    await appareilPartage({ userId: c.id, deviceId: c.deviceId }, SANS_INVITATION).catch(() => {});
     if (!stockage) continue;
     for (const key of c.profile?.photos ?? []) {
       try {
-        await analyserPhoto({ userId: c.id, photoKey: key, buffer: await lirePhoto(key) });
+        await analyserPhoto({ userId: c.id, photoKey: key, buffer: await lirePhoto(key) }, SANS_INVITATION);
         photos++;
       } catch {
         // Une photo absente de R2 ne bloque pas le lot.

@@ -7,6 +7,8 @@ const fakeDb = {
 };
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => fakeDb }));
 const enregistrerSignal = vi.fn();
+// Le second argument (options d'invitation) n'est pas l'objet de ces tests.
+const expectSignal = (attendu: unknown) => expect(enregistrerSignal.mock.calls.map((c: unknown[]) => c[0])).toContainEqual(attendu);
 vi.mock('../signaux', () => ({ enregistrerSignal }));
 
 const secretAvant = process.env.NEXTAUTH_SECRET;
@@ -42,7 +44,7 @@ describe('retour d’un banni (FR-003)', () => {
   it('une correspondance par sorte → un signal fort par sorte', async () => {
     fakeDb.bannedIdentityFingerprint.findMany.mockResolvedValue([{ kind: 'email' }, { kind: 'email' }]);
     await analyserInscription(base, NOW);
-    expect(enregistrerSignal).toHaveBeenCalledWith({ userId: 'neuf', type: 'retour_banni', force: 'fort', cle: 'email' });
+    expectSignal({ userId: 'neuf', type: 'retour_banni', force: 'fort', cle: 'email' });
     expect(types()).toEqual(['retour_banni']);
   });
 });
@@ -51,8 +53,8 @@ describe('appareil partagé (FR-006)', () => {
   it('indice faible sur les deux comptes actifs', async () => {
     fakeDb.user.findMany.mockResolvedValue([{ id: 'ancien' }]);
     await analyserInscription(base, NOW);
-    expect(enregistrerSignal).toHaveBeenCalledWith({ userId: 'neuf', type: 'appareil_partage', force: 'faible', autreUserId: 'ancien' });
-    expect(enregistrerSignal).toHaveBeenCalledWith({ userId: 'ancien', type: 'appareil_partage', force: 'faible', autreUserId: 'neuf' });
+    expectSignal({ userId: 'neuf', type: 'appareil_partage', force: 'faible', autreUserId: 'ancien' });
+    expectSignal({ userId: 'ancien', type: 'appareil_partage', force: 'faible', autreUserId: 'neuf' });
     expect(fakeDb.user.findMany.mock.calls[0][0].where).toMatchObject({ deviceId: 'dev-1', isBanned: false, id: { not: 'neuf' } });
   });
 

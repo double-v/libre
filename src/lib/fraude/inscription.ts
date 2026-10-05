@@ -39,15 +39,18 @@ async function retourDeBanni({ userId, deviceId, normalizedEmail }: Inscription)
  * couple ou une famille peut partager un téléphone. Les deux comptes portent
  * l'indice, chacun pointant vers l'autre pour le modérateur.
  */
-async function appareilPartage({ userId, deviceId }: Inscription): Promise<void> {
+export async function appareilPartage(
+  { userId, deviceId }: Pick<Inscription, 'userId' | 'deviceId'>,
+  options: { inviter?: boolean } = {},
+): Promise<void> {
   if (!deviceId) return;
   const autres = await getDb().user.findMany({
     where: { deviceId, isBanned: false, id: { not: userId } },
     select: { id: true },
   });
   for (const { id } of autres) {
-    await enregistrerSignal({ userId, type: 'appareil_partage', force: 'faible', autreUserId: id });
-    await enregistrerSignal({ userId: id, type: 'appareil_partage', force: 'faible', autreUserId: userId });
+    await enregistrerSignal({ userId, type: 'appareil_partage', force: 'faible', autreUserId: id }, options);
+    await enregistrerSignal({ userId: id, type: 'appareil_partage', force: 'faible', autreUserId: userId }, options);
   }
 }
 

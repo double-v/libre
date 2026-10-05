@@ -15,19 +15,22 @@ import { empreinte, memePhoto } from './empreinte';
  * Appelée dans `after()` : best-effort, ne jette jamais, ne change rien à la
  * réponse faite au membre.
  */
-export async function analyserPhoto({ userId, photoKey, buffer }: { userId: string; photoKey: string; buffer: Buffer }): Promise<void> {
+export async function analyserPhoto(
+  { userId, photoKey, buffer }: { userId: string; photoKey: string; buffer: Buffer },
+  options: { inviter?: boolean } = {},
+): Promise<void> {
   // Deux analyses indépendantes : l'échec de l'une n'empêche pas l'autre.
-  await Promise.all([lireContactSurPhoto(userId, photoKey, buffer), comparerEmpreinte(userId, photoKey, buffer)]);
+  await Promise.all([lireContactSurPhoto(userId, photoKey, buffer, options), comparerEmpreinte(userId, photoKey, buffer, options)]);
 }
 
-async function lireContactSurPhoto(userId: string, photoKey: string, buffer: Buffer): Promise<void> {
+async function lireContactSurPhoto(userId: string, photoKey: string, buffer: Buffer, options: { inviter?: boolean }): Promise<void> {
   try {
     const texte = await lireTexte(buffer);
     if (!texte.trim()) return;
     const contacts = detecterContact(texte);
     const repere = contacts.find((c) => c.force === 'fort') ?? contacts[0];
     if (!repere) return;
-    await enregistrerSignal({ userId, type: 'contact_photo', force: repere.force, extrait: repere.extrait, photoKey });
+    await enregistrerSignal({ userId, type: 'contact_photo', force: repere.force, extrait: repere.extrait, photoKey }, options);
   } catch (err) {
     console.warn('fraude.analyse.failed', { message: (err as Error)?.message?.slice(0, 80) });
   }
@@ -39,7 +42,7 @@ async function lireContactSurPhoto(userId: string, photoKey: string, buffer: Buf
  * comparée à celles des autres comptes (signal sur les deux, chacun pointant
  * l'autre) et à celles des comptes bannis dans l'année.
  */
-async function comparerEmpreinte(userId: string, photoKey: string, buffer: Buffer): Promise<void> {
+async function comparerEmpreinte(userId: string, photoKey: string, buffer: Buffer, options: { inviter?: boolean }): Promise<void> {
   try {
     const hash = await empreinte(buffer);
     const db = getDb();
@@ -52,11 +55,11 @@ async function comparerEmpreinte(userId: string, photoKey: string, buffer: Buffe
       db.bannedPhotoFingerprint.findMany({ select: { bannedUserId: true, hash: true } }),
     ]);
     for (const a of autres.filter((a) => memePhoto(a.hash, hash))) {
-      await enregistrerSignal({ userId, type: 'photo_reutilisee', force: 'fort', photoKey, autreUserId: a.userId });
-      await enregistrerSignal({ userId: a.userId, type: 'photo_reutilisee', force: 'fort', photoKey: a.photoKey, autreUserId: userId });
+      await enregistrerSignal({ userId, type: 'photo_reutilisee', force: 'fort', photoKey, autreUserId: a.userId }, options);
+      await enregistrerSignal({ userId: a.userId, type: 'photo_reutilisee', force: 'fort', photoKey: a.photoKey, autreUserId: userId }, options);
     }
     for (const b of bannies.filter((b) => b.bannedUserId !== userId && memePhoto(b.hash, hash))) {
-      await enregistrerSignal({ userId, type: 'photo_bannie', force: 'fort', photoKey, autreUserId: b.bannedUserId });
+      await enregistrerSignal({ userId, type: 'photo_bannie', force: 'fort', photoKey, autreUserId: b.bannedUserId }, options);
     }
   } catch (err) {
     console.warn('fraude.empreinte.failed', { message: (err as Error)?.message?.slice(0, 80) });

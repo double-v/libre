@@ -24,7 +24,7 @@ function silencieux(nom: string) {
  * bloqueurs doivent avoir au moins 7 jours : trois comptes créés pour faire
  * tomber quelqu'un ne suffisent pas. Un épisode = un signal par jour.
  */
-export async function verifierBlocages(blockedId: string, now = new Date()): Promise<void> {
+export async function verifierBlocages(blockedId: string, now = new Date(), options: { inviter?: boolean } = {}): Promise<void> {
   try {
     const blocages = await getDb().block.findMany({
       where: {
@@ -35,7 +35,7 @@ export async function verifierBlocages(blockedId: string, now = new Date()): Pro
       select: { blockerId: true },
     });
     if (new Set(blocages.map((b) => b.blockerId)).size >= 3) {
-      await enregistrerSignal({ userId: blockedId, type: 'bloque_repetition', force: 'fort', cle: jour(now) });
+      await enregistrerSignal({ userId: blockedId, type: 'bloque_repetition', force: 'fort', cle: jour(now) }, options);
     }
   } catch (err) {
     silencieux('blocages')(err);

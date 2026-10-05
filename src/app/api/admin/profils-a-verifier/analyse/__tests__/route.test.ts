@@ -11,10 +11,15 @@ vi.mock('@/lib/r2', () => ({ __esModule: true, lirePhoto, isR2Configured: () => 
 const analyserPhoto = vi.fn();
 const analyserTexteProfil = vi.fn();
 vi.mock('@/lib/fraude/analyse', () => ({ __esModule: true, analyserPhoto, analyserTexteProfil }));
+const verifierBlocages = vi.fn();
+vi.mock('@/lib/fraude/comportement', () => ({ __esModule: true, verifierBlocages }));
+const appareilPartage = vi.fn(async () => {});
+vi.mock('@/lib/fraude/inscription', () => ({ __esModule: true, appareilPartage }));
 
 const { POST } = await import('../route');
 const lancer = (body: unknown = {}) => POST(new NextRequest('http://x/api/admin/profils-a-verifier/analyse', { method: 'POST', body: JSON.stringify(body) }));
-const compte = (id: string, photos: string[] = []) => ({ id, displayName: `M${id}`, profile: { bio: 'Salut', photos } });
+const compte = (id: string, photos: string[] = []) => ({ id, displayName: `M${id}`, deviceId: `d-${id}`, profile: { bio: 'Salut', photos } });
+const SANS_INVITATION = { inviter: false };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -35,7 +40,15 @@ describe('POST /api/admin/profils-a-verifier/analyse (#444, FR-011)', () => {
     const body = await (await lancer()).json();
     expect(body).toEqual({ profils: 10, photos: 2, echecs: 0, suivant: 'u9' });
     expect(analyserTexteProfil).toHaveBeenCalledTimes(10);
-    expect(analyserPhoto).toHaveBeenCalledWith({ userId: 'u0', photoKey: 'p/a.webp', buffer: Buffer.from('img') });
+    expect(analyserPhoto).toHaveBeenCalledWith({ userId: 'u0', photoKey: 'p/a.webp', buffer: Buffer.from('img') }, SANS_INVITATION);
+  });
+
+  it('spec 010 : relance blocages et appareil partagé, sans jamais inviter', async () => {
+    fakeDb.user.findMany.mockResolvedValue([compte('u1')]);
+    await lancer();
+    expect(analyserTexteProfil).toHaveBeenCalledWith({ userId: 'u1', displayName: 'Mu1', bio: 'Salut' }, SANS_INVITATION);
+    expect(verifierBlocages).toHaveBeenCalledWith('u1', expect.any(Date), SANS_INVITATION);
+    expect(appareilPartage).toHaveBeenCalledWith({ userId: 'u1', deviceId: 'd-u1' }, SANS_INVITATION);
   });
 
   it('reprend après le curseur, et clôt le tour sur un lot court', async () => {
