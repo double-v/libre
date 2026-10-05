@@ -1,4 +1,6 @@
 import { getDb } from '@/lib/db';
+import { douteSerieux, signauxRecents, TYPES_CONTEXTE } from './fiabilite';
+import { evaluerCompte } from './invitation';
 
 /**
  * Signaux de faux profil (spec 006). Un signal est un indice, jamais une
@@ -15,7 +17,18 @@ export type TypeSignal =
   | 'photo_recuperee'
   | 'signalement_faux'
   /** #437 : âge mis en doute par un membre — traité en priorité. */
-  | 'signalement_mineur';
+  | 'signalement_mineur'
+  // Spec 010 — forts.
+  | 'bloque_repetition'
+  | 'retour_banni'
+  | 'lexique_arnaque'
+  | 'likes_rafale'
+  | 'verification_refusee'
+  // Spec 010 — indices de contexte (faibles, voir `TYPES_CONTEXTE`).
+  | 'appareil_partage'
+  | 'inscriptions_groupees'
+  | 'fuseau_incoherent'
+  | 'profil_express';
 
 export type ForceSignal = 'faible' | 'fort';
 
@@ -57,7 +70,8 @@ export function cleDeSignal(type: TypeSignal, s: Pick<NouveauSignal, 'cle' | 'ph
  * membre (écriture de bio, envoi de photo). Journal sans PII.
  * @returns vrai si le signal est enregistré (ou existait déjà).
  */
-export async function enregistrerSignal(s: NouveauSignal): Promise<boolean> {
+export async function enregistrerSignal(s: NouveauSignal, options: { inviter?: boolean } = {}): Promise<boolean> {
+  let enregistre = false;
   try {
     const cle = cleDeSignal(s.type, s);
     await getDb().profileSignal.upsert({
@@ -74,11 +88,16 @@ export async function enregistrerSignal(s: NouveauSignal): Promise<boolean> {
         cle,
       },
     });
-    return true;
+    enregistre = true;
   } catch (err) {
     console.warn('fraude.signal.failed', { type: s.type, message: (err as Error)?.message?.slice(0, 80) });
     return false;
   }
+  // Spec 010 : un signal peut faire basculer le compte en « douteux » et
+  // déclencher l'invitation au selfie. Pas pendant un rattrapage, pour ne pas
+  // inviter d'un coup tous les comptes anciens au déploiement.
+  if (options.inviter !== false) await evaluerCompte(s.userId);
+  return enregistre;
 }
 
 /**
@@ -86,16 +105,21 @@ export async function enregistrerSignal(s: NouveauSignal): Promise<boolean> {
  * à la dernière décision, un fort, ou deux, ou un signalement « faux profil ».
  * « Photo récupérée » seule ne suffit jamais (FR-008) : beaucoup de vrais
  * membres publient une photo déjà en ligne ailleurs.
+ *
+ * Spec 010 : les indices de contexte (appareil partagé, fuseau…) ne comptent
+ * pas dans « deux signaux » — deux explications banales feraient sinon entrer
+ * un vrai membre. Ils n'agissent qu'à trois de types différents (FR-014).
  */
 export function dansLaFile(
   signaux: ReadonlyArray<{ type: string; force: string; createdAt: Date }>,
   decidedAt: Date | null,
 ): boolean {
-  const recents = signaux.filter((s) => !decidedAt || s.createdAt > decidedAt);
-  if (recents.every((s) => s.type === 'photo_recuperee')) return false;
+  const recents = signauxRecents(signaux, decidedAt);
+  if (douteSerieux(recents)) return true;
+  const hors = recents.filter((s) => !TYPES_CONTEXTE.has(s.type));
+  if (hors.every((s) => s.type === 'photo_recuperee')) return false;
   return (
-    recents.some((s) => s.force === 'fort') ||
-    recents.some((s) => s.type === 'signalement_faux' || s.type === 'signalement_mineur') ||
-    recents.length >= 2
+    hors.some((s) => s.type === 'signalement_faux' || s.type === 'signalement_mineur') ||
+    hors.length >= 2
   );
 }

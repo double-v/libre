@@ -2,12 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const upsert = vi.fn();
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => ({ profileSignal: { upsert } }) }));
+const evaluerCompte = vi.fn();
+vi.mock('../invitation', () => ({ evaluerCompte }));
 
 const { enregistrerSignal, cleDeSignal, dansLaFile } = await import('../signaux');
 
 beforeEach(() => {
   upsert.mockReset();
   upsert.mockResolvedValue({});
+  evaluerCompte.mockReset();
 });
 
 describe('cleDeSignal', () => {
@@ -73,5 +76,36 @@ describe('dansLaFile', () => {
 
   it('un signalement « semble mineur » suffit, même faible (#437)', () => {
     expect(dansLaFile([s('signalement_mineur', 'faible')], null)).toBe(true);
+  });
+
+  it('deux indices de contexte ne suffisent pas (spec 010, FR-011)', () => {
+    expect(dansLaFile([s('appareil_partage', 'faible'), s('fuseau_incoherent', 'faible')], null)).toBe(false);
+    expect(dansLaFile([s('appareil_partage', 'faible'), s('photo_recuperee', 'faible')], null)).toBe(false);
+  });
+
+  it('trois indices de contexte de types différents suffisent (FR-014)', () => {
+    expect(dansLaFile([s('appareil_partage', 'faible'), s('fuseau_incoherent', 'faible'), s('profil_express', 'faible')], null)).toBe(true);
+  });
+
+  it('un indice de contexte ne compte pas comme second signal de la spec 006', () => {
+    expect(dansLaFile([s('contact_bio', 'faible'), s('appareil_partage', 'faible')], null)).toBe(false);
+  });
+});
+
+describe('enregistrerSignal → invitation (spec 010)', () => {
+  it('évalue le compte après un signal enregistré', async () => {
+    await enregistrerSignal({ userId: 'u1', type: 'lexique_arnaque', force: 'fort', cle: 'pcs' });
+    expect(evaluerCompte).toHaveBeenCalledWith('u1');
+  });
+
+  it('n’invite pas pendant un rattrapage', async () => {
+    await enregistrerSignal({ userId: 'u1', type: 'lexique_arnaque', force: 'fort', cle: 'pcs' }, { inviter: false });
+    expect(evaluerCompte).not.toHaveBeenCalled();
+  });
+
+  it('n’invite pas si l’écriture du signal a échoué', async () => {
+    upsert.mockRejectedValueOnce(new Error('panne'));
+    await enregistrerSignal({ userId: 'u1', type: 'lexique_arnaque', force: 'fort', cle: 'pcs' });
+    expect(evaluerCompte).not.toHaveBeenCalled();
   });
 });

@@ -24,6 +24,10 @@ model User {
   /// Mise en retrait (spec 006) : posée par la décision « vérification »,
   /// levée par le badge selfie. Privée — jamais lue par autrui.
   retraitAt         DateTime?
+  /// Invitation automatique à la vérification (spec 010) : posée quand le
+  /// compte devient « douteux », levée par le badge. Sans effet sur la
+  /// visibilité. Privée — lue par soi seulement, en booléen.
+  verifInviteeAt    DateTime?
   squareBannedUntil DateTime? @map("square_banned_until")
   lastActive        DateTime  @updatedAt
   skin              String? // Skin choisi par l'utilisateur (cf. #224). null = défaut du site / localStorage.
@@ -169,7 +173,10 @@ model ProfileSignal {
   id          String   @id @default(uuid()) @db.Uuid
   userId      String   @db.Uuid
   /// contact_pseudo · contact_bio · contact_photo · photo_reutilisee ·
-  /// photo_bannie · photo_recuperee · signalement_faux
+  /// photo_bannie · photo_recuperee · signalement_faux · signalement_mineur ·
+  /// (spec 010) bloque_repetition · retour_banni · lexique_arnaque ·
+  /// likes_rafale · verification_refusee · appareil_partage ·
+  /// inscriptions_groupees · fuseau_incoherent · profil_express
   type        String
   /// faible · fort
   force       String
@@ -229,6 +236,33 @@ model BannedPhotoFingerprint {
 
   @@index([bannedAt])
   @@map("banned_photo_fingerprints")
+}
+
+/// Empreintes HMAC de l'appareil et de l'e-mail d'un compte banni (spec 010,
+/// FR-002) : jamais la valeur en clair, sans clé étrangère, purgées à 1 an.
+model BannedIdentityFingerprint {
+  id           String   @id @default(uuid()) @db.Uuid
+  /// appareil · email
+  kind         String
+  hash         String
+  bannedUserId String   @db.Uuid
+  bannedAt     DateTime @default(now())
+
+  @@index([kind, hash])
+  @@index([bannedAt])
+  @@map("banned_identity_fingerprints")
+}
+
+/// Empreinte HMAC de l'IP d'inscription (spec 010, FR-009), purgée à 7 jours.
+model SignupTrace {
+  id        String   @id @default(uuid()) @db.Uuid
+  ipHash    String
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  @@index([ipHash, createdAt])
+  @@index([createdAt])
+  @@map("signup_traces")
 }
 
 model SiteConfig {
@@ -316,6 +350,7 @@ model Like {
   liked User @relation("ReceivedLikes", fields: [likedId], references: [id], onDelete: Cascade)
 
   @@id([likerId, likedId])
+  @@index([likerId, createdAt])
   @@map("likes")
 }
 
@@ -449,13 +484,14 @@ model Feedback {
 
 model ModerationLog {
   id           String   @id @default(uuid()) @db.Uuid
-  adminId      String   @db.Uuid
+  /// null = action automatique (spec 010, invitation à la vérification).
+  adminId      String?  @db.Uuid
   targetUserId String   @db.Uuid
   action       String
   reason       String?
   createdAt    DateTime @default(now())
 
-  admin      User @relation("ModerationActions", fields: [adminId], references: [id], onDelete: Cascade)
+  admin      User? @relation("ModerationActions", fields: [adminId], references: [id], onDelete: Cascade)
   targetUser User @relation("ModerationTargets", fields: [targetUserId], references: [id], onDelete: Cascade)
 
   @@index([action])
