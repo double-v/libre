@@ -65,4 +65,14 @@ describe('en-tête du fil (#417)', () => {
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
     expect(screen.getByText('30 min')).toBeInTheDocument();
   });
+
+  it('#369 — « Signaler » est dans le menu, et ouvre directement le signalement', async () => {
+    const user = userEvent.setup();
+    render(<ChatPage />);
+    await user.click(await screen.findByRole('button', { name: 'Plus d’actions' }));
+    await user.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Signaler Marie-Bernadette' }));
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Signaler Marie-Bernadette' })).toBeInTheDocument();
+    expect(screen.getByText(/Nous ne lisons pas vos messages/)).toBeInTheDocument();
+  });
 });

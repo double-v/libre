@@ -7,7 +7,9 @@ import { SENSITIVITY_LEVELS, SENSITIVITY_THRESHOLDS } from '@/lib/photo-sensitiv
 import { validatePseudo } from '@/lib/pseudo';
 
 // `minor` (#437) : le filet communautaire sur l'âge, faute de preuve d'âge gratuite.
-const VALID_REPORT_REASONS = ['harassment', 'spam', 'fake', 'minor', 'inappropriate', 'other'] as const;
+// « scam » est séparé de « spam » depuis #369 : une demande d'argent n'est pas
+// une publicité. Les signalements antérieurs gardent « spam » pour les deux.
+const VALID_REPORT_REASONS = ['harassment', 'scam', 'spam', 'fake', 'minor', 'inappropriate', 'other'] as const;
 
 const MIN_AGE = 18;
 

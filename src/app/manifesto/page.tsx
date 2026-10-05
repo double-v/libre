@@ -59,7 +59,7 @@ const onEstLibresDe = [
   {
     title: 'Choisir qui on voit',
     detail:
-      "Géolocalisation transparente, filtres utiles, pas d'algorithme opaque qui décide pour vous. Vous voyez les gens, pas un classement sponsorisé.",
+      "Position floutée, filtres utiles, et pas d'algorithme opaque : « Pour toi » montre d'abord les profils avec une photo, puis les plus actifs. Vous voyez les gens, pas un classement sponsorisé.",
   },
   {
     title: 'Garder nos messages pour nous',
@@ -69,7 +69,7 @@ const onEstLibresDe = [
   {
     title: 'Quitter quand on veut',
     detail:
-      "Suppression de compte en un clic, données effacées, photos parties. Pas de période de rétention cachée, pas de relance agressive par mail.",
+      "Vous supprimez votre compte depuis vos paramètres, en confirmant avec votre mot de passe : données effacées, photos parties. Les durées de conservation sont écrites dans la politique de confidentialité, et on ne vous relance pas par mail.",
   },
 ];
 
@@ -87,7 +87,7 @@ const onRefuseDe = [
   {
     title: 'Gonfler les chiffres avec des bots',
     detail:
-      "Jamais de faux profils. Jamais. Les autres le font, on l'a vu : c'est nul. On préfère un app petite et honnête qu'un zoo à robots.",
+      "Jamais de faux profils. Jamais. Les autres le font, on l'a vu : c'est nul. On préfère une app petite et honnête qu'un zoo à robots.",
   },
   {
     title: 'Vous garder captif',
@@ -193,34 +193,47 @@ export default function ManifestoPage() {
             >
               Comment on finance la maison
             </h2>
+            {/* Ne promettre que ce qui existe (#494) : aucun don n'est collecté
+                tant que la page de dons (#10) n'est pas livrée. Le jour où
+                elle l'est, cette section change avec elle. */}
             <p className="mb-6 text-base text-muted">
               Si on ne facture rien aux utilisateurs, qui paie la note ? C&rsquo;est
-              la question piège qu&rsquo;on nous pose le plus souvent. Réponse
-              honnête&nbsp;: quelques personnes de bonne volonté, et beaucoup
-              de dons.
+              la question qu&rsquo;on nous pose le plus souvent. Réponse
+              honnête&nbsp;: pour l&rsquo;instant, Libre coûte très peu, et
+              ce peu est payé par qui le construit.
             </p>
             <div className="space-y-4">
               <div className="rounded-xl bg-surface/70 p-5 shadow-sm">
                 <p className="font-semibold text-content">
-                  💛 Des dons, c&rsquo;est tout
+                  🌱 Petit, donc presque gratuit
                 </p>
                 <p className="mt-1 text-sm text-muted">
-                  Pas de VC, pas de fonds levés, pas de prêteur. Quand on a
-                  besoin d&rsquo;un serveur en plus, on lance un appel aux
-                  dons. Quand les dons dépassent, on garde le surplus pour le
-                  mois suivant. C&rsquo;est bête comme bonjour, et ça
-                  marche.
+                  Libre tourne sur les offres gratuites de ses hébergeurs. Les
+                  seuls frais réels, le nom de domaine et quelques outils de
+                  développement, sont réglés de sa poche par la personne qui
+                  construit Libre, bénévolement.
                 </p>
               </div>
               <div className="rounded-xl bg-surface/70 p-5 shadow-sm">
                 <p className="font-semibold text-content">
-                  📖 Budget publié tous les 6 mois
+                  💛 Les dons, pas encore
                 </p>
                 <p className="mt-1 text-sm text-muted">
-                  Hébergement, base de données, temps bénévole, frais
-                  juridiques&hellip; on met les chiffres en ligne, en brut.
-                  Pas de « post-pub », pas de slide corporate. Vous voyez ce
-                  qu&rsquo;on voit.
+                  On ne vous a encore jamais demandé un euro. Une page de dons
+                  viendra le jour où les frais dépasseront ce qu&rsquo;on peut
+                  couvrir sans aide. Pas de capital-risque, pas de fonds levés,
+                  pas de prêteur&nbsp;: ça, c&rsquo;est vrai aujourd&rsquo;hui
+                  et ça le restera.
+                </p>
+              </div>
+              <div className="rounded-xl bg-surface/70 p-5 shadow-sm">
+                <p className="font-semibold text-content">
+                  📖 Chaque euro, publié
+                </p>
+                <p className="mt-1 text-sm text-muted">
+                  Le jour où un don arrive, on publie ce qu&rsquo;il paie&nbsp;:
+                  hébergement, nom de domaine, outils, en chiffres bruts. Pas
+                  de slide corporate. Vous verrez ce qu&rsquo;on voit.
                 </p>
               </div>
               <div className="rounded-xl bg-surface/70 p-5 shadow-sm">

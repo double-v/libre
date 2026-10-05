@@ -18,12 +18,15 @@ import { toast } from '@/lib/toast';
  * présélectionner (signaler quelqu'un n'implique pas vouloir l'effacer).
  */
 
+// Aucun motif n'est présélectionné, même depuis une conversation (#369) :
+// présélectionner orienterait le choix.
 const REASONS = [
+  { value: 'scam', label: 'Arnaque ou demande d’argent' },
   { value: 'harassment', label: 'Harcèlement ou intimidation' },
-  { value: 'inappropriate', label: 'Contenu inapproprié' },
+  { value: 'spam', label: 'Spam ou publicité' },
   { value: 'fake', label: 'Faux profil' },
   { value: 'minor', label: 'Semble avoir moins de 18 ans' },
-  { value: 'spam', label: 'Spam ou arnaque' },
+  { value: 'inappropriate', label: 'Contenu inapproprié' },
   { value: 'other', label: 'Autre' },
 ] as const;
 
@@ -34,14 +37,21 @@ export default function ReportUserModal({
   displayName,
   onClose,
   onBlocked,
+  depuisConversation = false,
 }: {
   userId: string;
   displayName: string;
   onClose: () => void;
   /** Appelé après un blocage réussi — la surface appelante doit se retirer. */
   onBlocked?: () => void;
+  /**
+   * Ouvert depuis le menu d'une conversation (#369) : on va droit au
+   * signalement, et on dit ce que l'équipe peut voir des messages (CGU §9.1),
+   * pour que signaler ne fasse pas croire qu'on les lit déjà.
+   */
+  depuisConversation?: boolean;
 }) {
-  const [step, setStep] = useState<Step>('choose');
+  const [step, setStep] = useState<Step>(depuisConversation ? 'report' : 'choose');
   const [reason, setReason] = useState<string | null>(null);
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
@@ -203,6 +213,16 @@ export default function ReportUserModal({
               placeholder="Ce qui s'est passé, si tu veux le préciser."
             />
 
+            {/* Exactement le §9.1 des CGU : accès humain seulement sur
+                signalement grave, et journalisé. Ni plus, ni moins. */}
+            {depuisConversation && (
+              <p className="mb-4 text-xs text-muted">
+                Nous ne lisons pas vos messages. Si ton signalement décrit quelque chose de grave,
+                une personne de l’équipe pourra lire les messages concernés. Cet accès est
+                enregistré (CGU, §9.1).
+              </p>
+            )}
+
             {error && <p className="mb-3 text-xs text-red-600 dark:text-red-400">{error}</p>}
 
             <div className="flex justify-end gap-3">
@@ -268,6 +288,11 @@ export default function ReportUserModal({
               Veux-tu aussi bloquer {displayName} ? Ce n&apos;est pas obligatoire —
               le signalement est traité dans tous les cas.
             </p>
+            {reason === 'scam' && (
+              <p className="mb-4 text-sm text-muted">
+                N’envoie rien en attendant, et ne partage aucun code reçu par SMS.
+              </p>
+            )}
 
             {error && <p className="mb-3 text-xs text-red-600 dark:text-red-400">{error}</p>}
 

@@ -33,6 +33,12 @@ adossée à du code et à un test de non-régression par route**. Une phrase qui
 décrit une garantie inexistante est un défaut de sécurité, pas un défaut de
 copie.
 
+Second corollaire (2026-10-05) : **aucune donnée personnelle de membre n'entre
+dans le contexte d'un agent IA**, quel que soit le fournisseur du modèle ou le
+harnais. Le suivi du flux des membres se fait par agrégats calculés hors du
+contexte (cases < 5 masquées), jamais par lecture de lignes. Détail :
+`CLAUDE.md`, « Données des membres hors de portée des agents IA ».
+
 ### IV. Le Design System fait loi
 
 Zéro valeur inline : couleurs, ombres, rayons et polices passent par les tokens
@@ -88,4 +94,4 @@ principe retiré ou redéfini, **MINOR** pour un principe ajouté, **PATCH** pou
 une clarification. Une spec qui contredit un principe doit soit être réécrite,
 soit s'accompagner d'un amendement assumé.
 
-**Version**: 1.0.0 | **Ratified**: 2026-08-15 | **Last Amended**: 2026-08-15
+**Version**: 1.1.0 | **Ratified**: 2026-08-15 | **Last Amended**: 2026-10-05

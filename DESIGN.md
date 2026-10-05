@@ -668,6 +668,24 @@ Règles :
   disent « il y avait quelque chose ici, tu ne le verras pas ». Une couleur
   d'alerte par message rendrait un fil ancien anxiogène.
 
+### Rappel anti-arnaque du fil (#369)
+
+Premier élément de **chaque** conversation, avant le premier message :
+`Alert variant="info" role="note"` (pas `alert` : un rappel permanent ne doit
+pas être annoncé comme une erreur à chaque ouverture). Il vit dans l'en-tête de
+la liste virtualisée quand il n'y a plus d'historique à charger, et dans l'état
+vide. Il ne se ferme pas et rien n'est mémorisé.
+
+Copie : « Libre ne te demandera jamais d'argent. Personne ici n'a de raison de
+te demander un virement, des coupons (PCS, Transcash, Neosurf), un code reçu
+par SMS ou un mot de passe. Si on te le demande, tu peux signaler cette
+personne depuis le menu ⋯. »
+
+Le menu ⋯ porte « Signaler {pseudo} », séparé des autres actions, en
+`text-terracotta`. Il ouvre `ReportUserModal depuisConversation` : droit au
+signalement, aucun motif présélectionné, et une phrase qui dit exactement le
+§9.1 des CGU (accès humain seulement sur signalement grave, journalisé).
+
 ## Logo
 
 ### Heart-Sun (Cœur-soleil)
