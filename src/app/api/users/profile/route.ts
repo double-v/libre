@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { nextStep } from '@/lib/onboarding';
 import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
@@ -8,6 +8,8 @@ import { photoSensitivityMap } from '@/lib/photo-veil';
 import { formatCityLabel } from '@/lib/geocoding';
 import { detecterContact } from '@/lib/fraude/contact';
 import { enregistrerSignal } from '@/lib/fraude/signaux';
+import { signalerLexique } from '@/lib/fraude/lexique';
+import { fuseauIncoherent } from '@/lib/fraude/fuseau';
 import { MESSAGE_CONTACT } from '@/lib/fraude/messages';
 import { aConsentementSensible, donnerConsentementSensible, porteDonneeSensible, traceConsentement } from '@/lib/consentement-sensible';
 
@@ -20,7 +22,7 @@ export async function GET() {
 
     const user = await getDb().user.findUnique({
       where: { id: session.user.id },
-      select: { displayName: true, isVerified: true, mustRenameDisplayName: true, retraitAt: true, profile: true },
+      select: { displayName: true, isVerified: true, mustRenameDisplayName: true, retraitAt: true, verifInviteeAt: true, profile: true },
     });
 
     if (!user) {
@@ -47,6 +49,9 @@ export async function GET() {
         // Mise en retrait (spec 006) : un booléen, jamais la date — l'app
         // invite à se faire vérifier, sans rien dire d'un soupçon.
         retrait: user.retraitAt !== null && user.retraitAt !== undefined,
+        // Invitation automatique (spec 010) : un booléen pour soi seul, et la
+        // clé n'existe pas sans invitation — ni date, ni motif, ni niveau.
+        ...(user.verifInviteeAt ? { invitationVerification: true } : {}),
         photoSensitivity,
         sensitiveConsent,
       },
@@ -169,6 +174,20 @@ export async function PUT(request: Request) {
       where: { userId: session.user.id },
       update: updateData,
       create: createData as never,
+    });
+
+    // Spec 010 : vocabulaire d'arnaque dans la bio (signal, jamais de refus)
+    // et fuseau du navigateur comparé à une ville manuelle. Après la réponse :
+    // une analyse lente ou en panne ne touche pas l'enregistrement.
+    const userId = session.user.id;
+    const bio = data.bio;
+    const ville = data.city;
+    const fuseau = data.fuseau;
+    after(async () => {
+      if (bio) await signalerLexique(userId, bio);
+      if (ville && fuseauIncoherent(fuseau, ville.country)) {
+        await enregistrerSignal({ userId, type: 'fuseau_incoherent', force: 'faible', cle: 'fuseau' });
+      }
     });
 
     return NextResponse.json({ profile }, { status: 200 });

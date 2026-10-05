@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { getDb } from '@/lib/db';
 import { registerSchema } from '@/lib/validators';
@@ -8,6 +8,7 @@ import { verifyTurnstile } from '@/lib/turnstile';
 import { sendVerificationEmail } from '@/lib/email-send';
 import { rateLimit, limits } from '@/lib/rate-limit';
 import { getClientIp } from '@/lib/client-ip';
+import { analyserInscription } from '@/lib/fraude/inscription';
 
 // Startup validation: TURNSTILE_SECRET_KEY and TURNSTILE_SITE_KEY must be
 // configured together. The site key is needed on the client widget, the
@@ -186,6 +187,10 @@ export async function POST(request: Request) {
     const verifyToken = await createVerificationToken(user.id, normalizedEmail);
     const verifyUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${verifyToken}`;
     await sendVerificationEmail(normalizedEmail, verifyUrl);
+
+    // Spec 010 : retour d'un banni, appareil partagé, inscriptions groupées.
+    // Après la réponse ; aucune valeur en clair ne quitte cette requête.
+    after(() => analyserInscription({ userId: user.id, deviceId, normalizedEmail, ip }));
 
     return NextResponse.json({ user }, { status: 201 });
   } catch (error) {

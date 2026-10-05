@@ -43,6 +43,11 @@ export const REGLES_RETENTION = [
   { id: 'signauxTranches', donnees: 'Indices de faux profil sur un dossier clos sans suite', duree: '1 an après la décision « rien à signaler »', jours: 365, depuis: 'décision' },
   // Spec 006 : ce qu'on garde d'un compte banni pour reconnaître ses photos.
   { id: 'empreintesBannies', donnees: 'Empreintes des photos d’un compte banni (aucune photo)', duree: '1 an après le bannissement', jours: 365, depuis: 'bannissement' },
+  // Spec 010 : reconnaître un compte banni qui revient sur le même appareil
+  // ou avec la même adresse — empreintes chiffrées, jamais la valeur.
+  { id: 'empreintesIdentiteBannies', donnees: 'Empreintes chiffrées de l’appareil et de l’adresse e-mail d’un compte banni (aucune valeur lisible)', duree: '1 an après le bannissement', jours: 365, depuis: 'bannissement' },
+  // Spec 010 : compter les inscriptions groupées depuis une même connexion.
+  { id: 'tracesInscription', donnees: 'Empreinte chiffrée de l’adresse IP d’inscription (aucune adresse lisible)', duree: '7 jours', jours: 7, depuis: 'création' },
   // #437 : un compte masqué pour vérification qui ne se fait jamais vérifier
   // ne reste pas indéfiniment en base.
   { id: 'retraitsSansSelfie', donnees: 'Compte masqué pour vérification, jamais vérifié (compte entier)', duree: '90 jours après la mise en retrait, sauf selfie en cours d’examen', jours: 90, depuis: 'mise en retrait' },

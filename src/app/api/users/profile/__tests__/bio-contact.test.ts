@@ -19,6 +19,12 @@ vi.mock('@/lib/photo-veil', () => ({ __esModule: true, photoSensitivityMap: vi.f
 const enregistrerSignal = vi.fn(async () => true);
 vi.mock('@/lib/fraude/signaux', () => ({ __esModule: true, enregistrerSignal }));
 
+// after() (spec 010) : exécuté tout de suite, hors du contexte de requête Next.
+vi.mock('next/server', async (importOriginal) => {
+  const orig = await importOriginal<typeof import('next/server')>();
+  return { ...orig, after: (task: () => unknown) => { void Promise.resolve().then(task); } };
+});
+
 const { PUT } = await import('../route');
 
 const ME_ID = randomUUID();

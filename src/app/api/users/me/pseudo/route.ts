@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { z } from 'zod';
 import { getDb } from '@/lib/db';
@@ -7,6 +7,7 @@ import { rateLimit, limits } from '@/lib/rate-limit';
 import { pseudoSchema } from '@/lib/validators';
 import { normalizePseudo, validatePseudo } from '@/lib/pseudo';
 import { enregistrerSignal } from '@/lib/fraude/signaux';
+import { signalerLexique } from '@/lib/fraude/lexique';
 
 const bodySchema = z.object({ displayName: pseudoSchema });
 
@@ -52,6 +53,10 @@ export async function PATCH(request: Request) {
       data: { displayName: parsed.data.displayName, mustRenameDisplayName: false },
       select: { displayName: true },
     });
+
+    // Vocabulaire d'arnaque (spec 010) : signal après la réponse, sans refus.
+    const userId = session.user.id;
+    after(() => signalerLexique(userId, user.displayName));
 
     return NextResponse.json({ displayName: user.displayName });
   } catch (error) {

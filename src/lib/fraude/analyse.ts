@@ -1,6 +1,7 @@
 import { lireTexte } from './lecture-photo';
 import { detecterContact } from './contact';
 import { enregistrerSignal } from './signaux';
+import { signalerLexique } from './lexique';
 import { contientUnContact } from '@/lib/contact';
 import { getDb } from '@/lib/db';
 import { empreinte, memePhoto } from './empreinte';
@@ -67,18 +68,24 @@ async function comparerEmpreinte(userId: string, photoKey: string, buffer: Buffe
  * ont été écrits avant la règle. On ne les refuse pas après coup — on les
  * signale, et un humain tranche.
  */
-export async function analyserTexteProfil({ userId, displayName, bio }: { userId: string; displayName: string; bio: string }): Promise<void> {
+export async function analyserTexteProfil(
+  { userId, displayName, bio }: { userId: string; displayName: string; bio: string },
+  options: { inviter?: boolean } = {},
+): Promise<void> {
   try {
+    // Spec 010 : vocabulaire d'arnaque, sur la bio comme sur le pseudo.
+    await signalerLexique(userId, `${displayName}\n${bio}`, options);
     const contacts = detecterContact(bio);
     const repere = contacts.find((c) => c.force === 'fort') ?? contacts[0];
     if (repere) {
-      await enregistrerSignal({ userId, type: 'contact_bio', force: repere.force, extrait: repere.extrait });
+      await enregistrerSignal({ userId, type: 'contact_bio', force: repere.force, extrait: repere.extrait }, options);
     }
     // Même règle que l'écriture du pseudo (#459).
     if (contientUnContact(displayName, 'pseudo')) {
-      await enregistrerSignal({ userId, type: 'contact_pseudo', force: 'fort', extrait: displayName });
+      await enregistrerSignal({ userId, type: 'contact_pseudo', force: 'fort', extrait: displayName }, options);
     }
   } catch (err) {
     console.warn('fraude.analyse.failed', { message: (err as Error)?.message?.slice(0, 80) });
   }
 }
+

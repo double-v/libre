@@ -77,7 +77,8 @@ export default function ConfidentialitePage() {
         <li>Identifiant d&apos;appareil (deviceId, stocké en localStorage)</li>
         <li>Jeton anti-robot Turnstile (Cloudflare, consulté puis supprimé)</li>
         <li>User-Agent (collecté uniquement lors d&apos;un signalement de bug via le formulaire de feedback)</li>
-        <li>Adresses IP (traitées par Cloudflare et Vercel, pas stockées par Libre)</li>
+        <li>Adresses IP : traitées au passage par Cloudflare et Vercel ; conservées par Libre seulement avec la trace de votre consentement (voir §5), et, à l&apos;inscription, sous la forme d&apos;une empreinte chiffrée gardée 7 jours (voir §4)</li>
+        <li>Fuseau horaire de votre navigateur : comparé à la ville que vous saisissez à la main, puis oublié — il n&apos;est jamais enregistré</li>
       </ul>
 
       <h3>2.6 Notifications hors de l&apos;application</h3>
@@ -98,7 +99,8 @@ export default function ConfidentialitePage() {
         <li>Signalements (raison, description)</li>
         <li>Demandes de vérification (selfie, statut)</li>
         <li>Favoris (likes), blocages, matchs</li>
-        <li>Journal de modération (actions des administrateurs)</li>
+        <li>Indices de sécurité calculés sur votre compte (voir §4 et §11)</li>
+        <li>Journal de modération (actions des administrateurs, et invitations automatiques à la vérification)</li>
       </ul>
 
       {/* ─── 3. Bases légales ─── */}
@@ -175,6 +177,16 @@ export default function ConfidentialitePage() {
           empreinte de chaque photo, c&apos;est-à-dire un nombre qui ne permet pas de reconstituer
           l&apos;image, pour reconnaître une même photo publiée sur plusieurs comptes. Les empreintes
           d&apos;un compte banni sont conservées un an.
+          <br />
+          Nous relevons aussi des indices de comportement, à partir de données que le service
+          possède déjà : un compte bloqué par plusieurs personnes en peu de temps, des « j&apos;aime »
+          envoyés en rafale juste après l&apos;inscription, un vocabulaire typique des arnaques au
+          paiement (coupons prépayés, rencontres tarifées), un appareil ou une adresse e-mail déjà
+          utilisés par un compte banni, plusieurs inscriptions depuis la même connexion. Pour ces
+          comparaisons, l&apos;identifiant d&apos;appareil, l&apos;adresse e-mail et l&apos;adresse IP sont
+          transformés en empreintes chiffrées, illisibles sans une clé que seuls nos serveurs
+          détiennent. Aucun de ces indices n&apos;est envoyé à un tiers ni analysé par une
+          intelligence artificielle. Leurs durées de conservation figurent au §5.
         </li>
         <li>
           <strong>Amélioration du service et réponse à vos retours</strong>{' '}: feedback utilisateur (avec
@@ -328,7 +340,7 @@ export default function ConfidentialitePage() {
       <h2>10. Cookies et traceurs</h2>
       <p>
         Libre utilise des cookies strictement nécessaires au fonctionnement du service. Nous n&apos;utilisons
-        <strong> aucun cookie publicitaire, de tiers ou de追踪</strong>.
+        <strong> aucun cookie publicitaire, de tiers ou de pistage</strong>.
       </p>
 
       <h3>10.1 Cookies essentiels (pas de consentement requis)</h3>
@@ -358,7 +370,7 @@ export default function ConfidentialitePage() {
           </tr>
           <tr>
             <td>libre-theme</td>
-            <th>Préférence de thème (clair/sombre)</th>
+            <td>Préférence de thème (clair/sombre)</td>
             <td>1 an</td>
           </tr>
           <tr>
@@ -386,15 +398,24 @@ export default function ConfidentialitePage() {
       {/* ─── 11. Profilage ─── */}
       <h2>11. Profilage et décisions automatisées</h2>
       <p>
-        Libre ne pratique <strong>aucun profilage</strong>{' '}au sens du RGPD (art. 22).
-        L&apos;algorithme de découverte se contente de filtrer par localisation, âge et préférences
-        déclarées — il ne note pas les utilisateurs, ne prédit pas de comportement et ne prend
-        aucune décision automatisée produisant des effets juridiques.
+        L&apos;algorithme de découverte ne note pas les utilisateurs : il filtre par localisation, âge
+        et préférences déclarées, sans rien prédire de votre comportement.
       </p>
       <p>
-        Les indices de faux profil ne déclenchent aucune sanction automatique. Ils peuvent seulement
-        placer un profil dans une liste examinée par un membre de l&apos;équipe, qui décide lui-même :
-        ne rien faire, demander une vérification par selfie, ou bannir le compte.
+        Pour protéger les membres des faux profils et des arnaques, nous calculons en revanche un{' '}
+        <strong>indice de fiabilité</strong>{' '}à partir des indices décrits au §4. C&apos;est un
+        profilage au sens du RGPD, fondé sur notre intérêt légitime (art. 6(1)(f)) : la sécurité des
+        personnes qui utilisent Libre. Cet indice n&apos;est visible que de l&apos;équipe ; il n&apos;apparaît
+        jamais aux autres membres et ne change pas la façon dont votre profil leur est présenté.
+      </p>
+      <p>
+        Quand plusieurs indices sérieux s&apos;accumulent sur un compte qui n&apos;a pas encore fait la
+        vérification par selfie, l&apos;application l&apos;invite automatiquement à la faire. Cette
+        invitation ne masque pas le profil et n&apos;empêche pas d&apos;écrire. Aucune sanction n&apos;est
+        automatique (art. 22) : seul un membre de l&apos;équipe peut décider de ne rien faire, de masquer
+        un profil jusqu&apos;à sa vérification, ou de bannir un compte. Vous pouvez contester une décision
+        et demander une intervention humaine en écrivant à{' '}
+        <a href="mailto:dpo@getlibre.fr">dpo@getlibre.fr</a>, ou vous opposer à ce traitement (art. 21).
       </p>
 
       {/* ─── 12. Mineurs ─── */}

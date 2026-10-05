@@ -23,6 +23,13 @@ const update = vi.fn();
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => ({ user: { update } }) }));
 const enregistrerSignal = vi.fn(async () => true);
 vi.mock('@/lib/fraude/signaux', () => ({ __esModule: true, enregistrerSignal }));
+const signalerLexique = vi.fn();
+vi.mock('@/lib/fraude/lexique', () => ({ __esModule: true, signalerLexique }));
+// after() (spec 010) : exécuté tout de suite, hors du contexte de requête Next.
+vi.mock('next/server', async (importOriginal) => {
+  const orig = await importOriginal<typeof import('next/server')>();
+  return { ...orig, after: (task: () => unknown) => { void Promise.resolve().then(task); } };
+});
 
 const req = (body: unknown) =>
   new Request('http://localhost/api/users/me/pseudo', {
