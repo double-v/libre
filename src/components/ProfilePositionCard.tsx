@@ -46,11 +46,21 @@ export const POSITION_COPY = {
   error: 'Impossible d’enregistrer ta ville, réessaie plus tard.',
 } as const;
 
+function fuseauNavigateur(): string | undefined {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function defaultSaveCity(city: CityCandidate | null): Promise<void> {
   const res = await fetch('/api/users/profile', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ city }),
+    // Fuseau du navigateur (spec 010) : comparé à la ville puis oublié par le
+    // serveur. Absent si le navigateur ne le donne pas.
+    body: JSON.stringify(city ? { city, fuseau: fuseauNavigateur() } : { city }),
   });
   if (!res.ok) throw new Error(`city_save_${res.status}`);
 }

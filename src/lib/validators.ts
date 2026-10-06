@@ -107,6 +107,9 @@ export const profileUpdateSchema = z.object({
   // (#425) : évite un aller-retour et une fenêtre où la case est cochée mais
   // pas encore enregistrée.
   sensitiveConsent: z.literal(true).optional(),
+  // Fuseau du navigateur, joint à une ville manuelle seulement (spec 010,
+  // FR-007). Comparé puis oublié : jamais écrit en base.
+  fuseau: z.string().max(64).optional(),
 }).refine((data) => {
   if (data.ageMin !== undefined && data.ageMax !== undefined) {
     return data.ageMin <= data.ageMax;

@@ -1,4 +1,5 @@
 import { NextResponse, after } from 'next/server';
+import { verifierProfilExpress, verifierRythmeLikes } from '@/lib/fraude/comportement';
 import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
@@ -157,6 +158,12 @@ export async function POST(request: Request) {
         ]);
       });
     }
+
+    // Spec 010 : rafale de likes et profil monté d'un coup, après la réponse.
+    after(async () => {
+      await verifierRythmeLikes(likerId);
+      await verifierProfilExpress(likerId);
+    });
 
     return NextResponse.json(
       {

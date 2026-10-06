@@ -97,6 +97,12 @@ function regles(now: Date): Record<RegleId, Regle> {
     empreintesBannies: async () =>
       (await db.bannedPhotoFingerprint.deleteMany({ where: { bannedAt: { lt: seuil('empreintesBannies', now) } } })).count,
 
+    empreintesIdentiteBannies: async () =>
+      (await db.bannedIdentityFingerprint.deleteMany({ where: { bannedAt: { lt: seuil('empreintesIdentiteBannies', now) } } })).count,
+
+    tracesInscription: async () =>
+      (await db.signupTrace.deleteMany({ where: { createdAt: { lt: seuil('tracesInscription', now) } } })).count,
+
     // Le compte entier part, par le même chemin qu'une suppression voulue
     // (R2 compris). Jamais pendant qu'un selfie attend notre examen.
     retraitsSansSelfie: async () => {

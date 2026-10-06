@@ -2,7 +2,8 @@
  * Garde — le nom de ville saisi à la main ne sort jamais vers autrui (#402,
  * spec 004, SC-003). Même garde pour la modération des faux profils (spec 006,
  * #443) : la mise en retrait (`retraitAt`) et les signaux (`profileSignals`)
- * ne sont lus que par l'admin.
+ * ne sont lus que par l'admin. Spec 010 : l'invitation (`verifInviteeAt`) et
+ * l'indice de fiabilité non plus.
  *
  * `cityLabel` et `positionSource` sont privés : « le nom de ta ville n'est
  * visible que par toi » est une promesse affichée, donc adossée à un test par
@@ -120,6 +121,9 @@ function userOf(id: string, name: string) {
     // elle, ne doit jamais apparaître.
     retraitAt: null,
     profileSignals: [{ type: 'contact_photo', force: 'fort', extrait: SENTINEL_SIGNAL, cle: SENTINEL_SIGNAL }],
+    // Spec 010 : invitation posée sur TOUS les comptes — elle ne se lit que
+    // par soi, en booléen, sur GET /api/users/profile.
+    verifInviteeAt: new Date(),
   };
   user.profile = profileOf(id, user);
   return user;
@@ -180,6 +184,10 @@ function sansSignaux(text: string, cas = '') {
   expect(text, cas).not.toContain(SENTINEL_SIGNAL);
   expect(text, cas).not.toContain('retraitAt');
   expect(text, cas).not.toContain('profileSignals');
+  // Spec 010.
+  expect(text, cas).not.toContain('verifInviteeAt');
+  expect(text, cas).not.toContain('invitationVerification');
+  expect(text, cas).not.toMatch(/"niveau"|"fiabilite"|signauxRecents/);
 }
 
 describe('cityLabel / positionSource / onboardingStep / retraitAt / signaux ne sortent jamais vers autrui (#402, spec 005, spec 006)', () => {
@@ -235,5 +243,25 @@ describe('cityLabel / positionSource / onboardingStep / retraitAt / signaux ne s
     expect(text).not.toContain('positionSource');
     expect(text).not.toContain('onboardingStep');
     sansSignaux(text);
+  });
+});
+
+describe('spec 010 : l’indice de fiabilité ne se charge que sur les surfaces admin', () => {
+  it('aucune route hors /api/admin n’importe le module de fiabilité admin', async () => {
+    const { readdirSync, readFileSync, statSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const fautifs: string[] = [];
+    const parcourir = (dir: string) => {
+      for (const nom of readdirSync(dir)) {
+        const chemin = join(dir, nom);
+        if (statSync(chemin).isDirectory()) {
+          if (nom !== '__tests__') parcourir(chemin);
+        } else if (nom === 'route.ts' && !chemin.includes(join('api', 'admin'))) {
+          if (/fiabilite-admin|fiabiliteParCompte/.test(readFileSync(chemin, 'utf8'))) fautifs.push(chemin);
+        }
+      }
+    };
+    parcourir(join(process.cwd(), 'src', 'app', 'api'));
+    expect(fautifs).toEqual([]);
   });
 });

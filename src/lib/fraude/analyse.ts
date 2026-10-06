@@ -1,6 +1,8 @@
 import { lireTexte } from './lecture-photo';
 import { detecterContact } from './contact';
 import { enregistrerSignal } from './signaux';
+import { signalerLexique } from './lexique';
+import { lireFormeRecuperee } from './forme-photo';
 import { contientUnContact } from '@/lib/contact';
 import { getDb } from '@/lib/db';
 import { empreinte, memePhoto } from './empreinte';
@@ -14,19 +16,40 @@ import { empreinte, memePhoto } from './empreinte';
  * Appelée dans `after()` : best-effort, ne jette jamais, ne change rien à la
  * réponse faite au membre.
  */
-export async function analyserPhoto({ userId, photoKey, buffer }: { userId: string; photoKey: string; buffer: Buffer }): Promise<void> {
-  // Deux analyses indépendantes : l'échec de l'une n'empêche pas l'autre.
-  await Promise.all([lireContactSurPhoto(userId, photoKey, buffer), comparerEmpreinte(userId, photoKey, buffer)]);
+export async function analyserPhoto(
+  { userId, photoKey, buffer }: { userId: string; photoKey: string; buffer: Buffer },
+  options: { inviter?: boolean } = {},
+): Promise<void> {
+  // Analyses indépendantes : l'échec de l'une n'empêche pas les autres.
+  await Promise.all([
+    lireContactSurPhoto(userId, photoKey, buffer, options),
+    comparerEmpreinte(userId, photoKey, buffer, options),
+    reperFormeRecuperee(userId, photoKey, buffer, options),
+  ]);
 }
 
-async function lireContactSurPhoto(userId: string, photoKey: string, buffer: Buffer): Promise<void> {
+/**
+ * Indice faible « photo récupérée » (#446, R4), lu sur le tampon reçu : la
+ * route passe l'original, avant le nettoyage des métadonnées (#441).
+ */
+async function reperFormeRecuperee(userId: string, photoKey: string, buffer: Buffer, options: { inviter?: boolean }): Promise<void> {
+  try {
+    if (await lireFormeRecuperee(buffer)) {
+      await enregistrerSignal({ userId, type: 'photo_recuperee', force: 'faible', photoKey }, options);
+    }
+  } catch (err) {
+    console.warn('fraude.forme.failed', { message: (err as Error)?.message?.slice(0, 80) });
+  }
+}
+
+async function lireContactSurPhoto(userId: string, photoKey: string, buffer: Buffer, options: { inviter?: boolean }): Promise<void> {
   try {
     const texte = await lireTexte(buffer);
     if (!texte.trim()) return;
     const contacts = detecterContact(texte);
     const repere = contacts.find((c) => c.force === 'fort') ?? contacts[0];
     if (!repere) return;
-    await enregistrerSignal({ userId, type: 'contact_photo', force: repere.force, extrait: repere.extrait, photoKey });
+    await enregistrerSignal({ userId, type: 'contact_photo', force: repere.force, extrait: repere.extrait, photoKey }, options);
   } catch (err) {
     console.warn('fraude.analyse.failed', { message: (err as Error)?.message?.slice(0, 80) });
   }
@@ -38,7 +61,7 @@ async function lireContactSurPhoto(userId: string, photoKey: string, buffer: Buf
  * comparée à celles des autres comptes (signal sur les deux, chacun pointant
  * l'autre) et à celles des comptes bannis dans l'année.
  */
-async function comparerEmpreinte(userId: string, photoKey: string, buffer: Buffer): Promise<void> {
+async function comparerEmpreinte(userId: string, photoKey: string, buffer: Buffer, options: { inviter?: boolean }): Promise<void> {
   try {
     const hash = await empreinte(buffer);
     const db = getDb();
@@ -51,11 +74,11 @@ async function comparerEmpreinte(userId: string, photoKey: string, buffer: Buffe
       db.bannedPhotoFingerprint.findMany({ select: { bannedUserId: true, hash: true } }),
     ]);
     for (const a of autres.filter((a) => memePhoto(a.hash, hash))) {
-      await enregistrerSignal({ userId, type: 'photo_reutilisee', force: 'fort', photoKey, autreUserId: a.userId });
-      await enregistrerSignal({ userId: a.userId, type: 'photo_reutilisee', force: 'fort', photoKey: a.photoKey, autreUserId: userId });
+      await enregistrerSignal({ userId, type: 'photo_reutilisee', force: 'fort', photoKey, autreUserId: a.userId }, options);
+      await enregistrerSignal({ userId: a.userId, type: 'photo_reutilisee', force: 'fort', photoKey: a.photoKey, autreUserId: userId }, options);
     }
     for (const b of bannies.filter((b) => b.bannedUserId !== userId && memePhoto(b.hash, hash))) {
-      await enregistrerSignal({ userId, type: 'photo_bannie', force: 'fort', photoKey, autreUserId: b.bannedUserId });
+      await enregistrerSignal({ userId, type: 'photo_bannie', force: 'fort', photoKey, autreUserId: b.bannedUserId }, options);
     }
   } catch (err) {
     console.warn('fraude.empreinte.failed', { message: (err as Error)?.message?.slice(0, 80) });
@@ -67,18 +90,24 @@ async function comparerEmpreinte(userId: string, photoKey: string, buffer: Buffe
  * ont été écrits avant la règle. On ne les refuse pas après coup — on les
  * signale, et un humain tranche.
  */
-export async function analyserTexteProfil({ userId, displayName, bio }: { userId: string; displayName: string; bio: string }): Promise<void> {
+export async function analyserTexteProfil(
+  { userId, displayName, bio }: { userId: string; displayName: string; bio: string },
+  options: { inviter?: boolean } = {},
+): Promise<void> {
   try {
+    // Spec 010 : vocabulaire d'arnaque, sur la bio comme sur le pseudo.
+    await signalerLexique(userId, `${displayName}\n${bio}`, options);
     const contacts = detecterContact(bio);
     const repere = contacts.find((c) => c.force === 'fort') ?? contacts[0];
     if (repere) {
-      await enregistrerSignal({ userId, type: 'contact_bio', force: repere.force, extrait: repere.extrait });
+      await enregistrerSignal({ userId, type: 'contact_bio', force: repere.force, extrait: repere.extrait }, options);
     }
     // Même règle que l'écriture du pseudo (#459).
     if (contientUnContact(displayName, 'pseudo')) {
-      await enregistrerSignal({ userId, type: 'contact_pseudo', force: 'fort', extrait: displayName });
+      await enregistrerSignal({ userId, type: 'contact_pseudo', force: 'fort', extrait: displayName }, options);
     }
   } catch (err) {
     console.warn('fraude.analyse.failed', { message: (err as Error)?.message?.slice(0, 80) });
   }
 }
+

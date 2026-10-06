@@ -25,6 +25,11 @@ import { normalizeEmail } from '@/lib/email';
 // === Mocks ===
 
 const mockVerifyTurnstile = vi.fn();
+// after() (spec 010) : neutralisé, l'analyse d'inscription a ses propres tests.
+vi.mock('next/server', async (importOriginal) => {
+  const orig = await importOriginal<typeof import('next/server')>();
+  return { ...orig, after: () => {} };
+});
 vi.mock('@/lib/turnstile', () => ({
   __esModule: true,
   verifyTurnstile: mockVerifyTurnstile,

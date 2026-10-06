@@ -25,6 +25,8 @@ const fakeDb = {
   profileReview: { findMany: vi.fn<(args: unknown) => Promise<unknown[]>>(async () => []) },
   profileSignal: { deleteMany: vi.fn(async () => ({ count: 2 })) },
   bannedPhotoFingerprint: { deleteMany: vi.fn(async () => ({ count: 3 })) },
+  bannedIdentityFingerprint: { deleteMany: vi.fn(async () => ({ count: 2 })) },
+  signupTrace: { deleteMany: vi.fn(async () => ({ count: 4 })) },
   user: { findMany: vi.fn<(args: unknown) => Promise<unknown[]>>(async () => []) },
   retentionState: { updateMany: vi.fn(), create: vi.fn(), upsert: vi.fn(), findUnique: vi.fn() },
 };
@@ -109,6 +111,18 @@ describe('purgerRetention — seuils', () => {
     const bilan = await purgerRetention(NOW);
     expect(fakeDb.bannedPhotoFingerprint.deleteMany).toHaveBeenCalledWith({ where: { bannedAt: { lt: il_y_a(365) } } });
     expect(bilan.empreintesBannies).toBe(3);
+  });
+
+  it('empreintes d’identité des bannis : un an après le bannissement (spec 010)', async () => {
+    const bilan = await purgerRetention(NOW);
+    expect(fakeDb.bannedIdentityFingerprint.deleteMany).toHaveBeenCalledWith({ where: { bannedAt: { lt: il_y_a(365) } } });
+    expect(bilan.empreintesIdentiteBannies).toBe(2);
+  });
+
+  it('traces d’inscription : 7 jours (spec 010)', async () => {
+    const bilan = await purgerRetention(NOW);
+    expect(fakeDb.signupTrace.deleteMany).toHaveBeenCalledWith({ where: { createdAt: { lt: il_y_a(7) } } });
+    expect(bilan.tracesInscription).toBe(4);
   });
 
   it('comptes en retrait sans selfie depuis 90 j : effacés entièrement, sauf selfie en examen (#437)', async () => {

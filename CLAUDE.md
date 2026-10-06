@@ -302,6 +302,17 @@ pas contre le confort du développement.
   code (`src/lib/questions.ts`, clés stables, modifiée par PR). Détection de
   contact partagée `src/lib/contact.ts` (mode `pseudo` / `texte`). Garde par
   route : `src/__tests__/answers-never-leak.test.ts`.
+- Indice de fiabilité (spec 010) : signaux de comportement (blocages en
+  rafale, rafale de likes, retour d'un banni, lexique de l'arnaque, indices de
+  contexte) dans `profile_signals` ; niveau **dérivé, jamais stocké**
+  (`src/lib/fraude/fiabilite.ts`), lu par l'admin seulement. Les indices de
+  contexte (`TYPES_CONTEXTE`) n'agissent qu'à trois types différents.
+  Appareil, e-mail et IP n'existent qu'en HMAC à clé dérivée de
+  `NEXTAUTH_SECRET` (`empreinte-identite.ts`) ; le fuseau n'est jamais écrit.
+  `User.verifInviteeAt` est **privé** : invitation automatique au selfie,
+  **sans retrait** (RGPD art. 22) — le retrait reste un geste de modérateur.
+  Journal : `adminId` nul = action automatique. Garde :
+  `src/__tests__/city-label-never-leaks.test.ts`.
 
 ## Notifications (spec 003, #389–#393)
 

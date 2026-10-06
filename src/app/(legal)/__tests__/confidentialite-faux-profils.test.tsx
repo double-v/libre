@@ -19,7 +19,7 @@ describe('page Confidentialité — faux profils', () => {
     expect(screen.getAllByText(/Lutte contre les faux profils/).length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText(/protéger les utilisateurs des arnaques/)).toBeInTheDocument();
     expect(screen.getByText(/vos photos ne sont transmises à aucun tiers/)).toBeInTheDocument();
-    expect(screen.getByText(/aucune sanction automatique/).textContent).toMatch(/un membre de l.équipe, qui décide lui-même/);
+    expect(screen.getByText(/Aucune sanction n.est\s+automatique/).textContent).toMatch(/seul un membre de l.équipe peut décider/);
   });
 
   it('les empreintes : un nombre, pas l’image ; celles des bannis gardées un an', () => {
@@ -46,5 +46,31 @@ describe('page Confidentialité — faux profils', () => {
       expect(read(f), f).not.toMatch(/data:\s*\{[^}]*(isBanned|retraitAt)/);
       expect(read(f), f).not.toMatch(/user\.update/);
     }
+  });
+
+  // Spec 010 : chaque promesse de la copie est adossée au code (#328).
+  it('nomme le profilage, sa base légale, et l’invitation sans effet sur la visibilité', () => {
+    render(<Confidentialite />);
+    expect(screen.getByText(/C.est un\s+profilage au sens du RGPD/).textContent).toMatch(/intérêt légitime/);
+    expect(screen.getByText(/invite automatiquement/).textContent).toMatch(/ne masque pas le profil et n.empêche pas d.écrire/);
+  });
+
+  it('l’invitation ne masque rien : la visibilité ignore verifInviteeAt', () => {
+    expect(read('src/lib/fraude/visibilite.ts')).not.toMatch(/verifInviteeAt/);
+    expect(read('src/lib/fraude/retrait.ts')).not.toMatch(/verifInviteeAt/);
+  });
+
+  it('appareil, e-mail et IP : empreintes seulement, jamais la valeur ; le fuseau n’est jamais enregistré', () => {
+    const schema = read('prisma/schema.prisma');
+    for (const m of ['BannedIdentityFingerprint', 'SignupTrace']) {
+      const modele = schema.slice(schema.indexOf(`model ${m}`), schema.indexOf('}', schema.indexOf(`model ${m}`)));
+      // Les champs, pas les commentaires (« /// appareil · email » nomme une sorte).
+      const champs = modele.split('\n').filter((l) => !l.trim().startsWith('///')).join('\n');
+      expect(champs).not.toMatch(/deviceId|email|\bip\s/i);
+    }
+    // Aucun champ ne garde le fuseau (le type de signal « fuseau_incoherent » n'en est pas un).
+    expect(schema).not.toMatch(/^\s+\w*(fuseau|timezone)\w*\s+String/im);
+    expect(read('src/lib/retention/regles.ts')).toMatch(/tracesInscription[^\n]*jours: 7,/);
+    expect(read('src/lib/retention/regles.ts')).toMatch(/empreintesIdentiteBannies[^\n]*jours: 365/);
   });
 });

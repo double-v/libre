@@ -3,10 +3,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const lireTexte = vi.fn();
 vi.mock('../lecture-photo', () => ({ __esModule: true, lireTexte }));
 const enregistrerSignal = vi.fn(async () => true);
+// Le second argument (options d'invitation) n'est pas l'objet de ces tests.
+const expectSignal = (attendu: unknown) => expect(enregistrerSignal.mock.calls.map((c: unknown[]) => c[0])).toContainEqual(attendu);
 vi.mock('../signaux', () => ({ __esModule: true, enregistrerSignal }));
 
 const empreinte = vi.fn(async () => BigInt(0));
 vi.mock('../empreinte', async (orig) => ({ ...(await orig<typeof import('../empreinte')>()), empreinte }));
+const lireFormeRecuperee = vi.fn(async () => false);
+vi.mock('../forme-photo', () => ({ __esModule: true, lireFormeRecuperee }));
 const fakeDb = {
   photoFingerprint: { upsert: vi.fn(), findMany: vi.fn(async () => [] as unknown[]) },
   bannedPhotoFingerprint: { findMany: vi.fn(async () => [] as unknown[]) },
@@ -27,7 +31,7 @@ describe('analyserPhoto (#443)', () => {
   it('le cas du 2026-09-24 : un identifiant Telegram sur la photo lève un signal fort', async () => {
     lireTexte.mockResolvedValue('Telegram : @lola_privee75\n');
     await analyserPhoto({ userId: 'u1', photoKey: 'p/1.webp', buffer: img });
-    expect(enregistrerSignal).toHaveBeenCalledWith({
+    expectSignal({
       userId: 'u1',
       type: 'contact_photo',
       force: 'fort',
@@ -39,7 +43,7 @@ describe('analyserPhoto (#443)', () => {
   it('un contact faible lu sur la photo lève un signal faible', async () => {
     lireTexte.mockResolvedValue('Pas de Snapchat');
     await analyserPhoto({ userId: 'u1', photoKey: 'p/1.webp', buffer: img });
-    expect(enregistrerSignal).toHaveBeenCalledWith(expect.objectContaining({ force: 'faible' }));
+    expectSignal(expect.objectContaining({ force: 'faible' }));
   });
 
   it('une photo sans texte ne lève rien', async () => {
@@ -56,12 +60,28 @@ describe('analyserPhoto (#443)', () => {
   });
 });
 
+describe('analyserPhoto — photo « récupérée » (#446)', () => {
+  it('forme d’un réseau social sans EXIF → indice faible sur la photo', async () => {
+    lireTexte.mockResolvedValue('');
+    lireFormeRecuperee.mockResolvedValueOnce(true);
+    await analyserPhoto({ userId: 'u1', photoKey: 'p/1.webp', buffer: Buffer.from('x') });
+    expectSignal({ userId: 'u1', type: 'photo_recuperee', force: 'faible', photoKey: 'p/1.webp' });
+  });
+
+  it('lit la forme sur le tampon reçu, tel quel', async () => {
+    lireTexte.mockResolvedValue('');
+    const tampon = Buffer.from('original-avec-exif');
+    await analyserPhoto({ userId: 'u1', photoKey: 'p/1.webp', buffer: tampon });
+    expect(lireFormeRecuperee).toHaveBeenCalledWith(tampon);
+  });
+});
+
 describe('analyserTexteProfil (#444, rattrapage)', () => {
   it('signale une bio et un pseudo déjà en ligne, sans rien refuser', async () => {
     const { analyserTexteProfil } = await import('../analyse');
     await analyserTexteProfil({ userId: 'u1', displayName: 'lola@gmail.com', bio: 'Écris-moi sur t.me/lola' });
-    expect(enregistrerSignal).toHaveBeenCalledWith(expect.objectContaining({ type: 'contact_bio', force: 'fort', extrait: 't.me/lola' }));
-    expect(enregistrerSignal).toHaveBeenCalledWith(expect.objectContaining({ type: 'contact_pseudo', force: 'fort' }));
+    expectSignal(expect.objectContaining({ type: 'contact_bio', force: 'fort', extrait: 't.me/lola' }));
+    expectSignal(expect.objectContaining({ type: 'contact_pseudo', force: 'fort' }));
   });
 
   it('rien sur un profil ordinaire', async () => {
@@ -86,8 +106,8 @@ describe('analyserPhoto — même photo ailleurs (#445)', () => {
     ]);
     await analyserPhoto({ userId: 'u1', photoKey: 'p/1.webp', buffer: img });
     expect(fakeDb.photoFingerprint.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { userId: { not: 'u1' }, user: { isBanned: false } } }));
-    expect(enregistrerSignal).toHaveBeenCalledWith({ userId: 'u1', type: 'photo_reutilisee', force: 'fort', photoKey: 'p/1.webp', autreUserId: 'u2' });
-    expect(enregistrerSignal).toHaveBeenCalledWith({ userId: 'u2', type: 'photo_reutilisee', force: 'fort', photoKey: 'p/2.webp', autreUserId: 'u1' });
+    expectSignal({ userId: 'u1', type: 'photo_reutilisee', force: 'fort', photoKey: 'p/1.webp', autreUserId: 'u2' });
+    expectSignal({ userId: 'u2', type: 'photo_reutilisee', force: 'fort', photoKey: 'p/2.webp', autreUserId: 'u1' });
     expect(enregistrerSignal).toHaveBeenCalledTimes(2);
   });
 
@@ -95,7 +115,7 @@ describe('analyserPhoto — même photo ailleurs (#445)', () => {
     empreinte.mockResolvedValue(BigInt(0));
     fakeDb.bannedPhotoFingerprint.findMany.mockResolvedValue([{ bannedUserId: 'b1', hash: BigInt(0b111) }]);
     await analyserPhoto({ userId: 'u1', photoKey: 'p/1.webp', buffer: img });
-    expect(enregistrerSignal).toHaveBeenCalledWith({ userId: 'u1', type: 'photo_bannie', force: 'fort', photoKey: 'p/1.webp', autreUserId: 'b1' });
+    expectSignal({ userId: 'u1', type: 'photo_bannie', force: 'fort', photoKey: 'p/1.webp', autreUserId: 'b1' });
   });
 
   it('une empreinte qui échoue n’empêche pas la lecture du texte', async () => {
@@ -103,7 +123,7 @@ describe('analyserPhoto — même photo ailleurs (#445)', () => {
     lireTexte.mockResolvedValue('Telegram : @lola_privee75');
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     await analyserPhoto({ userId: 'u1', photoKey: 'p/1.webp', buffer: img });
-    expect(enregistrerSignal).toHaveBeenCalledWith(expect.objectContaining({ type: 'contact_photo' }));
+    expectSignal(expect.objectContaining({ type: 'contact_photo' }));
     warn.mockRestore();
   });
 });

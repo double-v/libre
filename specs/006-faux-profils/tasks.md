@@ -102,8 +102,8 @@
 
 ## Phase 7: User Story 5 - Indice faible : la photo « récupérée » (P3)
 
-- [ ] T033 [P] [US5] Test puis `src/lib/fraude/forme-photo.ts` : `formeRecuperee(metadata)` — dimensions de la liste de research.md R4 **et** aucun EXIF ; lu sur le tampon reçu, avant tout nettoyage (#441)
-- [ ] T034 [US5] `analyserPhoto` : signal `photo_recuperee` faible ; test qu'il ne fait jamais entrer seul un profil en file ; affiché « indice faible » dans la carte de la file
+- [x] T033 [P] [US5] Test puis `src/lib/fraude/forme-photo.ts` : `formeRecuperee(metadata)` — dimensions de la liste de research.md R4 **et** aucun EXIF ; lu sur le tampon reçu, avant tout nettoyage (#441)
+- [x] T034 [US5] `analyserPhoto` : signal `photo_recuperee` faible ; test qu'il ne fait jamais entrer seul un profil en file ; affiché « indice faible » dans la carte de la file
 
 ---
 

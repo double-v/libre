@@ -5,6 +5,7 @@ import { getDb } from '@/lib/db';
 import { adminBanSchema } from '@/lib/validators';
 import { retenirEmpreintesBannies } from '@/lib/fraude/bannissement';
 import { effacerCompte } from '@/lib/suppression-compte';
+import { niveauFiabilite, signauxRecents, TYPES_CONTEXTE } from '@/lib/fraude/fiabilite';
 
 export async function GET(
   request: NextRequest,
@@ -59,6 +60,13 @@ export async function GET(
         take: 5,
         select: { id: true, status: true, createdAt: true, selfieUrl: true },
       },
+      // Spec 010 : de quoi expliquer le niveau, signal par signal (FR-015).
+      verifInviteeAt: true,
+      profileReview: { select: { decidedAt: true } },
+      profileSignals: {
+        orderBy: { createdAt: 'desc' },
+        select: { type: true, force: true, createdAt: true, extrait: true, autreUserId: true },
+      },
     },
   });
 
@@ -70,7 +78,25 @@ export async function GET(
   // l'état courant, sinon l'admin ne sait pas ce qu'il a déjà classé.
   const photoSensitivity = await photoSensitivityMap(user.profile?.photos ?? []);
 
-  return NextResponse.json({ user, photoSensitivity });
+  // Indice de fiabilité (spec 010, US3) : le niveau et chaque indice qui y
+  // pèse. Pas de pondération cachée ; les indices de contexte disent qu'ils
+  // peuvent être légitimes.
+  const { profileSignals, profileReview, verifInviteeAt, ...reste } = user;
+  const recents = signauxRecents(profileSignals, profileReview?.decidedAt ?? null);
+  const fiabilite = {
+    niveau: niveauFiabilite(recents, user.isVerified),
+    invitation: verifInviteeAt ? { depuis: verifInviteeAt } : null,
+    indices: recents.map((sig) => ({
+      type: sig.type,
+      force: sig.force,
+      date: sig.createdAt,
+      extrait: sig.extrait,
+      autreUserId: sig.autreUserId,
+      legitimePossible: TYPES_CONTEXTE.has(sig.type),
+    })),
+  };
+
+  return NextResponse.json({ user: reste, photoSensitivity, fiabilite });
 }
 
 export async function PATCH(

@@ -38,6 +38,9 @@ vi.mock('@/lib/push/server', () => ({
 // (une rejection y serait, côté Next, une « unhandled rejection » silencieuse).
 let afterTasks: Promise<unknown>[] = [];
 const mockAfter = vi.fn((task: () => unknown) => { afterTasks.push(Promise.resolve().then(task)); });
+const verifierRythmeLikes = vi.fn();
+const verifierProfilExpress = vi.fn();
+vi.mock('@/lib/fraude/comportement', () => ({ verifierRythmeLikes, verifierProfilExpress }));
 vi.mock('next/server', async (importOriginal) => {
   const orig = await importOriginal<typeof import('next/server')>();
   return { ...orig, after: (task: () => unknown) => mockAfter(task) };
@@ -78,8 +81,15 @@ describe('POST /api/likes — push sur match', () => {
     const res = await POST(req());
     expect(res.status).toBe(201);
     expect(await res.json()).toEqual({ liked: true, match: false });
-    expect(mockAfter).not.toHaveBeenCalled();
+    await Promise.all(afterTasks);
     expect(mockSendPushToUser).not.toHaveBeenCalled();
+  });
+
+  it('planifie les signaux de comportement après la réponse (spec 010)', async () => {
+    await POST(req());
+    await Promise.all(afterTasks);
+    expect(verifierRythmeLikes).toHaveBeenCalledWith(ME);
+    expect(verifierProfilExpress).toHaveBeenCalledWith(ME);
   });
 
   it('sur match : push planifié après la réponse pour les DEUX comptes, charge `match` sans nom', async () => {

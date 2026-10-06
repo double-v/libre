@@ -16,6 +16,8 @@ const fakeDb = {
   moderationLog: { create: vi.fn() },
 };
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => fakeDb }));
+const enregistrerSignal = vi.fn();
+vi.mock('@/lib/fraude/signaux', () => ({ enregistrerSignal }));
 
 const { PATCH } = await import('../route');
 
@@ -39,7 +41,7 @@ describe('PATCH /api/admin/verifications/[id]', () => {
       where: { id: 'v1' },
       data: expect.objectContaining({ status: 'approved', rejectReason: null, reviewedBy: 'admin' }),
     }));
-    expect(fakeDb.user.update).toHaveBeenCalledWith({ where: { id: 'u1' }, data: { isVerified: true, retraitAt: null } });
+    expect(fakeDb.user.update).toHaveBeenCalledWith({ where: { id: 'u1' }, data: { isVerified: true, retraitAt: null, verifInviteeAt: null } });
     expect(fakeDb.moderationLog.create).toHaveBeenCalled();
   });
 
@@ -55,6 +57,18 @@ describe('PATCH /api/admin/verifications/[id]', () => {
     expect(fakeDb.moderationLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ action: 'REJECT_VERIFICATION', reason: 'geste_invisible' }),
     });
+  });
+
+  it('refus après une invitation automatique : signal fort, le compte entre dans la file (spec 010)', async () => {
+    fakeDb.user.findUnique.mockImplementation(async ({ select }: { select: Record<string, boolean> }) =>
+      select?.verifInviteeAt ? { verifInviteeAt: new Date() } : { role: 'ADMIN' });
+    await trancher({ action: 'REJECT_VERIFICATION', motif: 'geste_invisible' });
+    expect(enregistrerSignal).toHaveBeenCalledWith({ userId: 'u1', type: 'verification_refusee', force: 'fort', cle: 'v1' });
+  });
+
+  it('refus sans invitation : aucun signal', async () => {
+    await trancher({ action: 'REJECT_VERIFICATION', motif: 'geste_invisible' });
+    expect(enregistrerSignal).not.toHaveBeenCalled();
   });
 
   it('409 sur une demande déjà tranchée', async () => {

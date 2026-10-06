@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getDb } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { blockSchema } from '@/lib/validators';
+import { verifierBlocages } from '@/lib/fraude/comportement';
 
 export async function POST(request: Request) {
   try {
@@ -55,6 +56,10 @@ export async function POST(request: Request) {
         ],
       },
     });
+
+    // Spec 010 : un compte que plusieurs membres fuient en peu de temps, sans
+    // forcément le signaler. Après la réponse, sans effet sur le blocage.
+    after(() => verifierBlocages(blockedId));
 
     return NextResponse.json({ blocked: true }, { status: 201 });
   } catch (error) {
