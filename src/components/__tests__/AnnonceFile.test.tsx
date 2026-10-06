@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { AnnonceProvider, PRIORITE, useAnnonce, type IdAnnonce } from '../AnnonceFile';
 
@@ -29,11 +29,14 @@ describe('file d’annonces (#507)', () => {
   });
 
   it('quand l’avenant est tranché, l’annonce suivante prend la place', () => {
-    let trancher: () => void = () => {};
     function Avenant() {
       const [actif, setActif] = useState(true);
-      trancher = () => setActif(false);
-      return <Annonce id="avenant" actif={actif} />;
+      return (
+        <>
+          <Annonce id="avenant" actif={actif} />
+          <button type="button" onClick={() => setActif(false)}>Trancher</button>
+        </>
+      );
     }
     render(
       <AnnonceProvider>
@@ -42,7 +45,7 @@ describe('file d’annonces (#507)', () => {
       </AnnonceProvider>,
     );
     expect(screen.getByText('verification en attente (autre)')).toBeInTheDocument();
-    act(() => trancher());
+    fireEvent.click(screen.getByRole('button', { name: 'Trancher' }));
     expect(screen.getByText('verification visible')).toBeInTheDocument();
   });
 
