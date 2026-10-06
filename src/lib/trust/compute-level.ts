@@ -184,12 +184,14 @@ export async function loadFactors(
     select: { id: true },
   });
 
-  // Signalement reçu non-rejeté = Report où reportedId = userId ET status != 'rejected'
-  // (status possibles: 'pending', 'reviewed', 'actioned' — 'rejected' = modé a innocenté)
+  // Signalement actif = reçu et pas classé sans suite. Statuts réellement écrits :
+  // 'pending' à la création, puis 'dismissed' (classé) ou 'resolved' (avertissement,
+  // bannissement) par PUT /api/admin/reports/[id]. Le filtre visait 'rejected', que
+  // rien n'écrit : un signalement classé pénalisait à vie (#509).
   const activeReport = await db.report.findFirst({
     where: {
       reportedId: userId,
-      status: { not: 'rejected' },
+      status: { not: 'dismissed' },
     },
     select: { id: true },
   });

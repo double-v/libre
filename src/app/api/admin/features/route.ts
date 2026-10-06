@@ -55,10 +55,12 @@ export async function PUT(request: NextRequest) {
       },
     });
     invaliderFeatures();
-    // La FAQ montre ou masque la section Cercle selon `checkin` (#483) : on la
-    // régénère tout de suite plutôt qu'attendre sa minute d'ISR.
+    // La FAQ montre ou masque la section Cercle selon `checkin` (#483), la page
+    // de la confiance la ligne La Place selon `square` (#509) : on les régénère
+    // tout de suite plutôt qu'attendre leur minute d'ISR.
     try {
       revalidatePath('/faq');
+      revalidatePath('/trust/how-it-works');
     } catch (err) {
       console.error('features.revalidate.failed', err instanceof Error ? err.message : 'unknown');
     }
