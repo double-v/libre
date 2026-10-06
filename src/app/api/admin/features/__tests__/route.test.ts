@@ -69,9 +69,10 @@ describe('/api/admin/features', () => {
     });
   });
 
-  it('PUT régénère la FAQ, dont la section Cercle suit checkin (#483)', async () => {
+  it('PUT régénère la FAQ (#483) et la page de la confiance (#509)', async () => {
     await put({ checkin: false, crossings: true, square: true, journal_comments: false });
     expect(mockRevalidatePath).toHaveBeenCalledWith('/faq');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/trust/how-it-works');
   });
 
   it('PUT réussit même si la régénération de la FAQ échoue', async () => {
