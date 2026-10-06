@@ -64,6 +64,18 @@ describe('POST /api/users/photos — analyse après envoi (#443)', () => {
     expect(analyserPhoto).toHaveBeenCalledWith({ userId: ME, photoKey: 'photos/u/1.webp', buffer: Buffer.from('octets-image') });
   });
 
+  it('analyse l’original reçu, jamais la version nettoyée de ses métadonnées (#441, #446)', async () => {
+    // L'indice « photo récupérée » lit l'absence d'EXIF : sur le tampon
+    // nettoyé, toutes les photos sembleraient récupérées. Ce test verrouille
+    // l'ordre — un refactor qui passerait le tampon nettoyé le casserait.
+    const { uploadPhoto } = await import('@/lib/r2');
+    vi.mocked(uploadPhoto).mockImplementationOnce(async () => 'photos/u/1.webp');
+    await envoi();
+    await taches[0]();
+    const { buffer } = analyserPhoto.mock.calls[0][0] as { buffer: Buffer };
+    expect(buffer.equals(Buffer.from('octets-image'))).toBe(true);
+  });
+
   it('une analyse qui échoue ne change pas la réponse', async () => {
     analyserPhoto.mockRejectedValue(new Error('boom'));
     const res = await envoi();

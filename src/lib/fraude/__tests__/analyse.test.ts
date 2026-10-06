@@ -9,6 +9,8 @@ vi.mock('../signaux', () => ({ __esModule: true, enregistrerSignal }));
 
 const empreinte = vi.fn(async () => BigInt(0));
 vi.mock('../empreinte', async (orig) => ({ ...(await orig<typeof import('../empreinte')>()), empreinte }));
+const lireFormeRecuperee = vi.fn(async () => false);
+vi.mock('../forme-photo', () => ({ __esModule: true, lireFormeRecuperee }));
 const fakeDb = {
   photoFingerprint: { upsert: vi.fn(), findMany: vi.fn(async () => [] as unknown[]) },
   bannedPhotoFingerprint: { findMany: vi.fn(async () => [] as unknown[]) },
@@ -55,6 +57,22 @@ describe('analyserPhoto (#443)', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     await expect(analyserPhoto({ userId: 'u1', photoKey: 'p/1.webp', buffer: img })).resolves.toBeUndefined();
     warn.mockRestore();
+  });
+});
+
+describe('analyserPhoto — photo « récupérée » (#446)', () => {
+  it('forme d’un réseau social sans EXIF → indice faible sur la photo', async () => {
+    lireTexte.mockResolvedValue('');
+    lireFormeRecuperee.mockResolvedValueOnce(true);
+    await analyserPhoto({ userId: 'u1', photoKey: 'p/1.webp', buffer: Buffer.from('x') });
+    expectSignal({ userId: 'u1', type: 'photo_recuperee', force: 'faible', photoKey: 'p/1.webp' });
+  });
+
+  it('lit la forme sur le tampon reçu, tel quel', async () => {
+    lireTexte.mockResolvedValue('');
+    const tampon = Buffer.from('original-avec-exif');
+    await analyserPhoto({ userId: 'u1', photoKey: 'p/1.webp', buffer: tampon });
+    expect(lireFormeRecuperee).toHaveBeenCalledWith(tampon);
   });
 });
 

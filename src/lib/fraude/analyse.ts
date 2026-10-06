@@ -2,6 +2,7 @@ import { lireTexte } from './lecture-photo';
 import { detecterContact } from './contact';
 import { enregistrerSignal } from './signaux';
 import { signalerLexique } from './lexique';
+import { lireFormeRecuperee } from './forme-photo';
 import { contientUnContact } from '@/lib/contact';
 import { getDb } from '@/lib/db';
 import { empreinte, memePhoto } from './empreinte';
@@ -19,8 +20,26 @@ export async function analyserPhoto(
   { userId, photoKey, buffer }: { userId: string; photoKey: string; buffer: Buffer },
   options: { inviter?: boolean } = {},
 ): Promise<void> {
-  // Deux analyses indépendantes : l'échec de l'une n'empêche pas l'autre.
-  await Promise.all([lireContactSurPhoto(userId, photoKey, buffer, options), comparerEmpreinte(userId, photoKey, buffer, options)]);
+  // Analyses indépendantes : l'échec de l'une n'empêche pas les autres.
+  await Promise.all([
+    lireContactSurPhoto(userId, photoKey, buffer, options),
+    comparerEmpreinte(userId, photoKey, buffer, options),
+    reperFormeRecuperee(userId, photoKey, buffer, options),
+  ]);
+}
+
+/**
+ * Indice faible « photo récupérée » (#446, R4), lu sur le tampon reçu : la
+ * route passe l'original, avant le nettoyage des métadonnées (#441).
+ */
+async function reperFormeRecuperee(userId: string, photoKey: string, buffer: Buffer, options: { inviter?: boolean }): Promise<void> {
+  try {
+    if (await lireFormeRecuperee(buffer)) {
+      await enregistrerSignal({ userId, type: 'photo_recuperee', force: 'faible', photoKey }, options);
+    }
+  } catch (err) {
+    console.warn('fraude.forme.failed', { message: (err as Error)?.message?.slice(0, 80) });
+  }
 }
 
 async function lireContactSurPhoto(userId: string, photoKey: string, buffer: Buffer, options: { inviter?: boolean }): Promise<void> {
