@@ -7,6 +7,7 @@ import { LAUNCH_COPY } from '@/lib/lancement';
 import { useSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import SiteNav from '@/components/ui/SiteNav';
+import { AnnonceProvider, useAnnonce } from '@/components/AnnonceFile';
 import { sectionsVisibles, isSectionActive } from '@/components/ui/AppSections';
 import { useFeatures } from '@/hooks/useFeatures';
 import NotificationDot from '@/components/ui/NotificationDot';
@@ -35,7 +36,24 @@ function BetaBanner({ onFeedback }: { onFeedback: () => void }) {
     }
   }, []);
 
+  // File d'annonces (#507) : quand une autre annonce est là, la bêta se
+  // réduit à une ligne au lieu de s'empiler en bandeau complet.
+  const { visible } = useAnnonce('beta', !dismissed);
   if (dismissed) return null;
+
+  if (!visible) {
+    return (
+      <div className="flex justify-center border-b border-hairline px-4 text-center text-xs text-muted">
+        <button
+          type="button"
+          onClick={onFeedback}
+          className="min-h-11 underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-coral"
+        >
+          {LAUNCH_COPY.banniereCourte}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center gap-2 border-b border-coral/20 bg-sunken px-4 py-1.5 text-center text-xs text-coral-dark dark:border-coral/30 dark:text-coral-light">
@@ -122,7 +140,7 @@ function MainShell({ children }: { children: React.ReactNode }) {
         width="content"
         showSections
         banner={
-          <>
+          <AnnonceProvider>
             <BetaBanner onFeedback={() => window.dispatchEvent(new Event('open-feedback'))} />
             {/* Avenant art. 9 (#425) : seulement connecté, et seulement pour
                 un compte qui porte déjà des données sensibles sans consentement. */}
@@ -130,7 +148,7 @@ function MainShell({ children }: { children: React.ReactNode }) {
             {/* Mise en retrait (spec 006) : seulement connecté ; l'avis se
                 charge lui-même et ne dit rien d'un soupçon. */}
             {session?.user?.id && <RetraitNotice />}
-          </>
+          </AnnonceProvider>
         }
       />
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { toast } from '@/lib/toast';
+import { useAnnonce } from '@/components/AnnonceFile';
 
 /**
  * ConsentAvenantBanner — avenant art. 9 pour les retardataires (#425).
@@ -66,7 +67,9 @@ export default function ConsentAvenantBanner() {
     setARegulariser(false);
   }
 
-  if (!aRegulariser) return null;
+  // File d'annonces (#507) : l'avenant passe en premier, il est toujours visible.
+  const { visible } = useAnnonce('avenant', aRegulariser);
+  if (!aRegulariser || !visible) return null;
 
   // Cibles tactiles ≥ 44 px (charte) : ce sont des décisions, pas des liens.
   const bouton = 'inline-flex min-h-11 items-center rounded-full px-3 text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-coral disabled:opacity-50';
