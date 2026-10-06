@@ -30,6 +30,8 @@ export const LAUNCH_COPY = {
   ctaFaq: 'Pourquoi je ne vois personne ?',
   /** Bannière du shell connecté : remplace « version bêta ». */
   banniere: 'Libre vient d’ouvrir. Les inscriptions arrivent peu à peu, et tes retours nous aident à avancer.',
+  /** Même bannière, réduite à une ligne quand une autre annonce passe devant (#507). */
+  banniereCourte: 'Libre vient d’ouvrir : dis-nous ce qui coince.',
 } as const;
 
 export const LAUNCH_PROFILE_HREF = '/profile';

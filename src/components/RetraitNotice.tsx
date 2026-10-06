@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useAnnonce } from '@/components/AnnonceFile';
 
 /**
  * RetraitNotice — le membre mis en retrait (spec 006, décision « Demander une
@@ -59,7 +60,9 @@ export default function RetraitNotice() {
     return () => { cancelled = true; };
   }, []);
 
-  if (etat === 'rien') return null;
+  // File d'annonces (#507) : l'avenant passe devant ; ce bandeau attend.
+  const { visible } = useAnnonce('verification', etat !== 'rien');
+  if (etat === 'rien' || !visible) return null;
 
   const copie = etat === 'retrait' ? COPY_RETRAIT : COPY_INVITATION;
 
