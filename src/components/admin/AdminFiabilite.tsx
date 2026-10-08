@@ -54,7 +54,7 @@ export function AdminIndicesFiabilite({
       </div>
       {invitation && (
         <p className="mb-3 text-sm text-muted">
-          Invité automatiquement à se faire vérifier le {date(invitation.depuis)}. Le profil reste visible ; la mise en retrait reste ta décision.
+          Invité à se faire vérifier le {date(invitation.depuis)}. Le profil reste visible ; la mise en retrait reste ta décision.
         </p>
       )}
       {indices.length === 0 ? (

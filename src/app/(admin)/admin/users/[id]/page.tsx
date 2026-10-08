@@ -13,6 +13,7 @@ interface UserDetail {
   role: string;
   isBanned: boolean;
   isVerified: boolean;
+  retraitAt: string | null;
   createdAt: string;
   lastActive: string;
   profile?: {
@@ -36,6 +37,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
   const [error, setError] = useState('');
   const [banReason, setBanReason] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [verifEnCours, setVerifEnCours] = useState(false);
 
   useEffect(() => {
     params.then((p) => setUserId(p.id));
@@ -83,6 +85,42 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
       setBanReason('');
     } catch {
       alert('Erreur lors de l\'action');
+    }
+  };
+
+  // Inviter au selfie sans bloquer : même effet que l'automate de la spec 010.
+  const handleInvitation = async () => {
+    if (!user || !fiabilite) return;
+    setVerifEnCours(true);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/invitation`, { method: 'POST' });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setFiabilite({ ...fiabilite, invitation: data.invitation });
+    } catch {
+      alert('Erreur lors de l\'invitation');
+    } finally {
+      setVerifEnCours(false);
+    }
+  };
+
+  // Mettre en retrait (ou lever le retrait) : même décision que la file
+  // « Profils à vérifier » (spec 006), journalisée de la même façon.
+  const handleRetrait = async (decision: 'verification' | 'rien') => {
+    if (!user) return;
+    setVerifEnCours(true);
+    try {
+      const res = await fetch(`/api/admin/profils-a-verifier/${user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision }),
+      });
+      if (!res.ok) throw new Error();
+      setUser({ ...user, retraitAt: decision === 'verification' ? new Date().toISOString() : null });
+    } catch {
+      alert('Erreur lors de l\'action');
+    } finally {
+      setVerifEnCours(false);
     }
   };
 
@@ -154,6 +192,50 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
             >
               {user.isBanned ? 'Débannir' : 'Bannir'}
             </button>
+          </div>
+
+          <div className="rounded-xl border border-hairline p-4">
+            <h2 className="mb-3 font-semibold text-content">Vérification du profil</h2>
+            {user.isVerified ? (
+              <p className="text-sm text-muted">Profil déjà vérifié par selfie.</p>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <button
+                    onClick={handleInvitation}
+                    disabled={verifEnCours || !!fiabilite?.invitation}
+                    className="rounded-md border border-hairline-strong px-4 py-2 text-sm font-medium hover:bg-fill-subtle disabled:opacity-50"
+                  >
+                    {fiabilite?.invitation ? 'Invitation déjà envoyée' : 'Demander une vérification'}
+                  </button>
+                  <p className="mt-1 text-xs text-muted">Sans blocage : le profil reste visible et peut écrire.</p>
+                </div>
+                <div>
+                  {user.retraitAt ? (
+                    <button
+                      onClick={() => handleRetrait('rien')}
+                      disabled={verifEnCours}
+                      className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                    >
+                      Lever le retrait
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleRetrait('verification')}
+                      disabled={verifEnCours}
+                      className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+                    >
+                      Demander une vérification et mettre en retrait
+                    </button>
+                  )}
+                  <p className="mt-1 text-xs text-muted">
+                    {user.retraitAt
+                      ? `En retrait depuis le ${new Date(user.retraitAt).toLocaleDateString('fr-FR')} : invisible pour les autres, ni like ni message, jusqu'au selfie approuvé.`
+                      : 'Avec blocage : invisible pour les autres, ni like ni message, jusqu\'au selfie approuvé. Effacé après 90 jours sans selfie.'}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="rounded-xl border border-red-200 p-4 dark:border-red-900/50">

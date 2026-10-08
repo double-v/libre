@@ -18,7 +18,7 @@ describe('<AdminIndicesFiabilite /> (spec 010, US3)', () => {
     expect(screen.getByText('Likes en rafale juste après l’inscription')).toBeInTheDocument();
     expect(screen.getByText(/Peut être légitime : appareil de couple ou de famille/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Voir l’autre compte' })).toHaveAttribute('href', '/admin/users/u-2');
-    expect(screen.getByText(/Invité automatiquement à se faire vérifier/)).toBeInTheDocument();
+    expect(screen.getByText(/Invité à se faire vérifier/)).toBeInTheDocument();
   });
 
   it('sans indice, le dit en clair', () => {
