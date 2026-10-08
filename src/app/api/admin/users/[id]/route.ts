@@ -24,6 +24,8 @@ export async function GET(
       role: true,
       isBanned: true,
       isVerified: true,
+      // Mise en retrait (spec 006) : la fiche affiche l'état et propose de la lever.
+      retraitAt: true,
       createdAt: true,
       lastActive: true,
       profile: {
