@@ -322,21 +322,31 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null,
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
                     <span className="inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
-                      {profile.genderIdentity}
+                      {/* La valeur stockée est en bas de casse (« femme ») :
+                          la fiche la montre capitalisée, comme partout. */}
+                      {profile.genderIdentity.charAt(0).toUpperCase() + profile.genderIdentity.slice(1)}
                     </span>
                   </div>
                 </div>
               )}
 
-              {profile.orientation && (
+              {profile.orientation && profile.orientation.length > 0 && (
                 <div className="mb-3">
                   <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">
                     Orientation
                   </h3>
+                  {/* Tableau (String[]) : rendu joint, un tag par valeur —
+                      un `.map` rend séparé, un seul span le collerait. */}
                   <div className="flex flex-wrap gap-1.5">
-                    <span className="inline-block rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-800 dark:bg-pink-900/40 dark:text-pink-300">
-                      {profile.orientation}
-                    </span>
+                    {Array.isArray(profile.orientation) ? profile.orientation.map((o) => (
+                      <span key={o} className="inline-block rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-800 dark:bg-pink-900/40 dark:text-pink-300">
+                        {o}
+                      </span>
+                    )) : (
+                      <span className="inline-block rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-800 dark:bg-pink-900/40 dark:text-pink-300">
+                        {profile.orientation}
+                      </span>
+                    )}
                   </div>
                 </div>
               )}

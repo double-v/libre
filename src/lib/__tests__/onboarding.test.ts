@@ -9,9 +9,11 @@
 import { describe, it, expect } from 'vitest';
 import {
   deriveMissing,
+  deriveIdentite,
   mustOnboard,
   nextStep,
   NUDGE_COPY,
+  NUDGE_IDENTITE_COPY,
   MIRROR_COPY,
   shouldInviteDistance,
   ONBOARDING_DONE,
@@ -24,6 +26,8 @@ const full: OnboardingProfile = {
   lastGeolocAt: new Date(),
   cityLabel: null,
   onboardingStep: 3,
+  genderIdentity: 'femme',
+  orientation: ['hétéro'],
 };
 
 describe('deriveMissing', () => {
@@ -84,6 +88,40 @@ describe('MIRROR_COPY — charte', () => {
   it.each(Object.entries(MIRROR_COPY))('%s : aucun chiffre, aucune référence comptée aux autres', (_k, text) => {
     expect(text).not.toMatch(/\d/);
     expect(text.toLowerCase()).not.toMatch(/personnes|membres|likes?\b|t'attend/);
+  });
+});
+
+/**
+ * Le rang d'identité (#517) : après tous les manques du parcours, un nudge
+ * qui dit l'effet (les recherches filtrées) et déclare en ligne.
+ */
+describe('deriveIdentite', () => {
+  it('le genre d\'abord, l\'orientation ensuite', () => {
+    expect(deriveIdentite({ genderIdentity: '', orientation: [] })).toBe('genre');
+    expect(deriveIdentite({ genderIdentity: 'femme', orientation: [] })).toBe('orientation');
+  });
+  it('« Je ne souhaite pas le préciser » reste un silence (#519)', () => {
+    expect(deriveIdentite({ genderIdentity: '', orientation: ['hétéro'] })).toBe('genre');
+  });
+  it('tout déclaré → null', () => {
+    expect(deriveIdentite({ genderIdentity: 'femme', orientation: ['hétéro'] })).toBeNull();
+  });
+});
+
+describe('NUDGE_IDENTITE_COPY — charte (#517)', () => {
+  const manques = Object.keys(NUDGE_IDENTITE_COPY) as Array<keyof typeof NUDGE_IDENTITE_COPY>;
+  it('couvre les deux déclarations', () => {
+    expect(manques.sort()).toEqual(['genre', 'orientation']);
+  });
+  it.each(manques)('%s : aucun chiffre, aucune référence aux autres membres', (kind) => {
+    const text = `${NUDGE_IDENTITE_COPY[kind].title} ${NUDGE_IDENTITE_COPY[kind].body}`;
+    expect(text).not.toMatch(/\d/);
+    expect(text.toLowerCase()).not.toMatch(/personnes|membres|likes?\b|t'attend/);
+  });
+  // L'absence reste invisible publiquement (#517) : rien n'annonce l'absence
+  // d'autrui dans la copie — la carte parle aux siens, pour son profil seul.
+  it.each(manques)('%s : parle au propriétaire de son profil seul', (kind) => {
+    expect(NUDGE_IDENTITE_COPY[kind].champ).toMatch(/^Ton /);
   });
 });
 

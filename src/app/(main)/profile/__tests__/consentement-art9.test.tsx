@@ -6,6 +6,9 @@
  * case ; enregistrer sans la cocher est refusé sur place, et la cocher envoie
  * `sensitiveConsent: true` avec la première écriture. Après consentement, la
  * case disparaît partout.
+ *
+ * #518 : l'orientation déclarée vit sous « Identité » (à côté du genre) —
+ * c'est là que la première saisie sensible se teste.
  */
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
@@ -56,9 +59,9 @@ async function ouvrir(sensitiveConsent: boolean, section: string) {
 
 describe('/profile — consentement art. 9', () => {
   it('sans consentement : la case est là, enregistrer sans cocher est refusé, cocher envoie le consentement', async () => {
-    await ouvrir(false, 'Ce que je cherche');
+    await ouvrir(false, 'Identité');
     fireEvent.click(screen.getByRole('button', { name: 'Bi' }));
-    const section = () => within(document.getElementById('profile-section-seeking')!);
+    const section = () => within(document.getElementById('profile-section-identity')!);
     const consent = section().getByRole('checkbox');
     expect(section().getByText(/J’accepte que Libre enregistre/)).toBeInTheDocument();
     expect(consent).not.toBeChecked();
@@ -81,8 +84,8 @@ describe('/profile — consentement art. 9', () => {
   }, 15_000);
 
   it('avec consentement : aucune case, l’écriture part telle quelle', async () => {
-    await ouvrir(true, 'Ce que je cherche');
-    expect(within(document.getElementById('profile-section-seeking')!).queryByText(/J’accepte que Libre enregistre/)).toBeNull();
+    await ouvrir(true, 'Identité');
+    expect(within(document.getElementById('profile-section-identity')!).queryByText(/J’accepte que Libre enregistre/)).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Bi' }));
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
     await waitFor(() => expect(puts).toHaveLength(1));
@@ -90,7 +93,7 @@ describe('/profile — consentement art. 9', () => {
   });
 
   it('sans consentement, vider un champ ne demande rien', async () => {
-    await ouvrir(false, 'Ce que je cherche');
+    await ouvrir(false, 'Identité');
     // Rien de sélectionné → rien de sensible dans la charge : la case n'est pas exigée.
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
     await waitFor(() => expect(puts).toHaveLength(1));

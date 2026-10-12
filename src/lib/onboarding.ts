@@ -16,12 +16,18 @@ export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 /** Ce qui peut manquer à un profil pour être choisi, par ordre d'impact. */
 export type MissingKind = 'photo' | 'seeking' | 'position';
 
+/** La déclaration d'identité (art. 9) qui n'a pas encore eu lieu (#517). */
+export type IdentiteManquante = 'genre' | 'orientation';
+
 export interface OnboardingProfile {
   photos: string[];
   relationshipType: string[];
   lastGeolocAt: Date | string | null;
   cityLabel: string | null;
   onboardingStep: number;
+  /** Art. 9. Genre vide ou « Je ne souhaite pas le préciser » = silence. */
+  genderIdentity: string;
+  orientation: string[];
 }
 
 /** Clé `localStorage` : la carte de relance a été écartée (date ISO). */
@@ -59,6 +65,21 @@ export function nextStep(current: number, requested: number): number {
   return Math.min(ONBOARDING_DONE, Math.max(current, requested));
 }
 
+/**
+ * La déclaration d'identité qui manque, après tous les manques du parcours
+ * (photo > ce que je cherche > position > identité #517). Une carte à la
+ * fois : le premier manque porte, le suivant attend son tour.
+ *
+ * « Déclaré » = genre non vide, orientation à au moins une valeur. « Je ne
+ * souhaite pas le préciser » (genre vide) reste un silence, par définition
+ * même du silence que la réciprocité (#519) laisse debout.
+ */
+export function deriveIdentite(profile: Pick<OnboardingProfile, 'genderIdentity' | 'orientation'>): IdentiteManquante | null {
+  if (!profile.genderIdentity) return 'genre';
+  if (profile.orientation.length === 0) return 'orientation';
+  return null;
+}
+
 /** Copie de la carte de relance : le profil de la personne, et elle seule. */
 export const NUDGE_COPY: Record<MissingKind, { title: string; body: string; cta: string; href: string }> = {
   photo: {
@@ -82,6 +103,26 @@ export const NUDGE_COPY: Record<MissingKind, { title: string; body: string; cta:
 };
 
 /**
+ * Copie de la carte « dis qui tu es » (#517) : le rang d'identité de la
+ * relance. La carte déclare en ligne, donc pas de lien de section comme
+ * `NUDGE_COPY` — le corps dit l'effet (les recherches filtrées) et la
+ * conséquence visible (la fiche la montre, comme tout ce qui y est posé).
+ * Même charte qu'ailleurs : aucun chiffre, aucune référence aux autres.
+ */
+export const NUDGE_IDENTITE_COPY: Record<IdentiteManquante, { title: string; body: string; champ: string }> = {
+  genre: {
+    title: 'Dis qui tu es',
+    body: "Sans genre déclaré, tu n'apparais pas encore dans les recherches qui filtrent par genre. Une fois déclaré, il se voit sur ta fiche.",
+    champ: 'Ton genre',
+  },
+  orientation: {
+    title: 'Dis ton orientation',
+    body: "Sans orientation déclarée, tu n'apparais pas encore dans les recherches qui filtrent par orientation. Une fois déclarée, elle se voit sur ta fiche.",
+    champ: 'Ton orientation',
+  },
+};
+
+/**
  * Invitations de la réciprocité miroir (spec 008) : « tu vois ce que tu
  * montres ». Copie validée au prototype le 2026-09-25 ; même charte que la
  * relance — aucun chiffre, aucune comparaison.
@@ -93,6 +134,10 @@ export const MIRROR_COPY = {
   intentionFilter: 'Dis ce que tu cherches pour filtrer sur ce critère.',
   /** « Pour toi » : aucune position, donc aucune distance. */
   distance: 'Partage où tu es pour voir les distances.',
+  /** Réciprocité du filtre genre (#519) : poser le critère exige de déclarer. */
+  genreCritere: 'Pour chercher par genre, dis aussi le tien.',
+  /** Réciprocité du filtre orientation (#519) : un critère par côté. */
+  orientationCritere: 'Pour chercher par orientation, dis aussi la tienne.',
 } as const;
 
 /** Où l'on dit ce que l'on cherche : même ancre que la carte de relance. */

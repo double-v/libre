@@ -1,0 +1,322 @@
+<!-- ghwork-proto: issue=517 debloque=518,519 titre=Regle d'identite - relance, desimbriquee, reciprocite (#517-#519) -->
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype lot #517–#519</title>
+<style>
+:root {
+  --surface: #ffffff;
+  --sunken: #FDF0ED;
+  --content: #171717;
+  --muted: #4b5563;
+  --hairline: #e5e7eb;
+  --hairline-strong: #d1d5db;
+  --fill-subtle: #f3f4f6;
+  --coral: #E8634A;
+  --coral-dark: #9E3A28;
+  --blush: #FDF0ED;
+  --error: #dc2626;
+  --rad-card: 30px;
+  --rad-control: 6px;
+  --shadow-soft: 0 8px 20px -8px rgb(232 99 74 / 0.18);
+}
+* { box-sizing: border-box; }
+body {
+  background:
+    radial-gradient(1200px 600px at 20% -10%, color-mix(in srgb, var(--blush) 60%, transparent), transparent),
+    var(--surface);
+  color: var(--content);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  margin: 0;
+  padding: 24px 16px 64px;
+  line-height: 1.55;
+}
+.wrap { max-width: 1180px; margin: 0 auto; }
+h1 { font-size: 1.35rem; margin: 0 0 4px; }
+.lead { color: var(--muted); font-size: .875rem; margin: 0 0 28px; max-width: 60ch; }
+.cols { display: grid; gap: 24px; grid-template-columns: 1fr; }
+@media (min-width: 1024px) { .cols { grid-template-columns: 1fr 1fr 1fr; } }
+h2.titre-ecran {
+  font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 10px; font-weight: 700;
+}
+.titre-ecran span { display: block; text-transform: none; letter-spacing: 0; font-weight: 400; font-size: .8rem; margin-top: 2px; }
+
+/* ── Card (DS) ── */
+.card {
+  background: var(--surface); border: 1px solid var(--hairline);
+  border-radius: var(--rad-card); padding: 16px;
+}
+.card.media { padding: 0; overflow: hidden; box-shadow: var(--shadow-soft); }
+.grille { display: grid; gap: 12px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .grille { grid-template-columns: repeat(2, 1fr); } }
+
+/* ── Carte de relance d'identité ── */
+.nudge-photo {
+  min-height: 88px; display: flex; align-items: center; justify-content: center;
+  background: var(--sunken);
+}
+.coeur { color: var(--coral); font-size: 2rem; }
+.surtitre { font-size: .72rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.nudge-titre { font-size: 1.1rem; font-weight: 600; margin: 4px 0 0; }
+.nudge-corps { color: var(--muted); font-size: .82rem; line-height: 1.5; margin: 8px 0 12px; }
+.boutons-piles { display: flex; flex-direction: column; gap: 6px; }
+
+/* ── Bouton (DS) ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 44px; padding: 8px 16px; border-radius: 999px;
+  font-size: .8125rem; font-weight: 500; cursor: pointer; border: 1px solid transparent;
+  transition: filter .15s ease;
+}
+.btn.primary { background: var(--coral); color: #fff; }
+.btn.primary:hover { background: var(--coral-dark); color: #fff; }
+.btn.primary:disabled { opacity: .5; cursor: not-allowed; }
+.btn.secondary { background: var(--surface); border-color: var(--hairline-strong); color: var(--content); }
+.btn.ghost { background: transparent; color: var(--muted); }
+.btn.plein { width: 100%; }
+.btn.petit { min-height: 36px; padding: 4px 12px; font-size: .78rem; }
+
+/* ── Tag (DS TagButton) ── */
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+  display: inline-flex; align-items: center; border-radius: 999px; padding: 4px 12px;
+  font-size: .72rem; font-weight: 500; cursor: pointer;
+  border: 1px solid var(--hairline-strong); background: var(--surface); color: var(--muted);
+}
+.tag.sel { border-color: var(--coral); background: var(--coral); color: #fff; }
+
+/* ── Labels ── */
+.label { font-size: .68rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+.indice { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--muted); }
+
+/* ── Contrôles ── */
+select, input[type="text"] {
+  width: 100%; padding: 8px 12px; border-radius: var(--rad-control);
+  border: 1px solid var(--hairline-strong); background: var(--surface); color: var(--content);
+  font-size: .875rem; font-family: inherit;
+}
+
+/* ── Case de consentement (ConsentSensibleField) ── */
+.consent {
+  border-radius: var(--rad-control); border: 1px solid var(--hairline);
+  background: var(--sunken); padding: 12px; display: flex; gap: 8px; align-items: flex-start;
+}
+.consent input { width: 16px; height: 16px; margin-top: 2px; accent-color: var(--coral); flex: none; }
+.consent label { font-size: .72rem; color: var(--muted); line-height: 1.45; }
+
+/* ── Question à deux portes (panneau de filtres) ── */
+.question {
+  margin-top: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  border-radius: var(--rad-control); background: var(--sunken); padding: 10px 12px;
+}
+.question p { margin: 0; font-size: .8125rem; color: var(--content); flex-basis: 100%; }
+.question .btn { padding: 4px 12px; min-height: 36px; font-size: .78rem; }
+.deplie { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+.note-porte { color: var(--muted); font-size: .75rem; margin: 8px 0 0; }
+
+/* ── Page profil : sections ── */
+.section { border: 1px solid var(--hairline); border-radius: var(--rad-card); padding: 16px; margin-bottom: 10px; }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.section-titre { font-weight: 600; font-size: .95rem; margin: 0; }
+.ligne-valeur { font-size: .875rem; color: var(--content); margin: 8px 0 0; }
+.sous-titre-valeur { font-size: .7rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 10px 0 4px; }
+.puce-note { color: var(--muted); font-size: .75rem; margin: 6px 0 0; }
+
+/* ── divers ── */
+.etc { color: var(--muted); font-size: .8rem; margin-top: 10px; }
+details { margin-top: 16px; }
+summary { cursor: pointer; font-size: .8rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Lot #517–#519 — genre/orientation : relance, désimbriquée, réciprocité</h1>
+  <p class="lead">Trois surfaces, tokens du projet (thème libre, mode clair). La copie est en proposition : la relecture française passe au commit suivant.</p>
+
+  <div class="cols">
+
+    <!-- ══ Écran A : carte de relance d'identité dans « Pour toi » ══ -->
+    <section>
+      <h2 class="titre-ecran">A · Carte de relance — « Pour toi »
+        <span>Le nudge n'apparaît que pour qui n'a pas déclaré. Déclaration en ligne dans la carte.</span>
+      </h2>
+      <div class="grille">
+
+        <!-- Variante : genre non déclaré -->
+        <article class="card media">
+          <div class="nudge-photo"><span class="coeur">♥</span></div>
+          <div style="padding: 14px 16px 16px;">
+            <p class="surtitre">Ton profil</p>
+            <h3 class="nudge-titre">Dis qui tu es</h3>
+            <p class="nudge-corps">Sans genre déclaré, tu n'apparais pas encore dans les recherches qui filtrent par genre. Une fois déclaré, il se voit sur ta fiche.</p>
+            <div style="margin-bottom: 8px;">
+              <p class="label">Ton genre </p>
+              <select id="genre-nudge" aria-label="Ton genre">
+                <option value="" selected>Choisis…</option>
+                <option>Femme</option><option>Homme</option><option>Non-binaire</option>
+                <option>Genderfluid</option><option>Agender</option><option>Bigender</option>
+                <option>Pangenre</option><option>Queer</option><option>En questionnement</option><option>Autre</option>
+              </select>
+            </div>
+            <div class="consent" style="margin-bottom: 10px;">
+              <input type="checkbox" id="consent-a" checked disabled>
+              <label for="consent-a"><em>Prototype : la case de consentement serait cochée ici par la personne (jamais pré-cochée).</em></label>
+            </div>
+            <div class="boutons-piles">
+              <button class="btn primary plein" disabled>Enregistrer</button>
+              <button class="btn ghost plein">Plus tard</button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Variante : orientation non déclarée -->
+        <article class="card media">
+          <div class="nudge-photo"><span class="coeur">♥</span></div>
+          <div style="padding: 14px 16px 16px;">
+            <p class="surtitre">Ton profil</p>
+            <h3 class="nudge-titre">Dis ton orientation</h3>
+            <p class="nudge-corps">Sans orientation déclarée, tu n'apparais pas encore dans les recherches qui filtrent par orientation. Une fois déclarée, elle se voit sur ta fiche.</p>
+            <div style="margin-bottom: 8px;">
+              <p class="label">Ton orientation </p>
+              <div class="tags">
+                <button class="tag">Hétéro</button><button class="tag">Homo</button><button class="tag">Bi</button>
+                <button class="tag">Pan</button><button class="tag">Ace</button><button class="tag">Autre</button>
+              </div>
+            </div>
+            <div class="boutons-piles" style="margin-top: 10px;">
+              <button class="btn primary plein" disabled>Enregistrer</button>
+              <button class="btn ghost plein">Plus tard</button>
+            </div>
+          </div>
+        </article>
+      </div>
+      <p class="etc">Rangs : photo &gt; ce que je cherche &gt; position &gt; genre &gt; orientation — la première cellule de la grille, une seule carte à la fois.</p>
+    </section>
+
+    <!-- ══ Écran B : la question à deux portes dans le panneau des filtres ══ -->
+    <section>
+      <h2 class="titre-ecran">B · Question à deux portes — panneau « Filtres »
+        <span>Poser un filtre genre/orientation exige de la déclarer. Le serveur ne refuse jamais.</span>
+      </h2>
+
+      <div class="card" style="margin-bottom: 16px;">
+        <p class="label">Genre</p>
+        <div class="tags">
+          <button class="tag">Femme</button>
+          <button class="tag">Homme</button>
+          <button class="tag sel">Non-binaire</button>
+        </div>
+        <div class="question">
+          <p>Pour chercher par genre, dis aussi le tien.</p>
+          <button class="btn primary" onclick="deplier()">Déclarer mon genre</button>
+          <button class="btn ghost">Sans filtre</button>
+        </div>
+        <div class="deplie" id="b1-deplie" hidden>
+          <div>
+            <p class="label">Ton genre</p>
+            <select>
+              <option value="" selected>Choisis…</option>
+              <option>Femme</option><option>Homme</option><option selected>Non-binaire</option>
+              <option>Genderfluid</option><option>Agender</option><option>Bigender</option>
+              <option>Pangenre</option><option>Queer</option><option>En questionnement</option><option>Autre</option>
+            </select>
+          </div>
+          <div class="consent">
+            <input type="checkbox" id="consent-b1">
+            <label for="consent-b1">J’accepte que Libre enregistre mon orientation, mon identité de genre, mes pratiques et les personnes que je cherche, pour me proposer des profils qui me correspondent.
+              Je peux retirer ce choix à tout moment dans Paramètres › Données sensibles&nbsp;: ces informations seront alors effacées. <span style="color: var(--coral);">En savoir plus</span></label>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn primary petit">Enregistrer et filtrer</button>
+            <button class="btn ghost petit">Annuler</button>
+          </div>
+        </div>
+        <p class="note-porte">Le tag reste posé sur le choix ; le filtre n'est notifié au feed qu'après l'enregistrement (ou « Sans filtre »).</p>
+      </div>
+
+      <div class="card" style="margin-bottom: 16px;">
+        <p class="label">Orientation</p>
+        <div class="tags">
+          <button class="tag">Hétéro</button><button class="tag">Homo</button><button class="tag">Bi</button>
+          <button class="tag">Pan</button><button class="tag">Ace</button><button class="tag">Autre</button>
+        </div>
+        <p class="note-porte">Même question si l'orientation n'est pas déclarée : « Pour chercher par orientation, dis aussi la tienne. » Un critère par côté&nbsp;: déclarer son genre n'ouvre pas le filtre orientation.</p>
+      </div>
+
+      <div class="card">
+        <p class="label">Type de relation</p>
+        <div class="tags">
+          <button class="tag">Libre</button><button class="tag">Poly</button><button class="tag">Casual</button>
+          <button class="tag">Sérieux</button><button class="tag">Autre</button><button class="tag">Je verrai en chemin</button>
+        </div>
+        <p class="note-porte">Inchangé (patron spec 008 déjà en place).</p>
+      </div>
+    </section>
+
+    <!-- ══ Écran C : profil — l'orientation déclarée sous « Identité » ══ -->
+    <section>
+      <h2 class="titre-ecran">C · Profil — l'orientation déclarée sous « Identité »
+        <span>La déclarée porte la personne (« ton orientation ») ; la recherchée porte l'échange.</span>
+      </h2>
+
+      <div class="section" style="margin-bottom: 10px;">
+        <div class="section-head">
+          <h3 class="section-titre">Identité</h3>
+          <button class="btn secondary petit">Modifier</button>
+        </div>
+        <p class="ligne-valeur"><strong>34 ans</strong> · Femme · hétéro</p>
+        <p class="puce-note">Seul ton âge est visible, jamais ta date de naissance. Un pseudo, pas ton vrai nom.</p>
+        <p class="puce-note" style="margin-top: 2px;">Ton genre et ton orientation ne sortent jamais dans ton profil vu par les autres.</p>
+      </div>
+
+      <div class="section" style="margin-bottom: 10px;">
+        <div class="section-head">
+          <h3 class="section-titre">Ce que je cherche</h3>
+          <button class="btn secondary petit">Modifier</button>
+        </div>
+        <p class="sous-titre-valeur">Type de relation</p>
+        <div class="tags"><button class="tag sel">Libre</button><button class="tag">Sérieux</button></div>
+        <p class="puce-note">L'orientation déclarée a quitté cette section&nbsp;: ici ne vivent que les recherches.</p>
+      </div>
+
+      <div class="section" style="margin-bottom: 10px;">
+        <p class="sous-titre-valeur" style="margin-top: 0;">Édition « Identité » (mode édité)</p>
+        <div style="margin-bottom: 10px;">
+          <p class="label">Genre</p>
+          <select><option selected>Femme</option><option>Homme</option><option>Non-binaire</option><option value="">Je ne souhaite pas le préciser</option></select>
+        </div>
+        <div style="margin-bottom: 10px;">
+          <p class="label">Ton orientation</p>
+          <div class="tags">
+            <button class="tag sel">Hétéro</button><button class="tag">Homo</button><button class="tag">Bi</button>
+            <button class="tag">Pan</button><button class="tag">Ace</button><button class="tag">Autre</button>
+          </div>
+        </div>
+        <div class="consent" style="margin-bottom: 10px;">
+          <input type="checkbox" id="consent-c">
+          <label for="consent-c">Même case art. 9 que partout (copie existante, jamais pré-cochée).</label>
+        </div>
+        <button class="btn primary petit">Enregistrer</button>
+        <button class="btn ghost petit" style="margin-left: 6px;">Annuler</button>
+      </div>
+
+      <details>
+        <summary>Pièces de la séance (les tickets en détail)</summary>
+        <p class="puce-note">#517 (copie ajustée après relecture du code : les déclarations se voient sur la fiche, l'absence y reste masquée) — relance d'absence (écran A) et cause du vide côté chercheur : « Beaucoup de profils ne se déclarent pas encore. Élargis tes filtres pour voir plus de monde. » (remplace « élargis tes filtres » quand un filtre genre ou orientation est posé).</p>
+        <p class="puce-note">#518 — désimbriquer les libellés : à l'étape 2 de l'accueil, « Orientation » devient « L'orientation des gens qui te plaisent » ; au profil, « ton orientation ». L'erreur de consentement jamais branchée (prop <code>error</code>, `ConsentSensibleField`) est câblée à l'étape 2 : « Coche la case pour enregistrer ces informations. »</p>
+        <p class="puce-note">#519 — réciprocité : l'écran B ; l'absence de déclaration ne ferme jamais l'app (sans filtre = monde entier, « Toutes/Tous »).</p>
+      </details>
+    </section>
+  </div>
+</div>
+
+<script>
+function deplier() {
+  document.getElementById('b1-deplie').hidden = false;
+}
+</script>
+</body>
+</html>

@@ -35,6 +35,11 @@ export default function BienvenuePage() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState('');
+  // Réciprocité #519 / consentement #425 : l'étape 2 a besoin de savoir si la
+  // contrepartie est déjà en base (reprise du parcours). Détectés au chargement.
+  const [genreDeclare, setGenreDeclare] = useState(false);
+  const [orientationDeclaree, setOrientationDeclaree] = useState(false);
+  const [sensitiveConsent, setSensitiveConsent] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -45,11 +50,15 @@ export default function BienvenuePage() {
         const data = await res.json();
         if (cancelled) return;
         setDisplayName(data.displayName ?? '');
-        if (!mustOnboard(data.profile)) {
+        const p = data.profile;
+        setGenreDeclare(!!p?.genderIdentity);
+        setOrientationDeclaree((p?.orientation ?? []).length > 0);
+        setSensitiveConsent(Boolean(data.sensitiveConsent));
+        if (!mustOnboard(p)) {
           router.replace('/discover');
           return;
         }
-        const step = Math.min(2, Math.max(0, data.profile?.onboardingStep ?? 0)) as 0 | 1 | 2;
+        const step = Math.min(2, Math.max(0, p?.onboardingStep ?? 0)) as 0 | 1 | 2;
         setPhase(step);
       } catch {
         if (!cancelled) setPhase(0);
@@ -85,6 +94,9 @@ export default function BienvenuePage() {
       {phase === 0 && <StepPhoto displayName={displayName} onDone={() => void advance(1)} />}
       {phase === 1 && (
         <StepSeeking
+          genreDeclared={genreDeclare}
+          orientationDeclared={orientationDeclaree}
+          sensitiveConsent={sensitiveConsent}
           onContinue={(payload: SeekingPayload) => advance(2, { ...payload })}
           onLater={() => void advance(2)}
         />

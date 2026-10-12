@@ -6,7 +6,7 @@
  * relance de moins visible).
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { NUDGE_DISMISS_KEY } from '@/lib/onboarding';
 
 vi.mock('next/navigation', () => ({
@@ -85,5 +85,56 @@ describe('Découvrir — carte de relance', () => {
     screen.getByRole('button', { name: 'Plus tard' }).click();
     await waitFor(() => expect(screen.queryByLabelText('Compléter ton profil')).toBeNull());
     expect(window.localStorage.getItem(NUDGE_DISMISS_KEY)).toBeTruthy();
+  });
+});
+
+/**
+ * Le rang d'identité de la relance (#517) : il n'ouvre que quand le parcours
+ * est complet — et déclare en ligne. La carte n'apparaît jamais pour qui a
+ * déjà déclaré (#519) : genre puis orientation, le premier à la fois.
+ */
+describe('Découvrir — carte « dis qui tu es » (#517)', () => {
+  it('parcours complet, genre non déclaré → carte d\'identité, pas de carte de complétion', async () => {
+    stubFetch({ ...done, photos: ['a'], relationshipType: ['libre'], cityLabel: 'Nantes (44)', genderIdentity: '', orientation: [] });
+    await renderAndWaitFeed();
+    expect(screen.queryByLabelText('Compléter ton profil')).toBeNull();
+    const card = screen.getByLabelText('Se déclarer');
+    expect(card).toHaveTextContent('Dis qui tu es');
+    const first = screen.getByLabelText('Profil de Camille');
+    expect(card.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('genre déclaré, orientation non → la carte porte l\'orientation', async () => {
+    stubFetch({ ...done, photos: ['a'], relationshipType: ['libre'], cityLabel: 'Nantes (44)', genderIdentity: 'femme', orientation: [] });
+    await renderAndWaitFeed();
+    expect(screen.getByLabelText('Se déclarer')).toHaveTextContent('Dis ton orientation');
+  });
+
+  it('tout déclaré → aucune carte', async () => {
+    stubFetch({ ...done, photos: ['a'], relationshipType: ['libre'], cityLabel: 'Nantes (44)', genderIdentity: 'femme', orientation: ['hétéro'] });
+    await renderAndWaitFeed();
+    expect(screen.queryByLabelText('Se déclarer')).toBeNull();
+  });
+
+  it('écartée hier (même clé que la relance) → pas de carte d\'identité', async () => {
+    stubFetch({ ...done, photos: ['a'], relationshipType: ['libre'], cityLabel: 'Nantes (44)', genderIdentity: '', orientation: [] });
+    window.localStorage.setItem(NUDGE_DISMISS_KEY, new Date(Date.now() - 86_400_000).toISOString());
+    await renderAndWaitFeed();
+    expect(screen.queryByLabelText('Se déclarer')).toBeNull();
+  });
+
+  it('la déclaration en carte écrit genre + consent, puis la carte se referme', async () => {
+    stubFetch({ ...done, photos: ['a'], relationshipType: ['libre'], cityLabel: 'Nantes (44)', genderIdentity: '', orientation: [] });
+    await renderAndWaitFeed();
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.change(screen.getByLabelText('Ton genre'), { target: { value: 'femme' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+    await waitFor(() => expect(screen.queryByLabelText('Se déclarer')).toBeNull());
+    // `fetch` est un stub global : on lit ses appels par son mock interne.
+    const calls = (fetch as unknown as { mock: { calls: Array<[string, RequestInit | undefined]> } }).mock.calls;
+    const request = calls.find(([url, init]) => url === '/api/users/profile' && init?.method === 'PUT');
+    expect(request).toBeTruthy();
+    const body = JSON.parse(String((request![1] as RequestInit).body));
+    expect(body).toEqual({ genderIdentity: 'femme', sensitiveConsent: true });
   });
 });

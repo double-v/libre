@@ -8,9 +8,10 @@
  * 4. Le type de relation recherché se sélectionne comme l'orientation (#409)
  */
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import SearchFilters, { EMPTY_SEARCH_FILTERS, hasActiveFilters } from '../SearchFilters';
 import { MIRROR_COPY } from '@/lib/onboarding';
+import { COPY_CONSENT_SENSIBLE } from '../ConsentSensibleField';
 
 describe('<SearchFilters />', () => {
   it('emits the toggled gender on click', () => {
@@ -113,5 +114,122 @@ describe('<SearchFilters />', () => {
     render(<SearchFilters value={EMPTY_SEARCH_FILTERS} onChange={vi.fn()} />);
     expect(screen.getByRole('button', { name: 'Je verrai en chemin' })).toBeEnabled();
     expect(screen.queryByText(MIRROR_COPY.intentionFilter)).toBeNull();
+  });
+});
+
+/**
+ * Réciprocité genre/orientation (#519) : poser le critère exige de déclarer
+ * son équivalent — question à deux portes au clic, jamais d'écriture forcée,
+ * et un filtre déjà posé n'est jamais chassé.
+ */
+describe('<SearchFilters /> — réciprocité (#519)', () => {
+  it('pose la question au clic du genre sans genre déclaré, et ne pose pas le filtre', () => {
+    const onChange = vi.fn();
+    const onDeclared = vi.fn().mockResolvedValue(true);
+    render(
+      <SearchFilters value={EMPTY_SEARCH_FILTERS} onChange={onChange} genreDeclared={false} onDeclared={onDeclared} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Femme' }));
+    expect(screen.getByText(MIRROR_COPY.genreCritere)).toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('ne chasse pas un filtre déjà posé sans contrepartie — pas de question au montage', () => {
+    const onChange = vi.fn();
+    render(
+      <SearchFilters value={{ ...EMPTY_SEARCH_FILTERS, genders: ['femme'] }} onChange={onChange} genreDeclared={false} />,
+    );
+    expect(screen.queryByText(MIRROR_COPY.genreCritere)).toBeNull();
+    // Le critère posé reste posé : un clic de plus (décoche) marche, pas de
+    // nouvelle question pour retirer.
+    fireEvent.click(screen.getByRole('button', { name: 'Femme' }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ genders: [] }));
+  });
+
+  it('la porte « Sans filtre » referme sans rien écrire', () => {
+    const onChange = vi.fn();
+    const onDeclared = vi.fn().mockResolvedValue(true);
+    render(
+      <SearchFilters value={EMPTY_SEARCH_FILTERS} onChange={onChange} genreDeclared={false} onDeclared={onDeclared} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Femme' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sans filtre' }));
+    expect(screen.queryByText(MIRROR_COPY.genreCritere)).toBeNull();
+    expect(onDeclared).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('la déclaration enregistrée pose le critère pendu', async () => {
+    const onChange = vi.fn();
+    const onDeclared = vi.fn().mockResolvedValue(true);
+    render(
+      <SearchFilters value={EMPTY_SEARCH_FILTERS} onChange={onChange} genreDeclared={false} onDeclared={onDeclared} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Femme' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Déclarer mon genre' }));
+    fireEvent.change(screen.getByLabelText('Ton genre'), { target: { value: 'femme' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer et filtrer' }));
+    await waitFor(() => expect(screen.queryByText(MIRROR_COPY.genreCritere)).toBeNull());
+    expect(onDeclared).toHaveBeenCalledWith({ genderIdentity: 'femme' });
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ genders: ['femme'] }));
+  });
+
+  it('sans consentement art. 9, la question embarque la case et l\'error la dit', () => {
+    const onChange = vi.fn();
+    const onDeclared = vi.fn().mockResolvedValue(true);
+    render(
+      <SearchFilters
+        value={EMPTY_SEARCH_FILTERS}
+        onChange={onChange}
+        genreDeclared={false}
+        sensitiveConsent={false}
+        onDeclared={onDeclared}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Femme' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Déclarer mon genre' }));
+    expect(screen.getByLabelText(/J’accepte que Libre enregistre/)).toBeInTheDocument();
+    // La déclaration est choisie : sans case cochée, « Enregistrer » ne tient rien.
+    fireEvent.change(screen.getByLabelText('Ton genre'), { target: { value: 'femme' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer et filtrer' }));
+    expect(screen.getByText(COPY_CONSENT_SENSIBLE.requis)).toBeInTheDocument();
+    expect(onDeclared).not.toHaveBeenCalled();
+  });
+
+  it('un critère par côté : le genre déclaré n\'ouvre pas le filtre orientation', () => {
+    const onChange = vi.fn();
+    const onDeclared = vi.fn().mockResolvedValue(true);
+    render(
+      <SearchFilters
+        value={EMPTY_SEARCH_FILTERS}
+        onChange={onChange}
+        genreDeclared={true}
+        orientationDeclared={false}
+        onDeclared={onDeclared}
+      />,
+    );
+    // Le genre se pose directement (contrepartie là).
+    fireEvent.click(screen.getByRole('button', { name: 'Femme' }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ genders: ['femme'] }));
+    // L'orientation, elle, pose la question — le genre posé reste le seul passage.
+    fireEvent.click(screen.getAllByRole('button', { name: 'Hétéro' })[0]);
+    expect(screen.getByText(MIRROR_COPY.orientationCritere)).toBeInTheDocument();
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('« Je ne souhaite pas le préciser » reste un silence : la porte ne pose pas le filtre', () => {
+    // Le sélecteur de la question n'offre pas le silence (les options non
+    // vides seulement) : une déclaration vide au bouton ne pose rien.
+    const onChange = vi.fn();
+    const onDeclared = vi.fn().mockResolvedValue(true);
+    render(
+      <SearchFilters value={EMPTY_SEARCH_FILTERS} onChange={onChange} genreDeclared={false} onDeclared={onDeclared} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Femme' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Déclarer mon genre' }));
+    // Le champ reste sur « Choisis… » : le clic d'enregistrement est sans effet.
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer et filtrer' }));
+    expect(onDeclared).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
   });
 });

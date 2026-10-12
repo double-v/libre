@@ -4,25 +4,45 @@ import { useState } from 'react';
 import OnboardingShell from './OnboardingShell';
 import TagButton from '@/components/TagButton';
 import Card from '@/components/ui/Card';
-import ConsentSensibleField from '@/components/ConsentSensibleField';
+import Button from '@/components/ui/Button';
+import ConsentSensibleField, { COPY_CONSENT_SENSIBLE } from '@/components/ConsentSensibleField';
 import { GENDER_OPTIONS, ORIENTATION_OPTIONS, RELATIONSHIP_TYPE_OPTIONS } from '@/lib/taxonomy';
+import { MIRROR_COPY } from '@/lib/onboarding';
 
 /**
  * Étape 2 — ce que tu cherches (spec 005, FR-008). Une saisie, deux cibles :
  * le type de relation choisi devient à la fois ce que je déclare
  * (`relationshipType`) et ce que je cherche (`searchRelationshipTypes`). La
  * personne pourra dissocier plus tard dans son profil.
+ *
+ * Les critères genre/orientation portent l'échange (#518 : « l'orientation
+ * des gens qui te plaisent ») et la réciprocité (#519) : choisir un critère
+ * sans contrepartie pose la question — deux portes, ici même. « Déclarer »
+ * ouvre le champ ; la valeur voyage dans le PUT de l'étape. « Sans filtre »
+ * retire le critère. Jamais d'écriture forcée : « Plus tard » reste possible,
+ * et un critère retiré suffit à traverser l'étape. Le serveur, lui, refuse
+ * jamais une préférence — la contrepartie est un contrat d'UI, pas de route.
  */
 export interface SeekingPayload {
   relationshipType: string[];
   searchRelationshipTypes: string[];
   searchGenders: string[];
   searchOrientations: string[];
-  /** Art. 9 (#425) : présent seulement si un genre ou une orientation est choisi. */
+  /** Déclarations prises dans la question à deux portes (#519) — art. 9. */
+  genderIdentity?: string;
+  orientation?: string[];
+  /** Art. 9 (#425) : présent seulement si une donnée sensible est choisie. */
   sensitiveConsent?: true;
 }
 
 export interface StepSeekingProps {
+  /** Réciprocité (#519) : contreparties déjà déclarées en base. Défaut `true`
+   *  (comportement préservé) : l'étape pose la question seulement quand les
+   *  props disent le contraire — /bienvenue les porte. */
+  genreDeclared?: boolean;
+  orientationDeclared?: boolean;
+  /** Art. 9 déjà consenti ? Sinon la case vient dans l'écran. */
+  sensitiveConsent?: boolean;
   onContinue: (payload: SeekingPayload) => Promise<void> | void;
   onLater: () => void;
 }
@@ -31,18 +51,44 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const toggle = (arr: string[], v: string) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
 const LABEL = 'mb-1.5 flex items-baseline justify-between text-xs font-semibold uppercase tracking-wider text-muted';
+const SELECT_CLASS =
+  'w-full rounded-md border border-hairline-strong bg-surface px-3 py-2 text-sm text-content';
+const LIEEN_CLASS = 'text-xs font-medium text-coral hover:text-coral-dark';
 
-export default function StepSeeking({ onContinue, onLater }: StepSeekingProps) {
+export default function StepSeeking({
+  onContinue,
+  onLater,
+  genreDeclared = true,
+  orientationDeclared = true,
+  sensitiveConsent = false,
+}: StepSeekingProps) {
   const [rel, setRel] = useState<string[]>([]);
+  // Critère genre recherché (« Qui veux-tu voir ? »).
   const [genders, setGenders] = useState<string[]>([]);
+  // Critère orientation recherchée (« l'orientation des gens qui te plaisent »).
   const [orientations, setOrientations] = useState<string[]>([]);
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  // Genres et orientations cherchés révèlent l'orientation : la case art. 9
-  // n'apparaît que si la personne en choisit, et bloque tant qu'elle n'est
-  // pas cochée. Le type de relation seul ne demande rien.
-  const sensible = genders.length > 0 || orientations.length > 0;
+  // Contrepartie déclarée dans l'écran (#519). Le compte neuf n'a rien
+  // déclaré : le champ n'apparaît qu'à la prise de porte (« Déclarer »).
+  const [genreDeclare, setGenreDeclare] = useState('');
+  const [orientationDeclaree, setOrientationDeclaree] = useState<string[]>([]);
+  const [champGenreOuvert, setChampGenreOuvert] = useState(false);
+  const [champOrientationOuvert, setChampOrientationOuvert] = useState(false);
+
+  // Réciprocité : la question du critère posé sans contrepartie. La porte
+  // « déclarer » déplie le champ, la question se referme une fois déclarée.
+  const questionGenre = genders.length > 0 && !(genreDeclared || genreDeclare !== '');
+  const questionOrientation = orientations.length > 0 && !(orientationDeclared || orientationDeclaree.length > 0);
+
+  // Donnée sensible choisie : critères posés ou déclarations prises. La case
+  // art. 9 suit, jamais pré-cochée (#425).
+  const sensible =
+    genders.length > 0 ||
+    orientations.length > 0 ||
+    genreDeclare !== '' ||
+    orientationDeclaree.length > 0;
 
   async function submit() {
     setBusy(true);
@@ -52,6 +98,8 @@ export default function StepSeeking({ onContinue, onLater }: StepSeekingProps) {
         searchRelationshipTypes: rel,
         searchGenders: genders,
         searchOrientations: orientations,
+        ...(genreDeclare !== '' ? { genderIdentity: genreDeclare } : {}),
+        ...(orientationDeclaree.length > 0 ? { orientation: orientationDeclaree } : {}),
         ...(sensible ? { sensitiveConsent: true as const } : {}),
       });
     } finally {
@@ -64,7 +112,18 @@ export default function StepSeeking({ onContinue, onLater }: StepSeekingProps) {
       step={1}
       title="Ce que tu cherches"
       lead="Les autres sauront si vous cherchez la même chose. Tu peux en choisir plusieurs, et changer d'avis à tout moment."
-      primary={{ label: 'Continuer', onClick: () => void submit(), loading: busy, disabled: sensible && !consent }}
+      primary={{
+        label: 'Continuer',
+        onClick: () => void submit(),
+        loading: busy,
+        disabled:
+          // Sans la case art. 9 cochée, l'écriture serait refusée (#425/#518) :
+          // le bouton se tait, l'erreur le dit à la place.
+          (sensible && !sensitiveConsent && !consent) ||
+          // Réciprocité (#519) : un critère posé sans contrepartie attend la porte.
+          questionGenre ||
+          questionOrientation,
+      }}
       onLater={onLater}
     >
       <Card as="section" variant="filter">
@@ -77,6 +136,9 @@ export default function StepSeeking({ onContinue, onLater }: StepSeekingProps) {
               ))}
             </div>
           </div>
+
+          {/* Genre : le critère demande, la question pose l'échange, le champ
+              déplié porte la déclaration — un clic suffit à tout enlever. */}
           <div>
             <p className={LABEL}>
               <span>Qui veux-tu voir ?</span>
@@ -84,22 +146,110 @@ export default function StepSeeking({ onContinue, onLater }: StepSeekingProps) {
             </p>
             <div className="flex flex-wrap gap-1.5">
               {GENDER_OPTIONS.filter((g) => g.value !== '').map((g) => (
-                <TagButton key={g.value} label={g.label} selected={genders.includes(g.value)} onClick={() => setGenders(toggle(genders, g.value))} />
+                <TagButton
+                  key={g.value}
+                  label={g.label}
+                  selected={genders.includes(g.value)}
+                  onClick={() => setGenders(toggle(genders, g.value))}
+                />
               ))}
             </div>
+            {questionGenre && (
+              <div className="mt-2">
+                <p className="mb-2 text-sm text-muted">{MIRROR_COPY.genreCritere}</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="primary" size="sm" onClick={() => setChampGenreOuvert(true)}>
+                    Déclarer mon genre
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setGenders([])}
+                    className={LIEEN_CLASS}
+                  >
+                    Sans filtre
+                  </button>
+                </div>
+              </div>
+            )}
+            {champGenreOuvert && (
+              <div className="mt-2 space-y-2">
+                <label htmlFor="ton-genre-etape" className="text-xs font-semibold uppercase tracking-wider text-muted">Ton genre</label>
+                <select
+                  id="ton-genre-etape"
+                  value={genreDeclare}
+                  onChange={(e) => setGenreDeclare(e.target.value)}
+                  className={SELECT_CLASS}
+                >
+                  <option value="">Choisis…</option>
+                  {GENDER_OPTIONS.filter((g) => g.value !== '').map((g) => (
+                    <option key={g.value} value={g.value}>{g.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
+
+          {/* Orientation recherchée porte l'échange ; la déclaration en
+              question n'anticipe jamais la valeur du critère : le champ de
+              déclaration s'ouvre vide. */}
           <div>
             <p className={LABEL}>
-              <span>Orientation</span>
+              <span>L&apos;orientation des gens qui te plaisent</span>
               <small className="font-normal normal-case tracking-normal">facultatif</small>
             </p>
             <div className="flex flex-wrap gap-1.5">
               {ORIENTATION_OPTIONS.map((opt) => (
-                <TagButton key={opt} label={cap(opt)} selected={orientations.includes(opt)} onClick={() => setOrientations(toggle(orientations, opt))} />
+                <TagButton
+                  key={opt}
+                  label={cap(opt)}
+                  selected={orientations.includes(opt)}
+                  onClick={() => setOrientations(toggle(orientations, opt))}
+                />
               ))}
             </div>
+            {questionOrientation && (
+              <div className="mt-2">
+                <p className="mb-2 text-sm text-muted">{MIRROR_COPY.orientationCritere}</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="primary" size="sm" onClick={() => setChampOrientationOuvert(true)}>
+                    Déclarer mon orientation
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setOrientations([])}
+                    className={LIEEN_CLASS}
+                  >
+                    Sans filtre
+                  </button>
+                </div>
+                {champOrientationOuvert && (
+                  <div className="mt-2 space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted">Ton orientation</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {ORIENTATION_OPTIONS.map((opt) => (
+                        <TagButton
+                          key={opt}
+                          label={cap(opt)}
+                          selected={orientationDeclaree.includes(opt)}
+                          onClick={() => setOrientationDeclaree(toggle(orientationDeclaree, opt))}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-          {sensible && <ConsentSensibleField checked={consent} onChange={setConsent} />}
+
+          {sensible && (
+            <ConsentSensibleField
+              checked={consent}
+              onChange={setConsent}
+              // #518 : « Continuer » désactivé sans un mot — la copie dit le
+              // geste, dès le choix sensible sans case cochée.
+              error={sensible && !sensitiveConsent && !consent ? COPY_CONSENT_SENSIBLE.requis : undefined}
+            />
+          )}
         </div>
       </Card>
     </OnboardingShell>

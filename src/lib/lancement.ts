@@ -21,6 +21,12 @@ export const LAUNCH_COPY = {
   /** Feed vide avec des filtres actifs : le levier est chez la personne. */
   videFiltres:
     'Personne ne correspond à tes critères pour le moment. Les inscriptions arrivent peu à peu : élargis tes filtres pour voir plus de monde.',
+  /** Feed vide avec un filtre genre ou orientation posé (#517) : la filtre
+   *  strict ne montre pas les profils qui ne se déclarent pas (9 sur 10 au
+   *  lancement) — le vide vient d'eux, pas juste des « critères ». Dit la
+   *  cause la plus probable, sans chiffre ni coupable. */
+  videFiltresIdentite:
+    'Beaucoup de profils n’ont pas encore déclaré leur genre ou leur orientation, et le filtre ne les montre pas. Élargis tes filtres pour voir plus de monde.',
   /** Feed vide dans un rayon choisi. */
   videRayon: (km: number) =>
     `Personne dans un rayon de ${km} km pour le moment. Les inscriptions arrivent peu à peu : élargis la distance pour voir plus de monde.`,
