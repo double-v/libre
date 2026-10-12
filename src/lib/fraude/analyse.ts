@@ -4,6 +4,7 @@ import { enregistrerSignal } from './signaux';
 import { signalerLexique } from './lexique';
 import { lireFormeRecuperee } from './forme-photo';
 import { contientUnContact } from '@/lib/contact';
+import { comparerBio } from './texte';
 import { getDb } from '@/lib/db';
 import { empreinte, memePhoto } from './empreinte';
 
@@ -105,6 +106,11 @@ export async function analyserTexteProfil(
     // Même règle que l'écriture du pseudo (#459).
     if (contientUnContact(displayName, 'pseudo')) {
       await enregistrerSignal({ userId, type: 'contact_pseudo', force: 'fort', extrait: displayName }, options);
+    }
+    // Lot #514 : la bio copiée d'un autre compte, au rattrapage comme à
+    // l'écriture. Best-effort de bout en bout.
+    if (bio) {
+      await comparerBio(userId, bio, options);
     }
   } catch (err) {
     console.warn('fraude.analyse.failed', { message: (err as Error)?.message?.slice(0, 80) });

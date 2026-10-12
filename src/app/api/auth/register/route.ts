@@ -9,6 +9,7 @@ import { sendVerificationEmail } from '@/lib/email-send';
 import { rateLimit, limits } from '@/lib/rate-limit';
 import { getClientIp } from '@/lib/client-ip';
 import { analyserInscription } from '@/lib/fraude/inscription';
+import { TEMPS_MIN } from '@/lib/appat';
 
 // Startup validation: TURNSTILE_SECRET_KEY and TURNSTILE_SITE_KEY must be
 // configured together. The site key is needed on the client widget, the
@@ -52,7 +53,23 @@ export async function POST(request: Request) {
       );
     }
 
-    const { email, password, displayName, birthDate, turnstileToken = undefined, deviceId = undefined, consentGiven = false } = parsed.data as typeof parsed.data & { consentGiven?: boolean };
+    const { email, password, displayName, birthDate, turnstileToken = undefined, deviceId = undefined, consentGiven = false, fax = undefined, tms = undefined } = parsed.data as typeof parsed.data & { consentGiven?: boolean };
+
+    // #515 : le champ-appât rempli, ou une soumission quasi instantanée,
+    // décrit un robot scripté — une personne réelle ne voit pas l'appât et
+    // ne peut pas soumettre si vite. Réponse de toute erreur d'inscription :
+    // c'est réessayable (le temps court depuis l'affichage), et le motif
+    // n'est pas tracé ici — le compteur de log sans PII, à agréger, en tient
+    // le compte (leçon #334 : un refus uniforme doit rester mesurable).
+    const appatRempli = typeof fax === 'string' && fax.trim() !== '';
+    const tropVite = typeof tms === 'number' && tms < TEMPS_MIN;
+    if (appatRempli || tropVite) {
+      console.warn('fraude.inscription.appat', { motif: appatRempli ? 'champ' : 'temps' });
+      return NextResponse.json(
+        { error: 'Impossible de créer un compte pour le moment. Si vous utilisez un logiciel de remplissage automatique, désactivez-le pour ce site et essayez de nouveau.' },
+        { status: 403 },
+      );
+    }
 
     // RGPD: verify explicit consent was given
     if (!consentGiven) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -37,6 +37,15 @@ export default function RegisterPage() {
     return id;
   });
   const [consentGiven, setConsentGiven] = useState(false);
+  // #515 : l'appât (un robot remplit le DOM, une personne réelle ne voit pas
+  // le champ) et l'instant d'affichage (une personne réelle ne soumet pas
+  // plus vite que le temps de remplir). Ce code ne retient rien de plus :
+  // le serveur compare et jette, sans écrire.
+  const [appat, setAppat] = useState('');
+  const affichéÀ = useRef(0);
+  useEffect(() => {
+    affichéÀ.current = Date.now();
+  }, []);
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   useEffect(() => {
@@ -70,7 +79,13 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ displayName, email, password, birthDate, turnstileToken: turnstileToken ?? undefined, deviceId, consentGiven }),
+        body: JSON.stringify({
+          displayName, email, password, birthDate, turnstileToken: turnstileToken ?? undefined, deviceId, consentGiven,
+          // #515 : appât tel quel, temps depuis l'affichage. Tous deux
+          // optionnels — un onglet pré-rendu peut en manquer un.
+          fax: appat || undefined,
+          tms: affichéÀ.current ? Date.now() - affichéÀ.current : undefined,
+        }),
       });
 
       const data = await res.json();
@@ -191,6 +206,21 @@ export default function RegisterPage() {
             <Link href="/confidentialite" className="text-coral hover:underline">Politique de confidentialité</Link>
             . Le traitement de mes données est conforme au RGPD.
           </label>
+        </div>
+
+        {/* #515 : appât anti-robot. Une personne réelle ne le voit pas et
+            ne peut pas l'atteindre : hors de l'arbre d'accessibilité, jamais
+            au chemin de tabulation, sans autocomplétion. S'il arrive rempli,
+            le serveur refuse comme pour toute erreur d'inscription. */}
+        <div aria-hidden="true" className="absolute h-0 w-0 overflow-hidden [left:-9999px]">
+          <input
+            type="text"
+            name="fax"
+            tabIndex={-1}
+            autoComplete="off"
+            value={appat}
+            onChange={(e) => setAppat(e.target.value)}
+          />
         </div>
 
         <Button

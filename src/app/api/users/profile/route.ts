@@ -9,6 +9,7 @@ import { formatCityLabel } from '@/lib/geocoding';
 import { detecterContact } from '@/lib/fraude/contact';
 import { enregistrerSignal } from '@/lib/fraude/signaux';
 import { signalerLexique } from '@/lib/fraude/lexique';
+import { comparerBio } from '@/lib/fraude/texte';
 import { fuseauIncoherent } from '@/lib/fraude/fuseau';
 import { MESSAGE_CONTACT } from '@/lib/fraude/messages';
 import { aConsentementSensible, donnerConsentementSensible, porteDonneeSensible, traceConsentement } from '@/lib/consentement-sensible';
@@ -184,7 +185,12 @@ export async function PUT(request: Request) {
     const ville = data.city;
     const fuseau = data.fuseau;
     after(async () => {
-      if (bio) await signalerLexique(userId, bio);
+      if (bio) {
+        await signalerLexique(userId, bio);
+        // #514 : la bio copiée d'un autre compte, actif ou banni. Best-effort
+        // de bout en bout — l'analyse jette son propre log, jamais d'erreur.
+        await comparerBio(userId, bio);
+      }
       if (ville && fuseauIncoherent(fuseau, ville.country)) {
         await enregistrerSignal({ userId, type: 'fuseau_incoherent', force: 'faible', cle: 'fuseau' });
       }

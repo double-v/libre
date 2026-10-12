@@ -65,6 +65,10 @@ export const registerSchema = z.object({
   turnstileToken: z.string().nullable().optional(),
   deviceId: z.string().nullable().optional(),
   consentGiven: z.boolean().optional(),
+  // #515 : appât et temps, tous deux optionnels — leur absence passe
+  // (extension bloquée, onglet déjà ouvert…), jamais une personne réelle.
+  fax: z.string().optional(),
+  tms: z.number().int().min(0).optional(),
 });
 
 export const profileUpdateSchema = z.object({

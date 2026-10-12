@@ -36,6 +36,7 @@ model User {
   profileAnswers       ProfileAnswer[]
   profileSignals       ProfileSignal[]
   photoFingerprints    PhotoFingerprint[]
+  bioFingerprints      BioFingerprint[]
   profileReview        ProfileReview?       @relation("ProfileReviewSubject")
   profileReviewsDecided ProfileReview[]     @relation("ProfileReviewDecider")
   userKey              UserKey?
@@ -224,6 +225,22 @@ model PhotoFingerprint {
 
   @@index([userId])
   @@map("photo_fingerprints")
+}
+
+/// Empreinte de la bio (lot #514) : reconnaître une bio copié-collée d'un
+/// compte à l'autre. Hash non-réversible du texte normalisé — aucun texte
+/// de plus en base, l'empreinte suit le compte (cascade) et part avec lui.
+model BioFingerprint {
+  userId    String   @db.Uuid
+  hash      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, hash])
+  /// La comparaison à l'écriture cherche par empreinte, jamais par utilisateur.
+  @@index([hash])
+  @@map("bio_fingerprints")
 }
 
 /// Empreinte retenue d'un compte banni (FR-018) : ni photo ni clé étrangère,

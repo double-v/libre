@@ -9,6 +9,9 @@ export const LIBELLES_SIGNAL: Record<string, string> = {
   photo_reutilisee: 'Même photo sur un autre compte',
   photo_bannie: 'Photo d’un compte banni',
   photo_recuperee: 'Photo au format d’un réseau social',
+  // Lot #514.
+  texte_reutilise: 'Bio pareille à celle d’un autre compte',
+  texte_banni: 'Bio pareille à celle d’un compte banni',
   signalement_faux: 'Signalé comme faux profil',
   signalement_mineur: 'Signalé comme semblant avoir moins de 18 ans',
   // Spec 010.

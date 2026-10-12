@@ -15,6 +15,9 @@ export type TypeSignal =
   | 'photo_reutilisee'
   | 'photo_bannie'
   | 'photo_recuperee'
+  // Lot #514 : bio copié-collée d'un autre compte.
+  | 'texte_reutilise'
+  | 'texte_banni'
   | 'signalement_faux'
   /** #437 : âge mis en doute par un membre — traité en priorité. */
   | 'signalement_mineur'
