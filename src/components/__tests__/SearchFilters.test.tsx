@@ -136,14 +136,37 @@ describe('<SearchFilters /> — réciprocité (#519)', () => {
 
   it('ne chasse pas un filtre déjà posé sans contrepartie — pas de question au montage', () => {
     const onChange = vi.fn();
+    const onDeclared = vi.fn().mockResolvedValue(true);
     render(
-      <SearchFilters value={{ ...EMPTY_SEARCH_FILTERS, genders: ['femme'] }} onChange={onChange} genreDeclared={false} />,
+      <SearchFilters
+        value={{ ...EMPTY_SEARCH_FILTERS, genders: ['femme'] }}
+        onChange={onChange}
+        genreDeclared={false}
+        onDeclared={onDeclared}
+      />,
     );
     expect(screen.queryByText(MIRROR_COPY.genreCritere)).toBeNull();
-    // Le critère posé reste posé : un clic de plus (décoche) marche, pas de
-    // nouvelle question pour retirer.
+    // Retirer un critère déjà posé est libre, question ou pas de question.
     fireEvent.click(screen.getByRole('button', { name: 'Femme' }));
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ genders: [] }));
+    expect(onDeclared).not.toHaveBeenCalled();
+  });
+
+  it('la pose fusionne les critères pendus aux critères posés, sans doublon', async () => {
+    const onChange = vi.fn();
+    const onDeclared = vi.fn().mockResolvedValue(true);
+    render(
+      <SearchFilters value={EMPTY_SEARCH_FILTERS} onChange={onChange} genreDeclared={false} onDeclared={onDeclared} />,
+    );
+    // Deux critères pendus, la déclaration se fait, le pose fusionne les deux.
+    fireEvent.click(screen.getByRole('button', { name: 'Femme' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Homme' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Déclarer mon genre' }));
+    fireEvent.change(screen.getByLabelText('Ton genre'), { target: { value: 'femme' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer et filtrer' }));
+    await waitFor(() => expect(screen.queryByText(MIRROR_COPY.genreCritere)).toBeNull());
+    expect(onDeclared).toHaveBeenCalledWith({ genderIdentity: 'femme' });
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ genders: ['femme', 'homme'] }));
   });
 
   it('la porte « Sans filtre » referme sans rien écrire', () => {

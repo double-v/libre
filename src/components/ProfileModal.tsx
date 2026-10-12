@@ -340,7 +340,10 @@ export default function ProfileModal({ userId, open, onClose, viewerBand = null,
                   <div className="flex flex-wrap gap-1.5">
                     {Array.isArray(profile.orientation) ? profile.orientation.map((o) => (
                       <span key={o} className="inline-block rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-800 dark:bg-pink-900/40 dark:text-pink-300">
-                        {o}
+                        {/* Même règle que le genre juste au-dessus : la
+                            valeur stockée en bas de casse, la fiche la
+                            capitalise. */}
+                        {o.charAt(0).toUpperCase() + o.slice(1)}
                       </span>
                     )) : (
                       <span className="inline-block rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-800 dark:bg-pink-900/40 dark:text-pink-300">

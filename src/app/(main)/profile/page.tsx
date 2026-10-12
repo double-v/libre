@@ -645,7 +645,9 @@ export default function ProfilePage() {
                   </div>
                   <p className="mt-1.5 text-xs text-muted">Plusieurs possibles.</p>
                 </div>
-                {consentField}
+                {/* Pas de case art. 9 ici : le type de relation n'est pas dans
+                    CHAMPS_SENSIBLES ; l'orientation déclarée qui l'habitait a
+                    déménagé sous « Identité » (#518). */}
                 <EditActions saving={saving} onSave={() => void saveSensible({ relationshipType: editRelationshipType })} onCancel={() => setEditingSection(null)} />
               </div>
             ) : (
@@ -693,8 +695,8 @@ export default function ProfilePage() {
           {/* Identité — le genre et l'orientation déclarée vivent ici (#518) :
               la donnée art. 9 porte la personne (« ton orientation »), pas la
               recherche. Une fois posées, elles se voient sur la fiche
-              (ProfileModal) ; l'absence, elle, n'y laisse aucune trace (bloc
-              vide masqué — #517). */}
+              (ProfileModal) ; le bloc vide, lui, est jamais rendu (#517) —
+              reste un écart : le JSON public sérialise les champs vides (PR). */}
           <ProfileSection sectionId="identity" title="Identité" icon={<IdCardIcon className="h-5 w-5" />} onEdit={() => startEdit('identity')} editing={editingSection === 'identity'} complete={!!profile.birthDate && !!profile.genderIdentity} defaultOpen>
             {editingSection === 'identity' ? (
               <div className="mt-3 space-y-3">

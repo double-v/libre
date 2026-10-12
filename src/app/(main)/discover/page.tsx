@@ -451,8 +451,9 @@ export default function DiscoverPage() {
   /**
    * Déclaration faite dans la question à deux portes (réciprocité #519) :
    * même écriture que partout (#425), puis la page sait que la contrepartie
-   * est là — le critère pendu peut se poser. Renvoie false en échec : la
-   * question reste ouverte.
+   * est là — le critère pendu peut se poser, ET le rang d'identité de la
+   * relance se re-dérive (déclarer le genre peut ouvrir le rang orientation).
+   * Renvoie false en échec : la question reste ouverte.
    */
   const declarerIdentite = async (
     patch: { genderIdentity?: string; orientation?: string[]; sensitiveConsent?: true },
@@ -464,9 +465,12 @@ export default function DiscoverPage() {
         body: JSON.stringify(patch),
       });
       if (!res.ok) return false;
-      if (patch.genderIdentity !== undefined) { setGenreDeclared(true); setNudgeIdentite(null); }
-      if (patch.orientation !== undefined) { setOrientationDeclared(true); setNudgeIdentite(null); }
+      const genreVoilà = patch.genderIdentity !== undefined || genreDeclared;
+      const orientationVoilà = patch.orientation !== undefined || orientationDeclared;
+      if (patch.genderIdentity !== undefined) setGenreDeclared(true);
+      if (patch.orientation !== undefined) setOrientationDeclared(true);
       if (patch.sensitiveConsent) setSensitiveConsent(true);
+      setNudgeIdentite(!genreVoilà ? 'genre' : !orientationVoilà ? 'orientation' : null);
       return true;
     } catch {
       return false;
@@ -652,7 +656,19 @@ export default function DiscoverPage() {
               <IdentiteNudgeCard
                 kind={nudgeIdentite}
                 consentSensible={sensitiveConsent}
-                onDeclared={() => setNudgeIdentite(null)}
+                onDeclared={(champ) => {
+                  // La déclaration née dans la carte : la page suit sur les
+                  // trois états (une déclaration faite ici vaut le
+                  // consentement art. 9, la carte l'a portée) et le rang se
+                  // re-dérive — déclarer le genre peut ouvrir le rang
+                  // orientation, sans attendre une relecture du profil.
+                  const genreVoilà = champ === 'genderIdentity' || genreDeclared;
+                  const orientationVoilà = champ === 'orientation' || orientationDeclared;
+                  if (champ === 'genderIdentity') setGenreDeclared(true);
+                  else setOrientationDeclared(true);
+                  setSensitiveConsent(true);
+                  setNudgeIdentite(!genreVoilà ? 'genre' : !orientationVoilà ? 'orientation' : null);
+                }}
                 onDismiss={() => {
                   writeStoredDate(NUDGE_DISMISS_KEY);
                   setNudgeIdentite(null);

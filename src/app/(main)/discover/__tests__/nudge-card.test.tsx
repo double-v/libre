@@ -123,14 +123,16 @@ describe('Découvrir — carte « dis qui tu es » (#517)', () => {
     expect(screen.queryByLabelText('Se déclarer')).toBeNull();
   });
 
-  it('la déclaration en carte écrit genre + consent, puis la carte se referme', async () => {
+  it('la déclaration en carte écrit genre + consent, puis le rang suit (l\'orientation prend la carte)', async () => {
     stubFetch({ ...done, photos: ['a'], relationshipType: ['libre'], cityLabel: 'Nantes (44)', genderIdentity: '', orientation: [] });
     await renderAndWaitFeed();
+    // Genre et orientation manquent : la carte dit le genre d'abord.
+    expect(screen.getByLabelText('Se déclarer')).toHaveTextContent('Dis qui tu es');
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.change(screen.getByLabelText('Ton genre'), { target: { value: 'femme' } });
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
-    await waitFor(() => expect(screen.queryByLabelText('Se déclarer')).toBeNull());
-    // `fetch` est un stub global : on lit ses appels par son mock interne.
+    // Le rang se re-dérive : la carte se pose sur l'orientation, pas sur rien.
+    await waitFor(() => expect(screen.getByLabelText('Se déclarer')).toHaveTextContent('Dis ton orientation'));
     const calls = (fetch as unknown as { mock: { calls: Array<[string, RequestInit | undefined]> } }).mock.calls;
     const request = calls.find(([url, init]) => url === '/api/users/profile' && init?.method === 'PUT');
     expect(request).toBeTruthy();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import TagButton from './TagButton';
 import {
   GENDER_OPTIONS,
@@ -97,7 +97,12 @@ const RANGE_CLASS =
   'h-1.5 w-full cursor-pointer appearance-none rounded-full bg-fill-subtle accent-coral';
 const SELECT_CLASS =
   'w-full rounded-md border border-hairline-strong bg-surface px-3 py-2 text-sm text-content';
-const LIEEN_CLASS = 'text-xs font-medium text-coral hover:text-coral-dark';
+// Les portes secondaires sont des vraies cibles tactiles (invariant ≥ 44 px).
+const LIEEN_CLASS =
+  'inline-flex min-h-[44px] items-center text-xs font-medium text-coral hover:text-coral-dark';
+
+/** Fusion sans doublon : la question peut pendre un critère déjà posé en base. */
+const fusionnerUniques = (a: string[], b: string[]): string[] => Array.from(new Set([...a, ...b]));
 
 /** La question en cours : genre ou orientation, jamais les deux. */
 type QuestionEnCours = 'genre' | 'orientation';
@@ -133,6 +138,15 @@ export default function SearchFilters({
   const [consent, setConsent] = useState(false);
   const [consentError, setConsentError] = useState('');
   const [attente, setAttente] = useState(false);
+  const [erreurPose, setErreurPose] = useState('');
+
+  // Le dernier `value` rendu : la pose de la question, après l'attente du
+  // PUT, doit élargir le filtre AUCUNEMENT à partir d'un état périmé — et
+  // ne jamais restaurer un retrait fait par la personne pendant l'attente.
+  const dernierValue = useRef(value);
+  useEffect(() => {
+    dernierValue.current = value;
+  });
 
   const questionGenre = question === 'genre';
   const questionOrientation = question === 'orientation';
@@ -146,6 +160,7 @@ export default function SearchFilters({
     setOrientationADeclarer([]);
     setConsent(false);
     setConsentError('');
+    setErreurPose('');
   }
 
   /** Retient (ou retire) un critère du pendu ; le dernier décoché referme la
@@ -162,23 +177,38 @@ export default function SearchFilters({
     if (!onDeclared || question === null) return;
     // Une déclaration est une valeur : « Je ne souhaite pas le préciser »
     // (genre vide) reste un silence — le filtre ne se pose pas (#519).
-    if (questionGenre && genreADeclarer === '') return;
-    if (questionOrientation && orientationADeclarer.length === 0) return;
+    if (questionGenre && genreADeclarer === '') {
+      setErreurPose('Choisis ton genre pour enregistrer.');
+      return;
+    }
+    if (questionOrientation && orientationADeclarer.length === 0) {
+      setErreurPose('Choisis ton orientation pour enregistrer.');
+      return;
+    }
     if (!sensitiveConsent && !consent) {
       setConsentError(COPY_CONSENT_SENSIBLE.requis);
       return;
     }
     setAttente(true);
     setConsentError('');
+    setErreurPose('');
     try {
       const ok = await onDeclared({
         ...(questionGenre ? { genderIdentity: genreADeclarer } : {}),
         ...(questionOrientation ? { orientation: orientationADeclarer } : {}),
         ...(sensitiveConsent ? {} : { sensitiveConsent: true as const }),
       });
-      if (!ok) return;
-      if (questionGenre) set({ genders: [...value.genders, ...pendusGenre] });
-      else set({ orientations: [...value.orientations, ...pendusOrientation] });
+      if (!ok) {
+        setErreurPose('Impossible d’enregistrer, réessaie.');
+        return;
+      }
+      // Porte prise : le critère pendu s'ajoute au DERNIER value rendu (jamais
+      // l'état capturé au clic, qui écraserait un retrait fait entre-temps).
+      if (questionGenre) {
+        onChange({ ...dernierValue.current, genders: fusionnerUniques(dernierValue.current.genders, pendusGenre) });
+      } else {
+        onChange({ ...dernierValue.current, orientations: fusionnerUniques(dernierValue.current.orientations, pendusOrientation) });
+      }
       fermerQuestion();
     } finally {
       setAttente(false);
@@ -190,8 +220,11 @@ export default function SearchFilters({
     onChange(EMPTY_SEARCH_FILTERS);
   };
 
+  // La case de la question : une id à elle — le panel de /profil peut
+  // afficher la sienne (consentField, id par défaut) en même temps ; deux
+  // mêmes id se voleraient le focus (aria) et la case de l'autre.
   const consentQuestion = sensitiveConsent ? null : (
-    <ConsentSensibleField checked={consent} onChange={(v) => { setConsent(v); setConsentError(''); }} error={consentError} />
+    <ConsentSensibleField id="consent-question-filtre" checked={consent} onChange={(v) => { setConsent(v); setConsentError(''); }} error={consentError} />
   );
 
   const body = (
@@ -205,14 +238,15 @@ export default function SearchFilters({
               key={opt.value}
               label={opt.label}
               selected={value.genders.includes(opt.value) || (questionGenre && pendusGenre.includes(opt.value))}
+              disabled={questionOrientation}
               onClick={() => {
                 if (questionGenre) {
                   retenirPendus('genre', toggle(pendusGenre, opt.value));
                   return;
                 }
-                if (!genreDeclared && onDeclared) {
-                  // La question se pose au clic, jamais au montage : un filtre
-                  // déjà posé n'est pas chassé (le serveur refuse jamais).
+                // Retirer un critère déjà posé ne pose jamais la question :
+                // le retrait reste libre, seul l'ajout exige la contrepartie.
+                if (!genreDeclared && onDeclared && !value.genders.includes(opt.value)) {
                   setQuestion('genre');
                   setPendusGenre([opt.value]);
                   setPorteOuverte(false);
@@ -241,7 +275,7 @@ export default function SearchFilters({
                 <select
                   id="ton-genre-a-declarer"
                   value={genreADeclarer}
-                  onChange={(e) => { setGenreADeclarer(e.target.value); setConsentError(''); }}
+                  onChange={(e) => { setGenreADeclarer(e.target.value); setConsentError(''); setErreurPose(''); }}
                   className={SELECT_CLASS}
                 >
                   <option value="">Choisis…</option>
@@ -250,6 +284,7 @@ export default function SearchFilters({
                   ))}
                 </select>
                 {consentQuestion}
+                {erreurPose && <p role="alert" className="text-xs text-error">{erreurPose}</p>}
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" variant="primary" size="sm" loading={attente} onClick={() => void declarerQuestion()}>
                     Enregistrer et filtrer
@@ -274,12 +309,13 @@ export default function SearchFilters({
               key={opt}
               label={cap(opt)}
               selected={value.orientations.includes(opt) || (questionOrientation && pendusOrientation.includes(opt))}
+              disabled={questionGenre}
               onClick={() => {
                 if (questionOrientation) {
                   retenirPendus('orientation', toggle(pendusOrientation, opt));
                   return;
                 }
-                if (!orientationDeclared && onDeclared) {
+                if (!orientationDeclared && onDeclared && !value.orientations.includes(opt)) {
                   setQuestion('orientation');
                   setPendusOrientation([opt]);
                   setPorteOuverte(false);
@@ -311,11 +347,12 @@ export default function SearchFilters({
                       key={opt}
                       label={cap(opt)}
                       selected={orientationADeclarer.includes(opt)}
-                      onClick={() => { setOrientationADeclarer(toggle(orientationADeclarer, opt)); setConsentError(''); }}
+                      onClick={() => { setOrientationADeclarer(toggle(orientationADeclarer, opt)); setConsentError(''); setErreurPose(''); }}
                     />
                   ))}
                 </div>
                 {consentQuestion}
+                {erreurPose && <p role="alert" className="text-xs text-error">{erreurPose}</p>}
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" variant="primary" size="sm" loading={attente} onClick={() => void declarerQuestion()}>
                     Enregistrer et filtrer

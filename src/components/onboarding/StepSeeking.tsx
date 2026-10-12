@@ -53,7 +53,10 @@ const toggle = (arr: string[], v: string) => (arr.includes(v) ? arr.filter((x) =
 const LABEL = 'mb-1.5 flex items-baseline justify-between text-xs font-semibold uppercase tracking-wider text-muted';
 const SELECT_CLASS =
   'w-full rounded-md border border-hairline-strong bg-surface px-3 py-2 text-sm text-content';
-const LIEEN_CLASS = 'text-xs font-medium text-coral hover:text-coral-dark';
+// Cibles tactiles de secours : l'invariant du projet (≥ 44 px) vaut pour
+// tous les boutons, portes de la question comprises.
+const LIEEN_CLASS =
+  'inline-flex min-h-[44px] items-center text-xs font-medium text-coral hover:text-coral-dark';
 
 export default function StepSeeking({
   onContinue,
@@ -163,29 +166,37 @@ export default function StepSeeking({
                   </Button>
                   <button
                     type="button"
-                    onClick={() => setGenders([])}
+                    onClick={() => { setGenders([]); setChampGenreOuvert(false); setGenreDeclare(''); }}
                     className={LIEEN_CLASS}
                   >
                     Sans filtre
                   </button>
                 </div>
+                {/* Le champ vit DANS la question : « Sans filtre » le referme
+                    avec elle — un champ déplié hors contexte ferait croire le
+                    critère toujours posé. */}
+                {champGenreOuvert && (
+                  <div className="mt-2 space-y-2">
+                    <label htmlFor="ton-genre-etape" className="text-xs font-semibold uppercase tracking-wider text-muted">Ton genre</label>
+                    <select
+                      id="ton-genre-etape"
+                      value={genreDeclare}
+                      onChange={(e) => setGenreDeclare(e.target.value)}
+                      className={SELECT_CLASS}
+                    >
+                      <option value="">Choisis…</option>
+                      {GENDER_OPTIONS.filter((g) => g.value !== '').map((g) => (
+                        <option key={g.value} value={g.value}>{g.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             )}
-            {champGenreOuvert && (
-              <div className="mt-2 space-y-2">
-                <label htmlFor="ton-genre-etape" className="text-xs font-semibold uppercase tracking-wider text-muted">Ton genre</label>
-                <select
-                  id="ton-genre-etape"
-                  value={genreDeclare}
-                  onChange={(e) => setGenreDeclare(e.target.value)}
-                  className={SELECT_CLASS}
-                >
-                  <option value="">Choisis…</option>
-                  {GENDER_OPTIONS.filter((g) => g.value !== '').map((g) => (
-                    <option key={g.value} value={g.value}>{g.label}</option>
-                  ))}
-                </select>
-              </div>
+            {/* Une fois déclarée, la contrepartie se rappelle en une ligne —
+                le champ reste dans la question, seule ou elle. */}
+            {typeof genreDeclare === 'string' && genreDeclare !== '' && (
+              <p className="mt-2 text-sm text-content">Ton genre : {GENDER_OPTIONS.find((g) => g.value === genreDeclare)?.label ?? genreDeclare}</p>
             )}
           </div>
 
@@ -216,7 +227,7 @@ export default function StepSeeking({
                   </Button>
                   <button
                     type="button"
-                    onClick={() => setOrientations([])}
+                    onClick={() => { setOrientations([]); setChampOrientationOuvert(false); setOrientationDeclaree([]); }}
                     className={LIEEN_CLASS}
                   >
                     Sans filtre
@@ -238,6 +249,11 @@ export default function StepSeeking({
                   </div>
                 )}
               </div>
+            )}
+            {/* Symétrique du côté genre : la déclaration prise se rappelle en
+                une ligne, le champ reste dans la question, seule ou elle. */}
+            {orientationDeclaree.length > 0 && (
+              <p className="mt-2 text-sm text-content">Ton orientation : {orientationDeclaree.map(cap).join(', ')}</p>
             )}
           </div>
 
