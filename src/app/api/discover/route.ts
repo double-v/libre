@@ -58,8 +58,10 @@ interface FeedUser {
   displayName: string;
   bio: string;
   birthDate: Date | null;
-  genderIdentity: string;
-  orientation: string[];
+  /** Omis pour qui s'est tu (#517) : une clé absente dit « rien à lire »,
+   *  une chaîne vide dirait « refusé ». */
+  genderIdentity?: string;
+  orientation?: string[];
   interests: string[];
   practices?: string[];
   photos: string[];
@@ -228,8 +230,12 @@ export async function GET(request: NextRequest) {
         displayName: p.user.displayName,
         bio: p.bio,
         birthDate: p.birthDate,
-        genderIdentity: p.genderIdentity,
-        orientation: p.orientation,
+        // Omission, pas une valeur vide : la fiche d'autrui ne livre pas le
+        // silence d'un membre au JSON (une chaîne vide dirait « refusé »,
+        // une clé absente « rien à lire » — #517, le patron de la fiche
+        // publique). Les cartes n'affichent de toute façon jamais le champ.
+        ...(p.genderIdentity ? { genderIdentity: p.genderIdentity } : {}),
+        ...(p.orientation.length > 0 ? { orientation: p.orientation } : {}),
         interests: p.interests,
         // Pratiques : réservées aux matches par défaut (#328). Clé omise, pas
         // tableau vide — « tu n'y as pas accès » et « cette personne n'en a

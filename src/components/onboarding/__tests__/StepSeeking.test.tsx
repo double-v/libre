@@ -107,11 +107,17 @@ describe('<StepSeeking /> — réciprocité (#519)', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Femme' }));
     fireEvent.click(screen.getByRole('button', { name: 'Déclarer mon genre' }));
-    expect(screen.getByLabelText('Ton genre')).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Ton genre'), { target: { value: 'femme' } });
+    const champ = screen.getByLabelText('Ton genre');
+    expect(champ).toBeInTheDocument();
+    // La case art. 9 de la question, cochée avant la pose (#425).
+    fireEvent.change(champ, { target: { value: 'femme' } });
+    // La case de la QUESTION (celle du composant) — le test en voit deux
+    // quand le champ est déplié : celle de la question, celle du bas d'écran.
+    const caseQuestion = screen.getAllByRole('checkbox').find((c) => (c as HTMLInputElement).checked === false)!;
+    fireEvent.click(caseQuestion);
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer et filtrer' }));
     // La question se referme : la contrepartie est prise.
-    expect(screen.queryByText('Pour chercher par genre, dis aussi le tien.')).toBeNull();
-    fireEvent.click(screen.getByRole('checkbox'));
+    await waitFor(() => expect(screen.queryByText('Pour chercher par genre, dis aussi le tien.')).toBeNull());
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
     await waitFor(() => expect(onContinue).toHaveBeenCalledWith(expect.objectContaining({
       searchGenders: ['femme'],
