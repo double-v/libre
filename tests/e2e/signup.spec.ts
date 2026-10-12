@@ -1,4 +1,12 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { TEMPS_MIN } from '../../src/lib/appat';
+
+// #515 : le formulaire refuse les soumissions quasi instantanées — le test
+// joue l'humain et attend le minimum avant chaque soumission au serveur.
+async function soumettreLentement(page: Page): Promise<void> {
+  await page.waitForTimeout(TEMPS_MIN);
+  await page.click('button[type="submit"]');
+}
 
 // Mock Turnstile globally for all signup tests (see TurnstileProvider.tsx).
 // The component checks window.__TURNSTILE_MOCK__ on mount and uses the
@@ -24,7 +32,7 @@ test.describe('Registration flow', () => {
     await page.fill('input[id="password"]', 'SecurePass123');
     await page.check('input[id="consent"]');
 
-    await page.click('button[type="submit"]');
+    await soumettreLentement(page);
 
     await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
     await expect(page.getByText('Inscription réussie')).toBeVisible();
@@ -38,7 +46,7 @@ test.describe('Registration flow', () => {
     await page.fill('input[id="password"]', 'short');
     await page.check('input[id="consent"]');
 
-    await page.click('button[type="submit"]');
+    await soumettreLentement(page);
 
     await expect(page.getByText(/8 caractères min/i)).toBeVisible({ timeout: 5000 });
     await expect(page).toHaveURL(/\/register/);
@@ -52,7 +60,7 @@ test.describe('Registration flow', () => {
     await page.fill('input[id="password"]', 'SecurePass123');
     await page.check('input[id="consent"]');
 
-    await page.click('button[type="submit"]');
+    await soumettreLentement(page);
 
     // First attempt may succeed or fail depending on DB state
     // If it succeeds and redirects, that's fine — the duplicate test is on second attempt
@@ -64,7 +72,7 @@ test.describe('Registration flow', () => {
       await page.fill('input[id="email"]', 'dup@example.com');
       await page.fill('input[id="password"]', 'SecurePass123');
       await page.check('input[id="consent"]');
-      await page.click('button[type="submit"]');
+      await soumettreLentement(page);
       await expect(page.getByText(/erreur/i)).toBeVisible({ timeout: 5000 });
     }
   });
