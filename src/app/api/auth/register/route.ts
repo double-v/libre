@@ -59,14 +59,14 @@ export async function POST(request: Request) {
     // décrit un robot scripté — une personne réelle ne voit pas l'appât et
     // ne peut pas soumettre si vite. Réponse de toute erreur d'inscription :
     // c'est réessayable (le temps court depuis l'affichage), et le motif
-    // n'est pas tracé ici — un compteur de log sans PII, à agréger, en tient
-    // la mesure (leçon #334 : un refus uniforme doit rester mesurable).
+    // n'est pas tracé ici — le compteur de log sans PII, à agréger, en tient
+    // le compte (leçon #334 : un refus uniforme doit rester mesurable).
     const appatRempli = typeof fax === 'string' && fax.trim() !== '';
     const tropVite = typeof tms === 'number' && tms < TEMPS_MIN;
     if (appatRempli || tropVite) {
       console.warn('fraude.inscription.appat', { motif: appatRempli ? 'champ' : 'temps' });
       return NextResponse.json(
-        { error: 'Impossible de créer un compte pour le moment. Si vous utilisez un logiciel de remplissage automatique, désactivez-le pour cette page et essayez de nouveau.' },
+        { error: 'Impossible de créer un compte pour le moment. Si vous utilisez un logiciel de remplissage automatique, désactivez-le pour ce site et essayez de nouveau.' },
         { status: 403 },
       );
     }

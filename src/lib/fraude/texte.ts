@@ -9,7 +9,7 @@ import { enregistrerSignal } from './signaux';
  * empreinte retenue par compte, comparée aux comptes actifs et bannis,
  * signal posé partout où le fait l'atteste.
  *
- * Niveau 1 : le copier-coller après normalisation. Un scammmeur qui réécrit
+ * Niveau 1 : le copier-coller après normalisation. Un fraudeur qui réécrit
  * les mots passe — l'écart est assumé dans le ticket, on mesurera avant de
  * monter en comparaison floue.
  *
@@ -18,7 +18,7 @@ import { enregistrerSignal } from './signaux';
  * compte.
  */
 
-/** Une phrase courte et banales peut être écrite deux fois par accident :
+/** Une phrase courte et banale peut être écrite deux fois par accident :
  * l'empreinte se tait en dessous, l'indice ne peut pas piéger un vrai membre. */
 const LONGUEUR_MIN = 40;
 

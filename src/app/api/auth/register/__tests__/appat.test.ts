@@ -3,7 +3,7 @@
  *
  * Le champ-appât rempli et la soumission quasi instantanée refusent
  * l'inscription d'un robot scripté. Une personne réelle ne devrait jamais
- * passer ici : le test veille aussi à ce que les deux motifs répondent le
+ * passer ici : le test veille aussi à ce que les deux motifs renvoient le
  * même message, et à ce que rien ne parte en base.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
