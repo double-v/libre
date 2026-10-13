@@ -79,6 +79,7 @@ export default function ConfidentialitePage() {
         <li>User-Agent (collecté uniquement lors d&apos;un signalement de bug via le formulaire de feedback)</li>
         <li>Adresses IP : traitées au passage par Cloudflare et Vercel ; conservées par Libre seulement avec la trace de votre consentement (voir §5), et, à l&apos;inscription, sous la forme d&apos;une empreinte chiffrée gardée 7 jours (voir §4)</li>
         <li>Fuseau horaire de votre navigateur : comparé à la ville que vous saisissez à la main, puis oublié — il n&apos;est jamais enregistré</li>
+        <li>Jour de votre dernière visite : seulement la date, sans l&apos;heure ni l&apos;historique de vos visites. Elle sert à nos statistiques de fréquentation et à l&apos;ordre de Découvrir. Elle n&apos;est jamais montrée aux autres membres.</li>
       </ul>
 
       <h3>2.6 Notifications hors de l&apos;application</h3>

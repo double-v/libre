@@ -124,6 +124,9 @@ function userOf(id: string, name: string) {
     // Spec 010 : invitation posée sur TOUS les comptes — elle ne se lit que
     // par soi, en booléen, sur GET /api/users/profile.
     verifInviteeAt: new Date(),
+    // Spec 011 (#498) : présence et préavis, privés.
+    lastSeenAt: new Date(),
+    preavisInactiviteAt: new Date(),
   };
   user.profile = profileOf(id, user);
   return user;
@@ -188,6 +191,9 @@ function sansSignaux(text: string, cas = '') {
   expect(text, cas).not.toContain('verifInviteeAt');
   expect(text, cas).not.toContain('invitationVerification');
   expect(text, cas).not.toMatch(/"niveau"|"fiabilite"|signauxRecents/);
+  // Spec 011.
+  expect(text, cas).not.toContain('lastSeenAt');
+  expect(text, cas).not.toContain('preavisInactiviteAt');
 }
 
 describe('cityLabel / positionSource / onboardingStep / retraitAt / signaux ne sortent jamais vers autrui (#402, spec 005, spec 006)', () => {
