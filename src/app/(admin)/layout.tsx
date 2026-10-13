@@ -8,7 +8,7 @@ import ThemeMenu from '@/components/ui/ThemeMenu';
 import HeartMark from '@/components/ui/HeartMark';
 import CountChip from '@/components/ui/CountChip';
 import { countAdminQueues, type AdminQueues } from '@/lib/admin-queues';
-import { compterProfilsAVerifier } from '@/lib/fraude/file';
+import { compterGrappes } from '@/lib/fraude/indices-admin';
 
 // `queue` relie l'entrée à sa file de travail (#391) : le layout compte et
 // pose un `CountChip` à côté — le chiffre est légitime ici, surface admin.
@@ -19,7 +19,7 @@ const adminNavItems: Array<{ href: string; label: string; icon: string; queue?: 
   { href: '/admin/feedback', label: 'Retours', icon: 'feedback', queue: 'feedback' },
   { href: '/admin/journal', label: 'Journal', icon: 'journal' },
   { href: '/admin/circle/alerts', label: 'Alertes Cercle', icon: 'alert' },
-  { href: '/admin/profils', label: 'Profils à vérifier', icon: 'shield', queue: 'profils' },
+  { href: '/admin/indices', label: 'Indices', icon: 'shield', queue: 'profils' },
   { href: '/admin/verifications', label: 'Vérifications', icon: 'verifications', queue: 'verifications' },
   { href: '/admin/appearance', label: 'Apparence', icon: 'palette' },
   { href: '/admin/features', label: 'Fonctionnalités', icon: 'toggle' },
@@ -145,7 +145,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   // Files de travail (R7) : comptées ici, en serveur, sans HTTP. Un échec de
   // comptage ne ferme pas l'administration (`countAdminQueues` le confine à sa file).
-  const queues = await countAdminQueues(getDb(), compterProfilsAVerifier);
+  const queues = await countAdminQueues(getDb(), compterGrappes);
 
   return (
     <div className="flex min-h-screen">

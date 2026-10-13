@@ -73,7 +73,10 @@ describe('garde : chaque bannissement retient les empreintes (#445)', () => {
         if (statSync(p).isDirectory()) return f === '__tests__' ? [] : routes(p);
         return f === 'route.ts' ? [p] : [];
       });
-    const bannissent = routes(racine).filter((f) => /data:\s*\{\s*isBanned:\s*(true|banned)/.test(readFileSync(f, 'utf8')));
+    // Spec 011 : les gestes partagés (`src/lib/moderation/`) bannissent pour la
+    // page Indices et la route de la file : ils sont gardés comme les routes.
+    const gestes = path.join(process.cwd(), 'src/lib/moderation/gestes.ts');
+    const bannissent = [...routes(racine), gestes].filter((f) => /data:\s*\{\s*isBanned:\s*(true|banned)/.test(readFileSync(f, 'utf8')));
     expect(bannissent.length).toBeGreaterThanOrEqual(3);
     for (const f of bannissent) {
       expect(readFileSync(f, 'utf8'), path.relative(racine, f)).toContain('retenirEmpreintesBannies(');
