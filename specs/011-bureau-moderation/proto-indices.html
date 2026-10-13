@@ -1,0 +1,409 @@
+<title>Libre Indices</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout : nav admin à sections à gauche, liste de grappes en cartes, comparaison des comptes en colonnes, barre de lot collante en bas. Tokens = thème « libre » de globals.css. */
+:root {
+  --background: #ffffff;
+  --surface: #ffffff;
+  --sunken: #FDF0ED;
+  --content: #171717;
+  --muted: #4b5563;
+  --hairline: #e5e7eb;
+  --hairline-strong: #d1d5db;
+  --fill-subtle: #f3f4f6;
+  --coral: #E8634A;
+  --coral-light: #F09A88;
+  --coral-dark: #9E3A28;
+  --sand: #F5E6D8;
+  --verified-bg: #dbeafe; --verified-fg: #1e40af;
+  --pending-bg: #fffbeb; --pending-fg: #92400e;
+  --refused-bg: #fef2f2; --refused-fg: #b91c1c;
+  --ok-bg: #ecfdf5; --ok-fg: #047857;
+  --rad-card: 30px;
+  --rad-control: 6px;
+  --elev-soft: 0 8px 20px -8px rgb(232 99 74 / 0.18);
+  --font: "Geist", "Inter", Arial, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: #0a0a0a; --surface: #171717; --sunken: rgb(232 99 74 / 0.10);
+    --content: #ededed; --muted: #9ca3af; --hairline: #374151; --hairline-strong: #374151;
+    --fill-subtle: #1f2937; --sand: rgb(232 99 74 / 0.20); --coral-dark: #F09A88;
+    --verified-bg: rgb(30 58 138 / 0.30); --verified-fg: #93c5fd;
+    --pending-bg: rgb(120 53 15 / 0.30); --pending-fg: #fcd34d;
+    --refused-bg: rgb(127 29 29 / 0.30); --refused-fg: #fca5a5;
+    --ok-bg: rgb(6 78 59 / 0.35); --ok-fg: #6ee7b7;
+    --elev-soft: 0 8px 20px -8px rgb(232 99 74 / 0.24);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --background: #0a0a0a; --surface: #171717; --sunken: rgb(232 99 74 / 0.10);
+  --content: #ededed; --muted: #9ca3af; --hairline: #374151; --hairline-strong: #374151;
+  --fill-subtle: #1f2937; --sand: rgb(232 99 74 / 0.20); --coral-dark: #F09A88;
+  --verified-bg: rgb(30 58 138 / 0.30); --verified-fg: #93c5fd;
+  --pending-bg: rgb(120 53 15 / 0.30); --pending-fg: #fcd34d;
+  --refused-bg: rgb(127 29 29 / 0.30); --refused-fg: #fca5a5;
+  --ok-bg: rgb(6 78 59 / 0.35); --ok-fg: #6ee7b7;
+  --elev-soft: 0 8px 20px -8px rgb(232 99 74 / 0.24);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--background); color: var(--content); font-family: var(--font); font-size: 14px; line-height: 1.5; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+
+.proto-banner { background: var(--sand); color: var(--coral-dark); padding: 8px 16px; font-size: 13px; text-align: center; }
+
+.shell { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; }
+.side { border-right: 1px solid var(--hairline); padding: 20px 14px; display: flex; flex-direction: column; gap: 18px; position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; height: 100vh; overflow-y: auto; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--coral); font-size: 17px; padding-inline: 8px; }
+.brand i { width: 22px; height: 22px; border-radius: 50%; background: var(--coral); display: inline-grid; place-items: center; color: #fff; font-style: normal; font-size: 12px; }
+.navsec { display: flex; flex-direction: column; gap: 2px; }
+.navsec h3 { margin: 0 0 4px; padding-inline: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.navsec a { display: flex; align-items: center; justify-content: space-between; min-height: 40px; padding: 0 10px; border-radius: var(--rad-control); color: var(--content); text-decoration: none; }
+.navsec a:hover { background: var(--fill-subtle); }
+.navsec a[aria-current="page"] { background: var(--sunken); color: var(--coral-dark); font-weight: 600; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--coral); }
+.chip-count { font-size: 12px; font-variant-numeric: tabular-nums; background: var(--coral); color: #fff; border-radius: 999px; padding: 0 7px; line-height: 20px; }
+
+main { padding-block: 24px 120px; padding-inline: 28px; min-width: 0; max-width: 1080px; }
+.url { font-family: var(--mono); font-size: 12px; color: var(--muted); background: var(--fill-subtle); border-radius: var(--rad-control); padding: 4px 10px; display: inline-block; max-width: 100%; overflow-wrap: anywhere; }
+h1 { font-size: 26px; margin: 10px 0 4px; text-wrap: balance; letter-spacing: -0.01em; }
+.lede { color: var(--muted); margin: 0 0 18px; max-width: 64ch; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.fchip { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--hairline-strong); background: var(--surface); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.fchip[aria-pressed="true"] { background: var(--coral); border-color: var(--coral); color: #fff; }
+.fchip span { font-variant-numeric: tabular-nums; opacity: .85; }
+
+.grappes { display: flex; flex-direction: column; gap: 18px; }
+.card { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--rad-card); padding: 20px; box-shadow: var(--elev-soft); display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.card-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.card-head h2 { font-size: 16px; margin: 0; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { display: inline-flex; align-items: center; border-radius: 999px; padding: 2px 9px; font-size: 12px; font-weight: 500; white-space: nowrap; background: var(--fill-subtle); color: var(--muted); }
+.tag.accent { background: var(--sand); color: var(--coral-dark); }
+.tag.verified { background: var(--verified-bg); color: var(--verified-fg); }
+.tag.pending { background: var(--pending-bg); color: var(--pending-fg); }
+.tag.refused { background: var(--refused-bg); color: var(--refused-fg); }
+.tag.ok { background: var(--ok-bg); color: var(--ok-fg); }
+
+.raisons { margin: 0; padding: 12px 16px; background: var(--sunken); border-radius: 16px; display: flex; flex-direction: column; gap: 6px; list-style: none; }
+.raisons li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 6px; }
+.raisons li::before { content: "›"; color: var(--coral); font-weight: 700; }
+.raisons .legit { color: var(--muted); font-size: 13px; }
+
+.compare { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 12px; }
+.acct { border: 1px solid var(--hairline); border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.acct.orphan { border-style: dashed; border-color: var(--coral-light); }
+.acct-top { display: flex; align-items: center; gap: 10px; }
+.acct-top input { width: 22px; height: 22px; accent-color: var(--coral); margin: 0; flex: none; }
+.pick { display: inline-grid; place-items: center; min-width: 44px; min-height: 44px; margin: -11px; cursor: pointer; }
+.avatar { width: 40px; height: 40px; border-radius: 50%; flex: none; background: var(--fill-subtle); display: grid; place-items: center; color: var(--muted); font-size: 11px; }
+.avatar.has { background: linear-gradient(135deg, var(--coral-light), var(--sand)); color: var(--coral-dark); font-weight: 600; font-size: 14px; }
+.who { min-width: 0; }
+.who a { color: var(--content); font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
+.who a:hover { text-decoration: underline; }
+.who small { display: block; color: var(--muted); font-size: 12px; }
+dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; font-size: 13px; }
+dt { color: var(--muted); }
+dd { margin: 0; font-variant-numeric: tabular-nums; }
+.no { color: var(--refused-fg); }
+.yes { color: var(--ok-fg); }
+.sig { font-size: 12px; color: var(--muted); border-top: 1px solid var(--hairline); padding-top: 8px; }
+.sig b { color: var(--content); font-weight: 500; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { min-height: 44px; padding: 0 16px; border-radius: var(--rad-control); border: 1px solid var(--hairline-strong); background: var(--surface); cursor: pointer; font-weight: 500; }
+.btn:hover { background: var(--fill-subtle); }
+.btn.primary { background: var(--coral); border-color: var(--coral); color: #fff; }
+.btn.primary:hover { filter: brightness(.95); }
+.btn.danger { color: var(--refused-fg); border-color: var(--refused-fg); }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.spacer { flex: 1; }
+.lnk { background: none; border: 0; color: var(--coral-dark); text-decoration: underline; cursor: pointer; min-height: 44px; padding: 0 4px; }
+
+details.dossier { border-top: 1px solid var(--hairline); padding-top: 10px; }
+details.dossier summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; color: var(--coral-dark); font-weight: 500; }
+.decide { display: flex; flex-direction: column; gap: 10px; padding-top: 6px; }
+.decide-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.decide-row strong { min-width: 120px; }
+textarea { width: 100%; min-height: 64px; border: 1px solid var(--hairline-strong); border-radius: var(--rad-control); background: var(--surface); color: var(--content); font: inherit; padding: 8px 10px; }
+
+.confirm { border: 1px solid var(--coral); background: var(--sunken); border-radius: 18px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.confirm p { margin: 0; }
+
+.lotbar { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(6px); border-top: 1px solid var(--hairline); display: flex; justify-content: center; }
+.lotbar-in { width: 100%; max-width: 1080px; display: flex; flex-direction: column; gap: 10px; }
+.lotbar-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.lotbar .why { font-size: 12px; color: var(--muted); }
+.names { margin: 0; padding-left: 18px; columns: 2 180px; font-size: 13px; }
+.bilan { font-size: 13px; }
+
+.empty { text-align: center; color: var(--muted); padding: 40px 16px; border: 1px dashed var(--hairline-strong); border-radius: var(--rad-card); }
+
+@media (max-width: 860px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--hairline); padding: 12px 16px; gap: 8px; }
+  .navsec.other { display: none; }
+  .navsec.mod { flex-direction: row; overflow-x: auto; gap: 4px; }
+  .navsec.mod h3 { display: none; }
+  .navsec.mod a { white-space: nowrap; gap: 8px; }
+  main { padding-inline: 16px; }
+  .compare { grid-template-columns: minmax(0, 1fr); }
+  .card { padding: 16px; border-radius: 22px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .card, .lotbar { transition: box-shadow .2s, transform .2s; }
+}
+</style>
+
+<div class="proto-banner">Prototype de la spec 011 (pages Indices et lots). Les comptes sont fictifs ; aucun geste n'agit.</div>
+
+<div class="shell">
+  <aside class="side" aria-label="Administration">
+    <div class="brand"><i>♥</i> Libre admin</div>
+    <nav class="navsec mod" aria-label="Modération">
+      <h3>Modération</h3>
+      <a href="#" aria-current="page">Indices <span class="chip-count" id="nav-count">5</span></a>
+      <a href="#">Signalements <span class="dot" aria-label="du travail attend"></span></a>
+      <a href="#">Vérifications <span class="dot" aria-label="du travail attend"></span></a>
+      <a href="#">Retours</a>
+    </nav>
+    <nav class="navsec other" aria-label="Communauté">
+      <h3>Communauté</h3>
+      <a href="#">Tableau de bord</a>
+      <a href="#">Membres</a>
+      <a href="#">Journal</a>
+      <a href="#">Alertes Cercle</a>
+      <a href="#">La Place</a>
+    </nav>
+    <nav class="navsec other" aria-label="Réglages">
+      <h3>Réglages</h3>
+      <a href="#">Apparence</a>
+      <a href="#">Fonctionnalités</a>
+      <a href="#">Rétention</a>
+      <a href="#">Rate-limits</a>
+      <a href="#">Logs</a>
+    </nav>
+  </aside>
+
+  <main>
+    <span class="url" id="url">/admin/indices</span>
+    <h1>Indices</h1>
+    <p class="lede">Les comptes qui portent un indice non tranché. Les comptes reliés entre eux sont regroupés, avec la raison du rapprochement. Les plus douteux sont en tête.</p>
+
+    <div class="filters" role="group" aria-label="Filtrer les grappes">
+      <button class="fchip" data-f="tous" aria-pressed="true">Toutes <span id="c-tous"></span></button>
+      <button class="fchip" data-f="doublons" aria-pressed="false">Doublons probables <span id="c-doublons"></span></button>
+      <button class="fchip" data-f="douteux" aria-pressed="false">Douteux <span id="c-douteux"></span></button>
+      <button class="fchip" data-f="a_surveiller" aria-pressed="false">À surveiller <span id="c-a_surveiller"></span></button>
+    </div>
+
+    <div class="grappes" id="grappes"></div>
+  </main>
+</div>
+
+<div class="lotbar" id="lotbar" hidden>
+  <div class="lotbar-in" id="lotbar-in"></div>
+</div>
+
+<script>
+const NIV = { douteux: ['Douteux', 'refused'], a_surveiller: ['À surveiller', 'pending'], fiable: ['Fiable', 'ok'] };
+const VERIF = { aucune: ['Aucune', ''], invite: ['Invité au selfie', 'pending'], retrait: ['En retrait', 'refused'], verifie: ['Vérifié', 'verified'] };
+
+const GRAPPES = [
+  { id: 'g1', titre: 'Deux comptes, un appareil', doublon: 'a1',
+    raisons: ['Ces deux comptes ont été créés sur le même appareil, à 6 minutes d’écart.', 'Le premier n’a jamais confirmé son adresse e-mail : c’est probablement une faute de frappe à l’inscription.'],
+    comptes: [
+      { id: 'a1', nom: 'Membre fictif A', mail: 'adresse non confirmée', inscr: '14 sept., 21 h 02', conf: false, photo: false, vu: 'jamais', niv: 'a_surveiller', verif: 'aucune', sig: ['Appareil partagé'] },
+      { id: 'a2', nom: 'Membre fictif B', mail: 'adresse confirmée', inscr: '14 sept., 21 h 08', conf: true, photo: true, vu: 'hier', niv: 'a_surveiller', verif: 'aucune', sig: ['Appareil partagé'] },
+    ] },
+  { id: 'g2', titre: 'Une photo sur deux profils',
+    raisons: ['La même photo apparaît sur ces deux profils.', 'Membre fictif C a écrit « paiement en coupon » dans sa bio, une formule fréquente dans les arnaques.'],
+    comptes: [
+      { id: 'b1', nom: 'Membre fictif C', inscr: '9 oct., 03 h 41', conf: true, photo: true, vu: 'aujourd’hui', niv: 'douteux', verif: 'invite', sig: ['Photo réutilisée', 'Lexique de l’arnaque', 'Profil monté d’un coup'] },
+      { id: 'b2', nom: 'Membre fictif D', inscr: '2 août, 18 h 15', conf: true, photo: true, vu: 'il y a 3 jours', niv: 'a_surveiller', verif: 'aucune', sig: ['Photo réutilisée'] },
+    ] },
+  { id: 'g3', titre: 'Trois inscriptions, une connexion',
+    raisons: ['Trois comptes se sont inscrits depuis la même connexion en 40 minutes.'],
+    legit: 'Une box familiale ou un lieu public peut l’expliquer.',
+    comptes: [
+      { id: 'c1', nom: 'Membre fictif E', inscr: '11 oct., 14 h 10', conf: true, photo: false, vu: 'il y a 2 jours', niv: 'douteux', verif: 'aucune', sig: ['Inscriptions groupées', 'Rafale de likes'] },
+      { id: 'c2', nom: 'Membre fictif F', inscr: '11 oct., 14 h 31', conf: true, photo: false, vu: 'il y a 2 jours', niv: 'douteux', verif: 'aucune', sig: ['Inscriptions groupées', 'Rafale de likes'] },
+      { id: 'c3', nom: 'Membre fictif G', inscr: '11 oct., 14 h 50', conf: false, photo: false, vu: 'jamais', niv: 'a_surveiller', verif: 'aucune', sig: ['Inscriptions groupées'] },
+    ] },
+  { id: 'g4', titre: 'Deux comptes, un appareil', doublon: 'd1',
+    raisons: ['Ces deux comptes ont été créés sur le même appareil, à 2 heures d’écart.', 'Le premier n’a jamais confirmé son adresse e-mail : c’est probablement une faute de frappe à l’inscription.'],
+    comptes: [
+      { id: 'd1', nom: 'Membre fictif H', inscr: '3 oct., 09 h 12', conf: false, photo: false, vu: 'jamais', niv: 'fiable', verif: 'aucune', sig: ['Appareil partagé'] },
+      { id: 'd2', nom: 'Membre fictif I', inscr: '3 oct., 11 h 20', conf: true, photo: true, vu: 'aujourd’hui', niv: 'fiable', verif: 'verifie', sig: ['Appareil partagé'] },
+    ] },
+  { id: 'g5', titre: 'Un compte seul',
+    raisons: ['Membre fictif J a envoyé 140 likes en une heure.'],
+    comptes: [
+      { id: 'e1', nom: 'Membre fictif J', inscr: '12 oct., 22 h 05', conf: true, photo: true, vu: 'aujourd’hui', niv: 'a_surveiller', verif: 'aucune', sig: ['Rafale de likes'] },
+    ] },
+];
+
+const RANG = { douteux: 2, a_surveiller: 1, fiable: 0 };
+const nivMin = g => g.comptes.reduce((m, c) => RANG[c.niv] > RANG[m] ? c.niv : m, 'fiable');
+let filtre = 'tous';
+const choisis = new Set();
+let confirmation = null; // 'invitation' | 'retrait'
+let bilan = null;
+const supprimes = new Set();
+
+function visibles() {
+  return GRAPPES.filter(g => !supprimes.has(g.id)).filter(g =>
+    filtre === 'tous' ? true : filtre === 'doublons' ? !!g.doublon : nivMin(g) === filtre)
+    .sort((a, b) => RANG[nivMin(b)] - RANG[nivMin(a)]);
+}
+function compte(id) { for (const g of GRAPPES) for (const c of g.comptes) if (c.id === id) return [c, g]; }
+
+function tag(label, cls) { return `<span class="tag ${cls}">${label}</span>`; }
+
+function rendreCompte(c, g) {
+  const orphan = g.doublon === c.id;
+  return `<article class="acct ${orphan ? 'orphan' : ''}">
+    <div class="acct-top">
+      <label class="pick" title="Sélectionner pour un geste groupé"><input type="checkbox" data-pick="${c.id}" ${choisis.has(c.id) ? 'checked' : ''} aria-label="Sélectionner ${c.nom}"></label>
+      <div class="avatar ${c.photo ? 'has' : ''}">${c.photo ? c.nom.slice(-1) : 'sans photo'}</div>
+      <div class="who"><a href="#">${c.nom}</a><small>${orphan ? 'probablement le compte en trop' : '&nbsp;'}</small></div>
+    </div>
+    <div class="tags">${tag(...[NIV[c.niv][0], NIV[c.niv][1]])}${c.verif !== 'aucune' ? tag(VERIF[c.verif][0], VERIF[c.verif][1]) : ''}</div>
+    <dl>
+      <dt>Inscription</dt><dd>${c.inscr}</dd>
+      <dt>Adresse</dt><dd class="${c.conf ? 'yes' : 'no'}">${c.conf ? 'confirmée' : 'jamais confirmée'}</dd>
+      <dt>Photo</dt><dd>${c.photo ? 'oui' : 'non'}</dd>
+      <dt>Dernière visite</dt><dd>${c.vu}</dd>
+    </dl>
+    <div class="sig">Indices : <b>${c.sig.join(' · ')}</b></div>
+  </article>`;
+}
+
+function rendreGrappe(g) {
+  const n = nivMin(g);
+  const orphan = g.doublon && compte(g.doublon)[0];
+  return `<section class="card" aria-labelledby="t-${g.id}">
+    <div class="card-head">
+      <h2 id="t-${g.id}">${g.titre}</h2>
+      <div class="tags">${g.doublon ? tag('Doublon probable', 'accent') : ''}${tag(NIV[n][0], NIV[n][1])}${tag(g.comptes.length + (g.comptes.length > 1 ? ' comptes' : ' compte'), '')}</div>
+    </div>
+    <ul class="raisons">${g.raisons.map(r => `<li><span>${r}</span></li>`).join('')}${g.legit ? `<li><span class="legit">${g.legit}</span></li>` : ''}</ul>
+    <div class="compare" style="--n:${g.comptes.length}">${g.comptes.map(c => rendreCompte(c, g)).join('')}</div>
+    ${g.doublon ? `<div class="actions" id="dbl-${g.id}">
+      <button class="btn primary" data-dbl="${g.id}">Supprimer le compte jamais confirmé</button>
+      <span class="why">${orphan.nom} n’a ni photo, ni like, ni conversation.</span>
+    </div>` : ''}
+    <div class="actions">
+      <button class="btn" data-rien="${g.id}">Rien à signaler pour ${g.comptes.length > 1 ? 'ces comptes' : 'ce compte'}</button>
+      <button class="lnk" data-sel="${g.id}">Sélectionner toute la grappe</button>
+    </div>
+    <details class="dossier">
+      <summary>Ouvrir le dossier et décider compte par compte</summary>
+      <div class="decide">
+        ${g.comptes.map(c => `<div class="decide-row"><strong>${c.nom}</strong>
+          <button class="btn">Rien à signaler</button>
+          <button class="btn">Inviter au selfie</button>
+          <button class="btn">Exiger une vérification</button>
+          <button class="btn danger">Bannir</button></div>`).join('')}
+        <label for="motif-${g.id}">Motif, conservé dans le journal (facultatif)</label>
+        <textarea id="motif-${g.id}" placeholder="Par exemple : même photo qu’un profil signalé le 2 octobre."></textarea>
+      </div>
+    </details>
+  </section>`;
+}
+
+function garde() {
+  const ids = [...choisis];
+  if (!ids.length) return false;
+  const gs = new Set(ids.map(i => compte(i)[1].id));
+  if (gs.size === 1) return true;
+  return ids.every(i => compte(i)[0].niv === 'douteux');
+}
+
+function rendreLot() {
+  const bar = document.getElementById('lotbar');
+  const inn = document.getElementById('lotbar-in');
+  if (!choisis.size && !bilan) { bar.hidden = true; return; }
+  bar.hidden = false;
+  if (bilan) {
+    inn.innerHTML = `<div class="lotbar-row"><span class="bilan"><strong>${bilan.traites} ${bilan.geste}.</strong> ${bilan.ignores ? bilan.ignores + ' ignoré' + (bilan.ignores > 1 ? 's' : '') + ' : ' + bilan.raisons.join(', ') + '.' : ''}</span><span class="spacer"></span><button class="btn" id="bilan-ok">Fermer</button></div>`;
+    return;
+  }
+  const n = choisis.size;
+  const noms = [...choisis].map(i => compte(i)[0].nom);
+  if (confirmation) {
+    const retrait = confirmation === 'retrait';
+    inn.innerHTML = `<div class="confirm">
+      <p><strong>${retrait ? 'Exiger une vérification' : 'Inviter au selfie'} pour ${n} compte${n > 1 ? 's' : ''} ?</strong></p>
+      <p>${retrait ? 'Ces comptes seront masqués et ne pourront plus écrire jusqu’à leur selfie. Vérifie chaque nom :' : 'Ces comptes restent visibles et peuvent écrire. Ils verront une invitation à se faire vérifier.'}</p>
+      ${retrait ? `<ul class="names">${noms.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}
+      <div class="lotbar-row"><button class="btn primary" id="lot-go">${retrait ? 'Oui, exiger la vérification' : 'Oui, inviter'}</button><button class="btn" id="lot-cancel">Annuler</button></div>
+    </div>`;
+    return;
+  }
+  const ok = garde();
+  inn.innerHTML = `<div class="lotbar-row">
+    <strong>${n} compte${n > 1 ? 's' : ''} sélectionné${n > 1 ? 's' : ''}</strong>
+    <span class="spacer"></span>
+    <button class="btn primary" id="lot-inv">Inviter au selfie</button>
+    <button class="btn" id="lot-ret" ${ok ? '' : 'disabled aria-describedby="why-ret"'}>Exiger une vérification</button>
+    <button class="lnk" id="lot-clear">Tout désélectionner</button>
+  </div>
+  ${ok ? '' : `<span class="why" id="why-ret">Exiger une vérification par lot n’est possible que pour des comptes d’une même grappe, ou tous douteux.</span>`}`;
+}
+
+function rendre() {
+  const list = visibles();
+  document.getElementById('grappes').innerHTML = list.length ? list.map(rendreGrappe).join('')
+    : `<p class="empty">Aucune grappe ne correspond à ce filtre.</p>`;
+  const vivantes = GRAPPES.filter(g => !supprimes.has(g.id));
+  document.getElementById('c-tous').textContent = vivantes.length;
+  document.getElementById('c-doublons').textContent = vivantes.filter(g => g.doublon).length;
+  document.getElementById('c-douteux').textContent = vivantes.filter(g => nivMin(g) === 'douteux').length;
+  document.getElementById('c-a_surveiller').textContent = vivantes.filter(g => nivMin(g) === 'a_surveiller').length;
+  document.getElementById('nav-count').textContent = vivantes.length;
+  document.querySelectorAll('.fchip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === filtre)));
+  document.getElementById('url').textContent = '/admin/indices' + (filtre === 'tous' ? '' : (filtre === 'doublons' ? '?filtre=doublons' : '?niveau=' + filtre));
+  rendreLot();
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('button, input');
+  if (!t) return;
+  if (t.dataset.f) { filtre = t.dataset.f; rendre(); return; }
+  if (t.dataset.pick) { t.checked ? choisis.add(t.dataset.pick) : choisis.delete(t.dataset.pick); confirmation = null; bilan = null; rendreLot(); return; }
+  if (t.dataset.sel) { GRAPPES.find(g => g.id === t.dataset.sel).comptes.forEach(c => choisis.add(c.id)); bilan = null; rendre(); return; }
+  if (t.dataset.dbl) {
+    const box = document.getElementById('dbl-' + t.dataset.dbl);
+    const g = GRAPPES.find(x => x.id === t.dataset.dbl);
+    box.outerHTML = `<div class="confirm" id="dbl-${g.id}"><p><strong>Supprimer ${compte(g.doublon)[0].nom} ?</strong></p><p>Le compte et ses données sont effacés. L’autre compte reste tel quel et ses indices liés à ce doublon sont clos. L’action est inscrite au journal avec le motif « doublon ».</p><div class="lotbar-row"><button class="btn primary" data-dblok="${g.id}">Oui, supprimer</button><button class="btn" data-dblno="1">Annuler</button></div></div>`;
+    return;
+  }
+  if (t.dataset.dblok) { const g = GRAPPES.find(x => x.id === t.dataset.dblok); g.comptes.forEach(c => choisis.delete(c.id)); supprimes.add(g.id); rendre(); return; }
+  if (t.dataset.dblno) { rendre(); return; }
+  if (t.dataset.rien) { const g = GRAPPES.find(x => x.id === t.dataset.rien); g.comptes.forEach(c => choisis.delete(c.id)); supprimes.add(g.id); rendre(); return; }
+  if (t.id === 'lot-inv') { confirmation = 'invitation'; rendreLot(); return; }
+  if (t.id === 'lot-ret') { confirmation = 'retrait'; rendreLot(); return; }
+  if (t.id === 'lot-cancel') { confirmation = null; rendreLot(); return; }
+  if (t.id === 'lot-clear') { choisis.clear(); rendre(); return; }
+  if (t.id === 'bilan-ok') { bilan = null; rendreLot(); return; }
+  if (t.id === 'lot-go') {
+    const ids = [...choisis]; let traites = 0; const raisons = [];
+    for (const i of ids) {
+      const c = compte(i)[0];
+      if (c.verif === 'verifie') { raisons.push(c.nom + ' est déjà vérifié'); continue; }
+      if (confirmation === 'invitation' && c.verif === 'invite') { raisons.push(c.nom + ' est déjà invité'); continue; }
+      c.verif = confirmation === 'invitation' ? 'invite' : 'retrait'; traites++;
+    }
+    bilan = { traites, geste: (traites > 1 ? 'comptes ' : 'compte ') + (confirmation === 'invitation' ? 'invité' + (traites > 1 ? 's' : '') + ' au selfie' : 'mis' + ' en retrait jusqu’au selfie'), ignores: raisons.length, raisons };
+    confirmation = null; choisis.clear(); rendre(); return;
+  }
+});
+rendre();
+</script>
