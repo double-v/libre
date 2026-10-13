@@ -16,3 +16,11 @@ export function doitEcrirePresence(lastSeenAt: Date | null | undefined, now: Dat
   if (!lastSeenAt) return true;
   return lastSeenAt.getTime() < jourDePresence(now).getTime();
 }
+
+/**
+ * Jour où la migration a amorcé `last_seen_at` pour les comptes confirmés
+ * (20261013120000). Ce jour-là ne prouve aucune visite : les mesures de
+ * présence ne comptent que les jours **postérieurs**, sinon chaque compte
+ * confirmé paraîtrait actif et « revenu » pendant 30 jours.
+ */
+export const AMORCAGE_PRESENCE = new Date('2026-10-13T00:00:00Z');
