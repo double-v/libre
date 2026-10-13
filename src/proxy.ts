@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { doitEcrirePresence, jourDePresence } from '@/lib/presence';
 import { getDb } from '@/lib/db';
 import { getFeatures } from '@/lib/features-server';
 import type { Feature } from '@/lib/features';
@@ -72,7 +73,7 @@ const USER_CHECK_TTL_MS = 30_000;
 // mémoire. Même motif que le cache LRU de src/lib/giphy.ts.
 const USER_CHECK_MAX_ENTRIES = 10_000;
 
-type UserCheck = { id: string; isBanned: boolean; role: string } | null;
+type UserCheck = { id: string; isBanned: boolean; role: string; lastSeenAt?: Date | null } | null;
 
 const userCheckCache = new Map<string, { value: UserCheck; expiresAt: number }>();
 
@@ -95,6 +96,27 @@ function setCachedUserCheck(userId: string, value: UserCheck): void {
     if (oldest !== undefined) userCheckCache.delete(oldest);
   }
   userCheckCache.set(userId, { value, expiresAt: Date.now() + USER_CHECK_TTL_MS });
+}
+
+/**
+ * Présence au jour près (spec 011, #498) : au plus une écriture par jour et
+ * par compte. Le `where` rend l'écriture unique entre instances ; le cache
+ * l'évite sur celle-ci. Une panne ne bloque jamais la navigation et ne
+ * journalise aucun identifiant.
+ */
+async function noterPresence(user: NonNullable<UserCheck>): Promise<void> {
+  const now = new Date();
+  if (!doitEcrirePresence(user.lastSeenAt, now)) return;
+  const jour = jourDePresence(now);
+  try {
+    await getDb().user.updateMany({
+      where: { id: user.id, OR: [{ lastSeenAt: null }, { lastSeenAt: { lt: jour } }] },
+      data: { lastSeenAt: jour, preavisInactiviteAt: null },
+    });
+    setCachedUserCheck(user.id, { ...user, lastSeenAt: jour });
+  } catch (err) {
+    console.error('presence.failed', err instanceof Error ? err.message.slice(0, 80) : 'unknown');
+  }
 }
 
 /** Exposé pour les tests — vide le cache mémoire. */
@@ -184,7 +206,7 @@ export async function proxy(request: NextRequest) {
     if (user === undefined) {
       user = await getDb().user.findUnique({
         where: { id: userId },
-        select: { id: true, isBanned: true, role: true },
+        select: { id: true, isBanned: true, role: true, lastSeenAt: true },
       });
       setCachedUserCheck(userId, user);
     }
@@ -220,6 +242,8 @@ export async function proxy(request: NextRequest) {
     if (pathname.startsWith('/admin') && user.role?.toUpperCase() !== 'ADMIN') {
       return NextResponse.redirect(new URL('/', request.url));
     }
+
+    await noterPresence(user);
   } catch (err) {
     // On DB error, let the request through. The downstream page will surface
     // its own error. We don't want to block everyone on a transient DB hiccup.

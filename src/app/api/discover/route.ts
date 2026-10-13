@@ -50,7 +50,7 @@ type ProfileWithUser = {
   photos: string[];
   lastKnownLat: number;
   lastKnownLng: number;
-  user: { id: string; displayName: string; isVerified: boolean; lastActive: Date };
+  user: { id: string; displayName: string; isVerified: boolean; lastActive: Date; lastSeenAt?: Date | null };
 };
 
 interface FeedUser {
@@ -196,7 +196,7 @@ export async function GET(request: NextRequest) {
     };
 
     const profileInclude = {
-      user: { select: { id: true, displayName: true, isVerified: true, lastActive: true } },
+      user: { select: { id: true, displayName: true, isVerified: true, lastActive: true, lastSeenAt: true } },
     } as const;
 
     const onlineThreshold = new Date(now - ONLINE_THRESHOLD_MS);
@@ -374,7 +374,9 @@ export async function GET(request: NextRequest) {
         .filter(({ distanceKm }) => !withDistance || distanceKm <= distanceFilterKm)
         .map((item) => ({
           ...item,
-          sortValue: (item.profile.photos.length > 0 ? PHOTO_WEIGHT : 0) + item.profile.user.lastActive.getTime(),
+          // #498 : le jour de visite compte, `lastActive` ne bouge qu'à une écriture.
+          sortValue: (item.profile.photos.length > 0 ? PHOTO_WEIGHT : 0)
+            + Math.max(item.profile.user.lastSeenAt?.getTime() ?? 0, item.profile.user.lastActive.getTime()),
           userId: item.profile.userId,
         }))
         .sort((a, b) =>

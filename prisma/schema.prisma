@@ -30,6 +30,12 @@ model User {
   verifInviteeAt    DateTime?
   squareBannedUntil DateTime? @map("square_banned_until")
   lastActive        DateTime  @updatedAt
+  /// Spec 011 (#498) : dernier jour de navigation authentifiée, écrit par le
+  /// proxy au plus une fois par jour. `lastActive` bouge à toute écriture sur
+  /// la ligne, pas au retour du membre. Privée — jamais lue par autrui.
+  lastSeenAt          DateTime? @map("last_seen_at") @db.Date
+  /// Spec 011 : date d'envoi du préavis d'inactivité, levée par une visite. Privée.
+  preavisInactiviteAt DateTime? @map("preavis_inactivite_at")
   skin              String? // Skin choisi par l'utilisateur (cf. #224). null = défaut du site / localStorage.
 
   profile              Profile?
@@ -77,6 +83,7 @@ model User {
   pushSubscriptions  PushSubscription[] @relation("PushSubscriptions")
 
   @@index([isBanned, lastActive])
+  @@index([lastSeenAt])
   @@map("users")
 }
 

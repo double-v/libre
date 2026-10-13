@@ -15,7 +15,8 @@ const mockGetToken = vi.fn();
 vi.mock('next-auth/jwt', () => ({ __esModule: true, getToken: mockGetToken }));
 
 const findUnique = vi.fn();
-vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => ({ user: { findUnique } }) }));
+const updateMany = vi.fn();
+vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => ({ user: { findUnique, updateMany } }) }));
 const mockGetFeatures = vi.fn(async () => ({ checkin: true, crossings: true, square: true }));
 vi.mock('@/lib/features-server', () => ({ __esModule: true, getFeatures: () => mockGetFeatures() }));
 
@@ -40,6 +41,8 @@ beforeEach(() => {
   _resetProxyUserCache();
   mockGetToken.mockResolvedValue({ id: USER });
   findUnique.mockResolvedValue({ id: USER, isBanned: false, role: 'USER' });
+  updateMany.mockReset();
+  updateMany.mockResolvedValue({ count: 1 });
 });
 
 describe('proxy — cache court du contrôle user (#146)', () => {
@@ -128,5 +131,27 @@ describe('proxy — pages des fonctionnalités coupées (#418)', () => {
     mockGetFeatures.mockClear();
     await proxy(req('/discover'));
     expect(mockGetFeatures).not.toHaveBeenCalled();
+  });
+});
+
+describe('proxy — présence au jour près (#498)', () => {
+  it('deux navigations le même jour = une seule écriture, qui lève le préavis', async () => {
+    await proxy(req('/discover'));
+    await proxy(req('/messages'));
+    expect(updateMany).toHaveBeenCalledTimes(1);
+    expect(updateMany.mock.calls[0][0].data).toMatchObject({ preavisInactiviteAt: null });
+  });
+
+  it('déjà vu aujourd’hui → aucune écriture', async () => {
+    const jour = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()));
+    findUnique.mockResolvedValue({ id: USER, isBanned: false, role: 'USER', lastSeenAt: jour });
+    await proxy(req('/discover'));
+    expect(updateMany).not.toHaveBeenCalled();
+  });
+
+  it('panne à l’écriture → la navigation passe', async () => {
+    updateMany.mockRejectedValue(new Error('boom'));
+    const res = await proxy(req('/discover'));
+    expect(res.headers.get('location')).toBeNull();
   });
 });
