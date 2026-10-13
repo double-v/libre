@@ -24,7 +24,7 @@ factices uniquement (règle « données de membres hors IA »).
 
 **Checkpoint**: schéma et garde en place.
 
-## Phase 3: User Story 1 — Présence réelle (P1) 🎯 MVP
+## Phase 3: User Story 1 — Présence réelle (P1) 🎯 MVP — #498
 
 **Goal**: un membre qui revient sans rien modifier est compté présent ce jour-là (#498).
 **Independent Test**: quickstart scénario 1.
@@ -37,12 +37,12 @@ factices uniquement (règle « données de membres hors IA »).
 
 **Checkpoint**: US1 livrable seule ; #498 fermée par sa PR.
 
-## Phase 4: User Story 2 — Page Indices (P1)
+## Phase 4: User Story 2 — Page Indices (P1) — #522
 
 **Goal**: grappes de comptes liés, côte à côte, raisons en clair, doublon probable ; remplace la file « Profils à vérifier ».
 **Independent Test**: quickstart scénario 2.
 
-- [ ] T010 [US2] **Gate visuel** : prototype HTML de `/admin/indices` (liste de grappes, filtre doublons, comparaison côte à côte, détail avec décisions de la file, barre de lot) dans `specs/011-bureau-moderation/proto-indices.html`, tokens réels, clair/sombre, 390 px et 1280 px ; publier (proto-server ou Artifact) et **attendre la validation de l'opérateur** avant T014
+- [x] T010 [US2] **Gate visuel** (validé le 2026-10-13, [artifact](https://claude.ai/artifact/8i2EQ8kev61J6Px6QLPs2C)) : prototype HTML de `/admin/indices` (liste de grappes, filtre doublons, comparaison côte à côte, détail avec décisions de la file, barre de lot) dans `specs/011-bureau-moderation/proto-indices.html`, tokens réels, clair/sombre, 390 px et 1280 px ; publier (proto-server ou Artifact) et **attendre la validation de l'opérateur** avant T014
 - [ ] T011 [P] [US2] Test puis code `src/lib/fraude/grappes.ts` : `construireGrappes(comptes, liens)` (union-find), `raisonsGrappe(grappe)` (phrases complètes, écart d'inscription en minutes/heures/jours), `doublonProbable(grappe)` (R4), tri niveau puis récence ; cas : grappe d'un compte, grappe à 3 comptes, `photo_bannie` sans regroupement, compte supprimé (`autreUserId` absent de la base) (test `src/lib/fraude/__tests__/grappes.test.ts`)
 - [ ] T012 [P] [US2] Libellés des sortes de lien et des raisons dans `src/lib/fraude/libelles.ts`
 - [ ] T013 [US2] `src/lib/fraude/indices-admin.ts` : charger comptes à signaux non tranchés (`signauxRecents` + `profileReview.decidedAt`), liens `ProfileSignal.autreUserId` (`appareil_partage`, `photo_reutilisee`, `texte_reutilise`) et `SignupTrace.ipHash` partagés, champs de `CompteGrappe` (data-model) ; une requête par table, calcul en mémoire
@@ -55,7 +55,7 @@ factices uniquement (règle « données de membres hors IA »).
 
 **Checkpoint**: la file « Profils à vérifier » n'existe plus que comme redirection ; aucune décision perdue.
 
-## Phase 5: User Story 3 — Gestes par lot (P2)
+## Phase 5: User Story 3 — Gestes par lot (P2) — #523
 
 **Goal**: inviter ou exiger une vérification pour jusqu'à 50 comptes, avec bilan.
 **Independent Test**: quickstart scénario 3.
@@ -68,7 +68,7 @@ factices uniquement (règle « données de membres hors IA »).
 
 **Checkpoint**: 20 comptes invités en < 1 minute (SC-003).
 
-## Phase 6: User Story 4 — Navigation « Modération » et filtres dans l'adresse (P2)
+## Phase 6: User Story 4 — Navigation « Modération » et filtres dans l'adresse (P2) — #524
 
 **Goal**: un point d'entrée, et des listes qui gardent leurs filtres au retour.
 **Independent Test**: quickstart scénario 4.
@@ -78,7 +78,7 @@ factices uniquement (règle « données de membres hors IA »).
 - [ ] T027 [US4] `src/app/(admin)/layout.tsx` : `adminNavItems` en sections, section « Modération » (Indices, Signalements, Vérifications, Retours) avec `NotificationDot`/`CountChip` admin selon l'existant, en desktop et mobile ; test de rendu (4 entrées, ancienne entrée « Profils à vérifier » absente)
 - [ ] T028 [US4] Vérifier qu'aucun geste n'a disparu (liste de contrôle dans la PR : trancher, inviter, exiger, bannir, recherche de photo, métadonnées) et capture Playwright de la nav
 
-## Phase 7: User Story 5 — Inscription sans doublon (P2)
+## Phase 7: User Story 5 — Inscription sans doublon (P2) — #525
 
 **Goal**: double saisie, suggestion de domaine, correction d'adresse avant vérification.
 **Independent Test**: quickstart scénario 5.
@@ -89,7 +89,7 @@ factices uniquement (règle « données de membres hors IA »).
 - [ ] T032 [US5] Route `src/app/api/auth/corriger-adresse/route.ts` selon `contracts/api.md` : limiteur `auth`, vérification du mot de passe, réponse uniforme, refus compte vérifié/banni, 409 adresse prise, mise à jour `email` + `normalizedEmail`, envoi d'un nouveau lien ; tests
 - [ ] T033 [US5] `src/app/(auth)/login/page.tsx` : avec `?registered=true`, afficher l'adresse lue en `sessionStorage`, la règle des 30 jours et « Corriger mon adresse » ; sur refus de connexion d'un compte non vérifié, proposer le même formulaire ; tests + captures Playwright (390/1280 px, clair/sombre)
 
-## Phase 8: User Story 6 — Durée de vie des comptes et vue des actifs (P3)
+## Phase 8: User Story 6 — Durée de vie des comptes et vue des actifs (P3) — #526
 
 **Goal**: 30 j pour un compte jamais vérifié, 1 an + préavis pour un inactif, masquage de Découvrir à 90 j, répartition de présence.
 **Independent Test**: quickstart scénarios 6 et 7.
