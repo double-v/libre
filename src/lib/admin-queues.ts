@@ -14,7 +14,7 @@ export interface AdminQueues {
   reports: number;
   verifications: number;
   feedback: number;
-  /** Profils à vérifier (spec 006) : la règle de la file, pas un statut. */
+  /** Grappes ouvertes de la page Indices (spec 011, ex-file « Profils à vérifier »). */
   profils: number;
 }
 
