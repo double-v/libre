@@ -21,4 +21,12 @@ describe('page Confidentialité — art. 9', () => {
     expect(screen.getByText(/Données sensibles/)).toBeInTheDocument();
     expect(screen.getByText(/Ces champs sont effacés aussitôt/)).toBeInTheDocument();
   });
+
+  // #530 — le §6 destinataires ne listait que des sous-traitants : les autres
+  // membres voient la fiche, c'est eux les destinataires de la donnée sensible.
+  it('nomme les autres membres parmi les destinataires de la fiche', () => {
+    render(<Confidentialite />);
+    expect(screen.getByText(/Les autres membres/)).toBeInTheDocument();
+    expect(screen.getByText(/ce que ta fiche montre/)).toBeInTheDocument();
+  });
 });
