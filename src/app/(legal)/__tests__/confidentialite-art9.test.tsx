@@ -27,6 +27,6 @@ describe('page Confidentialité — art. 9', () => {
   it('nomme les autres membres parmi les destinataires de la fiche', () => {
     render(<Confidentialite />);
     expect(screen.getByText(/Les autres membres/)).toBeInTheDocument();
-    expect(screen.getByText(/ce que ta fiche montre/)).toBeInTheDocument();
+    expect(screen.getByText(/ce que votre fiche montre/)).toBeInTheDocument();
   });
 });
