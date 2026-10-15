@@ -87,6 +87,8 @@ describe('/profile — consentement art. 9', () => {
   // voit sur la fiche et rend trouvable dans les recherches filtrées.
   it('la case nomme où les données se voient : la fiche, et les autres membres', async () => {
     await ouvrir(false, 'Identité');
+    // Sous « Identité » (#518), la case ne sort qu'une valeur posée — comme au premier test.
+    fireEvent.click(screen.getByRole('button', { name: 'Bi' }));
     const section = () => within(document.getElementById('profile-section-identity')!);
     expect(section().getByText(/se voient sur ma fiche/)).toBeInTheDocument();
     expect(section().getByText(/les autres membres me trouvent/)).toBeInTheDocument();

@@ -241,6 +241,10 @@ export default function ConfidentialitePage() {
       <h2>6. Destinataires des données</h2>
       <p>Vos données sont accessibles à :</p>
       <ul>
+        {/* #530 : les autres membres sont les destinataires de la fiche — le
+            §6 ne disait que des sous-traitants, le lecteur de la case art. 9
+            n'apprenait jamais que sa donnée se lit par autrui. */}
+        <li><strong>Les autres membres</strong>{' '}: ce que ta fiche montre (bio, photos, genre, orientation, intérêts, pratiques). La messagerie reste chiffrée de bout en bout : le contenu des messages n&apos;est lisible que par vous deux (§8.1).</li>
         <li><strong>L&apos;équipe Libre</strong>{' '}: administrateurs pour la modération (contenu du Carré, signalements, demandes de vérification)</li>
         <li><strong>Cloudflare</strong>{' '}: fournisseur de sécurité (Turnstile anti-bot, CDN). Politique de confidentialité : <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">cloudflare.com/privacypolicy</a></li>
         <li><strong>Vercel</strong>{' '}: hébergement de l&apos;application. Politique de confidentialité : <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">vercel.com/legal/privacy-policy</a></li>
