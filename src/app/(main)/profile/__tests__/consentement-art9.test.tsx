@@ -83,6 +83,17 @@ describe('/profile — consentement art. 9', () => {
     expect(pratiques().queryByText(/J’accepte que Libre enregistre/)).toBeNull();
   }, 15_000);
 
+  // #530 : un consentement éclairé dit aussi les destinataires — la donnée se
+  // voit sur la fiche et rend trouvable dans les recherches filtrées.
+  it('la case nomme où les données se voient : la fiche, et les autres membres', async () => {
+    await ouvrir(false, 'Identité');
+    // Sous « Identité » (#518), la case ne sort qu'une valeur posée — comme au premier test.
+    fireEvent.click(screen.getByRole('button', { name: 'Bi' }));
+    const section = () => within(document.getElementById('profile-section-identity')!);
+    expect(section().getByText(/se voient sur ma fiche/)).toBeInTheDocument();
+    expect(section().getByText(/les autres membres me trouvent/)).toBeInTheDocument();
+  });
+
   it('avec consentement : aucune case, l’écriture part telle quelle', async () => {
     await ouvrir(true, 'Identité');
     expect(within(document.getElementById('profile-section-identity')!).queryByText(/J’accepte que Libre enregistre/)).toBeNull();
