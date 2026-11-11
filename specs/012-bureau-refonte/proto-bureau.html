@@ -1,0 +1,769 @@
+<title>Bureau de modération Libre</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Caveat:wght@600&display=swap">
+<style>
+/* Mise en page : mobile d'abord (une colonne + onglets en bas). ≥ 900px : vues dans l'en-tête, Membres en deux volets liste | fiche. */
+:root{
+  --bg:#FDF0ED; --surface:#ffffff; --sunk:#fbe6e0; --ink:#171717; --muted:#5e4f49; --line:#f1d9d1;
+  --blush:#FDF0ED; --abricot:#F4B58A; --miel:#E8A04E; --sand:#F5E6D8; --rad:22px;
+  --coral:#E8634A; --coral-ink:#9E3A28; --coral-soft:#fbe4de;
+  --ok:#2c7a57; --ok-soft:#dff1e8; --warn:#8f620f; --warn-soft:#f8ecd2; --bad:#b4372a; --bad-soft:#f9dfdb; --info:#3d5a80; --info-soft:#e2eaf4;
+  --scrim:rgb(20 16 14 / .45);
+  --head:"Inter",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace; --ui:"Inter",system-ui,sans-serif;
+  --tabh:60px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#171211; --surface:#221a18; --sunk:#2e2320; --ink:#f6ede9; --muted:#bba9a1; --line:#3b2d29;
+  --blush:#2a1f1c; --abricot:#d9946a; --miel:#e8a04e; --sand:#3a2c24;
+  --coral:#e8634a; --coral-ink:#f09a88; --coral-soft:#3a201a;
+  --ok:#62c99b; --ok-soft:#173226; --warn:#e3b356; --warn-soft:#352a12; --bad:#f08374; --bad-soft:#3a1c18; --info:#9dbbe0; --info-soft:#1c2a3b;
+  --scrim:rgb(0 0 0 / .6); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#171211; --surface:#221a18; --sunk:#2e2320; --ink:#f6ede9; --muted:#bba9a1; --line:#3b2d29;
+  --blush:#2a1f1c; --abricot:#d9946a; --miel:#e8a04e; --sand:#3a2c24;
+  --coral:#e8634a; --coral-ink:#f09a88; --coral-soft:#3a201a;
+  --ok:#62c99b; --ok-soft:#173226; --warn:#e3b356; --warn-soft:#352a12; --bad:#f08374; --bad-soft:#3a1c18; --info:#9dbbe0; --info-soft:#1c2a3b;
+  --scrim:rgb(0 0 0 / .6); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{text-wrap:balance}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.muted{color:var(--muted)} .small{font-size:12px} .mono{font-family:var(--mono);font-size:12px}
+.tag{font:600 10px/1 var(--ui);letter-spacing:.06em;text-transform:uppercase;padding:4px 6px;border-radius:3px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.t-bad{background:var(--bad-soft);color:var(--bad)} .t-warn{background:var(--warn-soft);color:var(--warn)} .t-info{background:var(--info-soft);color:var(--info)} .t-ok{background:var(--ok-soft);color:var(--ok)}
+.label{font:600 11px var(--ui);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+
+/* En-tête */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:12px;min-height:54px}
+.brand{display:flex;align-items:center;gap:8px;font:600 16px var(--head);white-space:nowrap}
+.dot{width:22px;height:22px;border-radius:50%;background:var(--coral);display:grid;place-items:center;color:#fff;font-size:11px}
+.views{display:none;gap:2px}
+.views button{border:0;background:none;padding:7px 11px;border-radius:6px;color:var(--muted);font-weight:500;min-height:36px;display:flex;gap:6px;align-items:center}
+.views button[aria-current="page"]{background:var(--sunk);color:var(--ink)}
+.sync{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.sync i{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.sync.busy i{background:var(--warn);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.fake{font-size:11px;color:var(--muted);border:1px dashed var(--line);border-radius:4px;padding:2px 6px;white-space:nowrap}
+.cnt{font:600 11px var(--ui);background:var(--coral);color:#fff;border-radius:999px;padding:2px 6px;min-width:20px;text-align:center}
+
+.tabs{position:fixed;inset:auto 0 0;z-index:20;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.tabs button{border:0;background:none;min-height:var(--tabh);display:grid;place-items:center;align-content:center;gap:3px;color:var(--muted);position:relative;font:600 10px var(--ui);letter-spacing:.06em;text-transform:uppercase}
+.tabs svg{width:20px;height:20px}
+.tabs button[aria-current="page"]{color:var(--coral-ink)}
+.tabs button[aria-current="page"]::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;background:var(--coral)}
+.pip{position:absolute;top:9px;left:calc(50% + 7px);width:7px;height:7px;border-radius:50%;background:var(--coral)}
+
+main{padding-bottom:calc(var(--tabh) + 16px + env(safe-area-inset-bottom,0px))}
+.page{max-width:1180px;margin:0 auto;padding-block:16px;display:grid;gap:18px}
+.ph{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ph h1{font:600 22px/1.2 var(--head)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--rad);padding:18px;padding:14px;min-width:0;display:grid;gap:10px;align-content:start}
+.panel>h2,.panel .h2{font:600 11px var(--ui);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
+.chip{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 11px;font-size:13px;white-space:nowrap;min-height:36px}
+.chip[aria-pressed="true"]{border-color:var(--coral);background:var(--coral-soft);color:var(--coral-ink)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:6px 12px;min-height:36px;font:600 12px var(--ui);color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+
+.quote{background:var(--sunk);border-radius:8px;padding:12px 14px;line-height:1.55;font-size:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:600}
+.btn.primary{background:var(--ok);border-color:var(--ok);color:var(--surface)}
+.btn.coral{background:var(--coral);border-color:var(--coral);color:#fff}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.danger.fill{background:var(--bad);color:var(--surface)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+input[type=search],select,textarea{width:100%;min-height:42px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
+textarea{min-height:90px;resize:vertical;background:var(--bg)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 10px var(--ui);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}
+
+/* ---------- Activité ---------- */
+.todo{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
+.todo button{flex:none;display:grid;grid-template-columns:4px auto;gap:2px 10px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px 10px 0;min-width:130px}
+.todo .sv{grid-row:1/3;border-radius:0 3px 3px 0}
+.todo .n{font:600 22px/1 var(--head);font-variant-numeric:tabular-nums}
+.todo .l{font-size:12px;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kpi{padding:12px;display:grid;gap:2px}
+.kpi .v{font:600 24px/1.1 var(--head);font-variant-numeric:tabular-nums}
+.kpi .d{font:500 11px var(--ui);color:var(--muted)}
+.kpi svg{width:100%;height:30px;margin-top:4px}
+.grid{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+.chart{position:relative}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart text{fill:var(--muted);font:500 10px var(--ui)}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--surface);font:500 12px var(--body);padding:6px 9px;border-radius:6px;white-space:nowrap;transform:translate(-50%,calc(-100% - 10px));z-index:5;box-shadow:0 4px 14px rgb(0 0 0 / .2)}
+.tip b{font-variant-numeric:tabular-nums}
+details.data summary{cursor:pointer;font-size:12px;color:var(--muted);min-height:32px;display:flex;align-items:center}
+.funnel{display:grid;gap:6px}
+.funnel_r{display:grid;grid-template-columns:minmax(0,150px) 1fr 74px;gap:10px;align-items:center;font-size:13px}
+.funnel .b{height:18px;background:var(--sunk);border-radius:0 4px 4px 0;overflow:hidden}
+.funnel .b i{display:block;height:100%;background:var(--coral);border-radius:0 4px 4px 0}
+.funnel .p{text-align:right;font:500 12px var(--ui);font-variant-numeric:tabular-nums}
+.heat{display:grid;grid-template-columns:34px repeat(12,minmax(0,1fr));gap:2px;font:500 10px var(--ui);color:var(--muted)}
+.heat span{display:grid;place-items:center;min-height:22px}
+.heat .c{border-radius:3px;min-height:22px}
+.cohort td{text-align:center;font:500 11px var(--ui);padding:6px 4px;border-bottom:2px solid var(--surface)}
+.cohort td:first-child,.cohort th:first-child{text-align:left;font-family:var(--body);white-space:nowrap}
+.dist{display:grid;gap:7px}
+.dist .r{display:grid;grid-template-columns:minmax(0,120px) 1fr 40px;gap:10px;align-items:center;font-size:13px}
+.dist .b{height:10px;background:var(--sunk);border-radius:0 4px 4px 0;overflow:hidden}
+.dist .b i{display:block;height:100%;background:var(--coral);border-radius:0 4px 4px 0}
+.dist .p{text-align:right;font:500 11px var(--ui);color:var(--muted)}
+.legend{display:flex;gap:6px;align-items:center;font:500 10px var(--ui);color:var(--muted)}
+.legend i{display:inline-block;width:80px;height:8px;border-radius:2px;background:linear-gradient(90deg,color-mix(in oklab,var(--coral) 8%,var(--sunk)),var(--coral))}
+
+
+/* ---------- Récit d'activité ---------- */
+.story{gap:34px;max-width:1080px}
+.kicker{font:700 12px var(--ui);letter-spacing:.08em;text-transform:uppercase;color:var(--coral-ink)}
+.hero{display:grid;gap:14px;padding-top:8px}
+.lede{font:600 clamp(22px,4.6vw,34px)/1.25 var(--head);letter-spacing:-.01em;max-width:30ch;text-wrap:balance}
+.lede em,.chapter h2 em,.chapter p em{font-style:normal;color:var(--coral-ink)}
+.lede em{background:linear-gradient(transparent 62%,color-mix(in oklab,var(--abricot) 45%,transparent) 62%)}
+.hero .sub{font-size:16px;color:var(--muted);max-width:60ch}
+.care{display:grid;gap:12px;background:var(--surface);border-radius:var(--rad);padding:18px;border:1px solid var(--line)}
+.care h2{font:700 18px var(--head)}
+.chapter{display:grid;gap:12px}
+.chapter>header{display:grid;gap:6px;max-width:68ch}
+.chapter h2{font:700 clamp(20px,3.4vw,26px)/1.25 var(--head);letter-spacing:-.01em}
+.chapter header p{font-size:15px;color:var(--muted)}
+.panel h3{font:600 14px var(--head);color:var(--ink)}
+.people{display:flex;flex-wrap:wrap;gap:6px}
+.pdot{display:inline-block;width:14px;height:14px;border-radius:50%;flex:none}
+.plegend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;color:var(--muted)}
+.plegend span{display:flex;gap:6px;align-items:center}
+.plegend b{color:var(--ink)}
+.chart text.ev{fill:var(--ink);font:600 11px var(--ui)}
+.bubbles{display:grid;grid-template-columns:36px repeat(12,minmax(0,1fr));gap:4px;font:500 11px var(--ui);color:var(--muted);align-items:center}
+.bubbles .cell{display:grid;place-items:center;min-height:24px}
+.bubbles .cell i{display:block;border-radius:50%;background:var(--coral)}
+.bubbles .hx{text-align:left}
+.cohorts{display:grid;gap:8px}
+.coh{display:grid;grid-template-columns:minmax(0,150px) 1fr auto;gap:12px;align-items:center;font-size:13px}
+.ten{display:flex;gap:5px;flex-wrap:wrap}
+.ten i{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--abricot);background:transparent}
+.ten i.on{background:var(--coral);border-color:var(--coral)}
+.ck{color:var(--muted);white-space:nowrap}.ck b{color:var(--ink)}
+.dist .b{height:12px;border-radius:999px;background:var(--blush)}
+.dist .b i{border-radius:999px;background:linear-gradient(90deg,var(--abricot),var(--coral))}
+.health{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;text-align:left;cursor:pointer}
+.hd{width:10px;height:10px;border-radius:50%;background:var(--muted);margin-top:5px}
+.hd.ok{background:var(--ok)} .hd.warn{background:var(--miel)}
+.todo button{border-radius:16px}
+@media (max-width:520px){.coh{grid-template-columns:1fr auto}.coh .cw{grid-column:1/-1}}
+/* ---------- Membres ---------- */
+.hub{display:grid;grid-template-columns:minmax(0,1fr)}
+.listpane{display:grid;gap:10px;align-content:start;padding-block:14px}
+.sortrow{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.sortrow select{width:auto;min-height:36px;padding:4px 8px;font-size:13px}
+.mlist{background:var(--surface);border:1px solid var(--line);border-radius:var(--rad);overflow:hidden}
+.row{display:grid;grid-template-columns:4px 40px 1fr auto;gap:10px;align-items:center;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:10px 12px 10px 0;min-height:64px}
+.row:last-child{border-bottom:0}
+.row .sev{align-self:stretch;border-radius:0 3px 3px 0}
+.row[aria-current="true"]{background:var(--sunk)}
+.av{width:40px;height:40px;border-radius:50%;display:block;background:var(--sunk)}
+.row .nm{font-weight:600;font-size:14px;display:flex;gap:6px;align-items:center;min-width:0}
+.row .nm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .sub{font-size:12px;color:var(--muted)}
+.row .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.row .age{font:500 11px var(--ui);color:var(--muted)}
+.ok-mark{color:var(--ok);font-size:12px;font-weight:600}
+.more{padding:12px 14px;font-size:12px;color:var(--muted)}
+.ficheout{display:none}
+.fiche{display:grid;gap:14px;padding-block:14px;align-content:start;min-width:0}
+.fhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.fhead .av{width:56px;height:56px}
+.fhead h1{font:600 22px/1.2 var(--head)}
+.fhead .meta{color:var(--muted);font-size:12px}
+.backbtn{border:0;background:none;min-height:44px;color:var(--coral-ink);font-weight:600;padding:0;display:flex;gap:6px;align-items:center}
+.case{border-left:4px solid var(--line)}
+.case.sev-bad{border-left-color:var(--bad)} .case.sev-warn{border-left-color:var(--warn)} .case.sev-info{border-left-color:var(--info)}
+.case .ch{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.case h3{font:600 16px var(--head)}
+.split{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+.media{display:grid;grid-template-columns:2fr 1fr;gap:8px}
+.media canvas,.photos canvas{width:100%;height:auto;border-radius:8px;display:block}
+.thumbs{display:grid;gap:8px;align-content:start}
+.codeline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.code{font:700 24px var(--mono);letter-spacing:.16em}
+.ocr{font-size:12px;padding:4px 8px;border-radius:6px}
+.ocr mark{background:none;color:inherit;text-decoration:underline wavy;font-weight:700}
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.checks li{padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px}
+.repere{font-size:12px;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
+.repere b{color:var(--ink)}
+.lock{font-size:12px;background:var(--info-soft);color:var(--info);border-radius:6px;padding:7px 10px}
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.photos figure{margin:0;display:grid;gap:6px}
+.photos .btn{min-height:34px;font-size:12px;padding:4px 8px}
+.timeline{list-style:none;margin:0;padding:0}
+.timeline li{display:grid;grid-template-columns:86px 1fr;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.timeline li:last-child{border-bottom:0}
+.timeline .w{font:500 11px var(--ui);color:var(--muted);padding-top:2px}
+.signals{display:flex;flex-wrap:wrap;gap:6px}
+.sig{font-size:12px;padding:3px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)}
+details.danger summary{cursor:pointer;min-height:40px;display:flex;align-items:center;font-weight:600;color:var(--bad);font-size:13px}
+.empty{display:grid;place-items:center;text-align:center;gap:6px;padding:40px 16px;color:var(--muted)}
+.empty strong{font:600 18px var(--head);color:var(--ink)}
+
+/* ---------- Outils ---------- */
+.tools{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+.toolnav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
+.switch{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.switch:last-child{border-bottom:0}
+.sw{width:48px;height:28px;border-radius:14px;border:0;background:var(--line);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--surface);transition:left .15s}
+.sw[aria-checked="true"]{background:var(--ok)} .sw[aria-checked="true"]::after{left:23px}
+.phone{border:9px solid var(--ink);border-radius:30px;background:var(--surface);padding:18px 14px;display:grid;gap:12px;max-width:320px;width:100%}
+.phone h3{font:600 18px var(--head)}
+.phone .big{font:700 26px var(--mono);letter-spacing:.14em;text-align:center;padding:12px;border:2px dashed var(--line);border-radius:10px}
+.phone .big small{display:block;font:500 12px var(--body);letter-spacing:0;color:var(--muted)}
+.phone ol{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13px}
+.phones{display:flex;flex-wrap:wrap;gap:18px}
+.flow{font:500 11px/1.9 var(--mono);background:var(--sunk);border-radius:8px;padding:12px;overflow-x:auto;white-space:pre;margin:0}
+
+/* ---------- Feuille + toast ---------- */
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:520px;border-radius:14px 14px 0 0;padding:18px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:grid;gap:10px;max-height:85vh;overflow:auto}
+.sheet h3{font:600 18px var(--head)}
+.opt{display:grid;gap:2px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:10px 12px;min-height:52px}
+.opt small{color:var(--muted)}
+.opt[aria-pressed="true"]{border-color:var(--coral);background:var(--coral-soft)}
+.sees{font-size:13px;background:var(--sunk);border-radius:8px;padding:10px 12px}
+.sees b{display:block;font:600 10px var(--ui);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tabh) + 12px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--surface);border-radius:10px;padding:8px 8px 8px 14px;display:flex;gap:10px;align-items:center;box-shadow:0 8px 30px rgb(0 0 0 / .25);font-size:13px;width:max-content;max-width:calc(100% - 32px);z-index:50}
+.toast button{background:transparent;border:1px solid currentColor;border-radius:6px;padding:6px 10px;min-height:38px;color:inherit;font-weight:600;white-space:nowrap}
+.toast .t{position:absolute;left:10px;right:10px;bottom:3px;height:2px;background:var(--coral);transform-origin:left;animation:shrink 5s linear forwards}
+@keyframes shrink{to{transform:scaleX(0)}}
+
+@media (min-width:640px){
+  .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .split{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
+}
+@media (min-width:900px){
+  .tabs{display:none}
+  .views{display:flex}
+  main{padding-bottom:24px}
+  .kpis{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .grid.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid.w21{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+  .hub{grid-template-columns:360px minmax(0,1fr);gap:0;height:calc(100vh - 55px - env(safe-area-inset-top,0px))}
+  .listpane{overflow:auto;padding-right:16px;border-right:1px solid var(--line)}
+  .ficheout{display:block;overflow:auto;padding-left:20px}
+  .hub .chips{margin-inline:0;padding-inline:0;flex-wrap:wrap}
+  .hub.mob-fiche .listpane{display:grid}
+  .backbtn{display:none}
+  .tools{grid-template-columns:220px minmax(0,1fr)}
+  .toolnav{flex-direction:column;margin:0;padding:0}
+  .toolnav .chip{border-radius:8px;justify-content:flex-start}
+  .toast{bottom:24px}
+  .scrim{align-items:center}
+  .sheet{border-radius:14px}
+}
+@media (max-width:899.98px){
+  .hub.mob-fiche .listpane{display:none}
+  .hub.mob-fiche .ficheout{display:block}
+  .case .btns{position:static}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="top"><div class="bar gut">
+  <div class="brand"><span class="dot" aria-hidden="true">♥</span>Bureau</div>
+  <nav class="views" id="views" aria-label="Vues"></nav>
+  <span class="fake">Données factices</span>
+  <div class="sync" id="sync" role="status"><i></i><span id="syncTxt">À jour</span></div>
+</div></header>
+<main id="main"></main>
+<nav class="tabs" id="tabs" aria-label="Vues"></nav>
+<div id="layer"></div><div id="toast"></div>
+
+<script>
+(function(){
+/* ================= utilitaires ================= */
+const $=s=>document.querySelector(s);
+function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const fmt=n=>Math.round(n).toLocaleString('fr-FR');
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+const DAYN=['lun.','mar.','mer.','jeu.','ven.','sam.','dim.'];
+
+/* ================= séries factices (180 jours, se terminant le 11 nov.) ================= */
+const R=rng(42), N=180, END=new Date(2026,10,11);
+const days=[],actifs=[],inscr=[],msgs=[],matchs=[],place=[];
+for(let i=0;i<N;i++){
+  const d=new Date(END);d.setDate(END.getDate()-(N-1-i));days.push(d);
+  const wd=(d.getDay()+6)%7, trend=i/N, we=wd>=5?1.18:wd===0?1.05:1;
+  const launch=i>95&&i<104?2.2:1; // annonce du journal fin août
+  actifs.push(Math.round((18+trend*78)*we*(.9+R()*.2)));
+  inscr.push(Math.max(0,Math.round((.4+trend*1.9)*launch*(wd>=5?1.3:1)+(R()-.45)*2)));
+  msgs.push(Math.round(actifs[i]*(1.6+R()*.5)));
+  matchs.push(Math.round(actifs[i]*(.08+R()*.06)));
+  place.push(Math.round((4+trend*10)*(.6+R()*.8)));
+}
+const dfmt=d=>d.getDate()+' '+['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'][d.getMonth()];
+
+/* ================= membres factices ================= */
+const L={a:{skin:'#c98d6b',hair:'#3a2418',bg:['#d9cbb8','#a99880']},b:{skin:'#8a5a3c',hair:'#16110e',bg:['#b7c4cc','#7f8f99']},c:{skin:'#e6b896',hair:'#9b6b3a',bg:['#e9c9c0','#c79a8e']},d:{skin:'#e6b896',hair:'#cfcac4',bg:['#cfd8c4','#97a585']},e:{skin:'#b07a55',hair:'#2a1a12',bg:['#d4cde3','#9d93b5']},f:{skin:'#d9a27c',hair:'#5a3a22',bg:['#f0d9b5','#c9a874']}};
+const MOTIFS_VERIF=[
+ {l:'Code absent, illisible ou faux',m:'Le code n’est pas écrit à la main, pas lisible ou pas exact.'},
+ {l:'Pas la même personne',m:'Le selfie ne correspond pas aux photos de ton profil.'},
+ {l:'Écran, retouche ou image générée',m:'La photo semble prise sur un écran, retouchée ou générée.'},
+ {l:'Visage peu visible',m:'Ton visage n’est pas assez visible.'}];
+const M=[
+ {id:'m2',pseudo:'Julien_84',look:L.b,inscrit:'il y a 2 j',vu:'il y a 1 h',statut:'actif',verifie:false,fiab:'douteux',photos:2,
+  signals:['Lexique de l’arnaque','3 signalements en 24 h','Compte créé il y a 2 jours','Aucun selfie'],
+  cases:[{t:'report',age:'38 min',motif:'Demande d’argent',n:3,quote:'Je suis coincé à l’aéroport, ma carte est bloquée. Tu pourrais m’envoyer 200 € par transfert ? Je te rembourse dès lundi.'}],
+  hist:[['il y a 1 j','Signal « lexique de l’arnaque »','auto'],['il y a 2 j','Inscription','auto']]},
+ {id:'m8',pseudo:'Marc_Tln',look:L.f,inscrit:'il y a 2 mois',vu:'il y a 6 h',statut:'actif',verifie:true,fiab:'fiable',photos:3,
+  cases:[{t:'report',age:'6 h',motif:'Propos insultants',n:1,prisPar:'Sam',quote:'Message signalé par une membre : insulte après un refus de rendez-vous.'}],
+  hist:[['il y a 6 h','Signalement ouvert','Sam'],['il y a 2 mois','Badge vérifié','Toi']]},
+ {id:'m1',pseudo:'Maëlle',look:L.a,inscrit:'il y a 2 j',vu:'il y a 10 min',statut:'actif',verifie:false,fiab:'fiable',photos:3,
+  cases:[{t:'verif',age:'12 min',code:'7358',written:'7358',ocr:'7358',essai:1}],hist:[['il y a 2 j','Inscription, e-mail confirmé','auto']]},
+ {id:'m3',pseudo:'Sofiane',look:L.b,inscrit:'il y a 9 j',vu:'il y a 3 h',statut:'actif',verifie:false,fiab:'fiable',photos:4,
+  cases:[{t:'verif',age:'41 min',code:'4926',written:'4962',ocr:'4962',essai:2,avant:'refusée il y a 2 j (visage peu visible)'}],
+  hist:[['il y a 2 j','Selfie refusé : visage peu visible','Toi'],['il y a 9 j','Inscription','auto']]},
+ {id:'m4',pseudo:'Clara.L',look:L.c,inscrit:'il y a 20 j',vu:'hier',statut:'actif',verifie:true,fiab:'fiable',photos:3,
+  cases:[{t:'photo',age:'1 h',ocrText:'snap : clara.l_92'}],hist:[['il y a 18 j','Badge vérifié','Toi']]},
+ {id:'m9',pseudo:'Yanis',look:L.a,inscrit:'il y a 6 j',vu:'il y a 30 min',statut:'actif',verifie:false,fiab:'fiable',photos:2,
+  cases:[{t:'reponse',age:'3 h',question:'Ce qui me fait rire',texte:'Les chats qui ratent leur saut. Écris-moi sur wa, zéro six douze…'}],hist:[['il y a 6 j','Inscription','auto']]},
+ {id:'m5',pseudo:'Bernadette',look:L.d,inscrit:'il y a 4 j',vu:'il y a 2 h',statut:'actif',verifie:false,fiab:'fiable',photos:2,
+  cases:[{t:'verif',age:'2 h',code:'8253',written:'8253',ocr:null,essai:1,messy:true}],hist:[['il y a 4 j','Inscription','auto']]},
+ {id:'m6',pseudo:'Inès',look:L.e,inscrit:'il y a 1 j',vu:'il y a 5 h',statut:'actif',verifie:false,fiab:'à surveiller',photos:1,
+  cases:[{t:'indice',age:'5 h',kind:'doublon',lie:'m7',detail:'Même appareil que Ines_2, inscrits à 4 minutes d’écart. Ines_2 n’a jamais confirmé son e-mail : faute de frappe probable.'}],
+  hist:[['il y a 1 j','Inscription, e-mail confirmé','auto']]},
+ {id:'m10',pseudo:'Aïcha',look:L.c,inscrit:'il y a 3 j',vu:'il y a 1 h',statut:'actif',verifie:false,fiab:'à surveiller',photos:2,
+  cases:[{t:'indice',age:'8 h',kind:'contexte',detail:'Trois indices de contexte différents (langue du navigateur, réseau, horaires). Aucun ne suffit seul.'}],hist:[['il y a 3 j','Inscription','auto']]},
+ {id:'m7',pseudo:'Ines_2',look:L.e,inscrit:'il y a 1 j',vu:'jamais',statut:'non confirmé',verifie:false,fiab:'à surveiller',photos:0,cases:[],hist:[['il y a 1 j','Inscription, e-mail jamais confirmé','auto']]},
+ {id:'m11',pseudo:'Odile',look:L.d,inscrit:'il y a 3 mois',vu:'aujourd’hui',statut:'actif',verifie:true,fiab:'fiable',photos:4,cases:[],hist:[['il y a 3 mois','Badge vérifié','Toi']]},
+ {id:'m12',pseudo:'Kevin_R',look:L.f,inscrit:'il y a 1 mois',vu:'il y a 12 j',statut:'banni',verifie:false,fiab:'douteux',photos:2,cases:[],hist:[['il y a 12 j','Banni : demande d’argent','Toi']]},
+ {id:'m13',pseudo:'Lou',look:L.e,inscrit:'il y a 5 mois',vu:'il y a 3 mois',statut:'masqué',verifie:false,fiab:'fiable',photos:1,cases:[],hist:[['il y a 1 j','Masqué de Découvrir : 3 mois sans visite','auto']]},
+ {id:'m14',pseudo:'Thomas',look:L.b,inscrit:'il y a 1 mois',vu:'hier',statut:'actif',verifie:true,fiab:'fiable',photos:3,cases:[],hist:[['il y a 25 j','Badge vérifié','Toi']]}
+];
+const FEEDBACK=[
+ {id:'f1',from:'Hugo',age:'3 h',text:'Je ne trouve pas comment changer ma ville. J’ai déménagé à Rennes et Découvrir me montre toujours des gens de Nantes.',draft:'Bonjour Hugo, tu peux changer ta ville dans Profil, rubrique « Où je suis ». Découvrir se mettra à jour dans la minute.'},
+ {id:'f2',from:null,age:'5 h',text:'L’appli est jolie mais il n’y a personne autour de Limoges.'},
+ {id:'f3',from:'Nadia',age:'1 j',text:'Est-ce qu’on pourra un jour filtrer par centres d’intérêt ?',draft:''}];
+const CASE={verif:{l:'Selfie',sev:'warn',f:'Selfies'},report:{l:'Signalement',sev:'bad',f:'Signalés'},photo:{l:'Photo',sev:'warn',f:'Photos'},indice:{l:'Indice',sev:'info',f:'Indices'},reponse:{l:'Réponse',sev:'warn',f:'Réponses'}};
+const SEVC={bad:'var(--bad)',warn:'var(--warn)',info:'var(--info)'};
+const byId=id=>M.find(m=>m.id===id);
+const openCases=()=>M.reduce((n,m)=>n+m.cases.length,0);
+const countT=t=>M.reduce((n,m)=>n+m.cases.filter(c=>c.t===t).length,0);
+const fbOpen=()=>FEEDBACK.filter(f=>!f.done).length;
+
+/* ================= état ================= */
+let view='activite', period=30, current='m2', mobFiche=false, filter='atraiter', sort='urgence', q='', tool='historique', outbox=[], sent=0, feats={checkin:false,crossings:true,square:true};
+
+/* ================= portraits dessinés ================= */
+function face(ctx,w,h,o,paper,code,messy){
+  const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,o.bg[0]);g.addColorStop(1,o.bg[1]);ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+  const cx=paper?w*.38:w/2,cy=h*.44,r=w*(paper?.17:.24);
+  ctx.fillStyle='#5b6f86';ctx.beginPath();ctx.ellipse(cx,h*1.04,r*2.1,r*1.5,0,Math.PI,0);ctx.fill();
+  ctx.fillStyle=o.skin;ctx.fillRect(cx-r*.35,cy+r*.8,r*.7,r*.6);ctx.beginPath();ctx.ellipse(cx,cy,r*.85,r,0,0,7);ctx.fill();
+  ctx.fillStyle=o.hair;ctx.beginPath();ctx.ellipse(cx,cy-r*.35,r*.95,r*.75,0,Math.PI,0);ctx.fill();
+  ctx.fillStyle='#231a16';[-.3,.3].forEach(d=>{ctx.beginPath();ctx.arc(cx+d*r,cy,r*.07,0,7);ctx.fill()});
+  ctx.strokeStyle='#7a3b2e';ctx.lineWidth=Math.max(1,r*.05);ctx.beginPath();ctx.arc(cx,cy+r*.35,r*.25,.2,Math.PI-.2);ctx.stroke();
+  if(!paper)return;
+  ctx.save();ctx.translate(w*.72,h*.52);ctx.rotate(messy?-.16:.07);
+  const pw=w*.38,ph=h*.3;ctx.fillStyle='#fbfaf6';ctx.shadowColor='rgba(0,0,0,.25)';ctx.shadowBlur=10;ctx.fillRect(-pw/2,-ph/2,pw,ph);ctx.shadowBlur=0;
+  ctx.fillStyle='#1d3a8a';ctx.textAlign='center';ctx.font=`600 ${ph*.24}px Caveat, cursive`;ctx.fillText('Libre',0,-ph*.08);
+  ctx.font=`600 ${ph*.38}px Caveat, cursive`;ctx.fillText(code.split('').join(' '),0,ph*.32);
+  ctx.fillStyle=o.skin;for(let i=0;i<4;i++){ctx.beginPath();ctx.roundRect(-pw*.3+i*pw*.13,ph*.42,pw*.11,ph*.32,8);ctx.fill()}
+  ctx.restore();
+}
+const BGS=[['#e4d6cf','#b9a59b'],['#cbd6df','#93a3b0'],['#d6dccb','#a3ad90'],['#efe0c8','#c6ad86']];
+function paint(){document.querySelectorAll('canvas[data-m]').forEach(c=>{const m=byId(c.dataset.m);if(!m)return;const k=+(c.dataset.k||0),ctx=c.getContext('2d');
+  if(c.dataset.selfie){const cs=m.cases.find(x=>x.t==='verif');if(cs)face(ctx,c.width,c.height,m.look,true,cs.written,cs.messy);return}
+  face(ctx,c.width,c.height,{...m.look,bg:k?BGS[(k-1)%4]:m.look.bg},false);
+  if(c.dataset.ocr){ctx.fillStyle='rgba(255,255,255,.88)';ctx.fillRect(c.width*.05,c.height*.84,c.width*.9,c.height*.09);ctx.fillStyle='#222';ctx.font=`600 ${c.height*.05}px Inter`;ctx.fillText(c.dataset.ocr,c.width*.08,c.height*.9)}})}
+const av=(m,s=80)=>`<canvas class="av" data-m="${m.id}" width="${s}" height="${s}" aria-hidden="true"></canvas>`;
+
+/* ================= graphiques ================= */
+const CH={};
+const EVENTS=[{i:99,l:'Annonce au journal'},{i:132,l:'Questions en miroir'},{i:168,l:'Lot anti-fraude'}];
+function smooth(p){let d=`M${p[0][0].toFixed(1)},${p[0][1].toFixed(1)}`;for(let i=0;i<p.length-1;i++){const a=p[i-1]||p[i],b=p[i],c=p[i+1],e=p[i+2]||c;
+  d+=` C${(b[0]+(c[0]-a[0])/6).toFixed(1)},${(b[1]+(c[1]-a[1])/6).toFixed(1)} ${(c[0]-(e[0]-b[0])/6).toFixed(1)},${(c[1]-(e[1]-b[1])/6).toFixed(1)} ${c[0].toFixed(1)},${c[1].toFixed(1)}`}return d}
+function lineChart(id,vals,dts,label,offset=0){
+  CH[id]={vals,dts,label};
+  const W=640,H=200,P={l:34,r:8,t:10,b:22},max=Math.ceil(Math.max(...vals)*1.15/10)*10||10;
+  const x=i=>P.l+(W-P.l-P.r)*(vals.length===1?0:i/(vals.length-1)),y=v=>P.t+(H-P.t-P.b)*(1-v/max);
+  const pts=vals.map((v,i)=>[x(i),y(v)]),line=smooth(pts),last=vals.length-1;
+  const grid=[0,.5,1].map(f=>`<line x1="${P.l}" x2="${W-P.r}" y1="${y(max*f)}" y2="${y(max*f)}" stroke="var(--line)" stroke-dasharray="${f?'2 4':''}"/><text x="${P.l-6}" y="${y(max*f)+3}" text-anchor="end">${fmt(max*f)}</text>`).join('');
+  const ticks=[0,Math.floor(last/2),last].map(i=>`<text x="${x(i)}" y="${H-6}" text-anchor="${i===0?'start':i===last?'end':'middle'}">${dfmt(dts[i])}</text>`).join('');
+  const ev=EVENTS.filter(e=>e.i>=offset&&e.i<offset+vals.length).map(e=>{const i=e.i-offset;return `<line x1="${x(i)}" x2="${x(i)}" y1="${P.t+14}" y2="${H-P.b}" stroke="var(--miel)" stroke-dasharray="2 3"/><circle cx="${x(i)}" cy="${P.t+10}" r="4" fill="var(--miel)"/><text x="${x(i)+(i>last*.7?-8:8)}" y="${P.t+14}" text-anchor="${i>last*.7?'end':'start'}" class="ev">${e.l}</text>`}).join('');
+  return `<div class="chart" data-chart="${id}"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">${grid}${ev}
+   <path d="${line} L${x(last)},${y(0)} L${x(0)},${y(0)} Z" fill="url(#warm)"/>
+   <path d="${line}" fill="none" stroke="var(--coral)" stroke-width="2.5" stroke-linecap="round"/>
+   <circle cx="${x(last)}" cy="${y(vals[last])}" r="5" fill="var(--coral)" stroke="var(--surface)" stroke-width="2"/>
+   ${ticks}<line class="xh" x1="0" x2="0" y1="${P.t}" y2="${H-P.b}" stroke="var(--muted)" stroke-dasharray="3 3" visibility="hidden"/>
+   <circle class="xd" r="6" fill="var(--coral)" stroke="var(--surface)" stroke-width="2" visibility="hidden"/>
+   <rect class="hit" x="${P.l}" y="0" width="${W-P.l-P.r}" height="${H}" fill="transparent"/></svg>${dataTable(vals,dts,label)}</div>`;
+}
+function barChart(id,vals,labels,label){
+  const W=640,H=170,P={l:34,r:8,t:10,b:22},max=Math.ceil(Math.max(...vals,1)*1.15),n=vals.length,bw=(W-P.l-P.r)/n,gap=Math.max(2,Math.min(8,bw*.3));
+  const y=v=>P.t+(H-P.t-P.b)*(1-v/max);
+  const grid=[0,1].map(f=>`<line x1="${P.l}" x2="${W-P.r}" y1="${y(max*f)}" y2="${y(max*f)}" stroke="var(--line)" stroke-dasharray="${f?'2 4':''}"/><text x="${P.l-6}" y="${y(max*f)+3}" text-anchor="end">${fmt(max*f)}</text>`).join('');
+  const bars=vals.map((v,i)=>{const x0=P.l+i*bw+gap/2,w=bw-gap,h=Math.max(0,y(0)-y(v)),r=Math.min(w/2,h,6);
+    return `<path d="M${x0},${y(0)} v${-(h-r)} q0,${-r} ${r},${-r} h${w-2*r} q${r},0 ${r},${r} v${h-r} z" fill="${i===n-1?'var(--coral)':'var(--abricot)'}"/><rect x="${P.l+i*bw}" y="${P.t}" width="${bw}" height="${H-P.t-P.b}" fill="transparent" data-tip="${labels[i]} · <b>${fmt(v)}</b>"/>`}).join('');
+  const ticks=[0,n-1].map(i=>`<text x="${P.l+i*bw+bw/2}" y="${H-6}" text-anchor="${i?'end':'start'}">${labels[i]}</text>`).join('');
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">${grid}${bars}${ticks}</svg>${dataTable(vals,labels,label)}</div>`;
+}
+function dataTable(vals,lab,label){return `<details class="data"><summary>Voir les chiffres</summary><div class="scroll" style="max-height:220px;overflow:auto"><table><thead><tr><th>${typeof lab[0]==='string'?'Période':'Jour'}</th><th class="n">${label}</th></tr></thead><tbody>${vals.map((v,i)=>`<tr><td>${typeof lab[i]==='string'?lab[i]:dfmt(lab[i])}</td><td class="n">${fmt(v)}</td></tr>`).join('')}</tbody></table></div></details>`}
+function seq(p){return `color-mix(in oklab, var(--coral) ${Math.round(14+p*86)}%, var(--blush))`}
+const sum=a=>a.reduce((s,v)=>s+v,0);
+const em=v=>`<em>${v}</em>`;
+
+/* ================= vue Activité : un récit ================= */
+const PERIOD_TXT={7:'cette semaine',30:'ces 30 derniers jours',90:'ce trimestre'};
+function vActivite(){
+  const P=period,off=N-P,cur=s=>s.slice(off),prev=s=>s.slice(N-2*P,off);
+  const d=s=>{const a=sum(cur(s)),b=sum(prev(s));return b?Math.round((a-b)/b*100):0};
+  const trend=s=>{const v=d(s);return v>3?`en hausse de ${v} %`:v<-3?`en baisse de ${-v} %`:'stable'};
+  const avgAct=Math.round(sum(cur(actifs))/P),ins=sum(cur(inscr)),nMsg=sum(cur(msgs)),nMat=sum(cur(matchs));
+  const uniq=Math.round(avgAct*(P===7?1.9:P===30?1.8:2.3));
+
+  // Qui arrive : un point = une personne, teinté selon jusqu’où elle est allée
+  const ST=[['S’est inscrit·e',1],['Profil prêt',Math.round(ins*.76)],['A tendu la main',Math.round(ins*.62)],['A matché',Math.round(ins*.39)],['Converse',Math.round(ins*.28)]];
+  const stageOf=i=>{let s=0;ST.forEach(([_,v],k)=>{if(k&&i<v)s=k});return s};
+  const people=Array.from({length:ins},(_,i)=>stageOf(i)).reverse();
+  const dot=s=>`<span class="pdot" style="background:${seq(s/4)}" data-tip="${ST[s][0]}"></span>`;
+
+  // Qui reste : 10 personnes par semaine d’arrivée
+  const COH=[['15 sept.',22,4],['22 sept.',31,4],['29 sept.',18,3],['6 oct.',14,5],['13 oct.',12,4],['20 oct.',16,5],['27 oct.',11,6],['3 nov.',9,7]];
+  // Quand : bulles jour × tranche de 2 h
+  const Rh=rng(7),HEAT=DAYN.map((_,dd)=>Array.from({length:12},(_,h)=>[.05,.02,.02,.1,.3,.35,.4,.45,.55,.85,1,.6][h]*(dd>=5?1.2:1)*(.8+Rh()*.4)));
+  const hmax=Math.max(...HEAT.flat());
+  // Prendre soin
+  const wk=[];for(let i=11;i>=0;i--){const x=new Date(END);x.setDate(END.getDate()-i*7);wk.push('sem. du '+dfmt(x))}
+  const Rm=rng(11),traites=wk.map((_,i)=>Math.round(4+i*.9+Rm()*5));
+  const soft=(rows,max)=>`<div class="dist">${rows.map(([l,v])=>`<div class="r"><span>${l}</span><span class="b"><i style="width:${v/max*100}%"></i></span><span class="p">${v} %</span></div>`).join('')}</div>`;
+
+  return `<div class="page gut story">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="warm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--coral)" stop-opacity=".28"/><stop offset="1" stop-color="var(--abricot)" stop-opacity=".04"/></linearGradient></defs></svg>
+
+  <section class="hero">
+   <div class="ph"><span class="kicker">Libre, ${PERIOD_TXT[P]}</span><div class="seg" role="group" aria-label="Période">${[[7,'Semaine'],[30,'Mois'],[90,'Trimestre']].map(([p,l])=>`<button type="button" data-period="${p}" aria-pressed="${P===p}">${l}</button>`).join('')}</div></div>
+   <p class="lede">${em(fmt(uniq)+' personnes')} sont passées sur Libre ${PERIOD_TXT[P]}. ${em(fmt(ins))} nous ont rejoints, ${em(fmt(nMat))} matchs se sont noués et ${em(fmt(nMsg))} messages ont été échangés.</p>
+   <p class="sub">Chaque jour, environ ${fmt(avgAct)} personnes ouvrent l’app, une fréquentation ${trend(actifs)} par rapport à la période d’avant.</p>
+  </section>
+
+  <section class="care">
+   <div><h2>Quelques personnes attendent ton regard</h2><p class="muted">${openCases()+fbOpen()} situations, la plus ancienne depuis 6 h.</p></div>
+   <div class="todo">${[['report','signalements','bad'],['verif','selfies','warn'],['photo','photos','warn'],['reponse','réponses','warn'],['indice','indices','info']].map(([t,l,s])=>`<button type="button" data-filter="${t}"><span class="sv" style="background:${SEVC[s]}"></span><span class="n">${countT(t)}</span><span class="l">${l}</span></button>`).join('')}
+    <button type="button" data-go="retours"><span class="sv" style="background:var(--miel)"></span><span class="n">${fbOpen()}</span><span class="l">retours</span></button></div>
+  </section>
+
+  <section class="chapter">
+   <header><span class="kicker">Qui arrive</span><h2>${ins} nouvelles personnes, et jusqu’où elles sont allées</h2>
+    <p>Chaque point est une personne inscrite ${PERIOD_TXT[P]}. Plus il est foncé, plus elle a avancé. ${em(ST[4][1])} d’entre elles ont déjà une conversation en cours. Le pas le plus difficile reste celui entre le premier like et le premier match.</p></header>
+   <div class="panel"><div class="people" role="img" aria-label="${ins} personnes inscrites, colorées selon leur avancée">${people.map(dot).join('')}</div>
+    <div class="plegend">${ST.map(([l,v],k)=>`<span><span class="pdot" style="background:${seq(k/4)}"></span>${l} <b>${k?v:ins}</b></span>`).join('')}</div></div>
+   <div class="panel"><h3>Arrivées jour après jour</h3>${barChart('ins',cur(inscr),days.slice(off).map(dfmt),'Inscriptions')}</div>
+  </section>
+
+  <section class="chapter">
+   <header><span class="kicker">Qui est là</span><h2>Environ ${fmt(avgAct)} personnes par jour</h2>
+    <p>Les points dorés marquent ce qui s’est passé sur Libre : une annonce ou une nouveauté se voit souvent dans la courbe quelques jours plus tard.</p></header>
+   <div class="panel">${lineChart('act',cur(actifs),days.slice(off),'Personnes actives',off)}</div>
+   <div class="panel"><h3>Les moments où Libre est le plus vivant</h3>
+    <div class="bubbles" role="img" aria-label="Fréquentation par jour et par heure"><span></span>${Array.from({length:12},(_,h)=>`<span class="hx">${h%3===0?h*2+' h':''}</span>`).join('')}
+     ${HEAT.map((row,dd)=>`<span class="hy">${DAYN[dd]}</span>${row.map((v,h)=>{const r=v/hmax;return `<span class="cell" data-tip="${DAYN[dd]} entre ${h*2} h et ${h*2+2} h"><i style="width:${Math.round(4+r*16)}px;height:${Math.round(4+r*16)}px;opacity:${(.35+r*.65).toFixed(2)}"></i></span>`}).join('')}`).join('')}</div>
+    <p class="muted">Le dimanche soir, entre 20 h et 22 h, c’est le moment où le plus de monde est là. C’est aussi le bon moment pour publier au journal.</p></div>
+  </section>
+
+  <section class="chapter">
+   <header><span class="kicker">Qui reste</span><h2>Sur dix personnes arrivées, combien passent encore ?</h2>
+    <p>La moitié des arrivées de septembre ne sont pas revenues après leur premier mois. Les arrivées récentes restent mieux : l’accueil en trois étapes semble porter ses fruits.</p></header>
+   <div class="panel"><div class="cohorts">${COH.map(([w,n,k])=>`<div class="coh" data-tip="Semaine du ${w} · ${n} arrivées · ${k} sur 10 encore là"><span class="cw">Semaine du ${w}</span><span class="ten">${Array.from({length:10},(_,i)=>`<i class="${i<k?'on':''}"></i>`).join('')}</span><span class="ck"><b>${k}</b> sur 10</span></div>`).join('')}</div>
+    <details class="data"><summary>Voir les chiffres</summary><div class="scroll"><table><thead><tr><th>Semaine d’arrivée</th><th class="n">Arrivées</th><th class="n">Encore là</th></tr></thead><tbody>${COH.map(([w,n,k])=>`<tr><td>${w}</td><td class="n">${n}</td><td class="n">${Math.round(n*k/10)}</td></tr>`).join('')}</tbody></table></div></details></div>
+  </section>
+
+  <section class="chapter">
+   <header><span class="kicker">Qui se parle</span><h2>${em('64 %')} des premiers messages reçoivent une réponse</h2>
+    <p>${fmt(nMsg)} messages ${PERIOD_TXT[P]}, ${trend(msgs)}. Sur La Place, une dizaine de personnes se retrouvent chaque jour.</p></header>
+   <div class="grid g3">
+    <div class="panel"><h3>Messages par jour</h3>${lineChart('msg',cur(msgs),days.slice(off),'Messages',off)}</div>
+    <div class="panel"><h3>Matchs par jour</h3>${lineChart('mat',cur(matchs),days.slice(off),'Matchs',off)}</div>
+    <div class="panel"><h3>La Place</h3>${lineChart('pla',cur(place),days.slice(off),'Messages sur La Place',off)}</div>
+   </div>
+  </section>
+
+  <section class="chapter">
+   <header><span class="kicker">Qui sont-ils</span><h2>212 comptes, des 18 à 79 ans</h2>
+    <p>Les 25–34 ans sont les plus nombreux, mais un quart des membres a plus de 45 ans. Près d’une personne sur trois se laisse le temps de voir en chemin.</p></header>
+   <div class="grid g3">
+    <div class="panel"><h3>Âges</h3>${soft([['18–24',14],['25–34',31],['35–44',24],['45–54',17],['55 et plus',14]],31)}</div>
+    <div class="panel"><h3>Ce qu’ils cherchent</h3>${soft([['Durable',38],['Je verrai en chemin',29],['Amitié',18],['Légère',15]],38)}</div>
+    <div class="panel"><h3>Genres</h3>${soft([['Homme',47],['Femme',44],['Non-binaire',6],['Autre',3]],47)}</div>
+    <div class="panel"><h3>Profils</h3>${soft([['Remplis',81],['Avec photo',75],['Avec position',63],['Vérifiés par selfie',22],['Notifications activées',38]],100)}</div>
+    <div class="panel"><h3>Questions en miroir</h3>${soft([['Ont répondu à une question',58],['À trois et plus',31]],100)}</div>
+    <div class="panel"><h3>Centres d’intérêt cités</h3>${soft([['Randonnée',41],['Cuisine',36],['Musique live',30],['Jeux de société',22]],41)}</div>
+   </div>
+  </section>
+
+  <section class="chapter">
+   <header><span class="kicker">Prendre soin</span><h2>Une réponse en ${em('4 h')} en moyenne</h2>
+    <p>Cette semaine, ${traites[11]} situations ont été traitées. Sur 11 personnes dont le selfie a été refusé, ${em('9')} ont réessayé, et 7 ont obtenu leur badge.</p></header>
+   <div class="grid w21">
+    <div class="panel"><h3>Situations traitées, semaine après semaine</h3>${barChart('mod',traites,wk,'Situations traitées')}</div>
+    <div class="panel"><h3>Ce qui a été décidé ${PERIOD_TXT[P]}</h3>
+     <div class="dist">${[['Selfies validés',12],['Selfies refusés',4],['Sans suite',7],['Avertissements',5],['Photos retirées',6],['Bannissements',2]].map(([l,v])=>`<div class="r"><span>${l}</span><span class="b"><i style="width:${v/12*100}%"></i></span><span class="p">${v}</span></div>`).join('')}</div>
+     <p class="muted small">Deux bannissements, tous deux pour une demande d’argent.</p></div>
+   </div>
+  </section>
+
+  <section class="chapter">
+   <header><span class="kicker">Côté coulisses</span><h2>Tout tourne</h2></header>
+   <div class="grid g3">
+    <button class="panel health" type="button" data-tool="retention"><span class="hd ok"></span><span><b>Rétention</b><br><span class="muted">Dernier passage il y a 3 h, rien en retard.</span></span></button>
+    <button class="panel health" type="button" data-tool="limites"><span class="hd warn"></span><span><b>Limites de requêtes</b><br><span class="muted">4 blocages sur 24 h, tous à l’inscription.</span></span></button>
+    <button class="panel health" type="button" data-tool="fonctions"><span class="hd"></span><span><b>Check-in en pause</b><br><span class="muted">Les membres voient « en pause ».</span></span></button>
+   </div>
+  </section>
+  </div>`;
+}
+
+/* ================= vue Membres (hub) ================= */
+const FILTERS=[['atraiter','À traiter',m=>m.cases.length],['verif','Selfies',m=>m.cases.some(c=>c.t==='verif')],['report','Signalés',m=>m.cases.some(c=>c.t==='report')],['photo','Photos',m=>m.cases.some(c=>c.t==='photo')],['reponse','Réponses',m=>m.cases.some(c=>c.t==='reponse')],['indice','Indices',m=>m.cases.some(c=>c.t==='indice')],['douteux','Douteux',m=>m.fiab==='douteux'],['verifies','Vérifiés',m=>m.verifie],['masques','Masqués',m=>m.statut==='masqué'],['bannis','Bannis',m=>m.statut==='banni'],['nonconf','Non confirmés',m=>m.statut==='non confirmé'],['tous','Tous',()=>true]];
+const RANK={bad:0,warn:1,info:2},FI={douteux:0,'à surveiller':1,fiable:2};
+const urg=m=>m.cases.length?Math.min(...m.cases.map(c=>RANK[CASE[c.t].sev])):9;
+function memberList(){
+  const f=FILTERS.find(x=>x[0]===filter)||FILTERS[0];
+  let list=M.filter(f[2]).filter(m=>!q||m.pseudo.toLowerCase().includes(q.toLowerCase()));
+  if(sort==='urgence')list.sort((a,b)=>urg(a)-urg(b));if(sort==='fiab')list.sort((a,b)=>FI[a.fiab]-FI[b.fiab]);
+  return list;
+}
+function statutTag(m){return m.statut==='banni'?'<span class="tag t-bad">Banni</span>':m.statut==='masqué'?'<span class="tag">Masqué</span>':m.statut==='non confirmé'?'<span class="tag">Non confirmé</span>':''}
+function fiabTag(f){return f==='douteux'?'<span class="tag t-bad">Douteux</span>':f==='à surveiller'?'<span class="tag t-warn">À surveiller</span>':''}
+function vMembres(){
+  const list=memberList();
+  if(current&&!list.some(m=>m.id===current))current=list[0]?.id||null;
+  return `<div class="hub gut${mobFiche?' mob-fiche':''}">
+   <div class="listpane">
+    <input type="search" id="q" placeholder="Chercher un pseudo ou une adresse e-mail" value="${q}" aria-label="Chercher un membre">
+    <div class="chips" role="toolbar" aria-label="Filtres">${FILTERS.map(([k,l,fn])=>{const n=M.filter(fn).length,show=['atraiter','verif','report','photo','reponse','indice'].includes(k)&&n;return `<button class="chip" type="button" data-f="${k}" aria-pressed="${filter===k}">${l}${show?`<span class="cnt">${n}</span>`:''}</button>`}).join('')}</div>
+    <div class="sortrow"><span class="small muted">${list.length} membre${list.length>1?'s':''}</span><select id="sort" aria-label="Trier"><option value="urgence"${sort==='urgence'?' selected':''}>Trier par urgence</option><option value="recent"${sort==='recent'?' selected':''}>Inscription récente</option><option value="fiab"${sort==='fiab'?' selected':''}>Fiabilité</option></select></div>
+    <div class="mlist">${list.length?list.map(m=>`<button class="row" type="button" data-member="${m.id}" aria-current="${m.id===current}">
+      <span class="sev" style="background:${m.cases.length?SEVC[CASE[m.cases[0].t].sev]:'transparent'}"></span>${av(m)}
+      <span style="min-width:0"><span class="nm"><span>${m.pseudo}</span>${m.verifie?'<span class="ok-mark">✓</span>':''}</span>
+      <span class="sub">Inscrit ${m.inscrit} · vu ${m.vu}</span>
+      <span class="tags">${m.cases.map(c=>`<span class="tag t-${CASE[c.t].sev}">${CASE[c.t].l}${c.n>1?' ×'+c.n:''}</span>`).join('')}${statutTag(m)}${fiabTag(m.fiab)}</span></span>
+      <span class="age">${m.cases[0]?m.cases[0].age:''}</span></button>`).join('')+'<div class="more">Les membres suivants se chargent en arrivant au bout de la liste.</div>':`<div class="empty"><strong>Rien ici</strong><span>Aucun membre ne correspond à ce filtre.</span></div>`}</div>
+   </div>
+   <div class="ficheout">${current?vFiche(byId(current)):`<div class="empty"><strong>Choisis un membre</strong><span>Sa fiche s’affiche ici.</span></div>`}</div>
+  </div>`;
+}
+function vFiche(m){
+  return `<div class="fiche">
+   <button class="backbtn" type="button" data-back>← Membres</button>
+   <div class="fhead">${av(m,112)}<div style="display:grid;gap:4px;min-width:0"><h1>${m.pseudo}</h1>
+    <span class="meta">Inscrit ${m.inscrit} · vu ${m.vu} · ${m.photos} photo${m.photos>1?'s':''}</span>
+    <span style="display:flex;gap:4px;flex-wrap:wrap">${m.verifie?'<span class="tag t-ok">Vérifié</span>':'<span class="tag">Non vérifié</span>'}${statutTag(m)}${fiabTag(m.fiab)}</span></div></div>
+   ${m.cases.length?m.cases.map((c,i)=>caseCard(m,c,i)).join(''):`<div class="panel"><h2>À traiter</h2><p class="muted">Aucun geste en attente pour ce membre.</p></div>`}
+   <div class="split">
+    <div style="display:grid;gap:12px;align-content:start;min-width:0">
+     ${m.signals?`<div class="panel"><h2>Indice de fiabilité ${fiabTag(m.fiab)}</h2><div class="signals">${m.signals.map(s=>`<span class="sig">${s}</span>`).join('')}</div><p class="small muted">Le niveau est calculé, jamais montré au membre.</p></div>`:''}
+     ${m.photos?`<div class="panel"><h2>Photos publiées</h2><div class="photos">${Array.from({length:m.photos},(_,k)=>`<figure><canvas data-m="${m.id}" data-k="${k+1}" width="200" height="245"></canvas><div class="btns"><button class="btn" type="button" data-photo="voile">Voiler</button><button class="btn danger" type="button" data-photo="retirer">Retirer</button></div></figure>`).join('')}</div></div>`:''}
+    </div>
+    <div style="display:grid;gap:12px;align-content:start;min-width:0">
+     <div class="panel"><h2>Historique</h2><ul class="timeline">${m.hist.map(([w,x,who])=>`<li><span class="w">${w}</span><span>${x} <span class="muted small">· ${who==='auto'?'automatique':'par '+who}</span></span></li>`).join('')}</ul></div>
+     <div class="panel"><h2>Autres gestes</h2><div class="btns">
+      ${m.verifie?'':`<button class="btn" type="button" data-act="invite">Inviter au selfie</button>`}
+      <button class="btn" type="button" data-act="avertir">Avertir</button>
+      ${m.statut==='masqué'?`<button class="btn" type="button" data-act="demasquer">Rendre visible</button>`:`<button class="btn" type="button" data-act="masquer">Masquer 3 mois</button>`}
+      ${m.statut==='banni'?`<button class="btn" type="button" data-act="debannir">Débannir</button>`:''}</div>
+      <details class="danger"><summary>Zone sensible</summary><div class="btns">${m.statut==='banni'?'':`<button class="btn danger" type="button" data-act="bannir">Bannir</button>`}<button class="btn danger" type="button" data-act="supprimer">Supprimer le compte</button></div></details></div>
+    </div>
+   </div></div>`;
+}
+function caseCard(m,c,i){
+  const k=CASE[c.t];let body='',actions='',repere='';
+  if(c.t==='verif'){
+    const ocr=c.ocr===null?`<span class="ocr t-warn">Lecture automatique impossible : lis-le toi-même</span>`:c.ocr===c.code?`<span class="ocr t-ok">Lu automatiquement : ${c.ocr}</span>`:`<span class="ocr t-bad">Lu automatiquement : ${c.ocr.split('').map((ch,j)=>ch===c.code[j]?ch:`<mark>${ch}</mark>`).join('')}</span>`;
+    body=`<div class="split"><div class="media"><div><canvas data-m="${m.id}" data-selfie="1" width="480" height="560"></canvas><p class="small muted" style="margin-top:4px">Selfie, il y a ${c.age}</p></div>
+      <div class="thumbs">${Array.from({length:Math.min(m.photos,3)},(_,j)=>`<canvas data-m="${m.id}" data-k="${j+1}" width="200" height="240"></canvas>`).join('')}<p class="small muted">Photos du profil</p></div></div>
+      <div style="display:grid;gap:10px;align-content:start"><span class="label">Code attendu</span><div class="codeline"><span class="code">${c.code}</span>${ocr}</div>
+      <ul class="checks"><li>Le code est écrit à la main et je lis bien ${c.code}.</li><li>C’est la même personne que sur les photos.</li><li>C’est une vraie photo, pas un écran ni une image générée.</li></ul>
+      ${c.essai>1?`<p class="small muted">Tentative n° ${c.essai}. La précédente a été ${c.avant}.</p>`:''}</div></div>`;
+    actions=`<button class="btn primary" type="button" data-case="${i}" data-do="valider">Tout est bon, valider</button><button class="btn danger" type="button" data-case="${i}" data-do="refuser">Refuser…</button>`;
+    repere='Valide seulement si tu réponds oui aux trois questions. Au moindre doute, refuse : le membre reçoit un nouveau code et peut réessayer tout de suite.';
+  }else if(c.t==='report'){
+    body=`<div class="quote">${c.quote}</div><p class="small muted">${c.n} signalement${c.n>1?'s':''} · motif : ${c.motif}</p>${c.prisPar?`<p class="lock">Sam a ouvert ce signalement il y a 6 h sans le clore. Tu peux le reprendre.</p>`:''}`;
+    actions=`<button class="btn" type="button" data-case="${i}" data-do="sanssuite">Sans suite</button><button class="btn" type="button" data-case="${i}" data-do="avertir">Avertir</button><button class="btn danger" type="button" data-case="${i}" data-do="masquer">Masquer 3 mois</button><button class="btn danger fill" type="button" data-case="${i}" data-do="bannir">Bannir…</button>`;
+    repere=c.motif==='Demande d’argent'?'Une demande d’argent à quelqu’un rencontré sur Libre suffit pour bannir, même au premier signalement.':'Un premier écart sans menace : avertir. Une récidive ou une menace : masquer ou bannir.';
+  }else if(c.t==='photo'){
+    body=`<div class="media" style="grid-template-columns:minmax(0,200px) 1fr"><canvas data-m="${m.id}" data-k="1" data-ocr="${c.ocrText}" width="200" height="245"></canvas><div style="display:grid;gap:6px;align-content:start"><span class="label">Texte lu sur l’image</span><span class="quote mono">${c.ocrText}</span></div></div>`;
+    actions=`<button class="btn primary" type="button" data-case="${i}" data-do="garder">Garder</button><button class="btn" type="button" data-case="${i}" data-do="voiler">Voiler</button><button class="btn danger" type="button" data-case="${i}" data-do="retirer">Retirer la photo</button>`;
+    repere='Un pseudo de réseau social ou un numéro sur une photo contourne la règle de la bio : retire la photo.';
+  }else if(c.t==='reponse'){
+    body=`<p class="small muted">Question : ${c.question}</p><div class="quote">${c.texte}</div>`;
+    actions=`<button class="btn primary" type="button" data-case="${i}" data-do="garder">Garder</button><button class="btn danger" type="button" data-case="${i}" data-do="retirerrep">Retirer la réponse</button>`;
+    repere='Un moyen de contact, même écrit en toutes lettres, n’a pas sa place dans une réponse.';
+  }else{
+    const lie=c.lie&&byId(c.lie);
+    body=`<div class="quote">${c.detail}</div>${lie?`<button class="row" type="button" data-member="${lie.id}" style="border:1px solid var(--line);border-radius:8px;padding-left:10px;grid-template-columns:40px 1fr auto"><canvas class="av" data-m="${lie.id}" width="80" height="80"></canvas><span><span class="nm"><span>${lie.pseudo}</span></span><span class="sub">Compte lié · ${lie.statut}</span></span><span class="muted">›</span></button>`:''}`;
+    actions=c.kind==='doublon'&&lie?`<button class="btn danger" type="button" data-case="${i}" data-do="doublon">Supprimer ${lie.pseudo}</button><button class="btn" type="button" data-case="${i}" data-do="rien">Rien à signaler</button>`:`<button class="btn" type="button" data-case="${i}" data-do="invite">Inviter au selfie</button><button class="btn" type="button" data-case="${i}" data-do="rien">Rien à signaler</button>`;
+    repere=c.kind==='doublon'?'Garde le compte dont l’e-mail est confirmé. La suppression est inscrite dans l’historique du compte gardé.':'Un indice de contexte ne suffit jamais pour sanctionner. Le selfie lève le doute sans rien retirer au membre.';
+  }
+  return `<article class="panel case sev-${k.sev}"><div class="ch"><span style="display:flex;gap:8px;align-items:center"><span class="tag t-${k.sev}">${k.l}</span><h3>${c.t==='report'?c.motif:c.t==='verif'?'Selfie à vérifier':c.t==='photo'?'Photo à revoir':c.t==='reponse'?'Réponse à revoir':'Indice'}</h3></span><span class="mono muted">il y a ${c.age}</span></div>
+   ${body}<div class="btns">${actions}</div><p class="repere"><b>Repère.</b> ${repere}</p></article>`;
+}
+
+/* ================= Retours ================= */
+function vRetours(){
+  const list=FEEDBACK.filter(f=>!f.done);
+  return `<div class="page gut"><div class="ph"><h1>Retours</h1><span class="small muted">Une réponse par retour, définitive. Le membre la lit dans Paramètres › Mes retours.</span></div>
+  <div class="grid g2">${list.length?list.map(f=>`<article class="panel"><h2><span>${f.from||'Anonyme'}</span><span>il y a ${f.age}</span></h2><div class="quote">${f.text}</div>
+   ${f.from?`<label class="label" for="r-${f.id}">Ta réponse</label><textarea id="r-${f.id}">${f.draft||''}</textarea><div class="btns"><button class="btn coral" type="button" data-fb="${f.id}" data-do="repondre">Envoyer la réponse</button><button class="btn" type="button" data-fb="${f.id}" data-do="clore">Clore sans répondre</button></div>`
+   :`<p class="small muted">Envoyé sans compte : impossible de répondre.</p><div class="btns"><button class="btn" type="button" data-fb="${f.id}" data-do="clore">Marquer comme lu</button></div>`}</article>`).join(''):`<div class="panel empty"><strong>Aucun retour ouvert</strong><span>Les nouveaux retours arriveront ici.</span></div>`}</div></div>`;
+}
+
+/* ================= Outils ================= */
+const TOOLS=[['historique','Historique des actions'],['guide','Guide de modération'],['place','La Place'],['cercle','Alertes Cercle'],['journal','Journal public'],['fonctions','Fonctionnalités'],['apparence','Apparence'],['limites','Limites de requêtes'],['retention','Rétention'],['selfie','Proto · selfie membre'],['technique','Proto · technique']];
+function vOutils(){
+  return `<div class="page gut"><div class="ph"><h1>Outils</h1></div><div class="tools">
+   <nav class="toolnav" aria-label="Outils">${TOOLS.map(([k,l])=>`<button class="chip" type="button" data-tool="${k}" aria-pressed="${tool===k}">${l}</button>`).join('')}</nav>
+   <div style="display:grid;gap:12px;min-width:0">${TV[tool]()}</div></div></div>`;
+}
+const TV={
+ historique:()=>`<div class="panel"><h2>Qui a fait quoi</h2><div class="scroll"><table><thead><tr><th>Quand</th><th>Par</th><th>Membre</th><th>Action</th><th>Motif</th></tr></thead><tbody>${[['il y a 6 h','Sam','Marc_Tln','Signalement ouvert',''],['il y a 1 j','automatique','Lou','Masqué de Découvrir','3 mois sans visite'],['il y a 2 j','Toi','Sofiane','Selfie refusé','Visage peu visible'],['il y a 12 j','Toi','Kevin_R','Banni','Demande d’argent']].map(r=>`<tr>${r.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="small muted">« automatique » désigne les règles du service : rétention, masquage, signaux.</p></div>`,
+ guide:()=>`<div class="grid g2">${[['Selfie','Trois questions, trois oui pour valider. Au moindre doute, refuse avec le motif le plus précis : le membre reçoit un nouveau code et peut réessayer tout de suite.'],['Signalement','Demande d’argent ou menace : bannir. Premier écart sans menace : avertir. Récidive : masquer 3 mois. Rien de contraire aux règles : sans suite.'],['Photo','Contact visible (pseudo, numéro, QR code) : retirer. Nudité ou image choquante : voiler.'],['Indice','Un indice ne suffit jamais pour sanctionner. Pour lever un doute, invite au selfie : ça ne retire rien au membre.'],['Doublon','Garde le compte dont l’e-mail est confirmé, supprime l’autre.'],['Bannir','La seule décision sans suite pour le membre. Elle demande un motif et une confirmation.']].map(([t,x])=>`<div class="panel"><h2>${t}</h2><p>${x}</p></div>`).join('')}</div>`,
+ place:()=>`<div class="grid g2"><div class="panel"><h2>Aujourd’hui</h2><p><b>14</b> messages, <b>6</b> participants.</p><p class="small muted">Remise à zéro chaque nuit, à la première visite après minuit.</p><div class="btns"><button class="btn" type="button" data-toast="Remise à zéro faite">Remettre à zéro maintenant</button></div></div><div class="panel"><h2>Thème de la semaine</h2><p>Automne en ville</p><div class="btns"><button class="btn" type="button" data-toast="Thème modifié">Changer le thème</button></div></div></div>`,
+ cercle:()=>`<div class="panel empty"><strong>Aucune alerte</strong><span>Le check-in est coupé depuis le 4 octobre. Les alertes reprendront quand il sera rouvert.</span></div>`,
+ journal:()=>`<div class="btns"><button class="btn coral" type="button" data-toast="Brouillon créé">Écrire un billet</button></div><div class="panel"><h2>Billets publiés</h2><ul class="timeline">${[['25 sept.','Les questions en miroir sont en ligne'],['25 sept.','Ce qu’on fait contre les faux profils']].map(([d,t])=>`<li><span class="w">${d}</span><span>${t} <span class="muted small">· commentaires coupés</span></span></li>`).join('')}</ul></div>`,
+ fonctions:()=>{const L2={checkin:'Check-in de sécurité',crossings:'Croisements en chemin',square:'La Place'};return `<div class="panel"><h2>Interrupteurs</h2>${Object.keys(feats).map(k=>`<div class="switch"><span><b>${L2[k]}</b><br><span class="small muted">${feats[k]?'Visible pour les membres.':'Les membres voient « en pause ».'}</span></span><button class="sw" type="button" role="switch" aria-checked="${feats[k]}" aria-label="${L2[k]}" data-feat="${k}"></button></div>`).join('')}</div>`},
+ apparence:()=>`<div class="panel"><h2>Thème par défaut du site</h2><select id="th" aria-label="Thème par défaut"><option>Libre</option><option>Libre chaleureux</option><option>Cartoon</option><option>Arcade</option><option>Rétro</option></select><p class="small muted">Le choix d’un membre l’emporte toujours sur ce défaut.</p></div>`,
+ limites:()=>`<div class="panel"><h2>Blocages sur 24 h</h2><div class="scroll"><table><thead><tr><th>Route</th><th class="n">Blocages</th></tr></thead><tbody>${[['Création de compte',4],['Connexion',2],['Envoi de message',0],['Signalement',0]].map(x=>`<tr><td>${x[0]}</td><td class="n">${x[1]}</td></tr>`).join('')}</tbody></table></div></div>`,
+ retention:()=>`<div class="panel"><h2>Dernier passage</h2><p>Il y a 3 h. 2 comptes purgés, rien en retard.</p></div><div class="panel"><h2>Règles</h2><div class="scroll"><table><thead><tr><th>Donnée</th><th>Durée</th></tr></thead><tbody>${[['Comptes jamais confirmés','30 jours'],['Comptes inactifs','1 an, préavis à 335 jours'],['Messages effacés','30 jours'],['Retours clos','90 jours']].map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('')}</tbody></table></div></div>`,
+ selfie:()=>`<p class="muted" style="max-width:65ch">Le serveur tire un code de quatre chiffres. Le membre l’écrit à la main et le montre sur son selfie. La question de modération devient fermée : le code est là, ou il n’y est pas. Après un refus, le membre n’est jamais bloqué.</p>
+  <div class="phones"><div class="phone"><h3>Montre-nous que c’est bien toi</h3><div class="big">LIBRE 7358<small>Ton code, valable 30 minutes</small></div><ol><li>Écris « Libre » et ce code à la main sur une feuille.</li><li>Prends un selfie en tenant la feuille près de ton visage. Si tu ne peux pas la tenir, pose-la à côté de toi, bien visible.</li><li>Vérifie que ton visage et le code se lisent bien, puis envoie la photo.</li></ol><p class="small muted">Quelqu’un peut écrire le code pour toi. Ce selfie n’apparaît jamais sur ton profil.</p><button class="btn coral" type="button">Prendre la photo</button></div>
+  <div class="phone"><h3>Ton selfie n’a pas pu être validé</h3><div class="quote">Le code n’est pas écrit à la main, pas lisible ou pas exact.</div><p class="small">Conseil : écris les chiffres en gros, au feutre si tu en as un, et vérifie qu’on les lit bien avant d’envoyer.</p><div class="big">LIBRE 2694<small>Ton nouveau code, valable 30 minutes</small></div><button class="btn coral" type="button">Refaire mon selfie</button><p class="small muted">Tu peux réessayer autant de fois qu’il le faut. Après trois refus, la tentative suivante s’ouvre 24 heures plus tard.</p></div></div>
+  <div class="panel"><h2>Aucune décision sans suite pour le membre</h2><div class="scroll"><table><thead><tr><th>Décision</th><th>Ce que le membre voit</th><th>Ce qu’il peut faire ensuite</th></tr></thead><tbody>
+   ${[['Selfie refusé','Le motif, un conseil et un nouveau code','Refaire un selfie tout de suite (24 h d’attente après 3 refus)'],['Photo retirée ou voilée','Un bandeau sur son profil avec le motif','Ajouter une autre photo'],['Réponse retirée','Le motif à la place de sa réponse','Écrire une autre réponse'],['Avertissement','Un message de la modération à la connexion','Le lire, puis continuer'],['Masqué 3 mois','Le motif et la date de fin','Corriger son profil et demander une relecture'],['Invitation au selfie','Une invitation dans Paramètres','Faire le selfie quand il le veut'],['Bannissement','Un écran de fin','Fin du parcours, la seule exception']].map(r=>`<tr>${r.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>
+  <div class="panel"><h2>Ce que ça ne règle pas</h2><p style="max-width:65ch">Aucune vérification par photo n’est infalsifiable : les générateurs d’images savent écrire du texte. Le code manuscrit rend la fraude plus coûteuse : il faut un texte exact, tiré il y a moins de 30 minutes, sur un visage qui ressemble aux photos du profil. Deux renforts gratuits : ouvrir directement l’appareil photo plutôt que la galerie, et compter comme indice une image sans données d’appareil.</p></div>`,
+ technique:()=>`<pre class="flow">activité    GET  /api/admin/activite?periode=30  → séries agrégées en SQL (GROUP BY jour), mises en cache 10 min
+liste       GET  /api/admin/membres?filtre=…&tri=…&curseur=…  → 20 lignes, champs minimaux
+            compteurs des filtres : une seule requête (UNION de COUNT)
+fiche       GET  /api/admin/membres/:id  → cas, signaux, historique ; photos en vignettes
+geste       écran mis à jour tout de suite, fenêtre d’annulation de 5 s
+            POST /api/admin/gestes  → lot de 1 à 20 gestes, une seule invocation
+            réponse dès l’écriture ; push, e-mail, purge R2, OCR dans after()
+fraîcheur   pas de sondage : rechargement au retour sur l’onglet ; 304 si rien n’a bougé</pre>
+  <div class="grid g2">${[['Activité en cache','Les séries se calculent en SQL, jamais en mémoire, et se gardent 10 minutes. Une période déjà vue s’affiche sans nouvelle requête.'],['Gestes regroupés','Dix gestes en une minute coûtent une ou deux invocations. Une clé par geste (cas + version) empêche qu’un renvoi double une sanction.'],['Deux modérateurs','Un cas déjà traité par l’autre revient « déjà traité » dans la réponse du lot, sans bloquer les autres gestes.'],['OCR du code','Tesseract est déjà embarqué pour les photos. Il lit le code à la réception du selfie, en différé. C’est un indice, jamais une décision.']].map(([t,x])=>`<div class="panel"><h2>${t}</h2><p>${x}</p></div>`).join('')}</div>`
+};
+
+/* ================= rendu ================= */
+const VIEWS=[['activite','Activité','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l5-6 4 4 8-9"/><path d="M3 21h18"/></svg>'],['membres','Membres','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16.5 14c2.6.2 4.4 1.9 5 4.5"/></svg>'],['retours','Retours','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v11H9l-5 4z"/></svg>'],['outils','Outils','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>']];
+function renderNav(){
+  const badge={membres:openCases(),retours:fbOpen()};
+  $('#views').innerHTML=VIEWS.map(([k,l])=>`<button type="button" data-go="${k}" aria-current="${view===k?'page':'false'}">${l}${badge[k]?`<span class="cnt">${badge[k]}</span>`:''}</button>`).join('');
+  $('#tabs').innerHTML=VIEWS.map(([k,l,ic])=>`<button type="button" data-go="${k}" aria-current="${view===k?'page':'false'}">${ic}${badge[k]?'<span class="pip"></span>':''}<span>${l}</span></button>`).join('');
+}
+function render(){
+  renderNav();
+  $('#main').innerHTML=view==='activite'?vActivite():view==='membres'?vMembres():view==='retours'?vRetours():vOutils();
+  paint();bindCharts();
+}
+function go(v){view=v;mobFiche=false;try{history.replaceState(null,'','#'+v)}catch(e){}render();window.scrollTo(0,0)}
+
+/* ================= info-bulles ================= */
+let tipEl=null;
+function showTip(html,x,y,host){hideTip();tipEl=document.createElement('div');tipEl.className='tip';tipEl.innerHTML=html;document.body.appendChild(tipEl);
+  const w=tipEl.offsetWidth,vw=document.documentElement.clientWidth;tipEl.style.position='fixed';tipEl.style.left=Math.min(Math.max(x,w/2+8),vw-w/2-8)+'px';tipEl.style.top=y+'px'}
+function hideTip(){if(tipEl){tipEl.remove();tipEl=null}}
+document.addEventListener('pointerover',e=>{const t=e.target.closest('[data-tip]');if(t){const r=t.getBoundingClientRect();showTip(t.dataset.tip,r.left+r.width/2,r.top)}});
+document.addEventListener('pointerout',e=>{if(e.target.closest('[data-tip]'))hideTip()});
+function bindCharts(){
+  document.querySelectorAll('[data-chart]').forEach(w=>{
+    const d=CH[w.dataset.chart],svg=w.querySelector('svg'),hit=svg.querySelector('.hit'),xh=svg.querySelector('.xh'),xd=svg.querySelector('.xd');
+    const W=640,H=200,P={l:34,r:8,t:10,b:22},max=Math.ceil(Math.max(...d.vals)*1.15/10)*10||10;
+    const move=ev=>{const r=svg.getBoundingClientRect(),sx=(ev.clientX-r.left)/r.width*W;let i=Math.round((sx-P.l)/(W-P.l-P.r)*(d.vals.length-1));i=Math.max(0,Math.min(d.vals.length-1,i));
+      const x=P.l+(W-P.l-P.r)*i/(d.vals.length-1),y=P.t+(H-P.t-P.b)*(1-d.vals[i]/max);
+      xh.setAttribute('x1',x);xh.setAttribute('x2',x);xh.setAttribute('visibility','visible');xd.setAttribute('cx',x);xd.setAttribute('cy',y);xd.setAttribute('visibility','visible');
+      showTip(`${dfmt(d.dts[i])} · <b>${fmt(d.vals[i])}</b>`,r.left+x/W*r.width,r.top+y/H*r.height)};
+    hit.addEventListener('pointermove',move);hit.addEventListener('pointerdown',move);
+    hit.addEventListener('pointerleave',()=>{xh.setAttribute('visibility','hidden');xd.setAttribute('visibility','hidden');hideTip()});
+  });
+}
+
+/* ================= gestes ================= */
+const SEES={valider:'Son profil porte le badge vérifié. Une notification le lui annonce.',sanssuite:'Rien. La personne qui a signalé apprend que son signalement a été traité.',avertir:'Un message de la modération à sa prochaine connexion. Il continue normalement.',masquer:'Son profil disparaît de Découvrir pendant 3 mois. Il voit le motif et peut demander une relecture après correction.',bannir:'Un écran de fin, sans recours dans l’app. C’est la seule décision sans suite.',supprimer:'Son compte et ses données disparaissent. Irréversible.'};
+const LABEL={valider:'Badge vérifié',sanssuite:'Classé sans suite',avertir:'Avertissement envoyé',masquer:'Masqué 3 mois',bannir:'Banni',garder:'Gardé',voiler:'Photo voilée',retirer:'Photo retirée',retirerrep:'Réponse retirée',doublon:'Doublon supprimé',rien:'Indice archivé',invite:'Invité au selfie',supprimer:'Compte supprimé',debannir:'Débanni',demasquer:'Rendu visible',refuser:'Selfie refusé'};
+function sheet(html){$('#layer').innerHTML=`<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`}
+function closeSheet(){$('#layer').innerHTML=''}
+function ask(m,k,ci){
+  if(k==='refuser'){
+    sheet(`<h3>Refuser le selfie de ${m.pseudo}</h3><p class="small muted">Choisis le motif le plus précis. Le membre le lira tel quel.</p>${MOTIFS_VERIF.map((x,j)=>`<button class="opt" type="button" data-motif="${j}" aria-pressed="false"><b>${x.l}</b><small>« ${x.m} »</small></button>`).join('')}
+     <div class="sees"><b>Le membre verra</b>Le motif, un conseil et un nouveau code pour refaire son selfie tout de suite.</div><div class="btns"><button class="btn" type="button" data-close>Annuler</button><button class="btn danger fill" type="button" id="ok" disabled>Refuser</button></div>`);
+    let pick=null;$('#layer').onclick=e=>{const o=e.target.closest('[data-motif]');if(o){pick=+o.dataset.motif;document.querySelectorAll('[data-motif]').forEach(b=>b.setAttribute('aria-pressed',b===o));$('#ok').disabled=false}
+      if(e.target.id==='ok'&&pick!=null){closeSheet();apply(m,'refuser',ci,MOTIFS_VERIF[pick].l)}if(e.target.closest('[data-close]')||e.target.id==='scrim')closeSheet()};return;
+  }
+  if(['bannir','masquer','supprimer'].includes(k)){
+    const t={bannir:`Bannir ${m.pseudo} ?`,masquer:`Masquer ${m.pseudo} pendant 3 mois ?`,supprimer:`Supprimer le compte de ${m.pseudo} ?`}[k];
+    sheet(`<h3>${t}</h3>${k!=='masquer'?`<label class="label" for="why">Motif, inscrit à l’historique</label><select id="why"><option>Demande d’argent</option><option>Menaces ou harcèlement</option><option>Faux profil</option><option>Mineur·e</option><option>Autre</option></select>`:''}
+     <div class="sees"><b>Le membre verra</b>${SEES[k]}</div><div class="btns"><button class="btn" type="button" data-close>Annuler</button><button class="btn danger fill" type="button" id="ok">${{bannir:'Bannir',masquer:'Masquer',supprimer:'Supprimer'}[k]}</button></div>`);
+    $('#layer').onclick=e=>{if(e.target.id==='ok'){const w=$('#why');closeSheet();apply(m,k,ci,w&&w.value)}if(e.target.closest('[data-close]')||e.target.id==='scrim')closeSheet()};return;
+  }
+  apply(m,k,ci);
+}
+function apply(m,k,ci,why){
+  const snap=JSON.parse(JSON.stringify(m)),snapM=M.slice();
+  if(ci!=null)m.cases.splice(ci,1);
+  if(k==='valider')m.verifie=true;if(k==='bannir'){m.statut='banni';m.cases=[]}if(k==='masquer')m.statut='masqué';if(k==='demasquer'||k==='debannir')m.statut='actif';
+  if(k==='doublon'){const o=M.findIndex(x=>x.id==='m7');if(o>=0)M.splice(o,1)}
+  m.hist.unshift(['à l’instant',LABEL[k]+(why?` : ${why.toLowerCase()}`:''),'Toi']);
+  const entry={at:Date.now()};outbox.push(entry);
+  const next=M.find(x=>x.cases.length&&x!==m&&x.statut!=='banni');
+  render();sync();schedule();
+  toast(`${m.pseudo} : ${LABEL[k].toLowerCase()}.`,()=>{outbox=outbox.filter(e=>e!==entry);Object.assign(m,snap);M.length=0;snapM.forEach(x=>M.push(x));sync();render()},
+    !m.cases.length&&next?{l:'Cas suivant',fn:()=>{current=next.id;render();window.scrollTo(0,0)}}:null);
+}
+let flushT;function schedule(){clearTimeout(flushT);flushT=setTimeout(flush,5200)}
+function flush(){const ready=outbox.filter(e=>Date.now()-e.at>=5000);if(!ready.length){if(outbox.length)schedule();return}
+  $('#sync').classList.add('busy');$('#syncTxt').textContent=`Envoi de ${ready.length} geste${ready.length>1?'s':''}…`;
+  setTimeout(()=>{outbox=outbox.filter(e=>!ready.includes(e));sent+=ready.length;sync();if(outbox.length)schedule()},450)}
+function sync(){const s=$('#sync');if(outbox.length){s.classList.add('busy');$('#syncTxt').textContent=`${outbox.length} en attente`}else{s.classList.remove('busy');$('#syncTxt').textContent=sent?`À jour · ${sent} envoyé${sent>1?'s':''}`:'À jour'}}
+let toastT;function toast(msg,undo,extra){clearTimeout(toastT);const h=$('#toast');
+  h.innerHTML=`<div class="toast" role="status"><span>${msg}</span>${undo?'<button type="button" id="undo">Annuler</button>':''}${extra?`<button type="button" id="nxt">${extra.l}</button>`:''}<span class="t"></span></div>`;
+  if(undo)$('#undo').onclick=()=>{undo();h.innerHTML=''};if(extra)$('#nxt').onclick=()=>{extra.fn();h.innerHTML=''};toastT=setTimeout(()=>h.innerHTML='',5000)}
+
+/* ================= événements ================= */
+document.addEventListener('click',e=>{
+  if(e.target.closest('#layer')||e.target.closest('#toast'))return;
+  const g=e.target.closest('[data-go]');if(g){go(g.dataset.go);return}
+  const pd=e.target.closest('[data-period]');if(pd){period=+pd.dataset.period;render();return}
+  const fl=e.target.closest('[data-filter]');if(fl){filter=fl.dataset.filter;current=null;go('membres');return}
+  const f=e.target.closest('[data-f]');if(f){filter=f.dataset.f;current=null;render();return}
+  const mem=e.target.closest('[data-member]');if(mem){current=mem.dataset.member;mobFiche=true;render();if(innerWidth<900)window.scrollTo(0,0);return}
+  if(e.target.closest('[data-back]')){mobFiche=false;render();return}
+  const c=e.target.closest('[data-case]');if(c){ask(byId(current),c.dataset.do,+c.dataset.case);return}
+  const a=e.target.closest('[data-act]');if(a){ask(byId(current),a.dataset.act,null);return}
+  const p=e.target.closest('[data-photo]');if(p){toast(p.dataset.photo==='voile'?'Photo voilée.':'Photo retirée. Le membre peut en ajouter une autre.',()=>{});return}
+  const fb=e.target.closest('[data-fb]');if(fb){const it=FEEDBACK.find(x=>x.id===fb.dataset.fb);it.done=true;render();toast(fb.dataset.do==='repondre'?`Réponse envoyée à ${it.from}.`:'Retour clos.',()=>{it.done=false;render()});return}
+  const tl=e.target.closest('[data-tool]');if(tl){tool=tl.dataset.tool;go('outils');return}
+  const sw=e.target.closest('[data-feat]');if(sw){feats[sw.dataset.feat]=!feats[sw.dataset.feat];render();return}
+  const t=e.target.closest('[data-toast]');if(t)toast(t.dataset.toast+'.');
+});
+document.addEventListener('input',e=>{if(e.target.id==='q'){q=e.target.value;const pos=e.target.selectionStart;render();const i=$('#q');i.focus();i.setSelectionRange(pos,pos)}});
+document.addEventListener('change',e=>{if(e.target.id==='sort'){sort=e.target.value;render()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+const h0=(location.hash||'').slice(1);if(['activite','membres','retours','outils'].includes(h0))view=h0;
+if(innerWidth<900)current=null;
+render();
+(document.fonts?document.fonts.ready:Promise.resolve()).then(paint);
+})();
+</script>
