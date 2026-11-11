@@ -16,9 +16,8 @@ export interface AdminSession {
  *
  * Le rôle est relu en base à chaque appel (le JWT peut être périmé, #155), et
  * la garde est **fermée** : base injoignable = `null`, donc 404 via
- * `requireAdmin`, sans repli sur le rôle du jeton (#547). C'est cette garde
- * que la spec 012 appelait `requireAdminStrict` (T003b) : il n'en faut plus
- * de seconde.
+ * `requireAdmin`, sans repli sur le rôle du jeton (#547). Un compte banni
+ * n'est pas admin non plus.
  */
 export async function verifyAdmin(): Promise<AdminSession | null> {
   const session = await getServerSession(authOptions);
@@ -26,12 +25,12 @@ export async function verifyAdmin(): Promise<AdminSession | null> {
     !!session, !!session?.user?.id);
 
   if (!session?.user?.id) {
-    debugLog('[admin/verifyAdmin] DENIED: no session or no user.id');
+    debugLog("[admin/verifyAdmin] REFUS : pas de session ou pas d'identifiant");
     return null;
   }
 
   if (!(await estAdminEnBase(session.user.id, 'admin/verifyAdmin'))) {
-    debugLog('[admin/verifyAdmin] DENIED: role is not ADMIN in DB (or DB unreachable)');
+    debugLog('[admin/verifyAdmin] REFUS : pas admin en base (ou base injoignable)');
     return null;
   }
 

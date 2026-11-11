@@ -80,6 +80,12 @@ describe('layout admin — garde fermée (#547)', () => {
     expect(screen.queryByText(CONTENU)).toBeNull();
   });
 
+  it('admin en base mais banni → 404', async () => {
+    findUnique.mockResolvedValue({ role: 'ADMIN', isBanned: true });
+    await expect(rendre()).rejects.toThrow('NEXT_NOT_FOUND');
+    expect(screen.queryByText(CONTENU)).toBeNull();
+  });
+
   it('compte introuvable en base → 404', async () => {
     findUnique.mockResolvedValue(null);
     await expect(rendre()).rejects.toThrow('NEXT_NOT_FOUND');

@@ -107,7 +107,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // API. Jamais de repli sur le rôle du jeton (#547), et jamais de page
   // « Accès refusé » qui confirmerait l'existence de la zone admin.
   if (!(await estAdminEnBase(token.sub, 'admin/layout'))) {
-    debugLog('[admin/layout] ACCESS DENIED → 404 (role is not ADMIN in DB, or DB unreachable)');
+    debugLog('[admin/layout] REFUS → 404 (pas admin en base, ou base injoignable)');
     notFound();
   }
 

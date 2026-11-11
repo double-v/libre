@@ -213,6 +213,30 @@ describe('proxy — zone /admin fermée quand la base ne répond pas (#547)', ()
     }
   });
 
+  it('zone /admin sans cache : rétrogradé pendant le TTL → refusé tout de suite', async () => {
+    findUnique.mockResolvedValue({ id: USER, isBanned: false, role: 'ADMIN' });
+    const r1 = await proxy(req('/admin'));
+    expect(r1.status).toBe(200);
+    findUnique.mockResolvedValue({ id: USER, isBanned: false, role: 'USER' });
+    const r2 = await proxy(req('/admin'));
+    expect(r2.status).toBe(307);
+    expect(new URL(r2.headers.get('location') as string).pathname).toBe('/');
+  });
+
+  it('zone /admin sans cache : panne juste après un passage admin → refusé', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      findUnique.mockResolvedValue({ id: USER, isBanned: false, role: 'ADMIN' });
+      expect((await proxy(req('/discover'))).status).toBe(200); // met le rôle en cache
+      findUnique.mockRejectedValue(new Error('connexion refusée'));
+      const r = await proxy(req('/admin'));
+      expect(r.status).toBe(307);
+      expect(new URL(r.headers.get('location') as string).pathname).toBe('/');
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   it('une panne n’est pas mise en cache : la base revenue, l’admin réel repasse', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {

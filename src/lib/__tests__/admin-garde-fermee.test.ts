@@ -75,6 +75,12 @@ describe('verifyAdmin — le rôle en base fait foi (#155, #547)', () => {
     await expect(verifyAdmin()).resolves.toBeNull();
   });
 
+  it('admin en base mais banni → null (le proxy ne garde pas /api/*)', async () => {
+    sessionJwtAdmin();
+    findUnique.mockResolvedValue({ role: 'ADMIN', isBanned: true });
+    await expect(verifyAdmin()).resolves.toBeNull();
+  });
+
   it('pas de session → null', async () => {
     getServerSession.mockResolvedValue(null);
     findUnique.mockResolvedValue({ role: 'ADMIN' });
@@ -119,5 +125,16 @@ describe('journal du refus pour base injoignable (#547)', () => {
       expect(l).not.toContain(EMAIL);
       expect(l).not.toContain('ADMIN');
     }
+  });
+
+  it('erreur Prisma à code (dérive de schéma) → le code figure au journal, pas le message', async () => {
+    sessionJwtAdmin();
+    findUnique.mockRejectedValue(
+      Object.assign(new Error(`colonne absente pour ${ID}`), { name: 'PrismaClientKnownRequestError', code: 'P2022' }),
+    );
+    await expect(verifyAdmin()).resolves.toBeNull();
+    const lignes = consoleError.mock.calls.map((args) => args.map(String).join(' '));
+    expect(lignes).toContain('[admin/verifyAdmin] accès admin refusé : base injoignable (PrismaClientKnownRequestError P2022)');
+    for (const l of lignes) expect(l).not.toContain(ID);
   });
 });

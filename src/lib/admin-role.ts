@@ -14,26 +14,32 @@ import { getDb } from '@/lib/db';
  * admin (qui décode lui-même son cookie) partagent ainsi la même décision.
  */
 export async function estAdminEnBase(userId: string, origine: string): Promise<boolean> {
-  let role: string | undefined;
+  let compte: { role: string | null; isBanned: boolean } | null;
   try {
-    const compte = await getDb().user.findUnique({
+    compte = await getDb().user.findUnique({
       where: { id: userId },
-      select: { role: true },
+      select: { role: true, isBanned: true },
     });
-    role = compte?.role?.toUpperCase();
   } catch (err) {
     journaliserRefusBaseInjoignable(origine, err);
     return false;
   }
-  return role === 'ADMIN';
+  // Un compte banni perd l'administration avec le reste : le proxy le renvoie
+  // déjà vers /login sur les pages, mais il ne voit pas /api/*.
+  if (!compte || compte.isBanned) return false;
+  return compte.role?.toUpperCase() === 'ADMIN';
 }
 
 /**
  * Trace le refus pour base injoignable, pour qu'une panne ne passe pas pour
- * une simple 404. Motif et nature de l'erreur seulement : ni identifiant, ni
- * e-mail, ni rôle du jeton, ni message d'erreur (qui peut citer la requête).
+ * une simple 404. Motif, nature de l'erreur et code Prisma seulement (le code,
+ * P2022 par exemple, distingue une dérive de schéma d'une panne réseau) : ni
+ * identifiant, ni e-mail, ni rôle du jeton, ni message d'erreur (qui peut
+ * citer la requête).
  */
 export function journaliserRefusBaseInjoignable(origine: string, err: unknown): void {
   const nature = err instanceof Error ? err.name : 'inconnue';
-  console.error(`[${origine}] accès admin refusé : base injoignable (${nature})`);
+  const code = (err as { code?: unknown } | null)?.code;
+  const suffixe = typeof code === 'string' && /^[A-Z0-9_]{1,16}$/.test(code) ? ` ${code}` : '';
+  console.error(`[${origine}] accès admin refusé : base injoignable (${nature}${suffixe})`);
 }

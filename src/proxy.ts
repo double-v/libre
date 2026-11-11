@@ -206,7 +206,9 @@ export async function proxy(request: NextRequest) {
   // la DB et on mémorise le résultat.
   try {
     const userId = token.id as string;
-    let user = getCachedUserCheck(userId);
+    // Zone admin : jamais de cache (#547). Un rôle ADMIN mis en cache juste
+    // avant une rétrogradation ou une panne ouvrirait /admin jusqu'à 30 s.
+    let user = zoneAdmin ? undefined : getCachedUserCheck(userId);
     if (user === undefined) {
       user = await getDb().user.findUnique({
         where: { id: userId },
