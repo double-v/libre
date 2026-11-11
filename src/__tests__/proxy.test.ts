@@ -155,3 +155,75 @@ describe('proxy — présence au jour près (#498)', () => {
     expect(res.headers.get('location')).toBeNull();
   });
 });
+
+describe('proxy — zone /admin fermée quand la base ne répond pas (#547)', () => {
+  // Le jeton affirme ADMIN dans tous ces cas : seul le rôle en base doit compter.
+  beforeEach(() => {
+    mockGetToken.mockResolvedValue({ id: USER, role: 'ADMIN' });
+  });
+
+  it('admin réel en base → /admin passe', async () => {
+    findUnique.mockResolvedValue({ id: USER, isBanned: false, role: 'ADMIN' });
+    const r = await proxy(req('/admin'));
+    expect(r.status).toBe(200);
+    expect(r.headers.get('location')).toBeNull();
+  });
+
+  it('rétrogradé en base alors que le JWT dit encore ADMIN → redirect vers /', async () => {
+    findUnique.mockResolvedValue({ id: USER, isBanned: false, role: 'USER' });
+    const r = await proxy(req('/admin/users'));
+    expect(r.status).toBe(307);
+    expect(new URL(r.headers.get('location') as string).pathname).toBe('/');
+  });
+
+  it('rôle absent en base → redirect vers /', async () => {
+    findUnique.mockResolvedValue({ id: USER, isBanned: false, role: null });
+    const r = await proxy(req('/admin'));
+    expect(new URL(r.headers.get('location') as string).pathname).toBe('/');
+  });
+
+  it('base qui lève une erreur sur /admin → redirect vers /, aucun repli sur le jeton', async () => {
+    findUnique.mockRejectedValue(new Error('connexion refusée'));
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const r = await proxy(req('/admin/reports'));
+      expect(r.status).toBe(307);
+      expect(new URL(r.headers.get('location') as string).pathname).toBe('/');
+      // Panne visible, sans identifiant ni rôle du jeton.
+      const lignes = spy.mock.calls.map((args) => args.map(String).join(' '));
+      expect(lignes.some((l) => l.includes('base injoignable'))).toBe(true);
+      for (const l of lignes) {
+        expect(l).not.toContain(USER);
+        expect(l).not.toContain('ADMIN');
+      }
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('base qui lève une erreur hors /admin → la navigation passe, comme avant', async () => {
+    findUnique.mockRejectedValue(new Error('connexion refusée'));
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const r = await proxy(req('/discover'));
+      expect(r.status).toBe(200);
+      expect(r.headers.get('location')).toBeNull();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('une panne n’est pas mise en cache : la base revenue, l’admin réel repasse', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      findUnique.mockRejectedValueOnce(new Error('connexion refusée'));
+      const r1 = await proxy(req('/admin'));
+      expect(r1.status).toBe(307);
+      findUnique.mockResolvedValue({ id: USER, isBanned: false, role: 'ADMIN' });
+      const r2 = await proxy(req('/admin'));
+      expect(r2.status).toBe(200);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});

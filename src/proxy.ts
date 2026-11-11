@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { doitEcrirePresence, jourDePresence } from '@/lib/presence';
 import { getDb } from '@/lib/db';
+import { journaliserRefusBaseInjoignable } from '@/lib/admin-role';
 import { getFeatures } from '@/lib/features-server';
 import type { Feature } from '@/lib/features';
 import {
@@ -60,7 +61,8 @@ function isProtectedPath(pathname: string): boolean {
 //
 // Fail-safe : on ne met en cache QUE les résultats DB aboutis (y compris `null`
 // = user confirmé absent). Les erreurs DB ne sont pas mises en cache et sont
-// gérées comme avant (on laisse passer, cf. bloc catch).
+// gérées dans le bloc catch : on laisse passer, sauf en zone /admin où la
+// garde se ferme (#547).
 const FEATURE_PAR_PAGE: readonly [string, Feature][] = [
   ['/square', 'square'],
   ['/crossings', 'crossings'],
@@ -194,6 +196,8 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
+  const zoneAdmin = pathname === '/admin' || pathname.startsWith('/admin/');
+
   // Verify the user still exists. This is the actual fix: a JWT can be valid
   // cryptographically while pointing at a deleted/rotated user.
   //
@@ -239,14 +243,21 @@ export async function proxy(request: NextRequest) {
     // Redirect non-admins to / so the admin surface is never exposed, even
     // transiently. The DB role is authoritative — the JWT may be stale after
     // a role change (#155).
-    if (pathname.startsWith('/admin') && user.role?.toUpperCase() !== 'ADMIN') {
+    if (zoneAdmin && user.role?.toUpperCase() !== 'ADMIN') {
       return NextResponse.redirect(new URL('/', request.url));
     }
 
     await noterPresence(user);
   } catch (err) {
-    // On DB error, let the request through. The downstream page will surface
-    // its own error. We don't want to block everyone on a transient DB hiccup.
+    // Zone admin : garde fermée (#547). Sans réponse de la base, le rôle réel
+    // est inconnu ; le jeton peut être périmé ou volé, on ne s'y fie pas. On
+    // renvoie vers / comme pour un non-admin, et on trace le motif seul.
+    if (zoneAdmin) {
+      journaliserRefusBaseInjoignable('proxy', err);
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    // Ailleurs, on laisse passer : la page en aval montrera sa propre erreur,
+    // et un hoquet de base ne doit pas bloquer tout le monde.
     // Log error type only — do NOT include the userId (PII in Vercel logs).
     console.error('[proxy] DB check failed:', err instanceof Error ? err.message : 'unknown error');
   }
