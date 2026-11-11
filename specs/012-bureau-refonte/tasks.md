@@ -29,7 +29,7 @@
 
 ---
 
-## Phase 3: User Story 1 — Selfie avec un code écrit à la main (P1) 🎯 MVP
+## Phase 3: User Story 1 — Selfie avec un code écrit à la main (P1) 🎯 MVP · #538
 
 **Goal** : le geste est remplacé par un code de quatre chiffres tiré et révoqué par le serveur ; la modération voit le code attendu, l'indice de lecture et trois questions.
 
@@ -58,7 +58,7 @@
 
 ---
 
-## Phase 4: User Story 2 — Après un refus, toujours une suite (P1)
+## Phase 4: User Story 2 — Après un refus, toujours une suite (P1) · #539
 
 **Goal** : motif, conseil et nouveau code après un refus ; 24 h d'attente seulement après trois refus.
 
@@ -82,7 +82,7 @@
 
 ---
 
-## Phase 5: User Story 3 — Membres, le point d'entrée (P1)
+## Phase 5: User Story 3 — Membres, le point d'entrée (P1) · #540
 
 **Goal** : liste filtrable, triable, cherchable, état dans l'adresse, mobile d'abord.
 
@@ -107,7 +107,7 @@
 
 ---
 
-## Phase 6: User Story 4 — La fiche membre et ses gestes guidés (P1)
+## Phase 6: User Story 4 — La fiche membre et ses gestes guidés (P1) · #541
 
 **Goal** : tous les cas d'un membre se tranchent depuis sa fiche, avec repères et « Le membre verra ».
 
@@ -133,7 +133,7 @@
 
 ---
 
-## Phase 7: User Story 5 — Des gestes instantanés, sûrs à deux (P2)
+## Phase 7: User Story 5 — Des gestes instantanés, sûrs à deux (P2) · #542
 
 **Goal** : gestes optimistes annulables, envoyés par lots idempotents, « déjà traité par X », « ouvert par X ».
 
@@ -157,7 +157,7 @@
 
 ---
 
-## Phase 8: User Story 6 — Sanctions graduées (P2)
+## Phase 8: User Story 6 — Sanctions graduées (P2) · #543
 
 **Goal** : avertir et masquer, chacun avec sa suite ; bandeaux après retrait de photo ou de réponse.
 
@@ -181,7 +181,7 @@
 
 ---
 
-## Phase 9: User Story 7 — L'activité de Libre, racontée (P2)
+## Phase 9: User Story 7 — L'activité de Libre, racontée (P2) · #544
 
 **Goal** : onglet Activité en récit, agrégats existants seulement, mis en cache.
 
@@ -204,7 +204,7 @@
 
 ---
 
-## Phase 10: User Story 8 — Retours et outils dans la nouvelle navigation (P3)
+## Phase 10: User Story 8 — Retours et outils dans la nouvelle navigation (P3) · #545
 
 **Goal** : quatre entrées, Retours et Outils rhabillés, Guide de modération, anciennes adresses redirigées.
 
