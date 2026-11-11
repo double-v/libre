@@ -58,5 +58,5 @@ Le dépôt est public : on part du principe qu'un attaquant connaît le code, le
 
 ## Hors périmètre, constats à traiter à part
 
-- **C1** : `verifyAdmin` (`src/lib/admin.ts`) se replie sur le rôle du jeton quand la base est injoignable. C'est ouvert en cas d'échec, contraire au principe III. La 012 n'en dépend pas (FR-S07), mais les routes existantes oui.
-- **C2** : la CI exécute `npm ci` (scripts d'installation compris) avec `DATABASE_URL` en variable, et ce secret existe aussi côté Dependabot. Une mise à jour de dépendance piégée pourrait lire la chaîne de connexion de la base Neon de développement.
+- **C1** (#547) : `verifyAdmin` (`src/lib/admin.ts`) se replie sur le rôle du jeton quand la base est injoignable. C'est ouvert en cas d'échec, contraire au principe III. La 012 n'en dépend pas (FR-S07), mais les routes existantes oui.
+- **C2** (#548) : la CI exécute `npm ci` (scripts d'installation compris) avec `DATABASE_URL` en variable, et ce secret existe aussi côté Dependabot. Le secret n'est passé qu'aux étapes suivantes, mais un script d'installation piégé peut injecter du code dans ces étapes (`$GITHUB_ENV`, `node_modules`) et lire la chaîne de connexion de la base Neon de la CI. Le workflow n'a pas de bloc `permissions:`.
