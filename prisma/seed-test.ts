@@ -9,18 +9,19 @@
  * Neon, jamais la production. Idempotent. Aucune donnée réelle : domaine
  * réservé `.test`.
  */
-import pg from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../src/generated/client/client';
-import { baseEstJetable, URL_NEUTRALISEE } from '../tests/garde-base';
+import { baseEstJetable } from '../tests/garde-base';
 import { MEMBRES_FACTICES } from './membres-factices';
 import { normalizeEmail } from '../src/lib/email';
 
 export async function semerBaseDeTest(url: string | undefined): Promise<number> {
-  if (!baseEstJetable(url) || url === URL_NEUTRALISEE) {
+  if (!url || !baseEstJetable(url)) {
     throw new Error('[seed-test] Refusé : DATABASE_URL ne vise pas une base locale jetable (#548).');
   }
-  const prisma = new PrismaClient({ adapter: new PrismaPg(new pg.Pool({ connectionString: url })) });
+  const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) });
+  // L'adaptateur possède son pool et le ferme à la déconnexion ; un `pg.Pool`
+  // passé de l'extérieur resterait ouvert et retiendrait le processus.
   try {
     for (const m of MEMBRES_FACTICES) {
       await prisma.user.upsert({

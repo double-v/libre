@@ -15,6 +15,20 @@
 
 const HOTES_LOCAUX = new Set(['localhost', '127.0.0.1', '[::1]', '::1']);
 
+/**
+ * Seuls les noms créés par la CI et par `scripts/base-de-test.sh`. Un hôte
+ * local ne suffit pas : un développeur peut y garder une base de dev
+ * persistante, qu'aucun test ne doit remplir.
+ */
+const BASES_DE_TEST = new Set(['libre_ci', 'libre_test']);
+
+/**
+ * Liste blanche des paramètres d'URL. Le pilote `pg` laisse `?host=` ou
+ * `?hostaddr=` remplacer l'hôte de l'URL : un paramètre inconnu pourrait donc
+ * envoyer la connexion ailleurs que là où la garde a regardé.
+ */
+const PARAMETRES_ADMIS = new Set(['sslmode', 'connect_timeout', 'application_name']);
+
 /** Port 1 : réservé, rien n'y écoute ; une connexion échoue tout de suite. */
 export const URL_NEUTRALISEE = 'postgresql://garde:garde@127.0.0.1:1/base-refusee-par-la-garde';
 
@@ -22,13 +36,18 @@ const VARIABLES = ['DATABASE_URL', 'DATABASE_URL_UNPOOLED'] as const;
 
 export function baseEstJetable(url: string | undefined): boolean {
   if (!url) return false;
-  let hote: string;
+  let u: URL;
   try {
-    hote = new URL(url).hostname;
+    u = new URL(url);
   } catch {
     return false;
   }
-  return HOTES_LOCAUX.has(hote);
+  if (!HOTES_LOCAUX.has(u.hostname)) return false;
+  if (!BASES_DE_TEST.has(decodeURIComponent(u.pathname.replace(/^\//, '')))) return false;
+  for (const cle of u.searchParams.keys()) {
+    if (!PARAMETRES_ADMIS.has(cle)) return false;
+  }
+  return true;
 }
 
 /**
@@ -46,4 +65,29 @@ export function neutraliserBaseDistante(env: Record<string, string | undefined>)
     }
   }
   return remplacees;
+}
+
+/**
+ * Identifiants des services qui envoient ou stockent pour de vrai (temps réel,
+ * Redis, stockage de photos, e-mail, push, GIF, anti-robot). Pendant les
+ * tests, un oubli de simulation ne doit rien envoyer : sans identifiant, le
+ * code retombe sur son repli local ou échoue, jamais sur le service réel.
+ * Les clés publiques (`NEXT_PUBLIC_*`) ne donnent aucun droit et restent.
+ */
+const SERVICES_EXTERNES = [
+  'PUSHER_APP_ID', 'PUSHER_KEY', 'PUSHER_SECRET',
+  'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN',
+  'R2_ACCOUNT_ID', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY',
+  'RESEND_API_KEY', 'VAPID_PRIVATE_KEY', 'GIPHY_API_KEY', 'TURNSTILE_SECRET_KEY',
+] as const;
+
+export function effacerServicesExternes(env: Record<string, string | undefined>): string[] {
+  const effaces: string[] = [];
+  for (const nom of SERVICES_EXTERNES) {
+    if (nom in env) {
+      delete env[nom];
+      effaces.push(nom);
+    }
+  }
+  return effaces;
 }

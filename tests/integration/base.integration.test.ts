@@ -6,26 +6,24 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { readdirSync } from 'fs';
 import path from 'path';
-import pg from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../src/generated/client/client';
-import { baseEstJetable, URL_NEUTRALISEE } from '../garde-base';
+import { baseEstJetable } from '../garde-base';
 import { MEMBRES_FACTICES } from '../../prisma/membres-factices';
 
 describe('base de test jetable', () => {
   let prisma: PrismaClient;
 
   beforeAll(() => {
-    prisma = new PrismaClient({ adapter: new PrismaPg(new pg.Pool({ connectionString: process.env.DATABASE_URL })) });
+    prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
   });
 
   afterAll(async () => {
     await prisma.$disconnect();
   });
 
-  it('vise une vraie base locale : ni Neon, ni l’adresse neutralisée par la garde', () => {
+  it('vise une base locale réservée aux tests : ni Neon, ni l’adresse neutralisée par la garde', () => {
     expect(baseEstJetable(process.env.DATABASE_URL)).toBe(true);
-    expect(process.env.DATABASE_URL).not.toBe(URL_NEUTRALISEE);
   });
 
   it('porte toutes les migrations du dépôt, appliquées sans échec', async () => {
