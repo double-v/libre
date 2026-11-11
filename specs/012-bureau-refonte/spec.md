@@ -164,7 +164,7 @@ seuls les trois gestes voulus sont appliqués, chacun une seule fois.
 1. **Given** un geste annulé dans les 5 secondes, **When** le délai passe, **Then** rien n'est envoyé et l'écran revient à l'état d'avant.
 2. **Given** un lot renvoyé après une coupure, **When** le serveur le reçoit une seconde fois, **Then** aucun geste n'est appliqué deux fois.
 3. **Given** deux modérateurs sur le même signalement, **When** le second tranche après le premier, **Then** son geste est refusé pour ce cas avec « déjà traité par X », et l'écran affiche la décision retenue.
-4. **Given** des gestes en attente d'envoi, **When** le modérateur ferme l'onglet, **Then** l'envoi est tenté avant la fermeture, et les gestes non partis restent signalés à la réouverture.
+4. **Given** des gestes encore dans leur délai d'annulation, **When** le modérateur ferme l'onglet, **Then** ils ne partent pas ; à la réouverture, l'écran propose de les envoyer ou de les abandonner. Les gestes dont le délai était écoulé sont envoyés à la fermeture.
 
 ---
 
@@ -330,6 +330,27 @@ redirige.
 - **FR-043**: Chaque page d'administration actuelle DOIT avoir un équivalent, et son ancienne adresse DOIT rediriger vers lui.
 - **FR-044**: L'interface DOIT suivre la charte de Libre (tokens existants, thèmes et modes clair et sombre) ; les composants nouveaux (graphiques, bande de gravité, feuille de confirmation, indicateur d'envoi) DOIVENT être proposés dans `DESIGN.md` avant leur code.
 - **FR-045**: Toute animation DOIT respecter la préférence de mouvement réduit.
+
+### Sécurité (dépôt public, voir `securite.md`)
+
+- **FR-S01**: Le tirage d'un code DOIT être réservé aux comptes dont l'e-mail est confirmé, non bannis, sans demande en file.
+- **FR-S02**: Le tirage et l'envoi du selfie DOIVENT être limités en fréquence par compte et par adresse IP.
+- **FR-S03**: Le selfie DOIT être refusé au-delà de 5 Mo ou d'un nombre de pixels fixé avant décodage ; l'OCR DOIT travailler sur une copie réduite.
+- **FR-S04**: Les métadonnées du selfie DOIVENT être retirées avant stockage ; l'indice « sans données d'appareil » DOIT se calculer avant, et seul un booléen est conservé. La page membre DOIT ouvrir l'appareil photo plutôt que la galerie quand le navigateur le permet.
+- **FR-S05**: Le résultat de la lecture automatique NE DOIT JAMAIS être renvoyé au membre.
+- **FR-S06**: Les routes membre de cette spec NE DOIVENT accepter aucun identifiant de membre : elles agissent sur la session seule.
+- **FR-S07**: Chaque nouvelle route admin DOIT exiger le rôle relu en base et DOIT refuser (404) si la base ne répond pas.
+- **FR-S08**: `POST /api/admin/gestes` DOIT refuser toute requête dont le `Content-Type` n'est pas `application/json` ou dont l'`Origin` diffère de l'origine du site.
+- **FR-S09**: Pour chaque geste, le serveur DOIT déduire le membre du cas, et refuser le geste si le membre envoyé diffère.
+- **FR-S10**: Une clé de geste DOIT être liée à l'empreinte de son contenu ; une même clé avec un autre contenu DOIT être refusée sans effet.
+- **FR-S11**: La suppression d'un compte NE DOIT PAS passer par un lot : geste immédiat avec ressaisie du pseudo. Au-delà de 10 bannissements par heure et par admin, les suivants DOIVENT être refusés et le dépassement journalisé.
+- **FR-S12**: Un geste encore dans son délai d'annulation NE DOIT PAS être envoyé à la fermeture de l'onglet.
+- **FR-S13**: Le stockage local des gestes NE DOIT contenir ni pseudo ni texte de membre, et DOIT être vidé à la déconnexion.
+- **FR-S14**: Toute requête SQL de cette spec DOIT être paramétrée ; la recherche DOIT échapper `%` et `_` ; un curseur invalide DOIT être refusé (400).
+- **FR-S15**: Aucun contenu saisi par un membre ou un admin NE DOIT être injecté en HTML brut (`dangerouslySetInnerHTML`, info-bulle HTML).
+- **FR-S16**: La demande de relecture DOIT être limitée à une par masquage et en fréquence.
+- **FR-S17**: La réponse d'activité DOIT porter `Cache-Control: private, no-store`, et la garde admin DOIT s'exécuter hors de toute fonction mise en cache.
+- **FR-S18**: Cette spec N'AJOUTE AUCUNE dépendance ; toute exception exige une justification écrite dans la PR.
 
 ### Key Entities
 

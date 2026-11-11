@@ -32,6 +32,7 @@ npx eslint src
 | 10 | US6 | Avertir ; se connecter comme le membre | Message une fois, puis plus rien |
 | 11 | US6 | Masquer ; Découvrir d'un autre membre ; demander une relecture | Absent de Découvrir ; cas « relecture » dans « À traiter » |
 | 12 | US7 | Activité sur 7, 30 et 90 j | Chiffres égaux au script de contrôle sur la base de démo ; phrases justes à 0 et 1 |
+| 14 | Tous | Rejouer les cas hostiles de `securite.md` (M1 à M21) | Chaque attaque est refusée ; un test le prouve |
 | 13 | US8 | Ouvrir chaque ancienne adresse admin | Redirection vers l'équivalent |
 
 ## Gate visuel (principe V)

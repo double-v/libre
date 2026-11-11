@@ -77,7 +77,11 @@ Gestes par type :
 | `reponse` | `garder`, `retirer` |
 | `indice` | `rien`, `inviter`, `supprimer_doublon` |
 | `relecture` | `rendre_visible`, `maintenir` |
-| hors cas (`cas: null`) | `inviter`, `avertir`, `masquer`, `rendre_visible`, `debannir`, `bannir`, `supprimer`, `voiler_photo`, `retirer_photo` |
+| hors cas (`cas: null`) | `inviter`, `avertir`, `masquer`, `rendre_visible`, `debannir`, `bannir`, `voiler_photo`, `retirer_photo` |
+
+`supprimer` n'existe pas dans le lot (FR-S11) : il passe par `DELETE /api/admin/membres/:id`, avec corps `{ pseudo, motif }`. Le pseudo ressaisi doit correspondre exactement.
+
+En-têtes exigés (FR-S08) : `Content-Type: application/json` et `Origin` égal à l'origine du site, sinon 403. Au-delà de 10 bannissements par heure pour un admin : issue `echec` avec `raison: "plafond"`.
 
 Réponse 200 (toujours, même si certains gestes échouent) :
 

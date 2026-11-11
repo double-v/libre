@@ -3,7 +3,7 @@
 **Input**: Design documents from `/specs/012-bureau-refonte/`
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/api.md, quickstart.md, proto-bureau.html
 
-**Tests**: oui. La constitution impose le TDD (gate `npx vitest run`) : dans chaque story, les tests précèdent l'implémentation et doivent échouer d'abord.
+**Tests**: oui, en TDD, selon la **doctrine anti-complaisance** de `plan.md` : rouge prouvé, effets vérifiés plutôt qu'appels, vrai PostgreSQL pour le SQL, cas hostiles de `securite.md`, contrôle par mutation. Les tâches ajoutées après la revue de sécurité portent un suffixe (T003a…) pour garder les numéros cités dans les issues.
 
 **Organization**: une phase par user story ; une user story = une issue = une PR (ou un lot, cf. plan).
 
@@ -24,6 +24,9 @@
 ## Phase 2: Foundational
 
 - [ ] T003 Extraire la logique des gestes unitaires existants (signalement, vérification, réponse, photo, indice, ban, suppression) en fonctions sans HTTP qui écrivent l'effet et la ligne de journal, dans `src/lib/moderation/gestes.ts`, et faire appeler ces fonctions par les routes `src/app/api/admin/{reports/[id],verifications/[id],answers/[id],users/[id],users/[id]/photos,indices/*}/route.ts`. Tests de non-régression : effet et ligne de journal identiques avant et après, dans `src/lib/moderation/__tests__/gestes.test.ts`
+- [ ] T003a Harnais d'intégration : projet Vitest `integration` sur un PostgreSQL réel (migrations appliquées, base vidée entre fichiers), en local et en CI via un conteneur de service `postgres` isolé, jamais Neon, dans `vitest.config.ts`, `src/test/integration-setup.ts` et `.github/workflows/ci.yml`
+- [ ] T003b Garde admin fermée par défaut pour les nouvelles routes (rôle relu en base, 404 si la base ne répond pas, FR-S07), avec ses tests d'intégration (rôle rétrogradé avec JWT encore ADMIN → 404 ; base coupée → 404), dans `src/lib/admin.ts` (`requireAdminStrict`) et `src/lib/__tests__/admin-strict.test.ts`
+- [ ] T003c Contrôle d'origine et de type de contenu des écritures admin (FR-S08), avec ses tests (Origin absente, étrangère, `text/plain` → 403), dans `src/lib/securite/origine.ts` et `src/lib/securite/__tests__/origine.test.ts`
 
 **Checkpoint** : les routes actuelles se comportent à l'identique ; les stories peuvent commencer.
 
@@ -40,6 +43,7 @@
 - [ ] T004 [P] [US1] Tests de `tirerCode` (alphabet 2–9, 4 chiffres, révocation du précédent, expiration 30 min) et `codeValide` dans `src/lib/verification/__tests__/code.test.ts`
 - [ ] T005 [P] [US1] Tests de `normaliserCodeLu` (extrait 4 chiffres, `''` si aucun) et du marquage des caractères divergents dans `src/lib/verification/__tests__/lecture-code.test.ts`
 - [ ] T006 [P] [US1] Tests de route : tirage 200/409, selfie avec code expiré, remplacé ou d'un autre membre → 410, bon code → 201 et ligne `verification_codes` effacée, dans `src/app/api/moderation/verify/__tests__/code.test.ts` (`// @vitest-environment node`)
+- [ ] T006a [P] [US1] Tests hostiles : compte non confirmé ou banni → refus du tirage (FR-S01) ; rafale de tirages ou d'envois par compte et par IP → 429 (FR-S02) ; image de plus de 5 Mo, image géante en pixels, faux JPEG polyglotte → refus (FR-S03) ; GPS présent dans le fichier envoyé → absent de l'objet stocké, booléen « sans données d'appareil » juste (FR-S04) ; aucune réponse membre ne contient `code_lu` (FR-S05) ; aucune route membre n'accepte d'identifiant (FR-S06). Dans `src/app/api/moderation/verify/__tests__/hostile.test.ts`
 
 ### Implementation
 
@@ -68,6 +72,7 @@
 
 - [ ] T017 [P] [US2] Tests de `peutTirer` (0, 1, 2, 3 refus, validation intercalée, 24 h pile) dans `src/lib/verification/__tests__/code.test.ts`
 - [ ] T018 [P] [US2] Tests du push `verification` : charge sans motif ni nom, dans `src/lib/push/__tests__/server.test.ts`
+- [ ] T018a [P] [US2] Tests d'intégration de `peutTirer` sur PostgreSQL : demandes réelles, bornes à 24 h moins 1 s et plus 1 s, deux tirages concurrents → un seul code valable, dans `src/lib/verification/__tests__/code.integration.test.ts`
 
 ### Implementation
 
@@ -92,6 +97,7 @@
 
 - [ ] T025 [P] [US3] Tests de `src/lib/moderation/cas.ts` (gravité, tri urgence puis ancienneté, filtres) dans `src/lib/moderation/__tests__/cas.test.ts`
 - [ ] T026 [P] [US3] Tests de route `GET /api/admin/membres` (filtres, tri, recherche, curseur, compteurs, refus non-admin) dans `src/app/api/admin/membres/__tests__/route.test.ts`
+- [ ] T026a [P] [US3] Tests hostiles de `GET /api/admin/membres` sur PostgreSQL : non-admin → 404, recherche `%`, `_`, `'` et `\\` traitées littéralement, curseur forgé ou tronqué → 400, aucune colonne privée hors liste blanche dans la réponse (FR-S07, FR-S14), dans `src/app/api/admin/membres/__tests__/hostile.integration.test.ts`
 
 ### Implementation
 
@@ -117,6 +123,8 @@
 
 - [ ] T034 [P] [US4] Tests de `src/lib/moderation/reperes.ts` (un repère et un « le membre verra » par geste, aucun manquant) dans `src/lib/moderation/__tests__/reperes.test.ts`
 - [ ] T035 [P] [US4] Tests de route `GET /api/admin/membres/[id]` (sections, historique avec auteur ou « automatique », aucun champ privé d'autrui en trop) dans `src/app/api/admin/membres/[id]/__tests__/route.test.ts`
+- [ ] T035a [P] [US4] Test de garde XSS : aucun `dangerouslySetInnerHTML` dans `src/components/admin/` ni `src/app/(admin)/` (lint ou test statique), et un pseudo `<img src=x onerror=…>` rendu comme texte dans `CaseCard` et `FicheMembre` (FR-S15), dans `src/components/admin/__tests__/xss.test.tsx`
+- [ ] T035b [P] [US4] Tests de `DELETE /api/admin/membres/[id]` : pseudo ressaisi faux → 400 sans effet, Origin étrangère → 403, journal sur le compte gardé selon la règle existante (FR-S11), dans `src/app/api/admin/membres/[id]/__tests__/delete.integration.test.ts`
 
 ### Implementation
 
@@ -143,6 +151,8 @@
 
 - [ ] T044 [P] [US5] Tests de `appliquerLot` (rejeu d'une clé, déjà traité avec auteur, cas clos, échec isolé, 1 à 20 gestes) dans `src/lib/moderation/__tests__/gestes-lot.test.ts`
 - [ ] T045 [P] [US5] Tests de `useGestes` (annulation à 5 s, regroupement, `pagehide`, reprise depuis `localStorage`) dans `src/hooks/__tests__/useGestes.test.ts`
+- [ ] T045a [P] [US5] Tests hostiles et de concurrence de `POST /api/admin/gestes` sur PostgreSQL : même lot envoyé deux fois en parallèle → un seul effet ; même clé avec un contenu différent → `echec` sans effet (FR-S10) ; cas d'un autre membre que `membreId` → refus (FR-S09) ; 21 gestes → 400 ; `supprimer` dans un lot → 400 ; 11ᵉ bannissement dans l'heure → `plafond` et ligne de journal (FR-S11) ; `text/plain` ou Origin étrangère → 403 (FR-S08). Dans `src/app/api/admin/gestes/__tests__/hostile.integration.test.ts`
+- [ ] T045b [P] [US5] Tests de `useGestes` : un geste dans son délai n'est pas envoyé au `pagehide` (FR-S12) ; le stockage local ne contient ni pseudo ni texte, et il est vidé à la déconnexion (FR-S13). Dans `src/hooks/__tests__/useGestes.securite.test.ts`
 
 ### Implementation
 
@@ -168,6 +178,7 @@
 - [ ] T054 [P] [US6] Tests des routes avertissement (GET le plus ancien non lu, POST idempotent) dans `src/app/api/moderation/avertissement/__tests__/route.test.ts`
 - [ ] T055 [P] [US6] Tests du masquage : Découvrir exclut `masque_jusqua > now()`, l'échéance le lève, relecture 201/409, dans `src/app/api/discover/__tests__/masquage.test.ts` et `src/app/api/moderation/relecture/__tests__/route.test.ts`
 - [ ] T056 [P] [US6] Ajouter `masque_jusqua`, `masque_motif`, `relecture_demandee_at` et `avertissements` aux champs privés de `src/__tests__/city-label-never-leaks.test.ts`
+- [ ] T056a [P] [US6] Tests hostiles : seconde relecture pour un même masquage → 409, rafale → 429 (FR-S16) ; un membre ne lit ni n'acquitte l'avertissement d'un autre (FR-S06), dans `src/app/api/moderation/__tests__/sanctions-hostile.integration.test.ts`
 
 ### Implementation
 
@@ -191,6 +202,7 @@
 
 - [ ] T064 [P] [US7] Tests de `recit.ts` (hausse, baisse, stable sous 3 %, accords à 0, 1, n, chapitre sans arrivée) dans `src/lib/activite/__tests__/recit.test.ts`
 - [ ] T065 [P] [US7] Tests de `agregats.ts` sur une base factice : chaque série égale à un calcul indépendant pour 7, 30 et 90 j, dans `src/lib/activite/__tests__/agregats.test.ts`
+- [ ] T065a [P] [US7] Tests de `GET /api/admin/activite` : non-admin → 404 même quand la période est déjà en cache, en-tête `Cache-Control: private, no-store` (FR-S17), aucun identifiant ni pseudo dans le corps, dans `src/app/api/admin/activite/__tests__/route.integration.test.ts`
 
 ### Implementation
 
@@ -230,6 +242,8 @@
 - [ ] T080 [P] Mettre à jour `CLAUDE.md` (sections Sécurité et Notifications : champs privés, push `verification`, hub admin) et `DESIGN.md` (statut « livré » des composants)
 - [ ] T081 [P] Politique de confidentialité : selfie avec code, lecture automatique locale, avertissements et masquage, dans `src/app/(legal)/confidentialite/page.tsx`
 - [ ] T082 Gates locaux `npx vitest run`, `npx tsc --noEmit`, `npx eslint src` avant chaque PR
+- [ ] T083 Revue de chaque PR selon `plan.md` (« Revue avant chaque PR ») : `/code-review high`, `/security-review` avec la correspondance menace → test, `/revue-metier` pour US1/US2/US5/US6, mutations consignées pour les modules critiques, preuve du rouge initial
+- [ ] T084 Vérifier qu'aucune dépendance n'a été ajoutée (`git diff main -- package.json package-lock.json` vide, FR-S18)
 
 ---
 
