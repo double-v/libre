@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { doitEcrirePresence, jourDePresence } from '@/lib/presence';
 import { getDb } from '@/lib/db';
-import { journaliserRefusBaseInjoignable } from '@/lib/admin-role';
+import { compteEstAdmin, journaliserRefusBaseInjoignable } from '@/lib/admin-role';
 import { getFeatures } from '@/lib/features-server';
 import type { Feature } from '@/lib/features';
 import {
@@ -245,7 +245,7 @@ export async function proxy(request: NextRequest) {
     // Redirect non-admins to / so the admin surface is never exposed, even
     // transiently. The DB role is authoritative — the JWT may be stale after
     // a role change (#155).
-    if (zoneAdmin && user.role?.toUpperCase() !== 'ADMIN') {
+    if (zoneAdmin && !compteEstAdmin(user)) {
       return NextResponse.redirect(new URL('/', request.url));
     }
 

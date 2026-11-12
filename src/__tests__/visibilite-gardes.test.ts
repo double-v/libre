@@ -15,7 +15,6 @@ const API = path.join(process.cwd(), 'src/app/api');
 const EXEMPTEES: Record<string, string> = {
   'stats/public/route.ts': 'un compte, pas un profil montré',
   'circle/contacts/route.ts': 'ajout à un cercle de confiance, pas une vitrine',
-  'square/messages/route.ts': 'statut admin de l’auteur via compteEstAdmin (#552), pas un profil montré',
 };
 
 function routes(dir: string): string[] {

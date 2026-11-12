@@ -13,6 +13,7 @@ import { NextRequest } from 'next/server';
 type Compte = { role: string | null; isBanned: boolean; squareBannedUntil: Date | null } | null;
 let session: { user: { id: string; role?: string } } | null;
 let compte: Compte;
+const publies: Record<string, unknown>[] = [];
 
 vi.mock('next-auth', () => ({ __esModule: true, default: vi.fn(), getServerSession: vi.fn(async () => session) }));
 vi.mock('@/lib/db', () => ({
@@ -44,7 +45,10 @@ vi.mock('@/lib/square/moderation', () => ({
 }));
 vi.mock('@/lib/square/store', () => ({
   __esModule: true,
-  addMessage: vi.fn(async (m: Record<string, unknown>) => ({ id: 'message-factice', ...m })),
+  addMessage: vi.fn(async (m: Record<string, unknown>) => {
+    publies.push(m);
+    return { id: 'message-factice', ...m };
+  }),
   getMessages: vi.fn(async () => []),
   getReactionsForMessages: vi.fn(async () => ({})),
 }));
@@ -64,9 +68,10 @@ async function publier(): Promise<{ status: number; message?: { isAdmin: boolean
 beforeEach(() => {
   session = null;
   compte = null;
+  publies.length = 0;
 });
 
-describe('POST /api/square/messages — badge admin décidé par la base', () => {
+describe('POST /api/square/messages — compte et badge décidés par la base', () => {
   it('jeton ADMIN mais rôle USER en base (admin rétrogradé) → pas de badge', async () => {
     session = { user: { id: 'u1', role: 'ADMIN' } };
     compte = { role: 'USER', isBanned: false, squareBannedUntil: null };
@@ -89,10 +94,22 @@ describe('POST /api/square/messages — badge admin décidé par la base', () =>
     expect((await publier()).message?.isAdmin).toBe(true);
   });
 
-  it('admin banni en base → pas de badge', async () => {
+  it('compte banni en base, jeton encore valide → 403, rien de publié', async () => {
     session = { user: { id: 'u1', role: 'ADMIN' } };
     compte = { role: 'ADMIN', isBanned: true, squareBannedUntil: null };
-    expect((await publier()).message?.isAdmin).toBe(false);
+    const r = await publier();
+    expect(r.status).toBe(403);
+    expect(r.message).toBeUndefined();
+    expect(publies).toHaveLength(0);
+  });
+
+  it('compte supprimé en base, jeton encore valide → 401, rien de publié', async () => {
+    session = { user: { id: 'u1', role: 'ADMIN' } };
+    compte = null;
+    const r = await publier();
+    expect(r.status).toBe(401);
+    expect(r.message).toBeUndefined();
+    expect(publies).toHaveLength(0);
   });
 
   it('rôle absent en base → pas de badge', async () => {
