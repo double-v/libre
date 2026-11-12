@@ -35,7 +35,16 @@ export interface VerificationRow {
 
 export type Decision = { action: 'APPROVE_VERIFICATION' } | { action: 'REJECT_VERIFICATION'; motif: MotifRefus };
 
-export default function AdminVerificationCard({ v, onDecision }: { v: VerificationRow; onDecision: (d: Decision) => Promise<void> }) {
+export default function AdminVerificationCard({
+  v,
+  onDecision,
+  bare = false,
+}: {
+  v: VerificationRow;
+  onDecision: (d: Decision) => Promise<void>;
+  /** Dans une `CaseCard` de la fiche (spec 012, US4) : ni carte ni en-tête, la fiche les porte déjà. */
+  bare?: boolean;
+}) {
   const questions = v.codeAttendu
     ? [
         `Le code est écrit à la main et je lis bien ${v.codeAttendu}.`,
@@ -58,16 +67,15 @@ export default function AdminVerificationCard({ v, onDecision }: { v: Verificati
     setOccupe(false);
   }
 
-  return (
-    <Card variant="profile">
+  const contenu = (
       <div className="grid gap-4">
-        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+        {!bare && <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <b className="text-base text-content">{v.user.displayName}</b>
           <span className="text-sm text-muted">{v.user.emailMasque}</span>
           <span className="text-sm tabular-nums text-muted">Demande du {new Date(v.createdAt).toLocaleDateString('fr-FR')}</span>
           {v.status === 'approved' && <Tag variant="verified" size="sm">Validée</Tag>}
           {v.status === 'rejected' && <Tag variant="refused" size="sm">Refusée</Tag>}
-        </div>
+        </div>}
 
         <div className="grid gap-5 sm:grid-cols-[minmax(200px,260px)_1fr]">
           <div>
@@ -161,8 +169,8 @@ export default function AdminVerificationCard({ v, onDecision }: { v: Verificati
           </div>
         )}
       </div>
-    </Card>
   );
+  return bare ? contenu : <Card variant="profile">{contenu}</Card>;
 }
 
 /** Indice de lecture : jamais une décision, les chiffres divergents soulignés. */

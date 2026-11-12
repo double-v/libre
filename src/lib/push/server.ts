@@ -44,7 +44,7 @@ export function buildPayload(kind: PushKind, ctx: { conversationId?: string } & 
     case 'match':
       return { kind, title: 'Nouveau match', body: 'Vous vous êtes plu.', url: '/messages', tag: 'match' };
     case 'admin-report':
-      return { kind, title: 'Nouveau signalement', body: 'Un signalement attend.', url: '/admin/reports', tag: 'admin-reports' };
+      return { kind, title: 'Nouveau signalement', body: 'Un signalement attend.', url: '/admin/membres?filtre=report', tag: 'admin-reports' };
     case 'admin-feedback':
       return { kind, title: 'Nouveau retour', body: 'Un retour attend.', url: '/admin/feedback', tag: 'admin-feedback' };
     // #477 : ni le texte de la réponse ni celui du retour — l'écran verrouillé

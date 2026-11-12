@@ -8,6 +8,7 @@ import Link from 'next/link';
 import ThemeMenu from '@/components/ui/ThemeMenu';
 import HeartMark from '@/components/ui/HeartMark';
 import CountChip from '@/components/ui/CountChip';
+import ToastHost from '@/components/ui/Toast';
 import { countAdminQueues, type AdminQueues } from '@/lib/admin-queues';
 import { compterCas } from '@/lib/moderation/membres';
 
@@ -178,6 +179,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </nav>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+        {/* Confirmations des gestes du hub Membres (spec 012). */}
+        <ToastHost />
       </div>
     </div>
   );

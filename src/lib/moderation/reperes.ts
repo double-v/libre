@@ -193,3 +193,14 @@ export const LIBELLES_ACTION: Record<string, string> = {
  * les décisions — sinon chaque ouverture de fiche y ajouterait des lignes.
  */
 export const ACTIONS_CONSULTATION: ReadonlySet<string> = new Set(['VIEW_PRIVATE_PHOTO', 'VIEW_KEY_STATE', 'SEARCH_PHOTO', 'STRIP_PHOTO_METADATA']);
+
+/** Motifs fermés d'un retrait ou d'un voile de photo, inscrits au journal. */
+export const MOTIFS_PHOTO = [
+  'Moyen de contact visible sur la photo',
+  'Nudité ou image choquante',
+  'Ce n’est pas une photo de la personne',
+  'Autre manquement aux règles',
+] as const;
+
+/** Motifs fermés pour lever un voile. */
+export const MOTIFS_LEVER_VOILE = ['Voile posé par erreur', 'Photo conforme après relecture'] as const;

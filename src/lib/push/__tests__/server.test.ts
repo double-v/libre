@@ -117,7 +117,7 @@ describe('buildPayload — rien qui identifie ou révèle (SC-006)', () => {
   });
 
   it('admin : ouvre la file concernée', () => {
-    expect(buildPayload('admin-report', {}).url).toBe('/admin/reports');
+    expect(buildPayload('admin-report', {}).url).toBe('/admin/membres?filtre=report');
     expect(buildPayload('admin-feedback', {}).url).toBe('/admin/feedback');
   });
 });
