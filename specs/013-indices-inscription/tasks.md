@@ -9,6 +9,8 @@ consigné dans la PR, et il observe des effets (lignes en base factice qui
 honore `where`, `select` et l'unicité ; réponses), jamais un simple appel de
 mock.
 
+**Issues** : US1 #563, US2 #564, US3 #565, US4 #566.
+
 **Lots proposés** : lot 1 = US1 + US2 (connexion), lot 2 = US3 + US4 (image
 et lecture). Un lot = une PR = un déploiement. La PR s'ouvre en brouillon et
 l'opérateur merge.
