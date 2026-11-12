@@ -1,6 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getDb } from '@/lib/db';
+import { estAdminEnBase } from '@/lib/admin-role';
 import { debugLog } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
@@ -12,53 +12,33 @@ export interface AdminSession {
 }
 
 /**
- * Verify the current session has ADMIN role.
- * Queries the DB directly — does NOT trust the JWT cache.
- * This ensures role changes propagate instantly without re-login.
+ * Vérifie que la session courante est celle d'un admin.
+ *
+ * Le rôle est relu en base à chaque appel (le JWT peut être périmé, #155), et
+ * la garde est **fermée** : base injoignable = `null`, donc 404 via
+ * `requireAdmin`, sans repli sur le rôle du jeton (#547). Un compte banni
+ * n'est pas admin non plus.
  */
 export async function verifyAdmin(): Promise<AdminSession | null> {
   const session = await getServerSession(authOptions);
-  debugLog('[admin/verifyAdmin] hasSession=%s hasUserId=%s jwtRole=%s',
-    !!session, !!session?.user?.id, session?.user?.role ?? 'none');
+  debugLog('[admin/verifyAdmin] hasSession=%s hasUserId=%s',
+    !!session, !!session?.user?.id);
 
   if (!session?.user?.id) {
-    debugLog('[admin/verifyAdmin] DENIED: no session or no user.id');
+    debugLog("[admin/verifyAdmin] REFUS : pas de session ou pas d'identifiant");
     return null;
   }
 
-  // Always check the DB — JWT may be stale
-  try {
-    const dbUser = await getDb().user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    });
-    const dbRole = dbUser?.role?.toUpperCase();
-    debugLog('[admin/verifyAdmin] hasDbRole=%s dbMatchesJwt=%s',
-      !!dbRole, dbRole === session.user.role?.toUpperCase());
-
-    if (dbRole !== 'ADMIN') {
-      debugLog('[admin/verifyAdmin] DENIED: role is not ADMIN');
-      return null;
-    }
-
-    return {
-      userId: session.user.id,
-      email: session.user.email ?? '',
-      role: dbRole,
-    };
-  } catch (err) {
-    console.error('[admin/verifyAdmin] DB error:', err);
-    // Fallback to JWT role if DB is unreachable
-    if (session.user.role?.toUpperCase() === 'ADMIN') {
-      debugLog('[admin/verifyAdmin] DB error but JWT has ADMIN — allowing (degraded)');
-      return {
-        userId: session.user.id,
-        email: session.user.email ?? '',
-        role: session.user.role,
-      };
-    }
+  if (!(await estAdminEnBase(session.user.id, 'admin/verifyAdmin'))) {
+    debugLog('[admin/verifyAdmin] REFUS : pas admin en base (ou base injoignable)');
     return null;
   }
+
+  return {
+    userId: session.user.id,
+    email: session.user.email ?? '',
+    role: 'ADMIN',
+  };
 }
 
 /**

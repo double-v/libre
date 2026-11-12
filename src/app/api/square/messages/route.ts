@@ -10,6 +10,7 @@ import { ensureSquareFresh } from '@/lib/square/reset';
 import { squareMessageSchema } from '@/lib/square/validators';
 import type { SquareMessage } from '@/lib/square/store';
 import { gardeFeature } from '@/lib/features-server';
+import { compteEstAdmin, compteEstBanni, selectStatutCompte } from '@/lib/admin-role';
 
 export async function GET() {
   // Interrupteur admin (#418)
@@ -57,10 +58,19 @@ export async function POST(request: NextRequest) {
   // Check if user is banned from square
   const user = await getDb().user.findUnique({
     where: { id: userId },
-    select: { squareBannedUntil: true, role: true },
+    select: { squareBannedUntil: true, ...selectStatutCompte },
   });
 
-  if (user?.squareBannedUntil && user.squareBannedUntil > new Date()) {
+  // Le proxy ne contrôle pas les bannis sur /api/* : la route le fait, sur le
+  // compte relu, et refuse aussi un compte supprimé dont le jeton vit encore (#552).
+  if (!user) {
+    return NextResponse.json({ error: 'Ta session a expiré. Reconnecte-toi pour écrire sur la Place.' }, { status: 401 });
+  }
+  if (compteEstBanni(user)) {
+    return NextResponse.json({ error: 'Ton compte est suspendu.' }, { status: 403 });
+  }
+
+  if (user.squareBannedUntil && user.squareBannedUntil > new Date()) {
     return NextResponse.json({ error: 'Vous êtes banni(e) de la Place' }, { status: 403 });
   }
 
@@ -108,7 +118,9 @@ export async function POST(request: NextRequest) {
   }
 
   const pseudonym = await getPseudonymFromConfig(userId);
-  const isAdmin = session.user.role === 'ADMIN';
+  // Badge décidé par le compte relu plus haut, jamais par le jeton : un jeton
+  // peut être périmé (admin rétrogradé, #155) ou volé (#552).
+  const isAdmin = compteEstAdmin(user);
 
   const message = await addMessage({
     pseudonym,
