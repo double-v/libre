@@ -28,6 +28,29 @@ export function refusOrigine(request: Request): NextResponse | null {
   return null;
 }
 
+/** Méthodes qui ne changent rien : jamais contrôlées. */
+const METHODES_SURES = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+/**
+ * Contrôle d'origine seul, appliqué par le proxy à **toute** écriture sous
+ * `/api/admin` (y compris les routes ajoutées plus tard). Un formulaire ou un
+ * `fetch` lancé depuis un site tiers porte l'`Origin` de ce site, avec ou sans
+ * corps : l'en-tête suffit à les écarter. Une écriture sans `Origin` est
+ * refusée aussi : tous les navigateurs actuels l'envoient sur ces méthodes,
+ * et l'admin ne s'utilise que depuis un navigateur.
+ *
+ * Le contrôle du `Content-Type` reste propre à `refusOrigine` : certaines
+ * écritures admin n'ont pas de corps.
+ */
+export function refusOrigineEcriture(request: Request): NextResponse | null {
+  if (METHODES_SURES.has(request.method.toUpperCase())) return null;
+  const origine = request.headers.get('origin');
+  if (!origine || !originesDuSite(request).has(origine)) {
+    return NextResponse.json({ error: 'Requête refusée : son origine n’est pas celle du site.' }, { status: 403 });
+  }
+  return null;
+}
+
 function originesDuSite(request: Request): Set<string> {
   const origines = new Set<string>([new URL(request.url).origin]);
   const publique = process.env.NEXTAUTH_URL;
