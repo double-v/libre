@@ -4,6 +4,7 @@ import { enregistrerSignal } from '@/lib/fraude/signaux';
 import { deletePhoto } from '@/lib/r2';
 import { effacerCompte } from '@/lib/suppression-compte';
 import type { MotifRefus } from '@/lib/verification/motifs';
+import { MOTIFS_SANCTION, type MotifSanction } from './reperes';
 
 /**
  * Gestes de modération partagés (spec 011, R5 ; spec 012, T003). Les routes
@@ -311,19 +312,6 @@ export async function inviterVerification(
   return { depuis: maintenant };
 }
 
-/**
- * Motifs fermés d'un bannissement ou d'une suppression (FR-022). Le libellé
- * est ce que l'historique affiche ; aucun texte libre de modérateur.
- */
-export const MOTIFS_SANCTION = {
-  argent: 'Demande d’argent',
-  menaces: 'Menaces ou harcèlement',
-  faux_profil: 'Faux profil',
-  mineur: 'Mineur·e',
-  autre: 'Autre',
-} as const;
-export type MotifSanction = keyof typeof MOTIFS_SANCTION;
-export const CODES_MOTIFS_SANCTION = Object.keys(MOTIFS_SANCTION) as [MotifSanction, ...MotifSanction[]];
 
 /**
  * Supprimer un compte (FR-S11 : jamais par lot). Même chemin que la

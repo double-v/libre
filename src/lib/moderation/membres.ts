@@ -268,10 +268,11 @@ export async function compterCas(): Promise<Compteurs> {
   };
 }
 
-/** Les cas en attente d'un seul membre, pour sa fiche. */
+/** Les cas en attente d'un seul membre, pour sa fiche : du plus grave au moins grave, puis du plus ancien. */
 export async function casDuMembre(uid: string): Promise<Array<{ type: TypeCas; id: string; depuis: Date }>> {
   return getDb().$queryRaw<Array<{ type: TypeCas; id: string; depuis: Date }>>(Prisma.sql`
-    WITH ${cteCas(uid)}
-    SELECT type, id, depuis FROM cas WHERE uid = ${uid}::uuid ORDER BY depuis ASC
+    WITH ${cteCas(uid)}, g AS (SELECT * FROM ${tableGravite()})
+    SELECT cas.type, cas.id, cas.depuis FROM cas JOIN g ON g.type = cas.type
+    WHERE cas.uid = ${uid}::uuid ORDER BY g.rang ASC, cas.depuis ASC, cas.id ASC
   `);
 }
