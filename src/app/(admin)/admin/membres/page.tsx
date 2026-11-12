@@ -110,10 +110,22 @@ function Hub() {
     return () => obs.disconnect();
   }, [curseur, chargerSuite]);
 
+  // Sous 900 px, la fiche remplace la liste : on retient où l'on était dans
+  // la liste pour y revenir avec « ← Membres » (US3, test indépendant).
+  const positionListe = useRef<number | null>(null);
   const ouvrir = useCallback((id: string) => {
+    if (window.matchMedia('(max-width: 899.98px)').matches) {
+      if (!membre) positionListe.current = window.scrollY;
+      window.scrollTo(0, 0);
+    }
     allerA({ membre: id });
-    if (window.matchMedia('(max-width: 899.98px)').matches) window.scrollTo(0, 0);
-  }, [allerA]);
+  }, [allerA, membre]);
+  useEffect(() => {
+    if (membre || positionListe.current === null) return;
+    const y = positionListe.current;
+    positionListe.current = null;
+    requestAnimationFrame(() => window.scrollTo(0, y));
+  }, [membre]);
   const recharger = useCallback(() => setVersion((v) => v + 1), []);
 
   return (

@@ -76,6 +76,19 @@ type Snapshot = Array<{ questionKey?: string; text?: string; choices?: string[] 
 
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 
+/**
+ * Le motif d'une ligne de journal, tel qu'un humain le lit : les clés
+ * internes (motif de refus, types de signaux d'une invitation automatique,
+ * question d'une réponse retirée) sont traduites ; un texte libre reste tel quel.
+ */
+export function motifLisible(action: string, motif: string | null): string | null {
+  if (!motif) return null;
+  if (action === 'REJECT_VERIFICATION') return lireMotif(motif)?.libelle ?? motif;
+  if (action === 'INVITE_VERIFICATION') return motif.split(',').map((t) => LIBELLES_SIGNAL[t.trim()] ?? t.trim()).join(', ');
+  if (action === 'REMOVE_ANSWER') return questionByKey(motif)?.label ?? motif;
+  return motif;
+}
+
 export async function lireFiche(id: string): Promise<FicheMembre | null> {
   if (!estUuid(id)) return null;
   const db = getDb();
@@ -184,7 +197,7 @@ export async function lireFiche(id: string): Promise<FicheMembre | null> {
       at: j.createdAt.toISOString(),
       action: j.action,
       libelle: LIBELLES_ACTION[j.action] ?? j.action,
-      motif: j.reason,
+      motif: motifLisible(j.action, j.reason),
       auteur: j.admin?.displayName ?? 'automatique',
     })),
     { at: u.createdAt.toISOString(), action: 'INSCRIPTION', libelle: LIBELLES_ACTION.INSCRIPTION, motif: null, auteur: 'automatique' },

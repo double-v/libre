@@ -146,7 +146,7 @@ describe('fiche membre (T035, T035b)', () => {
   it('historique : auteur nommé ou « automatique », sans les simples consultations, le plus récent d’abord', async () => {
     const { corps } = await lire(julien);
     expect(corps.historique.map((h: { libelle: string; auteur: string; motif: string | null }) => [h.libelle, h.auteur, h.motif])).toEqual([
-      ['Invitation à la vérification', 'automatique', 'lexique_arnaque'],
+      ['Invitation à la vérification', 'automatique', 'Vocabulaire d’arnaque (paiement, rencontre tarifée)'],
       ['Inscription', 'automatique', null],
       ['Signalement classé sans suite', 'Sam', null],
     ]);
@@ -169,6 +169,16 @@ describe('fiche membre (T035, T035b)', () => {
     ]);
   });
 
+  it('deux comptes jamais confirmés sur un appareil : pas de doublon proposé, aucun n’est « le compte gardé »', async () => {
+    const db = getDb();
+    const a = await creerCompte(P, { pseudo: 'NonConfA', emailVerified: null, deviceId: 'appareil-nc' });
+    const b = await creerCompte(P, { pseudo: 'NonConfB', emailVerified: null, deviceId: 'appareil-nc' });
+    await db.profileSignal.create({ data: { userId: a, type: 'appareil_partage', force: 'faible', autreUserId: b, cle: 'nc' } });
+    const indice = (await lire(a)).corps.cas.find((c: { type: string }) => c.type === 'indice');
+    expect(indice.doublon).toBeNull();
+    expect(indice.lies).toEqual([{ id: b, pseudo: 'NonConfB', existe: true, confirme: false }]);
+  });
+
   describe('cas hostiles', () => {
     it.each([['membre ordinaire', () => ordinaire], ['sans session', () => null]])('M8 : %s → 404, aucune donnée', async (_n, qui) => {
       session.id = qui();
@@ -189,6 +199,13 @@ describe('fiche membre (T035, T035b)', () => {
     it('M8 : un membre ordinaire reçoit 404 avant tout autre contrôle', async () => {
       session.id = ordinaire;
       expect((await supprimer(ines2, { pseudo: 'Ines_2', motif: 'faux_profil' })).status).toBe(404);
+      expect(await existe(ines2)).toBe(true);
+    });
+
+    it('M8 : un membre ordinaire reçoit 404, même depuis une origine étrangère (rien n’est dit du contrôle)', async () => {
+      session.id = ordinaire;
+      const r = await supprimer(ines2, { pseudo: 'Ines_2', motif: 'faux_profil' }, { 'content-type': 'text/plain', origin: 'https://attaquant.exemple' });
+      expect(r.status).toBe(404);
       expect(await existe(ines2)).toBe(true);
     });
 

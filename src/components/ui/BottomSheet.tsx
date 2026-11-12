@@ -57,7 +57,7 @@ export default function BottomSheet({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/45 dark:bg-black/60 min-[900px]:items-center"
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/45 dark:bg-black/60 min-[900px]:items-center"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
