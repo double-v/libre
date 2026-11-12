@@ -21,6 +21,7 @@ import { randomUUID } from 'crypto';
 
 const SENTINEL = 'SENTINELLE-VILLE';
 const SENTINEL_SIGNAL = 'SENTINELLE-SIGNAL';
+const SENTINEL_CODE = 'SENTINELLE-CODE';
 
 const mockGetServerSession = vi.fn();
 vi.mock('next-auth', () => ({
@@ -127,6 +128,9 @@ function userOf(id: string, name: string) {
     // Spec 011 (#498) : présence et préavis, privés.
     lastSeenAt: new Date(),
     preavisInactiviteAt: new Date(),
+    // Spec 012 : code en cours et lecture automatique, privés sur TOUS les comptes.
+    verificationCode: { code: SENTINEL_CODE, expireAt: new Date() },
+    verificationRequests: [{ codeAttendu: SENTINEL_CODE, codeLu: SENTINEL_CODE, sansDonneesAppareil: true, vueAt: null }],
   };
   user.profile = profileOf(id, user);
   return user;
@@ -194,6 +198,9 @@ function sansSignaux(text: string, cas = '') {
   // Spec 011.
   expect(text, cas).not.toContain('lastSeenAt');
   expect(text, cas).not.toContain('preavisInactiviteAt');
+  // Spec 012.
+  expect(text, cas).not.toContain(SENTINEL_CODE);
+  expect(text, cas).not.toMatch(/verificationCode|codeAttendu|codeLu|sansDonneesAppareil|verificationRequests/);
 }
 
 describe('cityLabel / positionSource / onboardingStep / retraitAt / signaux ne sortent jamais vers autrui (#402, spec 005, spec 006)', () => {
@@ -249,6 +256,27 @@ describe('cityLabel / positionSource / onboardingStep / retraitAt / signaux ne s
     expect(text).not.toContain('positionSource');
     expect(text).not.toContain('onboardingStep');
     sansSignaux(text);
+  });
+});
+
+describe('spec 012 : le code de vérification ne se lit que sur ses routes', () => {
+  it('seules les routes du selfie et de l’admin touchent au code et à sa lecture', async () => {
+    const { readdirSync, readFileSync, statSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const permis = [join('api', 'admin'), join('api', 'moderation', 'verify')];
+    const fautifs: string[] = [];
+    const parcourir = (dir: string) => {
+      for (const nom of readdirSync(dir)) {
+        const chemin = join(dir, nom);
+        if (statSync(chemin).isDirectory()) {
+          if (nom !== '__tests__') parcourir(chemin);
+        } else if (nom === 'route.ts' && !permis.some((p) => chemin.includes(p))) {
+          if (/verificationCode|codeLu|codeAttendu|lecture-code|verification\/code'/.test(readFileSync(chemin, 'utf8'))) fautifs.push(chemin);
+        }
+      }
+    };
+    parcourir(join(process.cwd(), 'src', 'app', 'api'));
+    expect(fautifs).toEqual([]);
   });
 });
 

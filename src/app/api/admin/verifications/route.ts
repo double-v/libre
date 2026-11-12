@@ -3,17 +3,20 @@ import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
 import { masquerEmail } from '@/lib/masquer-email';
 import { photoUrl } from '@/lib/photos';
-import { geste } from '@/lib/verification/gestes';
-import { MOTIFS_REFUS, type MotifRefus } from '@/lib/verification/motifs';
+import { texteAncienGeste } from '@/lib/verification/ancien-geste';
+import { lireMotif } from '@/lib/verification/motifs';
+
+const STATUTS = new Set(['pending', 'approved', 'rejected']);
 
 export async function GET(request: NextRequest) {
   const adminResult = await requireAdmin();
   if (!isAdminSession(adminResult)) return adminResult;
 
-  const { searchParams } = request.nextUrl;
-  const status = searchParams.get('status') ?? 'pending';
+  const demande = request.nextUrl.searchParams.get('status') ?? 'pending';
+  const status = STATUTS.has(demande) ? demande : 'pending';
+  const db = getDb();
 
-  const verifications = await getDb().verificationRequest.findMany({
+  const verifications = await db.verificationRequest.findMany({
     where: { status },
     include: {
       user: {
@@ -23,24 +26,47 @@ export async function GET(request: NextRequest) {
           email: true,
           // File comparée (#436) : le selfie se juge à côté des photos du profil.
           profile: { select: { photos: true } },
-          _count: { select: { verificationRequests: true } },
         },
       },
     },
     orderBy: { createdAt: 'asc' },
   });
 
-  // Même minimisation que la liste des membres (#423) : la file de
-  // vérification est une liste, l'adresse entière n'y a pas sa place.
-  // Codes de geste et de motif traduits ici : l'écran affiche ce que le
-  // membre a lu, pas un identifiant interne.
+  // Refus précédent de chaque membre (FR-006, à partir de la 2e tentative) :
+  // une seule requête pour toute la file.
+  const avecPassé = verifications.filter((v) => v.tentative > 1).map((v) => v.userId);
+  const refus = avecPassé.length
+    ? await db.verificationRequest.findMany({
+        where: { userId: { in: avecPassé }, status: 'rejected' },
+        orderBy: { resolvedAt: 'desc' },
+        select: { id: true, userId: true, rejectReason: true, resolvedAt: true, createdAt: true },
+      })
+    : [];
+
+  // Même minimisation que la liste des membres (#423) : l'adresse entière n'a
+  // pas sa place dans une file. Les clés de motif sont traduites ici :
+  // l'écran affiche ce que le membre a lu, pas un identifiant interne.
   return NextResponse.json({
-    verifications: verifications.map(({ user: { email, profile, _count, ...user }, challenge, rejectReason, ...v }) => ({
-      ...v,
-      geste: (challenge && geste(challenge)?.texte) ?? null,
-      motif: rejectReason && rejectReason in MOTIFS_REFUS ? MOTIFS_REFUS[rejectReason as MotifRefus] : null,
-      tentatives: _count.verificationRequests,
-      user: { ...user, emailMasque: masquerEmail(email), photos: (profile?.photos ?? []).map(photoUrl) },
-    })),
+    verifications: verifications.map(({ user: { email, profile, ...user }, challenge, rejectReason, ...v }) => {
+      const precedent = v.tentative > 1
+        ? refus.find((r) => r.userId === v.userId && r.id !== v.id && r.createdAt < v.createdAt)
+        : undefined;
+      return {
+        id: v.id,
+        selfieUrl: v.selfieUrl,
+        status: v.status,
+        createdAt: v.createdAt,
+        codeAttendu: v.codeAttendu,
+        codeLu: v.codeLu,
+        tentative: v.tentative,
+        sansDonneesAppareil: v.sansDonneesAppareil,
+        ancienGeste: v.codeAttendu ? null : texteAncienGeste(challenge),
+        motif: lireMotif(rejectReason)?.texte ?? null,
+        refusPrecedent: precedent
+          ? { motif: lireMotif(precedent.rejectReason)?.libelle ?? null, at: precedent.resolvedAt }
+          : null,
+        user: { ...user, emailMasque: masquerEmail(email), photos: (profile?.photos ?? []).map(photoUrl) },
+      };
+    }),
   });
 }

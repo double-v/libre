@@ -24,8 +24,8 @@
 ## Phase 2: Foundational
 
 - [ ] T003 Extraire la logique des gestes unitaires existants (signalement, vérification, réponse, photo, indice, ban, suppression) en fonctions sans HTTP qui écrivent l'effet et la ligne de journal, dans `src/lib/moderation/gestes.ts`, et faire appeler ces fonctions par les routes `src/app/api/admin/{reports/[id],verifications/[id],answers/[id],users/[id],users/[id]/photos,indices/*}/route.ts`. Tests de non-régression : effet et ligne de journal identiques avant et après, dans `src/lib/moderation/__tests__/gestes.test.ts`
-- [ ] T003a Harnais d'intégration : projet Vitest `integration` sur un PostgreSQL réel (migrations appliquées, base vidée entre fichiers), en local et en CI via un conteneur de service `postgres` isolé, jamais Neon, dans `vitest.config.ts`, `src/test/integration-setup.ts` et `.github/workflows/ci.yml`
-- [ ] T003b Garde admin fermée par défaut pour les nouvelles routes (rôle relu en base, 404 si la base ne répond pas, FR-S07), avec ses tests d'intégration (rôle rétrogradé avec JWT encore ADMIN → 404 ; base coupée → 404), dans `src/lib/admin.ts` (`requireAdminStrict`) et `src/lib/__tests__/admin-strict.test.ts`
+- [x] T003a Harnais d'intégration : projet Vitest `integration` sur un PostgreSQL réel (migrations appliquées, base vidée entre fichiers), en local et en CI via un conteneur de service `postgres` isolé, jamais Neon, dans `vitest.config.ts`, `src/test/integration-setup.ts` et `.github/workflows/ci.yml` — livré par #548 (PR #554) : `tests/integration/`, `npm run test:db`, service `postgres` en CI.
+- [x] T003b Garde admin fermée par défaut pour les nouvelles routes (rôle relu en base, 404 si la base ne répond pas, FR-S07), avec ses tests d'intégration (rôle rétrogradé avec JWT encore ADMIN → 404 ; base coupée → 404), dans `src/lib/admin.ts` (`requireAdminStrict`) et `src/lib/__tests__/admin-strict.test.ts` — livré par #547 (PR #554) : `estAdminEnBase`, garde fermée, sans nouveau nom de fonction.
 - [ ] T003c Contrôle d'origine et de type de contenu des écritures admin (FR-S08), avec ses tests (Origin absente, étrangère, `text/plain` → 403), dans `src/lib/securite/origine.ts` et `src/lib/securite/__tests__/origine.test.ts`
 
 **Checkpoint** : les routes actuelles se comportent à l'identique ; les stories peuvent commencer.
@@ -40,23 +40,23 @@
 
 ### Tests (écrits d'abord, doivent échouer)
 
-- [ ] T004 [P] [US1] Tests de `tirerCode` (alphabet 2–9, 4 chiffres, révocation du précédent, expiration 30 min) et `codeValide` dans `src/lib/verification/__tests__/code.test.ts`
-- [ ] T005 [P] [US1] Tests de `normaliserCodeLu` (extrait 4 chiffres, `''` si aucun) et du marquage des caractères divergents dans `src/lib/verification/__tests__/lecture-code.test.ts`
-- [ ] T006 [P] [US1] Tests de route : tirage 200/409, selfie avec code expiré, remplacé ou d'un autre membre → 410, bon code → 201 et ligne `verification_codes` effacée, dans `src/app/api/moderation/verify/__tests__/code.test.ts` (`// @vitest-environment node`)
-- [ ] T006a [P] [US1] Tests hostiles : compte non confirmé ou banni → refus du tirage (FR-S01) ; rafale de tirages ou d'envois par compte et par IP → 429 (FR-S02) ; image de plus de 5 Mo, image géante en pixels, faux JPEG polyglotte → refus (FR-S03) ; GPS présent dans le fichier envoyé → absent de l'objet stocké, booléen « sans données d'appareil » juste (FR-S04) ; aucune réponse membre ne contient `code_lu` (FR-S05) ; aucune route membre n'accepte d'identifiant (FR-S06). Dans `src/app/api/moderation/verify/__tests__/hostile.test.ts`
+- [x] T004 [P] [US1] Tests de `tirerCode` (alphabet 2–9, 4 chiffres, révocation du précédent, expiration 30 min) et `codeValide` dans `src/lib/verification/__tests__/code.test.ts`
+- [x] T005 [P] [US1] Tests de `normaliserCodeLu` (extrait 4 chiffres, `''` si aucun) et du marquage des caractères divergents dans `src/lib/verification/__tests__/lecture-code.test.ts`
+- [x] T006 [P] [US1] Tests de route : tirage 200/409, selfie avec code expiré, remplacé ou d'un autre membre → 410, bon code → 201 et ligne `verification_codes` effacée, dans `src/app/api/moderation/verify/__tests__/code.test.ts` (`// @vitest-environment node`)
+- [x] T006a [P] [US1] Tests hostiles : compte non confirmé ou banni → refus du tirage (FR-S01) ; rafale de tirages ou d'envois par compte et par IP → 429 (FR-S02) ; image de plus de 5 Mo, image géante en pixels, faux JPEG polyglotte → refus (FR-S03) ; GPS présent dans le fichier envoyé → absent de l'objet stocké, booléen « sans données d'appareil » juste (FR-S04) ; aucune réponse membre ne contient `code_lu` (FR-S05) ; aucune route membre n'accepte d'identifiant (FR-S06). Dans `src/app/api/moderation/verify/__tests__/hostile.test.ts`
 
 ### Implementation
 
-- [ ] T007 [US1] Ajouter au schéma `VerificationCode` et les colonnes `code_attendu`, `code_lu`, `tentative` de `VerificationRequest`, avec la migration additive à la main `prisma/migrations/<date>_verification_code/migration.sql`, dans `prisma/schema.prisma` (data-model.md)
-- [ ] T008 [US1] Implémenter `tirerCode`, `codeValide`, `consommerCode` dans `src/lib/verification/code.ts`
-- [ ] T009 [US1] Implémenter `lireCode(image)` au-dessus de `lireTexte` (liste blanche `23456789`) et `normaliserCodeLu` dans `src/lib/verification/lecture-code.ts`
-- [ ] T010 [US1] Créer `POST /api/moderation/verify/code` (contrat `contracts/api.md`) dans `src/app/api/moderation/verify/code/route.ts`
-- [ ] T011 [US1] Modifier `POST /api/moderation/verify` : accepter `code`, refuser 410, écrire `code_attendu` et `tentative`, planifier `lireCode` dans `after()` pour écrire `code_lu`, dans `src/app/api/moderation/verify/route.ts`
-- [ ] T012 [US1] Réécrire les motifs (code, personne, écran, visage) avec un conseil par motif, et garder l'ancienne clé `geste_invisible` lisible pour l'historique, dans `src/lib/verification/motifs.ts`
-- [ ] T013 [US1] Page membre : affichage du code, consignes en phrases complètes (feuille tenue ou posée, « quelqu'un peut l'écrire pour toi »), capture `capture="user"`, d'après `proto-bureau.html` (Outils › Proto selfie), dans `src/app/(main)/verify/page.tsx`
-- [ ] T014 [US1] Carte admin de vérification : code attendu, indice de lecture (en cours, impossible, divergences soulignées), photos du profil, trois questions, et ancien geste si `challenge` sans `code_attendu` (FR-008), dans `src/components/AdminVerificationCard.tsx`
-- [ ] T015 [US1] Ajouter `verification_codes` aux champs privés de `src/__tests__/city-label-never-leaks.test.ts`
-- [ ] T016 [US1] Retirer `geste/route.ts`, `gestes.ts` et `jeton-geste.ts` une fois T010 à T014 verts, dans `src/app/api/moderation/verify/geste/` et `src/lib/verification/`
+- [x] T007 [US1] Ajouter au schéma `VerificationCode` et les colonnes `code_attendu`, `code_lu`, `tentative` de `VerificationRequest`, avec la migration additive à la main `prisma/migrations/<date>_verification_code/migration.sql`, dans `prisma/schema.prisma` (data-model.md)
+- [x] T008 [US1] Implémenter `tirerCode`, `codeValide`, `consommerCode` dans `src/lib/verification/code.ts`
+- [x] T009 [US1] Implémenter `lireCode(image)` au-dessus de `lireTexte` (liste blanche `23456789`) et `normaliserCodeLu` dans `src/lib/verification/lecture-code.ts`
+- [x] T010 [US1] Créer `POST /api/moderation/verify/code` (contrat `contracts/api.md`) dans `src/app/api/moderation/verify/code/route.ts`
+- [x] T011 [US1] Modifier `POST /api/moderation/verify` : accepter `code`, refuser 410, écrire `code_attendu` et `tentative`, planifier `lireCode` dans `after()` pour écrire `code_lu`, dans `src/app/api/moderation/verify/route.ts`
+- [x] T012 [US1] Réécrire les motifs (code, personne, écran, visage) avec un conseil par motif, et garder l'ancienne clé `geste_invisible` lisible pour l'historique, dans `src/lib/verification/motifs.ts`
+- [x] T013 [US1] Page membre : affichage du code, consignes en phrases complètes (feuille tenue ou posée, « quelqu'un peut l'écrire pour toi »), capture `capture="user"`, d'après `proto-bureau.html` (Outils › Proto selfie), dans `src/app/(main)/verify/page.tsx`
+- [x] T014 [US1] Carte admin de vérification : code attendu, indice de lecture (en cours, impossible, divergences soulignées), photos du profil, trois questions, et ancien geste si `challenge` sans `code_attendu` (FR-008), dans `src/components/AdminVerificationCard.tsx`
+- [x] T015 [US1] Ajouter `verification_codes` aux champs privés de `src/__tests__/city-label-never-leaks.test.ts`
+- [x] T016 [US1] Retirer `geste/route.ts`, `gestes.ts` et `jeton-geste.ts` une fois T010 à T014 verts, dans `src/app/api/moderation/verify/geste/` et `src/lib/verification/`
 
 **Checkpoint** : un membre de test passe la vérification de bout en bout avec un code.
 
@@ -70,18 +70,18 @@
 
 ### Tests
 
-- [ ] T017 [P] [US2] Tests de `peutTirer` (0, 1, 2, 3 refus, validation intercalée, 24 h pile) dans `src/lib/verification/__tests__/code.test.ts`
-- [ ] T018 [P] [US2] Tests du push `verification` : charge sans motif ni nom, dans `src/lib/push/__tests__/server.test.ts`
-- [ ] T018a [P] [US2] Tests d'intégration de `peutTirer` sur PostgreSQL : demandes réelles, bornes à 24 h moins 1 s et plus 1 s, deux tirages concurrents → un seul code valable, dans `src/lib/verification/__tests__/code.integration.test.ts`
+- [x] T017 [P] [US2] Tests de `peutTirer` (0, 1, 2, 3 refus, validation intercalée, 24 h pile) dans `src/lib/verification/__tests__/code.test.ts`
+- [x] T018 [P] [US2] Tests du push `verification` : charge sans motif ni nom, dans `src/lib/push/__tests__/server.test.ts`
+- [x] T018a [P] [US2] Tests d'intégration de `peutTirer` sur PostgreSQL : demandes réelles, bornes à 24 h moins 1 s et plus 1 s, deux tirages concurrents → un seul code valable, dans `src/lib/verification/__tests__/code.integration.test.ts`
 
 ### Implementation
 
-- [ ] T019 [US2] Implémenter `peutTirer` et l'appliquer dans la route de tirage (429 `reessaiAt`) dans `src/lib/verification/code.ts` et `src/app/api/moderation/verify/code/route.ts`
-- [ ] T020 [US2] Étendre `statutVerification` (motif `{ cle, texte, conseil }`, `reessaiAt`, `tentative`) dans `src/lib/verification/statut.ts`
-- [ ] T021 [US2] Ajouter le `PushKind` `verification` et l'envoyer dans `after()` au refus et à la validation, dans `src/lib/push/server.ts` et `src/app/api/admin/verifications/[id]/route.ts`
-- [ ] T022 [US2] Repère de présence sur la roue dentée quand un refus n'a pas été vu, dans `src/hooks/useVerificationStatut.ts` et `src/components/SiteNav.tsx`
-- [ ] T023 [US2] Écran de refus (motif, conseil, nouveau code, « Refaire mon selfie », date de reprise) dans `src/app/(main)/verify/page.tsx`
-- [ ] T024 [US2] Carte admin : « tentative n° N » et motif du refus précédent, dans `src/components/AdminVerificationCard.tsx`
+- [x] T019 [US2] Implémenter `peutTirer` et l'appliquer dans la route de tirage (429 `reessaiAt`) dans `src/lib/verification/code.ts` et `src/app/api/moderation/verify/code/route.ts`
+- [x] T020 [US2] Étendre `statutVerification` (motif `{ cle, texte, conseil }`, `reessaiAt`, `tentative`) dans `src/lib/verification/statut.ts`
+- [x] T021 [US2] Ajouter le `PushKind` `verification` et l'envoyer dans `after()` au refus et à la validation, dans `src/lib/push/server.ts` et `src/app/api/admin/verifications/[id]/route.ts`
+- [x] T022 [US2] Repère de présence sur la roue dentée quand un refus n'a pas été vu, dans `src/hooks/useVerificationStatut.ts` et `src/components/SiteNav.tsx`
+- [x] T023 [US2] Écran de refus (motif, conseil, nouveau code, « Refaire mon selfie », date de reprise) dans `src/app/(main)/verify/page.tsx`
+- [x] T024 [US2] Carte admin : « tentative n° N » et motif du refus précédent, dans `src/components/AdminVerificationCard.tsx`
 
 **Checkpoint** : aucun refus ne laisse le membre sans action possible.
 

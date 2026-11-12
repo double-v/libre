@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
 import { adminHandleVerificationSchema } from '@/lib/validators';
 import { enregistrerSignal } from '@/lib/fraude/signaux';
+import { buildPayload, sendPushToUser } from '@/lib/push/server';
 
 export async function PATCH(
   request: NextRequest,
@@ -29,9 +30,10 @@ export async function PATCH(
   }
 
   const isApproved = action === 'APPROVE_VERIFICATION';
-
-  await getDb().verificationRequest.update({
-    where: { id },
+  // Écriture conditionnée au statut : deux modérateurs qui décident en même
+  // temps n'écrivent qu'une décision, et le second l'apprend (409).
+  const { count } = await getDb().verificationRequest.updateMany({
+    where: { id, status: 'pending' },
     data: {
       status: isApproved ? 'approved' : 'rejected',
       rejectReason: isApproved ? null : motif,
@@ -39,6 +41,9 @@ export async function PATCH(
       resolvedAt: new Date(),
     },
   });
+  if (count !== 1) {
+    return NextResponse.json({ error: 'Demande déjà traitée' }, { status: 409 });
+  }
 
   if (isApproved) {
     await getDb().user.update({
@@ -65,6 +70,9 @@ export async function PATCH(
       reason: motif ?? null,
     },
   });
+
+  // FR-010 : le membre apprend qu'il y a une réponse, jamais laquelle.
+  after(() => sendPushToUser(verification.userId, buildPayload('verification', {})));
 
   return NextResponse.json({ success: true, approved: isApproved });
 }

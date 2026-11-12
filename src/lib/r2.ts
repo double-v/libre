@@ -29,6 +29,29 @@ const SIGNED_URL_TTL = 900; // 15 minutes
  * le proxy, la purge et l'effacement du compte en déduisent le propriétaire.
  */
 export async function uploadPhoto(file: File, userId: string, dossier?: 'verif'): Promise<string> {
+  return (await televerserPhoto(file, userId, { dossier })).key;
+}
+
+export interface PhotoTeleversee {
+  key: string;
+  /** L'original portait des métadonnées (EXIF, XMP…). Booléen seul, lu avant nettoyage. */
+  avaitMetadonnees: boolean;
+  /** L'image telle que stockée, sans métadonnées : pour une lecture qui suit (OCR). */
+  propre: Buffer;
+}
+
+/**
+ * Comme `uploadPhoto`, et rend aussi ce que la vérification par selfie
+ * exploite (spec 012, FR-S03, FR-S04). `pixelsMax` est contrôlé sur
+ * l'en-tête de l'image, avant tout décodage : une image de 5 Mo peut
+ * annoncer des centaines de millions de pixels et épuiser la mémoire d'une
+ * fonction au décodage.
+ */
+export async function televerserPhoto(
+  file: File,
+  userId: string,
+  { dossier, pixelsMax }: { dossier?: 'verif'; pixelsMax?: number } = {},
+): Promise<PhotoTeleversee> {
   if (!ALLOWED_TYPES.includes(file.type)) {
     throw new Error('Format non supporté. Utilisez JPG, PNG ou WebP.');
   }
@@ -47,6 +70,19 @@ export async function uploadPhoto(file: File, userId: string, dossier?: 'verif')
     throw new Error('Le type déclaré et le contenu de l\'image ne correspondent pas.');
   }
 
+  if (pixelsMax !== undefined) {
+    let pixels: number;
+    try {
+      const { width = 0, height = 0 } = await (await import('sharp')).default(buffer, { failOn: 'none' }).metadata();
+      pixels = width * height;
+    } catch {
+      throw new Error('L\'image est illisible. Essaie avec une autre photo.');
+    }
+    if (!pixels || pixels > pixelsMax) {
+      throw new Error('L\'image est trop grande. Prends la photo avec l\'appareil de ton téléphone, en mode normal.');
+    }
+  }
+
   const client = getR2Client();
   if (!client) {
     throw new Error('Stockage non configuré.');
@@ -56,8 +92,9 @@ export async function uploadPhoto(file: File, userId: string, dossier?: 'verif')
   // prise de vue, appareil, heure). Indécodable = refus : stocker l'original
   // tel quel serait précisément la fuite qu'on ferme.
   let propre: Buffer;
+  let avaitMetadonnees: boolean;
   try {
-    ({ buffer: propre } = await retirerMetadonnees(buffer, file.type));
+    ({ buffer: propre, avaitMetadonnees } = await retirerMetadonnees(buffer, file.type));
   } catch {
     throw new Error('L\'image est illisible. Essaie avec une autre photo.');
   }
@@ -73,7 +110,7 @@ export async function uploadPhoto(file: File, userId: string, dossier?: 'verif')
     ContentType: file.type,
   }));
 
-  return key;
+  return { key, avaitMetadonnees, propre };
 }
 
 const MIME_PAR_EXTENSION: Record<string, string> = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' };
