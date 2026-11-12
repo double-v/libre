@@ -1,77 +1,109 @@
 'use client';
 
-import { useEffect, useId, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import Button from '@/components/ui/Button';
 import Tag from '@/components/ui/Tag';
 import * as api from '@/lib/verification/client';
-import type { StatutVerification, Tirage } from '@/lib/verification/client';
+import type { Code, StatutVerification } from '@/lib/verification/client';
 
 /**
- * Parcours du badge vérifié (#436) — reproduit le prototype validé le
- * 2026-09-24 : présentation, geste, aperçu, puis l'état de la demande.
+ * Parcours du badge vérifié (#436), au code écrit à la main (spec 012,
+ * US1/US2) — reproduit `specs/012-bureau-refonte/proto-bureau.html`
+ * (Outils › Proto selfie).
  *
- * Le geste vient du serveur et voyage dans un jeton signé : l'écran n'en
- * garde que l'affichage. Rien ne part avant « Envoyer pour vérification ».
+ * Le code vient du serveur ; l'écran ne fait que l'afficher. Rien ne part
+ * avant « Envoyer pour vérification ». Aucun état sans suite : un refus
+ * montre le motif, un conseil et un nouveau code ; un code expiré est
+ * remplacé ; après trois refus, la date de reprise est écrite.
  */
-export type VerifyApi = Pick<typeof api, 'lireStatut' | 'tirerGeste' | 'envoyerSelfie'>;
+export type VerifyApi = Pick<typeof api, 'lireStatut' | 'tirerCode' | 'envoyerSelfie' | 'marquerVu'>;
+
+type Refus = Extract<StatutVerification, { statut: 'refusee' }>;
 
 type Etape =
   | { nom: 'chargement' }
   | { nom: 'intro' }
-  | { nom: 'geste'; tirage: Tirage }
-  | { nom: 'apercu'; tirage: Tirage; fichier: File; url: string }
+  | { nom: 'code'; code: Code }
+  | { nom: 'apercu'; code: Code; fichier: File; url: string }
   | { nom: 'examen' }
-  | { nom: 'refus'; motif: string | null }
+  | { nom: 'refus'; refus: Refus; code: Code | null; reessaiAt: string | null }
   | { nom: 'validee' };
 
-function depuisStatut(s: StatutVerification): Etape {
-  switch (s.statut) {
-    case 'en_cours': return { nom: 'examen' };
-    case 'validee': return { nom: 'validee' };
-    case 'refusee': return { nom: 'refus', motif: s.motif };
-    default: return { nom: 'intro' };
-  }
+function dateLongue(iso: string): string {
+  return new Date(iso).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 }
 
 export default function VerifyFlow({ client = api, onRetour }: { client?: VerifyApi; onRetour: () => void }) {
   const [etape, setEtape] = useState<Etape>({ nom: 'chargement' });
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState('');
-
-  useEffect(() => {
-    let actif = true;
-    void client.lireStatut().then((r) => {
-      if (!actif) return;
-      if (r.ok) setEtape(depuisStatut(r.valeur));
-      else { setErreur(r.erreur); setEtape({ nom: 'intro' }); }
-    });
-    return () => { actif = false; };
-  }, [client]);
-
-  async function tirer(precedent?: string) {
-    setErreur('');
-    setOccupe(true);
-    const r = await client.tirerGeste(precedent);
-    setOccupe(false);
-    if (r.ok) setEtape({ nom: 'geste', tirage: r.valeur });
-    else setErreur(r.erreur);
-  }
-
-  async function envoyer(tirage: Tirage, fichier: File) {
-    setErreur('');
-    setOccupe(true);
-    const r = await client.envoyerSelfie(fichier, tirage.jeton);
-    setOccupe(false);
-    if (r.ok) quitterApercu({ nom: 'examen' });
-    else setErreur(r.erreur);
-  }
+  const apercu = useRef<string | null>(null);
 
   // L'URL `blob:` de l'aperçu naît au choix du fichier et meurt en quittant
   // l'aperçu : la créer dans un effet la ferait révoquer par le double
   // montage du mode strict, et l'image disparaîtrait.
-  function quitterApercu(suivante: Etape) {
-    if (etape.nom === 'apercu') URL.revokeObjectURL(etape.url);
+  const aller = useCallback((suivante: Etape) => {
+    if (apercu.current) URL.revokeObjectURL(apercu.current);
+    apercu.current = suivante.nom === 'apercu' ? suivante.url : null;
     setEtape(suivante);
+  }, []);
+
+  /** Un refus s'affiche avec son nouveau code déjà tiré, sauf pendant l'attente de 24 h. */
+  const montrerRefus = useCallback(async (refus: Refus) => {
+    void client.marquerVu();
+    if (refus.reessaiAt) {
+      aller({ nom: 'refus', refus, code: null, reessaiAt: refus.reessaiAt });
+      return;
+    }
+    const r = await client.tirerCode();
+    if (r.ok) aller({ nom: 'refus', refus, code: r.valeur, reessaiAt: null });
+    else {
+      aller({ nom: 'refus', refus, code: null, reessaiAt: r.reessaiAt ?? null });
+      if (!r.reessaiAt) setErreur(r.erreur);
+    }
+  }, [aller, client]);
+
+  useEffect(() => {
+    let actif = true;
+    void client.lireStatut().then(async (r) => {
+      if (!actif) return;
+      if (!r.ok) { setErreur(r.erreur); aller({ nom: 'intro' }); return; }
+      const s = r.valeur;
+      if (s.statut === 'refusee') await montrerRefus(s);
+      else if (s.statut === 'en_cours') aller({ nom: 'examen' });
+      else if (s.statut === 'validee') { void client.marquerVu(); aller({ nom: 'validee' }); }
+      else aller({ nom: 'intro' });
+    });
+    return () => { actif = false; };
+  }, [aller, client, montrerRefus]);
+
+  async function tirer() {
+    setErreur('');
+    setOccupe(true);
+    const r = await client.tirerCode();
+    setOccupe(false);
+    if (r.ok) aller({ nom: 'code', code: r.valeur });
+    else setErreur(r.reessaiAt ? `${r.erreur} ${dateLongue(r.reessaiAt)}.` : r.erreur);
+  }
+
+  async function envoyer(code: Code, fichier: File) {
+    setErreur('');
+    setOccupe(true);
+    const r = await client.envoyerSelfie(fichier, code.code);
+    if (r.ok) { setOccupe(false); aller({ nom: 'examen' }); return; }
+    if (r.nouveauCode) {
+      // Code expiré ou remplacé : on en tire un autre, la photo est à refaire
+      // puisqu'elle montre l'ancien.
+      const n = await client.tirerCode();
+      setOccupe(false);
+      if (n.ok) {
+        aller({ nom: 'code', code: n.valeur });
+        setErreur('Ton code avait expiré. Voici un nouveau code : écris-le et reprends la photo.');
+      } else setErreur(n.erreur);
+      return;
+    }
+    setOccupe(false);
+    setErreur(r.erreur);
   }
 
   const alerte = erreur ? <p role="alert" className="mt-4 text-sm text-error">{erreur}</p> : null;
@@ -84,45 +116,28 @@ export default function VerifyFlow({ client = api, onRetour }: { client?: Verify
       return (
         <Ecran eyebrow="Badge vérifié" titre="Montre que c'est bien toi">
           <p className="mb-5 text-[15px] leading-relaxed text-muted">
-            Le badge dit aux autres que tes photos sont les tiennes. Il suffit d&apos;un selfie, pris avec un geste qu&apos;on te demande.
+            Le badge dit aux autres que tes photos sont les tiennes. Il suffit d&apos;un selfie avec un code que tu écris à la main.
           </p>
           <ol className="grid gap-3.5">
-            <Etape n={1} titre="On te donne un geste">Tiré au hasard, pour que la photo soit prise maintenant.</Etape>
-            <Etape n={2} titre="Tu prends un selfie">Visage bien visible, avec le geste.</Etape>
+            <Etape n={1} titre="On te donne un code">Quatre chiffres, valables 30 minutes.</Etape>
+            <Etape n={2} titre="Tu l'écris et tu prends un selfie">Sur une feuille, tenue près de ton visage ou posée à côté de toi.</Etape>
             <Etape n={3} titre="Une personne de l'équipe compare">Ton selfie et les photos de ton profil. Tu vois le résultat ici.</Etape>
           </ol>
           <Confidentialite />
           {alerte}
           <Actions>
-            <Button type="button" onClick={() => void tirer()} loading={occupe}>Voir mon geste</Button>
+            <Button type="button" onClick={() => void tirer()} loading={occupe}>Recevoir mon code</Button>
             <Button type="button" variant="ghost" onClick={onRetour}>Plus tard</Button>
           </Actions>
         </Ecran>
       );
 
-    case 'geste':
+    case 'code':
       return (
-        <Ecran eyebrow="Étape 2 sur 3" titre="Ton geste">
-          <CarteGeste tirage={etape.tirage} />
-          {etape.tirage.peutRetirer && (
-            <p className="mt-2.5 text-sm text-muted">
-              Ce geste ne te convient pas ?{' '}
-              <button
-                type="button"
-                disabled={occupe}
-                onClick={() => void tirer(etape.tirage.jeton)}
-                className="font-medium text-coral-dark underline underline-offset-2 dark:text-coral-light"
-              >
-                En tirer un autre
-              </button>{' '}
-              (une fois)
-            </p>
-          )}
-          <PriseSelfie onFichier={(fichier) => { setErreur(''); setEtape({ nom: 'apercu', tirage: etape.tirage, fichier, url: URL.createObjectURL(fichier) }); }} />
-          <ul className="mt-3.5 grid gap-1.5 text-sm text-muted">
-            <li>Lumière de face, sans lunettes de soleil.</li>
-            <li>Ton visage en entier dans le cadre.</li>
-          </ul>
+        <Ecran eyebrow="Étape 2 sur 3" titre="Montre-nous que c'est bien toi">
+          <GrandCode code={etape.code.code} legende="Ton code, valable 30 minutes" />
+          <Consignes />
+          <PriseSelfie onFichier={(fichier) => { setErreur(''); aller({ nom: 'apercu', code: etape.code, fichier, url: URL.createObjectURL(fichier) }); }} />
           {alerte}
         </Ecran>
       );
@@ -130,14 +145,14 @@ export default function VerifyFlow({ client = api, onRetour }: { client?: Verify
     case 'apercu':
       return (
         <Ecran eyebrow="Étape 3 sur 3" titre="On l'envoie ?">
-          <Apercu url={etape.url} geste={etape.tirage.geste.texte} />
-          <p className="mt-3.5 text-sm text-muted">Vérifie que ton visage et le geste se voient bien.</p>
+          <Apercu url={etape.url} code={etape.code.code} />
+          <p className="mt-3.5 text-sm text-muted">Vérifie que ton visage et le code se lisent bien.</p>
           {alerte}
           <Actions>
-            <Button type="button" onClick={() => void envoyer(etape.tirage, etape.fichier)} loading={occupe}>
+            <Button type="button" onClick={() => void envoyer(etape.code, etape.fichier)} loading={occupe}>
               Envoyer pour vérification
             </Button>
-            <Button type="button" variant="secondary" disabled={occupe} onClick={() => quitterApercu({ nom: 'geste', tirage: etape.tirage })}>
+            <Button type="button" variant="secondary" disabled={occupe} onClick={() => aller({ nom: 'code', code: etape.code })}>
               Reprendre la photo
             </Button>
           </Actions>
@@ -159,26 +174,41 @@ export default function VerifyFlow({ client = api, onRetour }: { client?: Verify
         </Ecran>
       );
 
-    case 'refus':
+    case 'refus': {
+      const { refus, code, reessaiAt } = etape;
       return (
-        <Ecran eyebrow="Badge vérifié" titre="On n'a pas pu valider ce selfie">
+        <Ecran eyebrow="Badge vérifié" titre="Ton selfie n'a pas pu être validé">
           <div className="grid gap-2.5 rounded-2xl border border-hairline bg-surface p-4">
             <span><Tag variant="refused">Non validé</Tag></span>
-            {etape.motif && (
+            {refus.motif && (
               <div className="rounded-r-xl border-l-4 border-error bg-red-50 px-3 py-2.5 text-sm text-content dark:bg-red-900/30">
                 <span className="block text-xs font-semibold text-red-700 dark:text-red-300">Motif</span>
-                {etape.motif}
+                {refus.motif.texte}
               </div>
             )}
-            <p className="text-sm text-muted">Ça arrive souvent. Tu peux recommencer tout de suite, avec un nouveau geste.</p>
+            {refus.motif && <p className="text-sm text-content"><b className="font-semibold">Conseil :</b> {refus.motif.conseil}</p>}
           </div>
+          {reessaiAt ? (
+            <p className="mt-4 text-[15px] leading-relaxed text-content">
+              Après trois refus, la tentative suivante s&apos;ouvre 24 heures plus tard. Tu pourras refaire ton selfie à partir du {dateLongue(reessaiAt)}.
+            </p>
+          ) : code ? (
+            <div className="mt-4">
+              <GrandCode code={code.code} legende="Ton nouveau code, valable 30 minutes" />
+            </div>
+          ) : null}
           {alerte}
           <Actions>
-            <Button type="button" onClick={() => void tirer()} loading={occupe}>Recommencer</Button>
+            {code && <Button type="button" onClick={() => aller({ nom: 'code', code })}>Refaire mon selfie</Button>}
+            {!code && !reessaiAt && <Button type="button" onClick={() => void tirer()} loading={occupe}>Recevoir un nouveau code</Button>}
             <Button type="button" variant="ghost" onClick={onRetour}>Plus tard</Button>
           </Actions>
+          {!reessaiAt && (
+            <p className="mt-3 text-xs text-muted">Tu peux réessayer autant de fois qu&apos;il le faut. Après trois refus, la tentative suivante s&apos;ouvre 24 heures plus tard.</p>
+          )}
         </Ecran>
       );
+    }
 
     case 'validee':
       return (
@@ -190,6 +220,32 @@ export default function VerifyFlow({ client = api, onRetour }: { client?: Verify
         </Ecran>
       );
   }
+}
+
+/** « LIBRE 7358 » en grand : ce que le membre recopie sur sa feuille. */
+function GrandCode({ code, legende }: { code: string; legende: string }) {
+  return (
+    <div className="rounded-[20px] border border-hairline bg-surface px-4 py-5 text-center">
+      {/* `div` et non `p` : la marge globale des paragraphes écarterait la légende. */}
+      <div className="font-mono text-[34px] font-bold leading-none tracking-[0.14em] text-content" aria-label={`Libre ${code.split('').join(' ')}`}>
+        LIBRE {code}
+      </div>
+      <div className="mt-2 text-sm text-muted">{legende}</div>
+    </div>
+  );
+}
+
+function Consignes() {
+  return (
+    <>
+      <ol className="mt-4 grid list-decimal gap-2 pl-5 text-[15px] leading-relaxed text-content">
+        <li>Écris « Libre » et ce code à la main sur une feuille.</li>
+        <li>Prends un selfie en tenant la feuille près de ton visage. Si tu ne peux pas la tenir, pose-la à côté de toi, bien visible.</li>
+        <li>Vérifie que ton visage et le code se lisent bien, puis envoie la photo.</li>
+      </ol>
+      <p className="mt-3 text-sm text-muted">Quelqu&apos;un peut écrire le code pour toi. Ce selfie n&apos;apparaît jamais sur ton profil.</p>
+    </>
+  );
 }
 
 function Ecran({ eyebrow, titre, centre = false, children }: { eyebrow?: string; titre?: string; centre?: boolean; children: React.ReactNode }) {
@@ -232,42 +288,6 @@ function Confidentialite() {
   );
 }
 
-function CarteGeste({ tirage }: { tirage: Tirage }) {
-  return (
-    <div className="grid grid-cols-[72px_1fr] items-center gap-4 rounded-[20px] border border-hairline bg-surface p-[18px]">
-      <div className="grid h-[72px] w-[72px] place-items-center rounded-2xl bg-sunken text-coral-dark dark:text-coral-light">
-        <PictoGeste type={tirage.geste.type} />
-      </div>
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted">À faire sur la photo</p>
-        <p className="mt-0.5 text-[17px] font-semibold leading-snug text-content">{tirage.geste.texte}</p>
-      </div>
-    </div>
-  );
-}
-
-function PictoGeste({ type }: { type: 'main' | 'visage' }) {
-  return (
-    <svg viewBox="0 0 64 64" className="h-[52px] w-[52px]" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-      {type === 'main' ? (
-        <>
-          <circle cx="24" cy="28" r="13" />
-          <path d="M11 60c1-9 6-14 13-14s12 5 13 14" />
-          <path d="M44 42V24M49 42V19M54 42V21M59 42V26" />
-          <path d="M44 42c0 6 4 10 8 10s7-4 7-10" />
-          <path d="M44 38l-4-5" />
-        </>
-      ) : (
-        <>
-          <circle cx="32" cy="28" r="16" />
-          <path d="M16 62c1-10 7-16 16-16s15 6 16 16" />
-          <path d="M26 25h.01M38 25h.01M27 34c3 2.5 7 2.5 10 0" />
-        </>
-      )}
-    </svg>
-  );
-}
-
 function PriseSelfie({ onFichier }: { onFichier: (f: File) => void }) {
   const camera = useId();
   const fichier = useId();
@@ -284,7 +304,7 @@ function PriseSelfie({ onFichier }: { onFichier: (f: File) => void }) {
           <circle cx="12" cy="13" r="3.5" />
         </svg>
       </div>
-      <p className="text-sm text-muted">Prends la photo maintenant, face à l&apos;objectif.</p>
+      <p className="text-sm text-muted">Prends la photo maintenant, la feuille bien visible.</p>
       <input id={camera} type="file" accept="image/jpeg,image/png,image/webp" capture="user" className="sr-only" aria-label="Prendre le selfie" onChange={choisir} />
       <input id={fichier} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label="Choisir un fichier" onChange={choisir} />
       <Button type="button" onClick={() => document.getElementById(camera)?.click()}>Prendre le selfie</Button>
@@ -299,13 +319,13 @@ function PriseSelfie({ onFichier }: { onFichier: (f: File) => void }) {
   );
 }
 
-function Apercu({ url, geste }: { url: string; geste: string }) {
+function Apercu({ url, code }: { url: string; code: string }) {
   return (
     <div className="relative aspect-[4/5] max-w-full overflow-hidden rounded-card bg-sunken">
       {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local (blob:), rien à optimiser */}
       <img src={url} alt="Aperçu de ton selfie" className="h-full w-full object-cover" />
       <p className="absolute inset-x-3 bottom-3 rounded-xl bg-ink/60 px-3 py-2 text-xs font-medium leading-snug text-white backdrop-blur-sm">
-        <b className="font-semibold">Ton geste :</b> {geste}
+        <b className="font-semibold">Ton code :</b> LIBRE {code}
       </p>
     </div>
   );

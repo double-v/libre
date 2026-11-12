@@ -59,6 +59,7 @@ model User {
   reportsMade          Report[]              @relation("ReportsMade")
   reportsReceived      Report[]              @relation("ReportsReceived")
   verificationRequests VerificationRequest[] @relation("UserVerifications")
+  verificationCode     VerificationCode?
   verificationReviews  VerificationRequest[] @relation("ReviewerVerifications")
   blocksMade           Block[]               @relation("BlocksMade")
   blocksReceived       Block[]               @relation("BlocksReceived")
@@ -455,6 +456,16 @@ model VerificationRequest {
   status     String    @default("pending")
   /// Motif de refus lu par le membre, code fermé (src/lib/verification/motifs.ts).
   rejectReason String?
+  /// Code manuscrit attendu (spec 012, US1). Nul pour les demandes au geste (FR-008).
+  codeAttendu  String?   @map("code_attendu")
+  /// Lecture automatique du code : nul = en cours, '' = impossible. Jamais renvoyé au membre (FR-S05).
+  codeLu       String?   @map("code_lu")
+  /// Rang de la demande depuis la dernière validation (spec 012, US2).
+  tentative    Int       @default(1)
+  /// Le selfie reçu ne portait aucune donnée d'appareil (FR-S04). Booléen seul.
+  sansDonneesAppareil Boolean? @map("sans_donnees_appareil")
+  /// Le membre a vu la décision (repère de présence, FR-010).
+  vueAt        DateTime? @map("vue_at")
   reviewedBy String?   @db.Uuid
   createdAt  DateTime  @default(now())
   resolvedAt DateTime?
@@ -463,6 +474,19 @@ model VerificationRequest {
   reviewer User? @relation("ReviewerVerifications", fields: [reviewedBy], references: [id], onDelete: Cascade)
 
   @@map("verification_requests")
+}
+
+/// Code de vérification en cours (spec 012, R1) : une ligne par membre,
+/// écrasée à chaque tirage, effacée à la mise en file du selfie. Privée.
+model VerificationCode {
+  userId   String   @id @map("user_id") @db.Uuid
+  code     String
+  tireAt   DateTime @default(now()) @map("tire_at")
+  expireAt DateTime @map("expire_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("verification_codes")
 }
 
 model Block {

@@ -98,7 +98,13 @@ export default function ConfidentialitePage() {
       <h3>2.7 Données de modération</h3>
       <ul>
         <li>Signalements (raison, description)</li>
-        <li>Demandes de vérification (selfie, statut)</li>
+        <li>
+          Demandes de vérification : le selfie, le code de quatre chiffres qui vous a été donné et
+          son statut. Le selfie est enregistré sans ses métadonnées (position, appareil) ; nous
+          gardons seulement le fait qu&apos;il en portait ou non. Le code écrit sur le selfie est lu
+          automatiquement sur nos serveurs, sans aucun service extérieur. Cette lecture aide
+          l&apos;équipe à vérifier le code ; elle ne décide jamais à sa place.
+        </li>
         <li>Favoris (likes), blocages, matchs</li>
         <li>Indices de sécurité calculés sur votre compte (voir §4 et §11)</li>
         <li>Journal de modération (actions des administrateurs, et invitations automatiques à la vérification)</li>
