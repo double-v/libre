@@ -55,3 +55,12 @@ export async function creerCompte(p: string, c: CompteFactice): Promise<string> 
 export async function effacerPrefixe(p: string): Promise<void> {
   await getDb().user.deleteMany({ where: { email: { startsWith: `${p}-`.toLowerCase() } } });
 }
+
+/**
+ * Session simulée, partagée entre les morceaux du fichier `hub-membres.test.ts`
+ * (la fabrique de `vi.mock('next-auth')` la lit à chaque appel).
+ */
+export const session: { id: string | null } = { id: null };
+
+/** Clés que le simulacre de R2 a reçu l'ordre d'effacer. */
+export const r2Effaces: string[] = [];

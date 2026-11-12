@@ -1,14 +1,15 @@
 /**
- * Tests — layout admin, compteurs de files (#391, spec 003 US3, T037).
+ * Tests — layout admin, compteurs de files (#391 ; spec 012, T030).
  *
- * Le layout est un Server Component : il compte lui-même les trois files
- * (R7, pas de HTTP vers sa propre API) et rend un `CountChip` à côté de
- * Signalements, Vérifications et Retours. Une file vide n'affiche rien — pas
- * un « 0 », qui serait du bruit sur chaque entrée. La garde d'accès existante
- * (JWT + rôle en base) n'est pas re-testée ici : on la traverse en admin.
+ * Le layout est un Server Component : il compte lui-même (pas de HTTP vers sa
+ * propre API) et rend un `CountChip` à côté de Membres (tous les cas en
+ * attente, mêmes chiffres que les puces du hub) et de Retours. Une file vide
+ * n'affiche rien — pas un « 0 ». Le comptage SQL des cas est prouvé sur
+ * PostgreSQL (`tests/integration/hub/liste.cas.ts`) ; ici, on le remplace.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
+import type { Compteurs } from '@/lib/moderation/cas';
 
 vi.mock('next/headers', () => ({
   cookies: async () => ({ get: (name: string) => (name === 'next-auth.session-token' ? { value: 'jwt' } : undefined) }),
@@ -19,13 +20,15 @@ vi.mock('@/components/ui/ThemeMenu', () => ({ __esModule: true, default: () => n
 
 const fakeDb = {
   user: { findUnique: vi.fn() },
-  report: { count: vi.fn() },
-  verificationRequest: { count: vi.fn() },
   feedback: { count: vi.fn() },
 };
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => fakeDb }));
+const compterCas = vi.fn<() => Promise<Compteurs>>();
+vi.mock('@/lib/moderation/membres', () => ({ __esModule: true, compterCas: () => compterCas() }));
 
 const { default: AdminLayout } = await import('../layout');
+
+const cas = (o: Partial<Compteurs> = {}): Compteurs => ({ atraiter: 0, verif: 0, report: 0, photo: 0, reponse: 0, indice: 0, ...o });
 
 async function renderLayout() {
   const tree = await AdminLayout({ children: <p>contenu</p> });
@@ -33,8 +36,6 @@ async function renderLayout() {
 }
 
 function sidebar() {
-  // Deux navs (sidebar ≥ md, bandeau mobile) rendent les mêmes entrées : on
-  // vérifie la sidebar, la première dans l'arbre.
   return within(screen.getAllByRole('navigation')[0]);
 }
 
@@ -44,46 +45,41 @@ beforeEach(() => {
   fakeDb.user.findUnique.mockResolvedValue({ role: 'ADMIN' });
 });
 
-describe('AdminLayout — compteurs de files', () => {
-  it('affiche le nombre en attente à côté de chaque file non vide, sur son filtre de statut', async () => {
-    fakeDb.report.count.mockResolvedValue(2);
-    fakeDb.verificationRequest.count.mockResolvedValue(7);
+describe('layout admin — compteurs', () => {
+  it('Membres porte le nombre de cas à traiter, Retours le nombre de retours ouverts', async () => {
+    compterCas.mockResolvedValue(cas({ atraiter: 9, report: 2, verif: 7 }));
     fakeDb.feedback.count.mockResolvedValue(1);
     await renderLayout();
-
     const nav = sidebar();
-    // Ancré : « 7 » seul, pas « 17 » ni « 70 ».
-    expect(nav.getByRole('link', { name: /Signalements/ })).toHaveTextContent(/^Signalements2$/);
-    expect(nav.getByRole('link', { name: /Vérifications/ })).toHaveTextContent(/^Vérifications7$/);
+    expect(nav.getByRole('link', { name: /Membres/ })).toHaveTextContent(/^Membres9$/);
+    expect(nav.getByRole('link', { name: /Membres/ })).toHaveAttribute('href', '/admin/membres');
     expect(nav.getByRole('link', { name: /Retours/ })).toHaveTextContent(/^Retours1$/);
-    expect(fakeDb.report.count).toHaveBeenCalledWith({ where: { status: 'pending' } });
-    expect(fakeDb.verificationRequest.count).toHaveBeenCalledWith({ where: { status: 'pending' } });
     expect(fakeDb.feedback.count).toHaveBeenCalledWith({ where: { status: 'open' } });
   });
 
-  it("n'affiche rien — pas même un 0 — à côté d'une file vide", async () => {
-    fakeDb.report.count.mockResolvedValue(0);
-    fakeDb.verificationRequest.count.mockResolvedValue(3);
+  it('les anciennes files ne sont plus dans la navigation', async () => {
+    compterCas.mockResolvedValue(cas());
     fakeDb.feedback.count.mockResolvedValue(0);
     await renderLayout();
-
-    const nav = sidebar();
-    expect(nav.getByRole('link', { name: /Signalements/ })).toHaveTextContent(/^Signalements$/);
-    expect(nav.getByRole('link', { name: /Retours/ })).toHaveTextContent(/^Retours$/);
-    expect(nav.getByRole('link', { name: /Vérifications/ })).toHaveTextContent(/^Vérifications3$/);
-    // Les entrées sans file (Utilisateurs, Logs…) ne portent jamais de chip.
-    expect(nav.getByRole('link', { name: /Utilisateurs/ })).toHaveTextContent(/^Utilisateurs$/);
+    for (const nom of [/Utilisateurs/, /Signalements/, /Vérifications/, /Indices/]) {
+      expect(sidebar().queryByRole('link', { name: nom })).toBeNull();
+    }
   });
 
-  it('un échec de comptage ne bloque pas l’administration : entrées sans chip', async () => {
-    fakeDb.report.count.mockRejectedValue(new Error('db down'));
-    fakeDb.verificationRequest.count.mockResolvedValue(3);
+  it('une file vide n’affiche aucun chiffre', async () => {
+    compterCas.mockResolvedValue(cas());
     fakeDb.feedback.count.mockResolvedValue(0);
     await renderLayout();
-    // Le contenu est rendu deux fois (main mobile + main desktop).
+    expect(sidebar().getByRole('link', { name: /Membres/ })).toHaveTextContent(/^Membres$/);
+    expect(sidebar().getByRole('link', { name: /Retours/ })).toHaveTextContent(/^Retours$/);
+  });
+
+  it('un comptage des cas en panne ne ferme pas l’administration et laisse les retours justes', async () => {
+    compterCas.mockRejectedValue(new Error('db down'));
+    fakeDb.feedback.count.mockResolvedValue(4);
+    await renderLayout();
     expect(screen.getAllByText('contenu').length).toBeGreaterThan(0);
-    expect(sidebar().getByRole('link', { name: /Signalements/ })).toHaveTextContent(/^Signalements$/);
-    // Les autres files, elles, gardent leur compte : l'échec est isolé, pas global.
-    expect(sidebar().getByRole('link', { name: /Vérifications/ })).toHaveTextContent(/^Vérifications3$/);
+    expect(sidebar().getByRole('link', { name: /Membres/ })).toHaveTextContent(/^Membres$/);
+    expect(sidebar().getByRole('link', { name: /Retours/ })).toHaveTextContent(/^Retours4$/);
   });
 });
