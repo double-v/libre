@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
-import { getDb } from '@/lib/db';
+import { inviterVerification } from '@/lib/moderation/gestes';
 
 /**
- * Invitation à la vérification posée à la main depuis la fiche admin. Même
- * effet que l'invitation automatique de la spec 010 (`evaluerCompte`) : le
- * membre est invité au selfie, **sans** retrait — il reste visible et peut
- * écrire. Pour bloquer, la fiche passe par la décision « verification » de la
- * file (`/api/admin/profils-a-verifier/[userId]`), qui reste la seule à
- * poser `retraitAt`.
- *
- * Idempotente : une invitation déjà posée garde sa date d'origine.
+ * Invitation à la vérification posée à la main — effet et journal dans
+ * `inviterVerification` (spec 012, T003). Même effet que l'invitation
+ * automatique de la spec 010 : **sans** retrait. Pour bloquer, la fiche passe
+ * par la décision « verification » (`/api/admin/profils-a-verifier/[userId]`),
+ * seule à poser `retraitAt`.
  */
 export async function POST(
   request: NextRequest,
@@ -25,20 +22,10 @@ export async function POST(
   }
 
   try {
-    const db = getDb();
-    const u = await db.user.findUnique({ where: { id }, select: { isVerified: true, verifInviteeAt: true } });
-    if (!u) return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
-    if (u.isVerified) return NextResponse.json({ error: 'Ce profil est déjà vérifié' }, { status: 409 });
-    if (u.verifInviteeAt) return NextResponse.json({ invitation: { depuis: u.verifInviteeAt } });
-
-    const maintenant = new Date();
-    await db.$transaction([
-      db.user.update({ where: { id }, data: { verifInviteeAt: maintenant } }),
-      db.moderationLog.create({
-        data: { adminId: adminResult.userId, targetUserId: id, action: 'INVITE_VERIFICATION', reason: null },
-      }),
-    ]);
-    return NextResponse.json({ invitation: { depuis: maintenant } });
+    const issue = await inviterVerification(adminResult.userId, id);
+    if (issue === 'introuvable') return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
+    if (issue === 'deja_verifie') return NextResponse.json({ error: 'Ce profil est déjà vérifié' }, { status: 409 });
+    return NextResponse.json({ invitation: issue });
   } catch (error) {
     console.error('admin.invitation.failed', error instanceof Error ? error.message.slice(0, 80) : 'unknown');
     return NextResponse.json({ error: 'Une erreur est survenue, réessaie' }, { status: 500 });

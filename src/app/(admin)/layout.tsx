@@ -8,20 +8,20 @@ import Link from 'next/link';
 import ThemeMenu from '@/components/ui/ThemeMenu';
 import HeartMark from '@/components/ui/HeartMark';
 import CountChip from '@/components/ui/CountChip';
+import ToastHost from '@/components/ui/Toast';
 import { countAdminQueues, type AdminQueues } from '@/lib/admin-queues';
-import { compterGrappes } from '@/lib/fraude/indices-admin';
+import { compterCas } from '@/lib/moderation/membres';
 
 // `queue` relie l'entrée à sa file de travail (#391) : le layout compte et
 // pose un `CountChip` à côté — le chiffre est légitime ici, surface admin.
 const adminNavItems: Array<{ href: string; label: string; icon: string; queue?: keyof AdminQueues }> = [
   { href: '/admin', label: 'Tableau de bord', icon: 'dashboard' },
-  { href: '/admin/users', label: 'Utilisateurs', icon: 'users' },
-  { href: '/admin/reports', label: 'Signalements', icon: 'reports', queue: 'reports' },
+  // Hub Membres (spec 012, US3) : remplace Utilisateurs, Signalements,
+  // Indices et Vérifications, dont les adresses y redirigent.
+  { href: '/admin/membres', label: 'Membres', icon: 'users', queue: 'atraiter' },
   { href: '/admin/feedback', label: 'Retours', icon: 'feedback', queue: 'feedback' },
   { href: '/admin/journal', label: 'Journal', icon: 'journal' },
   { href: '/admin/circle/alerts', label: 'Alertes Cercle', icon: 'alert' },
-  { href: '/admin/indices', label: 'Indices', icon: 'shield', queue: 'profils' },
-  { href: '/admin/verifications', label: 'Vérifications', icon: 'verifications', queue: 'verifications' },
   { href: '/admin/appearance', label: 'Apparence', icon: 'palette' },
   { href: '/admin/features', label: 'Fonctionnalités', icon: 'toggle' },
   { href: '/admin/logs', label: 'Logs', icon: 'logs' },
@@ -113,7 +113,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   // Files de travail (R7) : comptées ici, en serveur, sans HTTP. Un échec de
   // comptage ne ferme pas l'administration (`countAdminQueues` le confine à sa file).
-  const queues = await countAdminQueues(getDb(), compterGrappes);
+  const queues = await countAdminQueues(getDb(), compterCas);
 
   return (
     <div className="flex min-h-screen">
@@ -179,6 +179,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </nav>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+        {/* Confirmations des gestes du hub Membres (spec 012). */}
+        <ToastHost />
       </div>
     </div>
   );

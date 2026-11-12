@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
-import { getDb } from '@/lib/db';
 import { adminHandleReportSchema } from '@/lib/validators';
-import { retenirEmpreintesBannies } from '@/lib/fraude/bannissement';
+import { traiterSignalement } from '@/lib/moderation/gestes';
+import { estMotifSanction } from '@/lib/moderation/reperes';
 
+/** Trancher un signalement — effet et journal dans `traiterSignalement` (spec 012, T003). */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -12,46 +13,19 @@ export async function PATCH(
   if (!isAdminSession(adminResult)) return adminResult;
   const { id } = await params;
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = adminHandleReportSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Validation échouée' }, { status: 400 });
   }
 
   const { action, reason } = parsed.data;
-  const report = await getDb().report.findUnique({ where: { id }, select: { reportedId: true } });
-  if (!report) {
-    return NextResponse.json({ error: 'Signalement non trouvé' }, { status: 404 });
+  // FR-022 : un bannissement porte un motif de la liste fermée.
+  if (action === 'BAN' && !estMotifSanction(reason)) {
+    return NextResponse.json({ error: 'Choisis un motif de bannissement dans la liste.' }, { status: 400 });
   }
-
-  const statusMap: Record<string, string> = {
-    DISMISS_REPORT: 'dismissed',
-    BAN: 'resolved',
-    WARNING: 'resolved',
-  };
-
-  await getDb().report.update({
-    where: { id },
-    data: { status: statusMap[action], reviewedBy: adminResult.userId, resolvedAt: new Date() },
-  });
-
-  if (action === 'BAN') {
-    await getDb().user.update({
-      where: { id: report.reportedId },
-      data: { isBanned: true },
-    });
-    // Ses photos ne pourront pas revenir sur un autre compte (spec 006).
-    await retenirEmpreintesBannies(report.reportedId);
-  }
-
-  await getDb().moderationLog.create({
-    data: {
-      adminId: adminResult.userId,
-      targetUserId: report.reportedId,
-      action,
-      reason: reason ?? null,
-    },
-  });
-
+  const issue = await traiterSignalement(adminResult.userId, id, action, reason ?? null);
+  if (issue === 'introuvable') return NextResponse.json({ error: 'Signalement non trouvé' }, { status: 404 });
+  if (issue === 'deja_traite') return NextResponse.json({ error: 'Ce signalement a déjà été traité. Recharge la fiche.' }, { status: 409 });
   return NextResponse.json({ success: true });
 }

@@ -73,13 +73,21 @@ describe('garde : chaque bannissement retient les empreintes (#445)', () => {
         if (statSync(p).isDirectory()) return f === '__tests__' ? [] : routes(p);
         return f === 'route.ts' ? [p] : [];
       });
-    // Spec 011 : les gestes partagés (`src/lib/moderation/`) bannissent pour la
-    // page Indices et la route de la file : ils sont gardés comme les routes.
+    // Spec 011/012 : les gestes partagés (`src/lib/moderation/gestes.ts`)
+    // portent désormais tous les bannissements des routes admin ; ils sont
+    // gardés comme les routes, écriture par écriture.
     const gestes = path.join(process.cwd(), 'src/lib/moderation/gestes.ts');
-    const bannissent = [...routes(racine), gestes].filter((f) => /data:\s*\{\s*isBanned:\s*(true|banned)/.test(readFileSync(f, 'utf8')));
-    expect(bannissent.length).toBeGreaterThanOrEqual(3);
+    const ecriture = /data:\s*\{\s*isBanned:\s*(true|banned|banni)\b/;
+    const ecritures = new RegExp(ecriture.source, 'g');
+    const bannissent = [...routes(racine), gestes].filter((f) => ecriture.test(readFileSync(f, 'utf8')));
+    expect(bannissent).toContain(gestes);
     for (const f of bannissent) {
-      expect(readFileSync(f, 'utf8'), path.relative(racine, f)).toContain('retenirEmpreintesBannies(');
+      const texte = readFileSync(f, 'utf8');
+      const nbBans = texte.match(ecritures)?.length ?? 0;
+      const nbRetenues = texte.match(/retenirEmpreintesBannies\(/g)?.length ?? 0;
+      expect(nbRetenues, path.relative(racine, f)).toBeGreaterThanOrEqual(nbBans);
     }
+    // Signalement, dossier d'indices, fiche : trois chemins qui bannissent.
+    expect(readFileSync(gestes, 'utf8').match(ecritures)?.length).toBeGreaterThanOrEqual(3);
   });
 });

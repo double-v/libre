@@ -29,9 +29,9 @@ const findUnique = vi.fn();
 vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => ({ user: { findUnique } }) }));
 vi.mock('@/lib/admin-queues', () => ({
   __esModule: true,
-  countAdminQueues: async () => ({ reports: 0, feedback: 0, profils: 0, verifications: 0 }),
+  countAdminQueues: async () => ({ atraiter: 0, reports: 0, feedback: 0, profils: 0, verifications: 0 }),
 }));
-vi.mock('@/lib/fraude/indices-admin', () => ({ __esModule: true, compterGrappes: async () => 0 }));
+vi.mock('@/lib/moderation/membres', () => ({ __esModule: true, compterCas: async () => ({ atraiter: 0, verif: 0, report: 0, photo: 0, reponse: 0, indice: 0 }) }));
 vi.mock('@/components/ui/ThemeMenu', () => ({ __esModule: true, default: () => null }));
 
 const { default: AdminLayout } = await import('../app/(admin)/layout');

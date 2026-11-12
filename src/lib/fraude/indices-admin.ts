@@ -129,8 +129,3 @@ export async function chargerGrappes(now = new Date()): Promise<Grappe<CompteGra
 
   return construireGrappes(comptes, liens);
 }
-
-/** Compteur de la navigation admin : le nombre de grappes ouvertes. */
-export async function compterGrappes(): Promise<number> {
-  return (await chargerGrappes()).length;
-}

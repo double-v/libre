@@ -17,16 +17,16 @@
 ## Phase 1: Setup
 
 - [ ] T001 Lire `AGENTS.md` (Next 16 : cache, `after()`, `redirects`) et noter les écarts avec research.md R7/R10 dans `specs/012-bureau-refonte/research.md`
-- [ ] T002 [P] Créer le seed de démonstration factice (2 ADMIN « Toi » et « Sam », ~15 membres couvrant chaque type de cas du prototype) dans `prisma/seed-bureau-012.ts`, jamais exécuté contre Neon
+- [x] T002 [P] Créer le seed de démonstration factice (2 ADMIN « Toi » et « Sam », ~15 membres couvrant chaque type de cas du prototype) dans `prisma/seed-bureau-012.ts`, jamais exécuté contre Neon — livré par le lot 2 (#540, #541) en SQL : `prisma/seed-bureau-012.sql`, qui refuse toute base dont le nom ne dit pas qu’elle est jetable.
 
 ---
 
 ## Phase 2: Foundational
 
-- [ ] T003 Extraire la logique des gestes unitaires existants (signalement, vérification, réponse, photo, indice, ban, suppression) en fonctions sans HTTP qui écrivent l'effet et la ligne de journal, dans `src/lib/moderation/gestes.ts`, et faire appeler ces fonctions par les routes `src/app/api/admin/{reports/[id],verifications/[id],answers/[id],users/[id],users/[id]/photos,indices/*}/route.ts`. Tests de non-régression : effet et ligne de journal identiques avant et après, dans `src/lib/moderation/__tests__/gestes.test.ts`
+- [x] T003 Extraire la logique des gestes unitaires existants (signalement, vérification, réponse, photo, indice, ban, suppression) en fonctions sans HTTP qui écrivent l'effet et la ligne de journal, dans `src/lib/moderation/gestes.ts`, et faire appeler ces fonctions par les routes `src/app/api/admin/{reports/[id],verifications/[id],answers/[id],users/[id],users/[id]/photos,indices/*}/route.ts`. Tests de non-régression : effet et ligne de journal identiques avant et après, dans `src/lib/moderation/__tests__/gestes.test.ts` — livré par le lot 2 : tests sur PostgreSQL dans `tests/integration/hub/gestes.cas.ts` (route et fonction, mêmes attendus).
 - [x] T003a Harnais d'intégration : projet Vitest `integration` sur un PostgreSQL réel (migrations appliquées, base vidée entre fichiers), en local et en CI via un conteneur de service `postgres` isolé, jamais Neon, dans `vitest.config.ts`, `src/test/integration-setup.ts` et `.github/workflows/ci.yml` — livré par #548 (PR #554) : `tests/integration/`, `npm run test:db`, service `postgres` en CI.
 - [x] T003b Garde admin fermée par défaut pour les nouvelles routes (rôle relu en base, 404 si la base ne répond pas, FR-S07), avec ses tests d'intégration (rôle rétrogradé avec JWT encore ADMIN → 404 ; base coupée → 404), dans `src/lib/admin.ts` (`requireAdminStrict`) et `src/lib/__tests__/admin-strict.test.ts` — livré par #547 (PR #554) : `estAdminEnBase`, garde fermée, sans nouveau nom de fonction.
-- [ ] T003c Contrôle d'origine et de type de contenu des écritures admin (FR-S08), avec ses tests (Origin absente, étrangère, `text/plain` → 403), dans `src/lib/securite/origine.ts` et `src/lib/securite/__tests__/origine.test.ts`
+- [x] T003c Contrôle d'origine et de type de contenu des écritures admin (FR-S08), avec ses tests (Origin absente, étrangère, `text/plain` → 403), dans `src/lib/securite/origine.ts` et `src/lib/securite/__tests__/origine.test.ts` — livré par le lot 2 : `refusOrigine`, appliqué à `DELETE /api/admin/membres/[id]` ; `POST /api/admin/gestes` l’appliquera au lot 3.
 
 **Checkpoint** : les routes actuelles se comportent à l'identique ; les stories peuvent commencer.
 
@@ -95,19 +95,19 @@
 
 ### Tests
 
-- [ ] T025 [P] [US3] Tests de `src/lib/moderation/cas.ts` (gravité, tri urgence puis ancienneté, filtres) dans `src/lib/moderation/__tests__/cas.test.ts`
-- [ ] T026 [P] [US3] Tests de route `GET /api/admin/membres` (filtres, tri, recherche, curseur, compteurs, refus non-admin) dans `src/app/api/admin/membres/__tests__/route.test.ts`
-- [ ] T026a [P] [US3] Tests hostiles de `GET /api/admin/membres` sur PostgreSQL : non-admin → 404, recherche `%`, `_`, `'` et `\\` traitées littéralement, curseur forgé ou tronqué → 400, aucune colonne privée hors liste blanche dans la réponse (FR-S07, FR-S14), dans `src/app/api/admin/membres/__tests__/hostile.integration.test.ts`
+- [x] T025 [P] [US3] Tests de `src/lib/moderation/cas.ts` (gravité, tri urgence puis ancienneté, filtres) dans `src/lib/moderation/__tests__/cas.test.ts`
+- [x] T026 [P] [US3] Tests de route `GET /api/admin/membres` (filtres, tri, recherche, curseur, compteurs, refus non-admin) dans `src/app/api/admin/membres/__tests__/route.test.ts` — sur PostgreSQL : `tests/integration/hub/liste.cas.ts`.
+- [x] T026a [P] [US3] Tests hostiles de `GET /api/admin/membres` sur PostgreSQL : non-admin → 404, recherche `%`, `_`, `'` et `\\` traitées littéralement, curseur forgé ou tronqué → 400, aucune colonne privée hors liste blanche dans la réponse (FR-S07, FR-S14), dans `src/app/api/admin/membres/__tests__/hostile.integration.test.ts` — sur PostgreSQL : `tests/integration/hub/liste.cas.ts` (cas hostiles).
 
 ### Implementation
 
-- [ ] T027 [US3] Proposer dans `DESIGN.md` : `SeverityStripe`, `CaseTag`, `MembreRow`, la mise en page liste | fiche et ses seuils (360 / 900 px), d'après `proto-bureau.html`
-- [ ] T028 [US3] Implémenter les cas dérivés et le tri (pur) dans `src/lib/moderation/cas.ts`
-- [ ] T029 [US3] Implémenter `GET /api/admin/membres` (SQL, curseur, compteurs `UNION ALL`) dans `src/app/api/admin/membres/route.ts`
-- [ ] T030 [US3] Remplacer `countAdminQueues` par les compteurs de T029 dans `src/lib/admin-queues.ts`, `src/app/(admin)/layout.tsx` et `src/app/api/admin/queues/route.ts`
-- [ ] T031 [P] [US3] Composants `SeverityStripe` et `CaseTag` dans `src/components/ui/`, et `MembreRow` dans `src/components/admin/MembreRow.tsx`
-- [ ] T032 [US3] Page hub (recherche, filtres en puces avec compteurs, tri, chargement par pages, état dans l'adresse, volet fiche vide pour l'instant) dans `src/app/(admin)/admin/membres/page.tsx`
-- [ ] T033 [US3] E2E : filtre → fiche → retour → rechargement à 360 et 1280 px, sans défilement horizontal, dans `e2e/admin-membres.spec.ts`
+- [x] T027 [US3] Proposer dans `DESIGN.md` : `SeverityStripe`, `CaseTag`, `MembreRow`, la mise en page liste | fiche et ses seuils (360 / 900 px), d'après `proto-bureau.html`
+- [x] T028 [US3] Implémenter les cas dérivés et le tri (pur) dans `src/lib/moderation/cas.ts`
+- [x] T029 [US3] Implémenter `GET /api/admin/membres` (SQL, curseur, compteurs `UNION ALL`) dans `src/app/api/admin/membres/route.ts`
+- [x] T030 [US3] Remplacer `countAdminQueues` par les compteurs de T029 dans `src/lib/admin-queues.ts`, `src/app/(admin)/layout.tsx` et `src/app/api/admin/queues/route.ts`
+- [x] T031 [P] [US3] Composants `SeverityStripe` et `CaseTag` dans `src/components/ui/`, et `MembreRow` dans `src/components/admin/MembreRow.tsx`
+- [x] T032 [US3] Page hub (recherche, filtres en puces avec compteurs, tri, chargement par pages, état dans l'adresse, volet fiche vide pour l'instant) dans `src/app/(admin)/admin/membres/page.tsx`
+- [x] T033 [US3] E2E : filtre → fiche → retour → rechargement à 360 et 1280 px, sans défilement horizontal, dans `e2e/admin-membres.spec.ts` — `tests/e2e/admin-membres.spec.ts` (projet Playwright `admin`).
 
 **Checkpoint** : le hub liste et filtre ; les gestes passent encore par les anciennes pages.
 
@@ -121,21 +121,21 @@
 
 ### Tests
 
-- [ ] T034 [P] [US4] Tests de `src/lib/moderation/reperes.ts` (un repère et un « le membre verra » par geste, aucun manquant) dans `src/lib/moderation/__tests__/reperes.test.ts`
-- [ ] T035 [P] [US4] Tests de route `GET /api/admin/membres/[id]` (sections, historique avec auteur ou « automatique », aucun champ privé d'autrui en trop) dans `src/app/api/admin/membres/[id]/__tests__/route.test.ts`
-- [ ] T035a [P] [US4] Test de garde XSS : aucun `dangerouslySetInnerHTML` dans `src/components/admin/` ni `src/app/(admin)/` (lint ou test statique), et un pseudo `<img src=x onerror=…>` rendu comme texte dans `CaseCard` et `FicheMembre` (FR-S15), dans `src/components/admin/__tests__/xss.test.tsx`
-- [ ] T035b [P] [US4] Tests de `DELETE /api/admin/membres/[id]` : pseudo ressaisi faux → 400 sans effet, Origin étrangère → 403, journal sur le compte gardé selon la règle existante (FR-S11), dans `src/app/api/admin/membres/[id]/__tests__/delete.integration.test.ts`
+- [x] T034 [P] [US4] Tests de `src/lib/moderation/reperes.ts` (un repère et un « le membre verra » par geste, aucun manquant) dans `src/lib/moderation/__tests__/reperes.test.ts`
+- [x] T035 [P] [US4] Tests de route `GET /api/admin/membres/[id]` (sections, historique avec auteur ou « automatique », aucun champ privé d'autrui en trop) dans `src/app/api/admin/membres/[id]/__tests__/route.test.ts` — sur PostgreSQL : `tests/integration/hub/fiche.cas.ts`.
+- [x] T035a [P] [US4] Test de garde XSS : aucun `dangerouslySetInnerHTML` dans `src/components/admin/` ni `src/app/(admin)/` (lint ou test statique), et un pseudo `<img src=x onerror=…>` rendu comme texte dans `CaseCard` et `FicheMembre` (FR-S15), dans `src/components/admin/__tests__/xss.test.tsx`
+- [x] T035b [P] [US4] Tests de `DELETE /api/admin/membres/[id]` : pseudo ressaisi faux → 400 sans effet, Origin étrangère → 403, journal sur le compte gardé selon la règle existante (FR-S11), dans `src/app/api/admin/membres/[id]/__tests__/delete.integration.test.ts` — sur PostgreSQL : `tests/integration/hub/fiche.cas.ts`.
 
 ### Implementation
 
-- [ ] T036 [US4] Proposer dans `DESIGN.md` : `CaseCard`, `FicheMembre`, `BottomSheet` (confirmation à motif), d'après `proto-bureau.html`
-- [ ] T037 [US4] Repères et textes « Le membre verra », source unique, dans `src/lib/moderation/reperes.ts`
-- [ ] T038 [US4] Implémenter `GET /api/admin/membres/[id]` dans `src/app/api/admin/membres/[id]/route.ts`
-- [ ] T039 [P] [US4] `BottomSheet` dans `src/components/ui/BottomSheet.tsx` (piège du focus, Échap, cible 44 px, mouvement réduit)
-- [ ] T040 [US4] `CaseCard` par type (selfie réutilisant T014/T024, signalement, photo, réponse, indice avec compte lié) dans `src/components/admin/CaseCard.tsx`
-- [ ] T041 [US4] `FicheMembre` (identité, cas, fiabilité, photos, historique, autres gestes, zone sensible) branchée sur les routes unitaires existantes, dans `src/components/admin/FicheMembre.tsx` et `src/app/(admin)/admin/membres/page.tsx`
-- [ ] T042 [US4] Redirections `/admin/reports`, `/admin/verifications`, `/admin/indices`, `/admin/profils`, `/admin/users(/[id])` vers le hub (research.md R10) dans `next.config.ts`, et URL des pushs admin dans `src/lib/push/server.ts`
-- [ ] T043 [US4] E2E : bannir depuis la fiche (motif exigé, journal identique), ouvrir un compte lié, dans `e2e/admin-fiche.spec.ts`
+- [x] T036 [US4] Proposer dans `DESIGN.md` : `CaseCard`, `FicheMembre`, `BottomSheet` (confirmation à motif), d'après `proto-bureau.html`
+- [x] T037 [US4] Repères et textes « Le membre verra », source unique, dans `src/lib/moderation/reperes.ts`
+- [x] T038 [US4] Implémenter `GET /api/admin/membres/[id]` dans `src/app/api/admin/membres/[id]/route.ts`
+- [x] T039 [P] [US4] `BottomSheet` dans `src/components/ui/BottomSheet.tsx` (piège du focus, Échap, cible 44 px, mouvement réduit)
+- [x] T040 [US4] `CaseCard` par type (selfie réutilisant T014/T024, signalement, photo, réponse, indice avec compte lié) dans `src/components/admin/CaseCard.tsx`
+- [x] T041 [US4] `FicheMembre` (identité, cas, fiabilité, photos, historique, autres gestes, zone sensible) branchée sur les routes unitaires existantes, dans `src/components/admin/FicheMembre.tsx` et `src/app/(admin)/admin/membres/page.tsx`
+- [x] T042 [US4] Redirections `/admin/reports`, `/admin/verifications`, `/admin/indices`, `/admin/profils`, `/admin/users(/[id])` vers le hub (research.md R10) dans `next.config.ts`, et URL des pushs admin dans `src/lib/push/server.ts`
+- [x] T043 [US4] E2E : bannir depuis la fiche (motif exigé, journal identique), ouvrir un compte lié, dans `e2e/admin-fiche.spec.ts` — `tests/e2e/admin-fiche.spec.ts` (projet Playwright `admin`).
 
 **Checkpoint** : les anciennes files ne servent plus ; tout part du hub.
 

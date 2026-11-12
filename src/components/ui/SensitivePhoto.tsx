@@ -95,7 +95,7 @@ export default function SensitivePhoto({
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- le proxy redirige
           vers une URL R2 signée à TTL court, que le cache de next/image mettrait
-          en défaut (même raison que AdminUserPhotos). */}
+          en défaut (même raison que les photos de la fiche membre). */}
       <img src={src} alt={showVeil ? `${alt} (floutée)` : alt} className={`h-full w-full ${fit === 'contain' ? 'object-contain' : 'object-cover'}`} />
 
       {showVeil && revealable && (

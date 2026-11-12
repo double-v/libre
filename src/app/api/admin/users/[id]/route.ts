@@ -3,8 +3,8 @@ import { photoSensitivityMap } from '@/lib/photo-veil';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
 import { adminBanSchema } from '@/lib/validators';
-import { retenirEmpreintesBannies } from '@/lib/fraude/bannissement';
-import { effacerCompte } from '@/lib/suppression-compte';
+import { changerBannissement, estUuid } from '@/lib/moderation/gestes';
+import { estMotifSanction } from '@/lib/moderation/reperes';
 import { niveauFiabilite, signauxRecents, TYPES_CONTEXTE } from '@/lib/fraude/fiabilite';
 
 export async function GET(
@@ -109,53 +109,32 @@ export async function PATCH(
   if (!isAdminSession(adminResult)) return adminResult;
   const { id } = await params;
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = adminBanSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Validation échouée', details: parsed.error.flatten().fieldErrors }, { status: 400 });
   }
 
   const { banned, reason } = parsed.data;
-
-  const user = await getDb().user.update({
-    where: { id },
-    data: { isBanned: banned },
-  });
-  // Ses photos ne pourront pas revenir sur un autre compte (spec 006).
-  if (banned) await retenirEmpreintesBannies(id);
-
-  await getDb().moderationLog.create({
-    data: {
-      adminId: adminResult.userId,
-      targetUserId: id,
-      action: banned ? 'BAN' : 'UNBAN',
-      reason: reason ?? null,
-    },
-  });
-
-  return NextResponse.json({ user: { id: user.id, isBanned: user.isBanned } });
+  if (banned) {
+    // FR-022 : motif de la liste fermée. Et on ne bannit ni soi-même ni un
+    // autre admin depuis ici : ce serait se fermer la porte, ou la fermer à
+    // un collègue, d'un clic.
+    if (!estMotifSanction(reason)) {
+      return NextResponse.json({ error: 'Choisis un motif de bannissement dans la liste.' }, { status: 400 });
+    }
+    if (id === adminResult.userId) return NextResponse.json({ error: 'On ne se bannit pas soi-même.' }, { status: 400 });
+    if (estUuid(id) && (await getDb().user.findUnique({ where: { id }, select: { role: true } }))?.role === 'ADMIN') {
+      return NextResponse.json({ error: 'Un compte admin ne se bannit pas ici.' }, { status: 400 });
+    }
+  }
+  // Effet et journal dans `changerBannissement` (spec 012, T003).
+  if ((await changerBannissement(adminResult.userId, id, banned, reason ?? null)) === 'introuvable') {
+    return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
+  }
+  return NextResponse.json({ user: { id, isBanned: banned } });
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const adminResult = await requireAdmin();
-  if (!isAdminSession(adminResult)) return adminResult;
-  const { id } = await params;
-
-  // Même chemin que la suppression par le membre : les photos sur R2 partent
-  // aussi (#437 — la suppression admin laissait des objets orphelins).
-  await effacerCompte(id);
-
-  await getDb().moderationLog.create({
-    data: {
-      adminId: adminResult.userId,
-      targetUserId: id,
-      action: 'DELETE_USER',
-      reason: 'Admin deletion',
-    },
-  });
-
-  return NextResponse.json({ success: true });
-}
+// La suppression d'un compte passe par `DELETE /api/admin/membres/[id]`
+// (spec 012, FR-S11) : ressaisie du pseudo, motif de la liste fermée,
+// contrôle d'origine. L'ancienne suppression sans confirmation est retirée.

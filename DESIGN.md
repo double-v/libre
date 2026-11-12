@@ -820,6 +820,9 @@ La rationalisation CSS passe par cette couche. **Aucun composant ne devrait êtr
 | `HeartMark` | — | glyphe seul (taille via className/props) | Les deux glyphes de marque en double (cœur lobby + cœur-soleil à rayons) |
 | `NotificationDot` | visible, masqué | absolute (sur icône), inline (liste) | Toute pastille de non-lu ad hoc (#389) |
 | `CountChip` | n > 0, n = 0 (rendu nul) | — | Tout compteur de file admin ad hoc (#391) |
+| `SeverityStripe` | bad, warn, info, aucune | — | Bandes de gravité du hub Membres (spec 012) |
+| `CaseTag` | — | bad, warn, info, ok, neutre | Étiquettes de cas, de statut et de fiabilité du back-office (spec 012) |
+| `BottomSheet` | ouverte, fermée, focus piégé | bas d'écran (< 900 px), centrée (≥ 900 px) | Confirmations à motif du back-office (spec 012) ; `window.prompt` |
 
 ### Règles
 
@@ -981,7 +984,7 @@ alerte levable → `variant="warning"` avec une case « Je maintiens cet extrait
 (`Input` case à cocher, cible ≥ 44 px). L'extrait incriminé s'affiche en
 `font-mono text-sm` dans l'alerte, la règle en `title`.
 
-### AdminUserPhotos (`src/components/admin/AdminUserPhotos.tsx`)
+### Photos publiées de la fiche membre (ex-`AdminUserPhotos`, repris par `FicheMembre`, spec 012)
 
 Galerie de modération des photos d'un profil (#323). La fiche admin n'affichait
 qu'un compteur (`photos.length`) : aucune vignette, aucun retrait possible — les
@@ -1258,6 +1261,65 @@ que la carte de parrainage : une cellule non-profil dans la grille.
 - **Copie** : phrases complètes, lisibles de 18 à 79 ans ; « choisis », pas
   « touche » ; boutons qui disent l'action entière (FR-011). Espace insécable
   avant « ? » dans la banque.
+
+### Hub Membres et fiche membre (spec 012, US3/US4) — proposé le 2026-11-12
+
+Surface **admin** seulement. Prototype validé le 2026-11-11 :
+`specs/012-bureau-refonte/proto-bureau.html` (onglet Membres). Les couleurs de
+gravité reprennent la palette de statut déjà utilisée par `Tag`
+(`pending`, `refused`, `verified`) : rouge = signalement, ambre = à juger,
+bleu = pour information, vert = validé, avec leur pendant sombre.
+
+- **Mise en page liste | fiche** (`/admin/membres`) : mobile d'abord. Sous
+  900 px, une colonne : la liste, puis la fiche **à la place** de la liste
+  avec « ← Membres » (cible 44 px) ; aucun défilement horizontal dès 360 px.
+  À partir de 900 px, deux volets : liste de 360 px à gauche (filet
+  `border-hairline`), fiche à droite, chacun défile seul. L'état (filtre,
+  recherche, tri, membre ouvert) vit dans l'adresse (FR-016).
+- **`SeverityStripe`** (`src/components/ui/`) : bande verticale de 4 px, coins
+  droits arrondis de 3 px, couleur de gravité (`bad`, `warn`, `info`) ou
+  transparente. Décorative (`aria-hidden`) : la gravité est toujours dite
+  aussi par un `CaseTag`.
+- **`CaseTag`** (`src/components/ui/`) : étiquette de 10 px, capitales
+  espacées (`tracking-[0.06em]`), rayon 3 px, fond doux et texte de la
+  gravité ; variantes `bad`, `warn`, `info`, `ok`, `neutre`. Sert aux types de
+  cas (« Signalement ×3 »), aux statuts (« Banni », « Masqué », « Non
+  confirmé ») et à la fiabilité (« Douteux », « À surveiller »).
+- **`MembreRow`** (`src/components/admin/`) : un `<button>` pleine largeur,
+  hauteur ≥ 64 px, grille `4px 40px 1fr auto` : bande de gravité du cas le
+  plus grave, avatar rond de 40 px (initiale sur `bg-sunken` sans photo),
+  pseudo (tronqué, ✓ vert si vérifié), « Inscrit il y a … · vu … », puis les
+  étiquettes ; à droite, l'âge du cas le plus grave. `aria-current` sur le
+  membre ouvert (fond `bg-sunken`).
+- **Puces de filtre** : `rounded-full`, hauteur 44 px (cible tactile ; 36 px
+  au prototype) dans une barre qui
+  défile en mobile et passe à la ligne en deux volets ; puce active
+  `border-coral bg-coral/10 text-coral-dark`. Les filtres de travail portent
+  un `CountChip` (FR-014) ; les autres jamais.
+- **`CaseCard`** (`src/components/admin/`) : carte `rounded-card`, filet
+  gauche de 4 px à la couleur de gravité ; en-tête `CaseTag` + titre 16 px +
+  âge en mono ; corps propre au type (signalement : contenu cité sur
+  `bg-sunken` ; selfie : la carte du lot 1 ; photo : vignette + texte lu ;
+  indice : détail + compte lié ouvrable) ; gestes ; puis **« Repère. »** en
+  12 px sous un filet pointillé, lu dans `src/lib/moderation/reperes.ts`.
+- **`FicheMembre`** (`src/components/admin/`) : dans l'ordre de FR-019 —
+  en-tête (avatar 56 px, pseudo 22 px, méta, badges), cas, puis deux colonnes
+  dès 640 px : fiabilité et photos publiées (« Voiler… », « Retirer… ») à
+  gauche, historique (« · par Sam » ou « · automatique ») et autres gestes à
+  droite, la zone sensible repliée dans un `<details>` rouge.
+- **`BottomSheet`** (`src/components/ui/`) : feuille de confirmation. Voile
+  `bg-ink/45` (`bg-black/60` en sombre), feuille `bg-surface` collée en bas,
+  coins hauts de 14 px, `max-h-[85vh]` défilante, marges de zone sûre ; au-delà
+  de 900 px, centrée, coins de 14 px. `role="dialog"` + `aria-modal`, titre
+  relié par `aria-labelledby`, piège du focus, Échap et clic sur le voile
+  ferment, le focus revient au déclencheur. Pas d'animation d'entrée (aucune
+  à réduire). Contenu type : motif (options `aria-pressed` ou liste),
+  encadré **« Le membre verra »** (`bg-sunken`, intitulé 10 px en capitales),
+  puis « Annuler » et l'action en `danger`.
+- **Boutons des gestes** : `Button` en forme `pill` (prop ajoutée) et deux
+  variantes ajoutées : `success` (valider, garder : fond vert de statut) et
+  `danger-outline` (retirer, refuser : contour et texte rouges) ; le geste
+  irréversible reste `danger` (plein).
 
 ## Responsive
 

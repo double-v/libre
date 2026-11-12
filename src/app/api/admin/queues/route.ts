@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
 import { countAdminQueues } from '@/lib/admin-queues';
-import { compterGrappes } from '@/lib/fraude/indices-admin';
+import { compterCas } from '@/lib/moderation/membres';
 
 /**
  * GET /api/admin/queues — compteurs des files admin (#391, contrats/api.md).
@@ -14,5 +14,5 @@ import { compterGrappes } from '@/lib/fraude/indices-admin';
 export async function GET() {
   const adminResult = await requireAdmin();
   if (!isAdminSession(adminResult)) return adminResult;
-  return NextResponse.json(await countAdminQueues(getDb(), compterGrappes));
+  return NextResponse.json(await countAdminQueues(getDb(), compterCas));
 }
