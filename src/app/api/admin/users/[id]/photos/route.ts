@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
-import { getDb } from '@/lib/db';
-import { deletePhoto } from '@/lib/r2';
 import { adminRemovePhotoSchema } from '@/lib/validators';
+import { retirerPhoto } from '@/lib/moderation/gestes';
 
 /**
- * Retrait d'une photo par la modération (#323).
- *
- * Jusqu'ici les seuls leviers face à un avatar hors charte étaient bannir ou
- * supprimer le compte — disproportionnés. Cet endpoint permet la sanction
- * proportionnée : on retire la photo, le compte reste.
+ * Retrait d'une photo par la modération (#323) — effet, journal et nettoyage
+ * R2 dans `retirerPhoto` (spec 012, T003).
  */
 export async function DELETE(
   request: NextRequest,
@@ -28,59 +24,8 @@ export async function DELETE(
     );
   }
 
-  const { photoKey, reason } = parsed.data;
-
-  const profile = await getDb().profile.findUnique({
-    where: { userId: id },
-    select: { photos: true },
-  });
-  if (!profile) {
-    return NextResponse.json({ error: 'Profil non trouvé' }, { status: 404 });
-  }
-  if (!profile.photos.includes(photoKey)) {
-    return NextResponse.json({ error: 'Photo non trouvée' }, { status: 404 });
-  }
-
-  // `filter` préserve l'ordre : retirer photos[0] promeut mécaniquement la
-  // suivante en avatar, ce qui est le comportement voulu. Si c'était la seule,
-  // le profil se retrouve sans photo — les surfaces retombent sur l'initiale.
-  const remaining = profile.photos.filter((p) => p !== photoKey);
-
-  const updated = await getDb().profile.update({
-    where: { userId: id },
-    data: { photos: remaining },
-  });
-
-  // La raison est obligatoire côté schéma : un retrait de photo sans motif
-  // est indéfendable si la personne conteste.
-  await getDb().moderationLog.create({
-    data: {
-      adminId: adminResult.userId,
-      targetUserId: id,
-      action: 'REMOVE_PHOTO',
-      reason,
-    },
-  });
-
-  // Suppression R2 best-effort, comme dans /api/users/photos (#142) : sans
-  // elle l'objet reste atteignable tant que la clé est connue. Un échec R2
-  // ne doit pas annuler le retrait déjà acté en base.
-  try {
-    await deletePhoto(photoKey);
-  } catch (err) {
-    console.error('[admin/photos] R2 delete failed for key:', photoKey, err);
-  }
-
-  // Idem pour la classification et son dérivé (#330) : la photo n'existe plus.
-  try {
-    const moderation = await getDb().photoModeration.findUnique({ where: { key: photoKey } });
-    if (moderation) {
-      await getDb().photoModeration.delete({ where: { key: photoKey } });
-      await deletePhoto(moderation.blurredKey);
-    }
-  } catch (err) {
-    console.error('[admin/photos] nettoyage de la classification échoué pour', photoKey, err);
-  }
-
-  return NextResponse.json({ photos: updated.photos });
+  const issue = await retirerPhoto(adminResult.userId, id, parsed.data.photoKey, parsed.data.reason);
+  if (issue === 'profil_introuvable') return NextResponse.json({ error: 'Profil non trouvé' }, { status: 404 });
+  if (issue === 'photo_introuvable') return NextResponse.json({ error: 'Photo non trouvée' }, { status: 404 });
+  return NextResponse.json({ photos: issue.photos });
 }

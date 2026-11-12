@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
-import { getDb } from '@/lib/db';
 import { adminHandleVerificationSchema } from '@/lib/validators';
-import { enregistrerSignal } from '@/lib/fraude/signaux';
 import { buildPayload, sendPushToUser } from '@/lib/push/server';
+import { deciderVerification } from '@/lib/moderation/gestes';
 
+/** Valider ou refuser un selfie — effet et journal dans `deciderVerification` (spec 012, T003). */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -13,66 +13,23 @@ export async function PATCH(
   if (!isAdminSession(adminResult)) return adminResult;
   const { id } = await params;
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = adminHandleVerificationSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Validation échouée' }, { status: 400 });
   }
 
   const { action, motif } = parsed.data;
-  const verification = await getDb().verificationRequest.findUnique({ where: { id } });
-  if (!verification) {
-    return NextResponse.json({ error: 'Demande non trouvée' }, { status: 404 });
-  }
-  // Une décision ne se réécrit pas en silence : le membre l'a peut-être déjà lue.
-  if (verification.status !== 'pending') {
-    return NextResponse.json({ error: 'Demande déjà traitée' }, { status: 409 });
-  }
-
-  const isApproved = action === 'APPROVE_VERIFICATION';
-  // Écriture conditionnée au statut : deux modérateurs qui décident en même
-  // temps n'écrivent qu'une décision, et le second l'apprend (409).
-  const { count } = await getDb().verificationRequest.updateMany({
-    where: { id, status: 'pending' },
-    data: {
-      status: isApproved ? 'approved' : 'rejected',
-      rejectReason: isApproved ? null : motif,
-      reviewedBy: adminResult.userId,
-      resolvedAt: new Date(),
-    },
-  });
-  if (count !== 1) {
-    return NextResponse.json({ error: 'Demande déjà traitée' }, { status: 409 });
-  }
-
-  if (isApproved) {
-    await getDb().user.update({
-      where: { id: verification.userId },
-      // Le badge approuvé lève la mise en retrait (spec 006, #444) : c'est
-      // exactement ce que « Demander une vérification » attendait.
-      // Il lève aussi l'invitation automatique (spec 010, FR-019).
-      data: { isVerified: true, retraitAt: null, verifInviteeAt: null },
-    });
-  } else {
-    // Spec 010, FR-019 : un selfie refusé après une invitation automatique
-    // fait entrer le compte dans la file — la suite revient à un humain.
-    const u = await getDb().user.findUnique({ where: { id: verification.userId }, select: { verifInviteeAt: true } });
-    if (u?.verifInviteeAt) {
-      await enregistrerSignal({ userId: verification.userId, type: 'verification_refusee', force: 'fort', cle: id });
-    }
-  }
-
-  await getDb().moderationLog.create({
-    data: {
-      adminId: adminResult.userId,
-      targetUserId: verification.userId,
-      action,
-      reason: motif ?? null,
-    },
-  });
+  const issue = await deciderVerification(
+    adminResult.userId,
+    id,
+    action === 'APPROVE_VERIFICATION' ? { action } : { action, motif: motif! },
+  );
+  if (issue === 'introuvable') return NextResponse.json({ error: 'Demande non trouvée' }, { status: 404 });
+  if (issue === 'deja_traite') return NextResponse.json({ error: 'Demande déjà traitée' }, { status: 409 });
 
   // FR-010 : le membre apprend qu'il y a une réponse, jamais laquelle.
-  after(() => sendPushToUser(verification.userId, buildPayload('verification', {})));
+  after(() => sendPushToUser(issue.userId, buildPayload('verification', {})));
 
-  return NextResponse.json({ success: true, approved: isApproved });
+  return NextResponse.json({ success: true, approved: issue.approuvee });
 }

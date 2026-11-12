@@ -74,13 +74,13 @@ const { PATCH } = await import('../route');
 
 const trancher = (body: unknown) =>
   PATCH(new NextRequest('http://localhost/api/admin/verifications/v1', { method: 'PATCH', body: JSON.stringify(body) }), {
-    params: Promise.resolve({ id: 'v1' }),
+    params: Promise.resolve({ id: '00000000-0000-4000-8000-0000000000a1' }),
   });
 async function viderApres() { while (apres.length) await apres.shift()!(); }
 
 beforeEach(() => {
   mockGetServerSession.mockResolvedValue({ user: { id: 'admin', role: 'ADMIN' } });
-  demandes = [{ id: 'v1', userId: 'u1', status: 'pending', rejectReason: null, reviewedBy: null, resolvedAt: null }];
+  demandes = [{ id: '00000000-0000-4000-8000-0000000000a1', userId: 'u1', status: 'pending', rejectReason: null, reviewedBy: null, resolvedAt: null }];
   membre = { isVerified: false, retraitAt: new Date(), verifInviteeAt: null };
   journal = [];
   signaux.length = 0;
@@ -135,7 +135,7 @@ describe('PATCH /api/admin/verifications/[id]', () => {
   it('refus après une invitation automatique : signal fort (spec 010)', async () => {
     membre.verifInviteeAt = new Date();
     await trancher({ action: 'REJECT_VERIFICATION', motif: 'code' });
-    expect(signaux).toEqual([{ userId: 'u1', type: 'verification_refusee', force: 'fort', cle: 'v1' }]);
+    expect(signaux).toEqual([{ userId: 'u1', type: 'verification_refusee', force: 'fort', cle: '00000000-0000-4000-8000-0000000000a1' }]);
   });
 
   it('refus sans invitation : aucun signal', async () => {
