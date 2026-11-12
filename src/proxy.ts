@@ -5,6 +5,7 @@ import { doitEcrirePresence, jourDePresence } from '@/lib/presence';
 import { getDb } from '@/lib/db';
 import { compteEstAdmin, journaliserRefusBaseInjoignable } from '@/lib/admin-role';
 import { getFeatures } from '@/lib/features-server';
+import { refusOrigineEcriture } from '@/lib/securite/origine';
 import type { Feature } from '@/lib/features';
 import {
   PREVIEW_COOKIE_NAME,
@@ -141,6 +142,15 @@ function redirectStrippingPreview(request: NextRequest): NextResponse {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Écritures admin (spec 012, FR-S08) : une requête qu'un site tiers fait
+  // envoyer au navigateur d'un modérateur porte l'origine de ce site. Refusée
+  // ici, avant toute route, pour celles d'aujourd'hui comme pour les futures.
+  if (pathname === '/api/admin' || pathname.startsWith('/api/admin/')) {
+    const refus = refusOrigineEcriture(request);
+    if (refus) return refus;
+    return NextResponse.next();
+  }
 
   // --- Preview theme handling (admin) -----------------------------------
   // ?preview=<theme-id> sets a 24h cookie that overrides the active theme
@@ -284,5 +294,7 @@ export const config = {
   // Match only HTML page navigations, not assets / API / static.
   matcher: [
     '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)',
+    // Les écritures admin passent par le contrôle d'origine (FR-S08).
+    '/api/admin/:path*',
   ],
 };

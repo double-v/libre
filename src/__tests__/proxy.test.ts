@@ -251,3 +251,57 @@ describe('proxy — zone /admin fermée quand la base ne répond pas (#547)', ()
     }
   });
 });
+
+describe('écritures admin : contrôle d’origine (spec 012, FR-S08)', () => {
+  const SITE = 'http://localhost';
+  function ecriture(methode: string, origine?: string | null, chemin = '/api/admin/membres/x') {
+    const headers = new Headers({ 'content-type': 'application/json' });
+    if (origine) headers.set('origin', origine);
+    return new NextRequest(`${SITE}${chemin}`, { method: methode, headers, ...(methode === 'GET' || methode === 'HEAD' ? {} : { body: '{}' }) });
+  }
+
+  it.each(['POST', 'PUT', 'PATCH', 'DELETE'])('%s depuis un site tiers : 403, avant toute route ni lecture de session', async (m) => {
+    const res = await proxy(ecriture(m, 'https://piege.example'));
+    expect(res.status).toBe(403);
+    expect(mockGetToken).not.toHaveBeenCalled();
+    expect(findUnique).not.toHaveBeenCalled();
+  });
+
+  it.each(['POST', 'DELETE'])('%s sans en-tête Origin : 403', async (m) => {
+    expect((await proxy(ecriture(m, null))).status).toBe(403);
+  });
+
+  it.each([
+    ['même hôte, autre port', 'http://localhost:4000'],
+    ['préfixe trompeur', 'http://localhost.piege.example'],
+    ['autre schéma', 'https://localhost'],
+    ['valeur « null » (iframe isolée, fichier local)', 'null'],
+  ])('origine proche mais différente (%s) : 403', async (_l, o) => {
+    expect((await proxy(ecriture('POST', o))).status).toBe(403);
+  });
+
+  it('écriture depuis le site : laissée à la route (qui garde sa garde admin)', async () => {
+    const res = await proxy(ecriture('POST', SITE));
+    expect(res.status).toBe(200);
+    expect(res.headers.get('x-middleware-next')).toBe('1');
+  });
+
+  it('lectures non contrôlées : un GET sans Origin passe', async () => {
+    const res = await proxy(ecriture('GET', null));
+    expect(res.headers.get('x-middleware-next')).toBe('1');
+  });
+
+  it('la racine /api/admin est couverte aussi', async () => {
+    expect((await proxy(ecriture('POST', 'https://piege.example', '/api/admin'))).status).toBe(403);
+  });
+
+  it('le proxy est bien appelé sur les routes admin (matcher)', async () => {
+    const { config } = await import('../proxy');
+    const { unstable_doesMiddlewareMatch } = await import('next/experimental/testing/server');
+    for (const url of ['/api/admin', '/api/admin/membres/x', '/api/admin/verifications/v1']) {
+      expect(unstable_doesMiddlewareMatch({ config, url }), url).toBe(true);
+    }
+    // Les autres routes API restent hors du proxy.
+    expect(unstable_doesMiddlewareMatch({ config, url: '/api/messages' })).toBe(false);
+  });
+});

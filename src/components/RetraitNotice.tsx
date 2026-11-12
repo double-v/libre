@@ -19,12 +19,12 @@ import { useAnnonce } from '@/components/AnnonceFile';
  * motif ni de chiffre — un indice n'est pas une preuve.
  */
 export const COPY_RETRAIT = {
-  texte: 'Ton profil est masqué le temps d’une vérification. Fais un selfie en reproduisant un geste simple : ton profil réapparaît dès qu’il est validé.',
+  texte: 'Ton profil est masqué le temps d’une vérification. Fais un selfie avec un code que tu écris à la main : ton profil réapparaît dès qu’il est validé.',
   action: 'Me faire vérifier',
 };
 
 export const COPY_INVITATION = {
-  texte: 'Fais vérifier ton profil : un selfie en reproduisant un geste simple suffit. Le badge rassure les personnes que tu croises.',
+  texte: 'Fais vérifier ton profil : un selfie avec un code écrit à la main suffit. Le badge rassure les personnes que tu croises.',
   action: 'Me faire vérifier',
   plusTard: 'Plus tard',
 };
