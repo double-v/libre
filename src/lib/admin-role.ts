@@ -24,8 +24,19 @@ export async function estAdminEnBase(userId: string, origine: string): Promise<b
     journaliserRefusBaseInjoignable(origine, err);
     return false;
   }
-  // Un compte banni perd l'administration avec le reste : le proxy le renvoie
-  // déjà vers /login sur les pages, mais il ne voit pas /api/*.
+  return compteEstAdmin(compte);
+}
+
+/**
+ * La règle elle-même, sur un compte déjà relu en base : rôle ADMIN (casse
+ * ignorée) et compte non banni. Partagée par la garde ci-dessus et par tout
+ * ce qui affiche un statut d'admin (badge de La Place, #552), pour qu'aucun
+ * de ces usages ne retombe sur le rôle du jeton.
+ *
+ * Un compte banni perd l'administration avec le reste : le proxy le renvoie
+ * déjà vers /login sur les pages, mais il ne voit pas /api/*.
+ */
+export function compteEstAdmin(compte: { role: string | null; isBanned: boolean } | null): boolean {
   if (!compte || compte.isBanned) return false;
   return compte.role?.toUpperCase() === 'ADMIN';
 }

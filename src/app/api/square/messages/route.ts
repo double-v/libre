@@ -10,6 +10,7 @@ import { ensureSquareFresh } from '@/lib/square/reset';
 import { squareMessageSchema } from '@/lib/square/validators';
 import type { SquareMessage } from '@/lib/square/store';
 import { gardeFeature } from '@/lib/features-server';
+import { compteEstAdmin } from '@/lib/admin-role';
 
 export async function GET() {
   // Interrupteur admin (#418)
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
   // Check if user is banned from square
   const user = await getDb().user.findUnique({
     where: { id: userId },
-    select: { squareBannedUntil: true, role: true },
+    select: { squareBannedUntil: true, role: true, isBanned: true },
   });
 
   if (user?.squareBannedUntil && user.squareBannedUntil > new Date()) {
@@ -108,7 +109,9 @@ export async function POST(request: NextRequest) {
   }
 
   const pseudonym = await getPseudonymFromConfig(userId);
-  const isAdmin = session.user.role === 'ADMIN';
+  // Badge décidé par le compte relu plus haut, jamais par le jeton : un jeton
+  // peut être périmé (admin rétrogradé, #155) ou volé (#552).
+  const isAdmin = compteEstAdmin(user);
 
   const message = await addMessage({
     pseudonym,
