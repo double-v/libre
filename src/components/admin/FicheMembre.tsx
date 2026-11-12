@@ -206,7 +206,7 @@ export default function FicheMembre({
           <>
             {bouton('sans_suite', () => void signalement(c.id, 'DISMISS_REPORT', `${pseudo} : signalement classé sans suite.`))}
             {bouton('avertir', () => setFeuille({ geste: 'avertir', reportId: c.id }))}
-            {m.statut !== 'banni' && bouton('bannir', () => setFeuille({ geste: 'bannir', reportId: c.id }), 'danger')}
+            {m.statut !== 'banni' && !m.admin && bouton('bannir', () => setFeuille({ geste: 'bannir', reportId: c.id }), 'danger')}
           </>
         ),
       };
@@ -413,7 +413,7 @@ export default function FicheMembre({
             <details className="text-sm">
               <summary className="flex min-h-11 cursor-pointer items-center text-[13px] font-semibold text-red-700 dark:text-red-300">Zone sensible</summary>
               <div className="flex flex-wrap gap-2">
-                {m.statut !== 'banni' && bouton('bannir', () => setFeuille({ geste: 'bannir', reportId: null }), 'danger-outline')}
+                {m.statut !== 'banni' && !m.admin && bouton('bannir', () => setFeuille({ geste: 'bannir', reportId: null }), 'danger-outline')}
                 {!m.admin && bouton('supprimer', () => setFeuille({ geste: 'supprimer' }), 'danger-outline')}
               </div>
             </details>

@@ -68,7 +68,12 @@ describe('liste du hub Membres (T026, T026a)', () => {
     await signal(await c('D-photo', { pseudo: '', photos: [`${P}/d.jpg`], createdAt: t('2026-07-04T00:00:00Z') }), 'contact_photo', 'fort', '2026-11-07T00:00:00Z', { photoKey: `${P}/d.jpg` });
     const e = await c('E-photo-voilee', { pseudo: '', photos: [`${P}/e.jpg`], createdAt: t('2026-02-01T00:00:00Z') });
     await signal(e, 'contact_photo', 'faible', '2026-11-06T00:00:00Z', { photoKey: `${P}/e.jpg` });
-    await db.photoModeration.create({ data: { key: `${P}/e.jpg`, ownerId: e, sensitivity: 'suggestive', blurredKey: `${P}/e-flou.jpg` } });
+    // Voilée par la modération : le cas est tranché.
+    await db.photoModeration.create({ data: { key: `${P}/e.jpg`, ownerId: e, sensitivity: 'suggestive', blurredKey: `${P}/e-flou.jpg`, classifiedBy: admin } });
+    // Voilée par le membre lui-même : le texte de contact reste en ligne, le cas reste ouvert.
+    const v = await c('V-photo-auto-voilee', { pseudo: '', photos: [`${P}/v.jpg`], createdAt: t('2026-07-10T00:00:00Z') });
+    await signal(v, 'contact_photo', 'faible', '2026-11-10T00:00:00Z', { photoKey: `${P}/v.jpg` });
+    await db.photoModeration.create({ data: { key: `${P}/v.jpg`, ownerId: v, sensitivity: 'suggestive', blurredKey: `${P}/v-flou.jpg` } });
     await signal(await c('F-indice', { pseudo: '', createdAt: t('2026-07-05T00:00:00Z') }), 'appareil_partage', 'faible', '2026-11-01T00:00:00Z');
     const g = await c('G-indice-tranche', { pseudo: '', createdAt: t('2026-03-01T00:00:00Z') });
     await signal(g, 'appareil_partage', 'faible', '2026-10-01T00:00:00Z');
@@ -102,9 +107,9 @@ describe('liste du hub Membres (T026, T026a)', () => {
   it('compteurs : chaque source compte ses cas, une seule fois (FR-014)', async () => {
     const apres = await compterCas();
     const delta = Object.fromEntries(Object.entries(apres).map(([k, v]) => [k, v - avant[k as keyof Compteurs]]));
-    // report : A, B, N · photo : D · indice : F, J, K, N, O (H est banni,
+    // report : A, B, N · photo : D, V (voilée par elle-même) · indice : F, J, K, N, O (H est banni,
     // G tranché, E n'a qu'un signal de photo voilée).
-    expect({ report: delta.report, photo: delta.photo, indice: delta.indice, reponse: delta.reponse }).toEqual({ report: 3, photo: 1, indice: 5, reponse: 0 });
+    expect({ report: delta.report, photo: delta.photo, indice: delta.indice, reponse: delta.reponse }).toEqual({ report: 3, photo: 2, indice: 5, reponse: 0 });
     // Le fichier `verification-code` peut écrire des selfies en même temps :
     // on vérifie la somme sans dépendre de lui.
     expect(apres.atraiter).toBe(apres.verif + apres.report + apres.photo + apres.reponse + apres.indice);
@@ -116,7 +121,7 @@ describe('liste du hub Membres (T026, T026a)', () => {
     expect(pages).toBe(2);
     expect(noms).toEqual([
       'A-report-ancien', 'N-report-et-indice', 'B-report-recent',
-      'C-verif', 'D-photo',
+      'C-verif', 'D-photo', 'V-photo-auto-voilee',
       'F-indice', 'J-douteux', 'K-douteux-verifie', 'O-trois-faibles',
       'R0-rempli', 'R1-rempli', 'R2-rempli', 'R3-rempli', 'R4-rempli', 'R5-rempli', 'R6-rempli', 'R7-rempli', 'R8-rempli', 'R9-rempli',
       'I-sans', 'E-photo-voilee', 'G-indice-tranche', 'H-banni', 'L-nonconf', 'M-retrait',
@@ -137,7 +142,7 @@ describe('liste du hub Membres (T026, T026a)', () => {
     const { noms } = await toutesLesPages({ filtre: 'tous', tri: 'recent', q: P });
     expect(noms.slice(0, 3)).toEqual(['zz-auteur', 'zz-ordinaire', 'zz-admin']);
     expect(noms.slice(-3)).toEqual(['R2-rempli', 'R1-rempli', 'R0-rempli']);
-    expect(new Set(noms).size).toBe(28);
+    expect(new Set(noms).size).toBe(29);
   });
 
   it('tri par fiabilité : douteux, puis à surveiller (le plus de signaux d’abord), puis fiables', async () => {
@@ -145,14 +150,14 @@ describe('liste du hub Membres (T026, T026a)', () => {
     // Douteux : O (trois signaux), puis J, D (texte de contact fort) et H
     // (banni) par inscription récente. À surveiller : N, K (vérifié, d'où un
     // cran de moins), F, E (photo voilée, signal faible).
-    expect(noms.slice(0, 8)).toEqual(['O-trois-faibles', 'J-douteux', 'D-photo', 'H-banni', 'N-report-et-indice', 'K-douteux-verifie', 'F-indice', 'E-photo-voilee']);
+    expect(noms.slice(0, 9)).toEqual(['O-trois-faibles', 'J-douteux', 'D-photo', 'H-banni', 'V-photo-auto-voilee', 'N-report-et-indice', 'K-douteux-verifie', 'F-indice', 'E-photo-voilee']);
   });
 
   it.each([
-    ['atraiter', ['A-report-ancien', 'N-report-et-indice', 'B-report-recent', 'C-verif', 'D-photo', 'F-indice', 'J-douteux', 'K-douteux-verifie', 'O-trois-faibles']],
+    ['atraiter', ['A-report-ancien', 'N-report-et-indice', 'B-report-recent', 'C-verif', 'D-photo', 'V-photo-auto-voilee', 'F-indice', 'J-douteux', 'K-douteux-verifie', 'O-trois-faibles']],
     ['report', ['A-report-ancien', 'N-report-et-indice', 'B-report-recent']],
     ['verif', ['C-verif']],
-    ['photo', ['D-photo']],
+    ['photo', ['D-photo', 'V-photo-auto-voilee']],
     ['indice', ['N-report-et-indice', 'F-indice', 'J-douteux', 'K-douteux-verifie', 'O-trois-faibles']],
     ['reponse', []],
     ['douteux', ['D-photo', 'J-douteux', 'O-trois-faibles', 'H-banni']],
@@ -167,7 +172,7 @@ describe('liste du hub Membres (T026, T026a)', () => {
 
   it('statut et fiabilité de chaque ligne', async () => {
     const { noms } = await toutesLesPages({ filtre: 'tous', q: P });
-    expect(noms).toHaveLength(28);
+    expect(noms).toHaveLength(29);
     const { corps } = await appeler({ filtre: 'tous', q: P, tri: 'fiabilite' });
     const par = Object.fromEntries(corps.membres.map((m: { pseudo: string; statut: string; fiabilite: string; verifie: boolean }) => [m.pseudo, [m.statut, m.fiabilite, m.verifie]]));
     expect(par['H-banni']).toEqual(['banni', 'douteux', false]);

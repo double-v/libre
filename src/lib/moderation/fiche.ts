@@ -134,7 +134,9 @@ export async function lireFiche(id: string): Promise<FicheMembre | null> {
     lies.length ? db.user.findMany({ where: { id: { in: lies } }, select: { id: true, displayName: true, emailVerified: true } }) : [],
     photoSensitivityMap(photos),
     db.moderationLog.findMany({
-      where: { targetUserId: id, action: { notIn: [...ACTIONS_CONSULTATION] } },
+      // Une suppression se journalise sur le compte de l'admin qui l'a faite :
+      // sur sa propre fiche, elle se lirait comme la suppression de son compte.
+      where: { targetUserId: id, action: { notIn: [...ACTIONS_CONSULTATION] }, NOT: { action: 'DELETE_USER', adminId: id } },
       orderBy: { createdAt: 'desc' },
       take: HISTORIQUE_MAX,
       select: { action: true, reason: true, createdAt: true, admin: { select: { displayName: true } } },

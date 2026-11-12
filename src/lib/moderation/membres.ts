@@ -36,8 +36,9 @@ function tableGravite(): Prisma.Sql {
  *
  * - `report` : signalement `pending` ;
  * - `verif` : selfie `pending` ;
- * - `photo` : texte de contact lu sur une photo encore publiée et ni voilée
- *   ni tranchée (spec 006) ;
+ * - `photo` : texte de contact lu sur une photo encore publiée, ni tranchée
+ *   ni voilée **par la modération** (spec 006) — un voile posé par le membre
+ *   lui-même laisse le contact en ligne, le cas reste ouvert ;
  * - `indice` : au moins un autre signal non tranché — un cas par membre, daté
  *   du plus ancien (spec 010/011, page Indices) ;
  * - `reponse` et `relecture` n'ont pas encore de source : aucune réponse
@@ -65,7 +66,7 @@ function cteCas(uid: string | null = null): Prisma.Sql {
       SELECT 'photo', s.id::text, s.uid, s."createdAt"
         FROM sig s JOIN users u ON u.id = s.uid JOIN profiles p ON p."userId" = s.uid
         WHERE s.type = 'contact_photo' AND NOT u."isBanned" AND s."photoKey" = ANY(p.photos)
-          AND NOT EXISTS (SELECT 1 FROM photo_moderation pm WHERE pm.key = s."photoKey")
+          AND NOT EXISTS (SELECT 1 FROM photo_moderation pm WHERE pm.key = s."photoKey" AND pm."classifiedBy" IS NOT NULL)
       UNION ALL
       SELECT 'indice', s.uid::text, s.uid, min(s."createdAt")
         FROM sig s JOIN users u ON u.id = s.uid

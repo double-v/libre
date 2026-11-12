@@ -21,6 +21,12 @@ export default function BottomSheet({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const idTitre = useId();
+  // Le parent recrée souvent `onClose` : on le lit par référence, pour que le
+  // focus ne saute pas à chaque rendu du parent.
+  const fermer = useRef(onClose);
+  useEffect(() => {
+    fermer.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     const declencheur = document.activeElement as HTMLElement | null;
@@ -32,7 +38,7 @@ export default function BottomSheet({
     const auClavier = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        onClose();
+        fermer.current();
         return;
       }
       if (e.key !== 'Tab') return;
@@ -53,7 +59,7 @@ export default function BottomSheet({
       document.removeEventListener('keydown', auClavier);
       declencheur?.focus?.();
     };
-  }, [onClose]);
+  }, []);
 
   return (
     <div

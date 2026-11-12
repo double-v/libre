@@ -4,6 +4,7 @@ import { enregistrerSignal } from '@/lib/fraude/signaux';
 import { deletePhoto } from '@/lib/r2';
 import { effacerCompte } from '@/lib/suppression-compte';
 import type { MotifRefus } from '@/lib/verification/motifs';
+import { estUuid } from './cas';
 import { MOTIFS_SANCTION, type MotifSanction } from './reperes';
 
 /**
@@ -14,9 +15,7 @@ import { MOTIFS_SANCTION, type MotifSanction } from './reperes';
  * `null` quand le geste est appliqué, ou la raison du refus.
  */
 
-/** Uuid bien formé : une colonne `@db.Uuid` ferait lever Prisma sur le reste. */
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-export const estUuid = (id: string): boolean => UUID.test(id);
+export { estUuid } from './cas';
 
 export const DECISIONS = ['rien', 'verification', 'banni'] as const;
 export type Decision = (typeof DECISIONS)[number];
@@ -114,16 +113,19 @@ export async function traiterSignalement(
   reportId: string,
   action: ActionSignalement,
   motif: string | null,
-): Promise<'introuvable' | null> {
+): Promise<'introuvable' | 'deja_traite' | null> {
   const db = getDb();
   if (!estUuid(reportId)) return 'introuvable';
   const report = await db.report.findUnique({ where: { id: reportId }, select: { reportedId: true } });
   if (!report) return 'introuvable';
 
-  await db.report.update({
-    where: { id: reportId },
+  // Écriture conditionnée au statut, comme pour les selfies : une décision
+  // ne se réécrit pas, et deux modérateurs simultanés n'en écrivent qu'une.
+  const { count } = await db.report.updateMany({
+    where: { id: reportId, status: 'pending' },
     data: { status: STATUT_SIGNALEMENT[action], reviewedBy: adminId, resolvedAt: new Date() },
   });
+  if (count !== 1) return 'deja_traite';
   if (action === 'BAN') {
     await db.user.update({ where: { id: report.reportedId }, data: { isBanned: true } });
     // Ses photos ne pourront pas revenir sur un autre compte (spec 006).
@@ -321,7 +323,8 @@ export async function inviterVerification(
  * compte supprimé partirait avec lui (cascade), et sa création échouait
  * jusqu'ici après l'effacement (contrainte de clé étrangère) — la suppression
  * avait lieu, sans trace et avec une erreur 500. Le motif est un libellé de
- * la liste fermée ; le pseudo supprimé n'est pas recopié.
+ * la liste fermée ; l'identifiant du compte effacé y figure pour la
+ * traçabilité, jamais son pseudo ni son adresse.
  */
 export async function supprimerCompte(adminId: string, userId: string, motif: MotifSanction): Promise<'introuvable' | null> {
   const db = getDb();
@@ -329,7 +332,7 @@ export async function supprimerCompte(adminId: string, userId: string, motif: Mo
   if ((await db.user.count({ where: { id: userId } })) === 0) return 'introuvable';
   await effacerCompte(userId);
   await db.moderationLog.create({
-    data: { adminId, targetUserId: adminId, action: 'DELETE_USER', reason: `Compte supprimé : ${MOTIFS_SANCTION[motif].toLowerCase()}` },
+    data: { adminId, targetUserId: adminId, action: 'DELETE_USER', reason: `Compte ${userId} supprimé : ${MOTIFS_SANCTION[motif].toLowerCase()}` },
   });
   return null;
 }

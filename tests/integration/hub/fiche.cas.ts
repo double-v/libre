@@ -237,6 +237,11 @@ describe('fiche membre (T035, T035b)', () => {
       expect(await existe(admin)).toBe(true);
     });
 
+    it('un compte admin ne se supprime pas ici', async () => {
+      expect((await supprimer(sam, { pseudo: 'Sam', motif: 'autre' })).status).toBe(400);
+      expect(await existe(sam)).toBe(true);
+    });
+
     it('compte inconnu → 404', async () => {
       expect((await supprimer('00000000-0000-4000-8000-00000000beef', { pseudo: 'x', motif: 'autre' })).status).toBe(404);
     });
@@ -246,7 +251,10 @@ describe('fiche membre (T035, T035b)', () => {
       expect(r.status).toBe(200);
       expect(await existe(ines2)).toBe(false);
       const lignes = await getDb().moderationLog.findMany({ where: { adminId: admin, action: 'DELETE_USER' }, select: { targetUserId: true, reason: true } });
-      expect(lignes).toEqual([{ targetUserId: admin, reason: 'Compte supprimé : faux profil' }]);
+      expect(lignes).toEqual([{ targetUserId: admin, reason: `Compte ${ines2} supprimé : faux profil` }]);
+      // Sur la fiche de l'admin, cette ligne ne se lit pas comme la suppression de son propre compte.
+      const fiche = (await lire(admin)).corps;
+      expect(fiche.historique.map((h: { action: string }) => h.action)).not.toContain('DELETE_USER');
     });
   });
 });

@@ -114,6 +114,8 @@ export type Curseur =
   | { tri: 'fiabilite'; rang: number; n: number; temps: string; id: string };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Uuid bien formé : une colonne `@db.Uuid` ferait lever Prisma sur le reste. Partagé client et serveur. */
+export const estUuid = (id: string): boolean => UUID.test(id);
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const CHAMPS: Record<Tri, string[]> = {
   urgence: ['id', 'rang', 'temps', 'tri'],

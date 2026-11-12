@@ -35,6 +35,11 @@ export const MOTIFS_SANCTION = {
 export type MotifSanction = keyof typeof MOTIFS_SANCTION;
 export const CODES_MOTIFS_SANCTION = Object.keys(MOTIFS_SANCTION) as [MotifSanction, ...MotifSanction[]];
 
+/** Un libellé de motif de sanction, tel que la fiche l'envoie et que le journal le garde. */
+export function estMotifSanction(v: unknown): v is string {
+  return typeof v === 'string' && (Object.values(MOTIFS_SANCTION) as string[]).includes(v);
+}
+
 export const REPERES: Record<TypeCas, string> = {
   verif: 'Valide seulement si tu réponds oui aux trois questions. Au moindre doute, refuse : le membre reçoit un nouveau code et peut réessayer tout de suite.',
   report: 'Un premier écart sans menace : avertir. Une menace ou une demande d’argent : bannir. Juge le contenu signalé, pas le nombre de signalements.',

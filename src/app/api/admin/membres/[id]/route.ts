@@ -50,8 +50,11 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   if (!estUuid(id)) return NextResponse.json({ error: 'Membre introuvable.' }, { status: 404 });
 
   try {
-    const cible = await getDb().user.findUnique({ where: { id }, select: { displayName: true } });
+    const cible = await getDb().user.findUnique({ where: { id }, select: { displayName: true, role: true } });
     if (!cible) return NextResponse.json({ error: 'Membre introuvable.' }, { status: 404 });
+    if (cible.role === 'ADMIN') {
+      return NextResponse.json({ error: 'Un compte admin ne se supprime pas ici.' }, { status: 400 });
+    }
     if (corps.pseudo !== cible.displayName) {
       return NextResponse.json({ error: 'Le pseudo ressaisi ne correspond pas : rien n’a été supprimé.' }, { status: 400 });
     }

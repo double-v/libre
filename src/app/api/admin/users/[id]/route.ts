@@ -3,7 +3,8 @@ import { photoSensitivityMap } from '@/lib/photo-veil';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
 import { adminBanSchema } from '@/lib/validators';
-import { changerBannissement } from '@/lib/moderation/gestes';
+import { changerBannissement, estUuid } from '@/lib/moderation/gestes';
+import { estMotifSanction } from '@/lib/moderation/reperes';
 import { niveauFiabilite, signauxRecents, TYPES_CONTEXTE } from '@/lib/fraude/fiabilite';
 
 export async function GET(
@@ -115,6 +116,18 @@ export async function PATCH(
   }
 
   const { banned, reason } = parsed.data;
+  if (banned) {
+    // FR-022 : motif de la liste fermée. Et on ne bannit ni soi-même ni un
+    // autre admin depuis ici : ce serait se fermer la porte, ou la fermer à
+    // un collègue, d'un clic.
+    if (!estMotifSanction(reason)) {
+      return NextResponse.json({ error: 'Choisis un motif de bannissement dans la liste.' }, { status: 400 });
+    }
+    if (id === adminResult.userId) return NextResponse.json({ error: 'On ne se bannit pas soi-même.' }, { status: 400 });
+    if (estUuid(id) && (await getDb().user.findUnique({ where: { id }, select: { role: true } }))?.role === 'ADMIN') {
+      return NextResponse.json({ error: 'Un compte admin ne se bannit pas ici.' }, { status: 400 });
+    }
+  }
   // Effet et journal dans `changerBannissement` (spec 012, T003).
   if ((await changerBannissement(adminResult.userId, id, banned, reason ?? null)) === 'introuvable') {
     return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });

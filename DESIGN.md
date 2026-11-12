@@ -1291,7 +1291,8 @@ bleu = pour information, vert = validé, avec leur pendant sombre.
   pseudo (tronqué, ✓ vert si vérifié), « Inscrit il y a … · vu … », puis les
   étiquettes ; à droite, l'âge du cas le plus grave. `aria-current` sur le
   membre ouvert (fond `bg-sunken`).
-- **Puces de filtre** : `rounded-full`, hauteur 36 px dans une barre qui
+- **Puces de filtre** : `rounded-full`, hauteur 44 px (cible tactile ; 36 px
+  au prototype) dans une barre qui
   défile en mobile et passe à la ligne en deux volets ; puce active
   `border-coral bg-coral/10 text-coral-dark`. Les filtres de travail portent
   un `CountChip` (FR-014) ; les autres jamais.

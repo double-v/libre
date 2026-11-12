@@ -83,10 +83,28 @@ describe('gestes unitaires (T003)', () => {
       expect(await journal(cible)).toEqual([{ adminId: 'admin', action, reason: action === 'BAN' ? 'Demande d’argent' : null }]);
     });
 
+    it('un signalement déjà tranché ne se retranche pas : refus, aucune ligne de plus', async () => {
+      const cible = await creerCompte(P, { pseudo: `${chemin}-deux-fois` });
+      const id = await signalement(cible);
+      expect(await traiter(id, 'DISMISS_REPORT')).toBe(200);
+      expect(await traiter(id, 'BAN', 'Demande d’argent')).toBe(chemin === 'route' ? 409 : 'deja_traite');
+      expect((await db().report.findUniqueOrThrow({ where: { id }, select: { status: true } })).status).toBe('dismissed');
+      expect((await db().user.findUniqueOrThrow({ where: { id: cible }, select: { isBanned: true } })).isBanned).toBe(false);
+      expect(await journal(cible)).toEqual([{ adminId: 'admin', action: 'DISMISS_REPORT', reason: null }]);
+    });
+
+    it('deux décisions simultanées : une seule est écrite', async () => {
+      const cible = await creerCompte(P, { pseudo: `${chemin}-simultane` });
+      const id = await signalement(cible);
+      const issues = await Promise.all([traiter(id, 'DISMISS_REPORT'), traiter(id, 'WARNING')]);
+      expect(issues.filter((i) => i === 200)).toHaveLength(1);
+      expect(await journal(cible)).toHaveLength(1);
+    });
+
     it('signalement inconnu : rien n’est écrit', async () => {
       const avant = await db().moderationLog.count({ where: { adminId: admin } });
       const inconnu = '00000000-0000-4000-8000-000000000001';
-      expect(chemin === 'route' ? await traiter(inconnu, 'BAN') : await traiter(inconnu, 'BAN')).toBe(chemin === 'route' ? 404 : 'introuvable');
+      expect(await traiter(inconnu, 'BAN', 'Demande d’argent')).toBe(chemin === 'route' ? 404 : 'introuvable');
       expect(await db().moderationLog.count({ where: { adminId: admin } })).toBe(avant);
     });
   });
@@ -218,7 +236,7 @@ describe('gestes unitaires (T003)', () => {
       expect(await db().user.count({ where: { id: cible } })).toBe(0);
       const ligne = await db().moderationLog.findFirstOrThrow({ where: { adminId: admin, action: 'DELETE_USER' }, orderBy: { createdAt: 'desc' } });
       expect(ligne.targetUserId).toBe(admin);
-      expect(ligne.reason).toBe('Compte supprimé : faux profil');
+      expect(ligne.reason).toBe(`Compte ${cible} supprimé : faux profil`);
       expect(ligne.reason).not.toContain('supprime@');
     });
 
@@ -227,6 +245,44 @@ describe('gestes unitaires (T003)', () => {
       const avant = await db().moderationLog.count({ where: { adminId: admin } });
       expect(await supprimerCompte(admin, '00000000-0000-4000-8000-000000000002', 'autre')).toBe('introuvable');
       expect(await db().moderationLog.count({ where: { adminId: admin } })).toBe(avant);
+    });
+  });
+
+  describe('motif fermé et garde-fous des sanctions (FR-022)', () => {
+    it.each([
+      ['signalement, sans motif', 'report', undefined],
+      ['signalement, texte libre', 'report', 'il m’énerve'],
+      ['fiche, sans motif', 'user', undefined],
+      ['fiche, texte libre', 'user', 'il m’énerve'],
+    ] as const)('bannir %s → 400, rien n’est écrit', async (_c, ou, reason) => {
+      const cible = await creerCompte(P, { pseudo: `motif-${ou}-${reason ? 'libre' : 'vide'}` });
+      let status: number;
+      if (ou === 'report') {
+        const id = await signalement(cible);
+        const { PATCH } = await import('@/app/api/admin/reports/[id]/route');
+        status = (await PATCH(req(`/api/admin/reports/${id}`, 'PATCH', { action: 'BAN', reason }), params({ id }))).status;
+      } else {
+        const { PATCH } = await import('@/app/api/admin/users/[id]/route');
+        status = (await PATCH(req(`/api/admin/users/${cible}`, 'PATCH', { banned: true, reason }), params({ id: cible }))).status;
+      }
+      expect(status).toBe(400);
+      expect((await db().user.findUniqueOrThrow({ where: { id: cible }, select: { isBanned: true } })).isBanned).toBe(false);
+      expect(await journal(cible)).toEqual([]);
+    });
+
+    it('débannir n’exige pas de motif', async () => {
+      const cible = await creerCompte(P, { pseudo: 'debannir-sans-motif', isBanned: true });
+      const { PATCH } = await import('@/app/api/admin/users/[id]/route');
+      expect((await PATCH(req(`/api/admin/users/${cible}`, 'PATCH', { banned: false }), params({ id: cible }))).status).toBe(200);
+    });
+
+    it('un admin ne se bannit pas lui-même, ni un autre admin', async () => {
+      const autre = await creerCompte(P, { pseudo: 'autre-admin', role: 'ADMIN' });
+      const { PATCH } = await import('@/app/api/admin/users/[id]/route');
+      for (const id of [admin, autre]) {
+        expect((await PATCH(req(`/api/admin/users/${id}`, 'PATCH', { banned: true, reason: 'Autre' }), params({ id }))).status).toBe(400);
+        expect((await db().user.findUniqueOrThrow({ where: { id }, select: { isBanned: true } })).isBanned).toBe(false);
+      }
     });
   });
 });

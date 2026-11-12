@@ -6,10 +6,8 @@ import AnalyseRattrapage from '@/components/admin/AnalyseRattrapage';
 import FicheMembre, { Vide } from '@/components/admin/FicheMembre';
 import MembreRow from '@/components/admin/MembreRow';
 import CountChip from '@/components/ui/CountChip';
-import { FILTRES, FILTRES_TRAVAIL, TRIS, estFiltre, estTri, type Compteurs, type Filtre, type Tri } from '@/lib/moderation/cas';
+import { FILTRES, FILTRES_TRAVAIL, TRIS, estFiltre, estTri, estUuid, type Compteurs, type Filtre, type Tri } from '@/lib/moderation/cas';
 import type { MembreListe } from '@/lib/moderation/membres';
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Hub Membres (spec 012, US3 ; DESIGN.md « Hub Membres »).
@@ -30,7 +28,7 @@ function Hub() {
   const tri: Tri = estTri(brutTri) ? brutTri : 'urgence';
   const q = sp.get('q') ?? '';
   const brutMembre = sp.get('membre');
-  const membre = brutMembre && UUID.test(brutMembre) ? brutMembre : null;
+  const membre = brutMembre && estUuid(brutMembre) ? brutMembre : null;
 
   const [saisie, setSaisie] = useState(q);
   const [membres, setMembres] = useState<MembreListe[]>([]);
@@ -55,10 +53,20 @@ function Hub() {
     [pathname, router, sp],
   );
 
+  // Clé de la liste affichée : une page suivante demandée pour une autre clé
+  // (filtre changé entre-temps) est jetée à son retour.
+  const cleListe = `${filtre}|${tri}|${q}|${version}`;
+  const cleCourante = useRef(cleListe);
+  useEffect(() => {
+    cleCourante.current = cleListe;
+  }, [cleListe]);
+
   // Première page à chaque changement de filtre, de tri ou de recherche.
   useEffect(() => {
     let annule = false;
     void (async () => {
+      // Le curseur de l'ancienne liste ne vaut rien pour la nouvelle.
+      setCurseur(null);
       setEtat('chargement');
       try {
         const res = await fetch(`/api/admin/membres?${new URLSearchParams({ filtre, tri, ...(q ? { q } : {}) })}`);
@@ -85,12 +93,14 @@ function Hub() {
   }, [saisie, q, allerA]);
 
   const chargerSuite = useCallback(async () => {
-    if (!curseur || suite) return;
+    if (!curseur || suite || etat !== 'pret') return;
+    const cle = cleListe;
     setSuite(true);
     try {
       const res = await fetch(`/api/admin/membres?${new URLSearchParams({ filtre, tri, curseur, ...(q ? { q } : {}) })}`);
       if (!res.ok) throw new Error();
       const d: { membres: MembreListe[]; curseur: string | null } = await res.json();
+      if (cleCourante.current !== cle) return;
       setMembres((l) => [...l, ...d.membres.filter((m) => !l.some((x) => x.id === m.id))]);
       setCurseur(d.curseur);
     } catch {
@@ -98,7 +108,7 @@ function Hub() {
     } finally {
       setSuite(false);
     }
-  }, [curseur, suite, filtre, tri, q]);
+  }, [curseur, suite, etat, cleListe, filtre, tri, q]);
 
   useEffect(() => {
     const el = sentinelle.current;
@@ -148,7 +158,7 @@ function Hub() {
               type="button"
               aria-pressed={filtre === f.cle}
               onClick={() => allerA({ filtre: f.cle === 'atraiter' ? null : f.cle, membre: null })}
-              className={`flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[13px] focus-visible:outline-none focus-visible:shadow-focus ${filtre === f.cle ? 'border-coral bg-coral/10 text-coral-dark dark:text-coral-light' : 'border-hairline bg-surface text-content'}`}
+              className={`flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[13px] focus-visible:outline-none focus-visible:shadow-focus ${filtre === f.cle ? 'border-coral bg-coral/10 text-coral-dark dark:text-coral-light' : 'border-hairline bg-surface text-content'}`}
             >
               {f.libelle}
               {FILTRES_TRAVAIL.has(f.cle) && compteurs && <CountChip count={compteurs[f.cle as keyof Compteurs]} />}
@@ -163,7 +173,7 @@ function Hub() {
             aria-label="Trier"
             value={tri}
             onChange={(e) => allerA({ tri: e.target.value === 'urgence' ? null : e.target.value })}
-            className="min-h-9 w-auto rounded-lg border border-hairline bg-surface px-2 text-[13px] text-content"
+            className="min-h-11 w-auto rounded-lg border border-hairline bg-surface px-2 text-[13px] text-content"
           >
             {TRIS.map((t) => <option key={t.cle} value={t.cle}>{t.libelle}</option>)}
           </select>
