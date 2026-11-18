@@ -9,10 +9,15 @@ import Link from 'next/link';
  * Distincte de la case CGU de l'inscription : le RGPD veut un consentement
  * séparé, explicite et informé pour ces données. Jamais pré-cochée. Même
  * forme que la case de l'inscription pour rester dans la charte.
+ *
+ * #530 : « informé » porte les destinataires — le genre et l'orientation
+ * se voient sur la fiche, et les autres membres me trouvent en filtrant.
+ * Sans cette phrase, la case promet un enregistrement et tait la lecture
+ * par autrui ; la page /confidentialite (§6) dit la même chose.
  */
 export const COPY_CONSENT_SENSIBLE = {
   label:
-    'J’accepte que Libre enregistre mon orientation, mon identité de genre, mes pratiques et les personnes que je cherche, pour me proposer des profils qui me correspondent.',
+    'J’accepte que Libre enregistre mon orientation, mon identité de genre, mes pratiques et les personnes que je cherche, pour me proposer des profils qui me correspondent. Mon genre et mon orientation se voient sur ma fiche, et les autres membres me trouvent aussi en filtrant par genre ou par orientation.',
   suite: 'Je peux retirer ce choix à tout moment dans Paramètres › Données sensibles : ces informations seront alors effacées.',
   requis: 'Coche la case pour enregistrer ces informations.',
 };

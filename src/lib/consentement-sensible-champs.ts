@@ -6,7 +6,13 @@
  * base dans le bundle.
  */
 export const CONSENT_SENSIBLE_TYPE = 'sensitive_data';
-export const CONSENT_SENSIBLE_VERSION = '1';
+/**
+ * #530 : v2 = la copie qui nomme la fiche et les autres membres. La version
+ * trace quel texte la personne a vu au moment du don ; les consentements v1
+ * restent valables (décision d'opérateur du 2026-10-15) et aucune logique ne
+ * relit la version — pas d'avenant rétroactif.
+ */
+export const CONSENT_SENSIBLE_VERSION = '2';
 
 export const CHAMPS_SENSIBLES = [
   'genderIdentity',

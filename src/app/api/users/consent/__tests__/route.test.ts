@@ -50,7 +50,8 @@ describe('/api/users/consent', () => {
     });
     expect(await (await POST(req)).json()).toEqual({ sensitiveData: true });
     expect(fakeDb.consent.create).toHaveBeenCalledWith({
-      data: { userId: ME, type: 'sensitive_data', version: '1', given: true, ipAddress: '203.0.113.9', userAgent: 'UA-test' },
+      // #530 : la version suit la copie (v2 nomme la fiche et les autres membres).
+      data: { userId: ME, type: 'sensitive_data', version: '2', given: true, ipAddress: '203.0.113.9', userAgent: 'UA-test' },
     });
   });
 
