@@ -60,4 +60,28 @@ INSERT INTO moderation_logs (id, "adminId", "targetUserId", action, reason, "cre
  (gen_random_uuid(), null,'00000000-0000-4000-8000-000000000010','INVITE_VERIFICATION','lexique_arnaque', now()-interval '1 day'),
  (gen_random_uuid(),'00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000013','REJECT_VERIFICATION','visage', now()-interval '2 days'),
  (gen_random_uuid(),'00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000020','BAN','Demande d’argent', now()-interval '12 days');
+
+-- Liste longue (#568) : soixante comptes factices de plus, pour que « À traiter »
+-- dépasse une page de vingt et que le défilement de la liste se mesure. Un
+-- compte sur deux attend son selfie, un sur dix porte un signalement.
+SELECT u(('00000000-0000-4000-8000-0000000' || lpad((1000+g)::text,5,'0'))::uuid,
+         (ARRAY['Alix','Basile','Capucine','Dorian','Elsa','Farid','Gaëlle','Hervé','Isaure','Joachim','Katell','Lazare','Mona','Nils','Ondine','Pablo','Quitterie','Rémi','Solène','Titouan'])[1 + (g % 20)] || '_' || g,
+         'USER', now()-(g||' days')::interval, current_date-(g % 30), g % 4 = 0, false, true, null, 'dx'||g, '{}')
+FROM generate_series(1,60) g;
+INSERT INTO verification_requests (id, "userId", "selfieUrl", status, code_attendu, code_lu, tentative, "createdAt")
+  SELECT gen_random_uuid(), ('00000000-0000-4000-8000-0000000' || lpad((1000+g)::text,5,'0'))::uuid, '/api/photos/x/selfie.jpg','pending','2345','2345',1, now()-(g||' hours')::interval
+  FROM generate_series(1,60) g WHERE g % 2 = 1;
+INSERT INTO reports (id, "reporterId", "reportedId", reason, description, status, "createdAt")
+  SELECT gen_random_uuid(), '00000000-0000-4000-8000-000000000023', ('00000000-0000-4000-8000-0000000' || lpad((1000+g)::text,5,'0'))::uuid, 'harassment','Texte factice de signalement.','pending', now()-(g||' hours')::interval
+  FROM generate_series(1,60) g WHERE g % 10 = 0;
+
+-- Groupe de signalements (#568) : trois signalements du même motif et un d'un
+-- autre motif sur le même compte, pour le geste groupé.
+SELECT u('00000000-0000-4000-8000-000000000030','Groupe_3','USER', now()-interval '3 days', current_date, false,false,true,null,'dg','{}');
+INSERT INTO reports (id, "reporterId", "reportedId", reason, description, status, "createdAt") VALUES
+ (gen_random_uuid(),'00000000-0000-4000-8000-000000000023','00000000-0000-4000-8000-000000000030','harassment','Premier texte factice.','pending', now()-interval '4 days'),
+ (gen_random_uuid(),'00000000-0000-4000-8000-000000000019','00000000-0000-4000-8000-000000000030','harassment','','pending', now()-interval '4 days' + interval '1 hour'),
+ (gen_random_uuid(),'00000000-0000-4000-8000-000000000022','00000000-0000-4000-8000-000000000030','harassment','','pending', now()-interval '4 days' + interval '2 hours'),
+ (gen_random_uuid(),'00000000-0000-4000-8000-000000000012','00000000-0000-4000-8000-000000000030','fake','Autre motif factice.','pending', now()-interval '1 hour');
+
 DROP FUNCTION u(uuid, text, text, timestamptz, date, bool, bool, bool, timestamptz, text, text[]);

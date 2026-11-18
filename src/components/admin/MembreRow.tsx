@@ -72,16 +72,16 @@ export default function MembreRow({
       type="button"
       onClick={() => onOuvrir(m.id)}
       aria-current={courant ? 'true' : undefined}
-      className={`grid min-h-16 w-full grid-cols-[4px_40px_minmax(0,1fr)_auto] items-center gap-2.5 border-b border-hairline py-2.5 pl-0 pr-3 text-left last:border-b-0 hover:bg-sunken/60 focus-visible:outline-none focus-visible:shadow-focus ${courant ? 'bg-sunken' : 'bg-transparent'}`}
+      className={`grid min-h-16 w-full grid-cols-[4px_40px_minmax(0,1fr)_auto] items-center gap-2.5 border-b border-hairline py-2 pl-0 pr-3.5 text-left hover:bg-sunken/60 focus-visible:outline-none focus-visible:shadow-[inset_var(--shadow-focus)] ${courant ? 'bg-sunken' : 'bg-transparent'}`}
     >
       <SeverityStripe gravite={premier?.gravite ?? null} />
       <Avatar src={m.avatar} pseudo={m.pseudo} />
       <span className="min-w-0">
-        <span className="flex min-w-0 items-center gap-1.5 text-sm font-semibold text-content">
+        <span className="flex min-w-0 items-center gap-1.5 text-sm font-semibold leading-snug text-content">
           <span className="truncate">{m.pseudo}</span>
           {m.verifie && <span className="text-xs font-semibold text-green-700 dark:text-green-400" aria-label="vérifié">✓</span>}
         </span>
-        <span className="block text-xs text-muted">Inscrit {ilYa(m.inscritAt, maintenant)} · {vuLe(m.vuLe, maintenant)}</span>
+        <span className="block truncate text-xs leading-snug text-muted">Inscrit {ilYa(m.inscritAt, maintenant)} · {vuLe(m.vuLe, maintenant)}</span>
         {(parType.size > 0 || m.statut !== 'actif' || m.fiabilite !== 'fiable') && (
           <span className="mt-1 flex flex-wrap gap-1">
             {[...parType].map(([type, { n, variant }]) => (
@@ -92,7 +92,7 @@ export default function MembreRow({
           </span>
         )}
       </span>
-      <span className="text-[11px] font-medium text-muted">{premier ? duree(premier.depuis, maintenant) : ''}</span>
+      <span className="whitespace-nowrap text-[11px] font-medium text-muted">{premier ? duree(premier.depuis, maintenant) : ''}</span>
     </button>
   );
 }

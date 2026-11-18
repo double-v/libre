@@ -1336,14 +1336,19 @@ les points correspondants de la section précédente.
   actuel, en attendant #544), **Membres**, **Retours**, **Outils**. Entrée
   courante : `bg-sunken text-content` + `aria-current="page"`. À droite :
   `ThemeMenu` puis « ← Retour à l’app ». Sous 900 px, les quatre entrées
-  passent dans une barre d'onglets en bas (`--nav-h`, icône 20 px + libellé de
+  passent dans une barre d'onglets en bas (`min-h-14`, icône 20 px + libellé de
   10 px en capitales, filet corail de 2 px sur l'onglet courant, `pb-safe`).
+  Les onglets ne sont pas en position fixe : ils sont la dernière rangée de
+  la coque, donc ils ne recouvrent jamais le contenu.
   Un seul seuil, 900 px, pour la coque et pour le hub. Liens : cible de 44 px
   et `focus-visible:shadow-focus`. Les compteurs restent des `CountChip`
   (surface admin).
-- **`ThemeMenu` dans l'en-tête** : le composant n'est pas modifié. Placé en
-  fin d'en-tête, son panneau ancré à droite tient dans la fenêtre. Il ne va
-  jamais dans une colonne étroite collée au bord gauche.
+- **`ThemeMenu` dans l'en-tête** : placé en fin d'en-tête, son panneau ancré
+  à droite tient dans la fenêtre. Il ne va jamais dans une colonne étroite
+  collée au bord gauche. Seul ajout au composant : la prop `labelClassName`
+  (défaut `hidden sm:inline`, inchangé ailleurs) ; l'en-tête du bureau, plus
+  chargé, ne montre le nom du thème qu'à partir de 1280 px, et le bouton ne
+  passe jamais à la ligne (`whitespace-nowrap`).
 - **Outils** (`/admin/outils`) : index des pages existantes, en trois
   groupes (Modération, Site, Technique), chaque lien haut de 48 px. Les pages
   gardent leur adresse.
@@ -1375,7 +1380,9 @@ les points correspondants de la section précédente.
   sur sa ligne (texte cité s'il y en a un, « Signalé par … · il y a … »), une
   seule rangée de gestes et un seul repère. Le geste s'applique à **tous les
   signalements affichés** du groupe, en une transaction
-  (`PATCH /api/admin/membres/[id]/signalements`).
+  (`PATCH /api/admin/membres/[id]/signalements`) : tout ou rien, et une seule
+  ligne de journal, celle du geste unitaire. La feuille de confirmation
+  (avertir, bannir) dit combien de signalements seront clos.
 - **Aucune animation ajoutée** : rien à réduire.
 
 ## Responsive

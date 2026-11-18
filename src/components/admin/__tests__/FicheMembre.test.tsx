@@ -18,7 +18,11 @@ const LIE = '4a2b8c1e-1d2a-4c3b-9a8e-7f6d5c4b3a22';
 function base(o: Partial<Fiche> = {}): Fiche {
   return {
     membre: { id: ID, pseudo: 'Julien_84', email: 'julien@exemple.test', inscritAt: '2026-11-10T00:00:00Z', vuLe: '2026-11-12', verifie: false, statut: 'actif', fiabilite: 'douteux', invitation: null, retrait: null, admin: false },
-    cas: [{ type: 'report', id: 'rep-1', depuis: '2026-11-11T00:00:00Z', motif: 'scam', motifLibelle: 'Arnaque ou demande d’argent', description: 'Envoie-moi 200 €.', auteur: 'Signaleuse', enAttente: 3, reponsesAuMoment: [] }],
+    cas: [
+      { type: 'report', id: 'rep-2', depuis: '2026-11-11T08:00:00Z', motif: 'scam', motifLibelle: 'Arnaque ou demande d’argent', description: '', auteur: 'Odile', enAttente: 3, reponsesAuMoment: [] },
+      { type: 'report', id: 'rep-1', depuis: '2026-11-11T00:00:00Z', motif: 'scam', motifLibelle: 'Arnaque ou demande d’argent', description: 'Envoie-moi 200 €.', auteur: 'Signaleuse', enAttente: 3, reponsesAuMoment: [] },
+      { type: 'report', id: 'rep-3', depuis: '2026-11-11T09:00:00Z', motif: 'scam', motifLibelle: 'Arnaque ou demande d’argent', description: '', auteur: 'Thomas', enAttente: 3, reponsesAuMoment: [] },
+    ],
     reponses: [],
     signaux: [{ type: 'lexique_arnaque', libelle: 'Vocabulaire d’arnaque (paiement, rencontre tarifée)', force: 'fort', date: '2026-11-11T00:00:00Z', extrait: null, legitimePossible: null }],
     photos: [],
@@ -56,7 +60,12 @@ describe('sections et repères', () => {
     await ouvrir();
     const carte = screen.getByRole('article');
     expect(within(carte).getByText('Envoie-moi 200 €.')).toBeInTheDocument();
-    expect(within(carte).getByText(/3 signalements en attente pour ce membre/)).toBeInTheDocument();
+    // Trois signalements du même motif : une seule carte, qui dit leur nombre
+    // et qui a signalé, du plus ancien au plus récent (#568).
+    expect(within(carte).getByText('Signalement ×3')).toBeInTheDocument();
+    expect(within(carte).getAllByText(/^Signalé par /).map((e) => e.textContent?.replace(/ · il y a .*$/, ''))).toEqual(['Signalé par Signaleuse', 'Signalé par Odile', 'Signalé par Thomas']);
+    expect(within(carte).getAllByText(/sans texte$/)).toHaveLength(2);
+    expect(within(carte).getAllByText(/^Repère\.$/)).toHaveLength(1);
     expect(within(carte).getByText(/Une demande d’argent à quelqu’un rencontré sur Libre suffit pour bannir/)).toBeInTheDocument();
     expect(within(carte).getAllByRole('button').map((b) => b.textContent)).toEqual(['Sans suite', 'Avertir', 'Bannir…']);
     expect(screen.getByText('Vocabulaire d’arnaque (paiement, rencontre tarifée)')).toBeInTheDocument();
@@ -92,8 +101,37 @@ describe('bannir (FR-021, FR-022)', () => {
     const f2 = screen.getByRole('dialog');
     await user.selectOptions(within(f2).getByLabelText('Motif, inscrit à l’historique'), 'argent');
     await user.click(within(f2).getByRole('button', { name: 'Bannir' }));
-    expect(ecritures).toEqual([{ url: '/api/admin/reports/rep-1', method: 'PATCH', corps: { action: 'BAN', reason: 'Demande d’argent' } }]);
+    // Un seul envoi, pour tout le groupe affiché, à la route du membre.
+    expect(ecritures).toEqual([{ url: `/api/admin/membres/${ID}/signalements`, method: 'PATCH', corps: { motif: 'scam', ids: ['rep-1', 'rep-2', 'rep-3'], action: 'BAN', reason: 'Demande d’argent' } }]);
     expect(onChange).toHaveBeenCalled();
+  });
+
+  it('la feuille dit que les trois signalements seront clos', async () => {
+    const user = userEvent.setup();
+    await ouvrir();
+    await user.click(within(screen.getByRole('article')).getByRole('button', { name: 'Bannir…' }));
+    expect(within(screen.getByRole('dialog')).getByText('Les 3 signalements de ce motif seront clos par ce geste.')).toBeInTheDocument();
+  });
+});
+
+describe('signalements regroupés par motif (#568)', () => {
+  it('« Sans suite » classe le groupe en un envoi, sans toucher l’autre motif', async () => {
+    const user = userEvent.setup();
+    fiche = base({ cas: [...base().cas, { type: 'report', id: 'rep-h', depuis: '2026-11-10T00:00:00Z', motif: 'harassment', motifLibelle: 'Harcèlement ou intimidation', description: 'Insulte.', auteur: 'Maëlle', enAttente: 4, reponsesAuMoment: [] }] });
+    await ouvrir();
+    const cartes = screen.getAllByRole('article');
+    expect(cartes).toHaveLength(2);
+    expect(within(cartes[0]).getByText('Signalement ×3')).toBeInTheDocument();
+    // Un signalement seul garde l'étiquette sans multiplicateur.
+    expect(within(cartes[1]).getByText('Signalement')).toBeInTheDocument();
+    expect(within(cartes[1]).queryByText(/×/)).toBeNull();
+    await user.click(within(cartes[0]).getByRole('button', { name: 'Sans suite' }));
+    expect(ecritures).toEqual([{ url: `/api/admin/membres/${ID}/signalements`, method: 'PATCH', corps: { motif: 'scam', ids: ['rep-1', 'rep-2', 'rep-3'], action: 'DISMISS_REPORT' } }]);
+  });
+
+  it('l’en-tête de la fiche compte les cas, pas les cartes', async () => {
+    await ouvrir();
+    expect(screen.getByText('3 cas')).toBeInTheDocument();
   });
 
   it('Échap ferme la feuille sans rien envoyer', async () => {
