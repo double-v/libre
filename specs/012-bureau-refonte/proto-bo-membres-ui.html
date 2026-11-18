@@ -1,0 +1,410 @@
+<!-- ghwork-proto: issue=568 debloque=568 titre=Bureau · Membres : coque à quatre entrées, liste qui défile dans sa zone, fiche regroupée (validé le 2026-11-18 : filtres A, coque maintenant, signalements regroupés) -->
+<!doctype html>
+<html lang="fr" data-theme="libre">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bureau · Membres — prototype de refonte</title>
+<style>
+/* Tokens recopiés de src/app/globals.css (thème « libre », clair et sombre).
+   Aucune couleur nouvelle : gravités = palette de statut de CaseTag / SeverityStripe. */
+:root{
+  --background:#ffffff; --surface:#ffffff; --sunken:#FDF0ED; --content:#171717; --muted:#4b5563;
+  --hairline:#e5e7eb; --hairline-strong:#d1d5db; --fill-subtle:#f3f4f6;
+  --coral:#E8634A; --coral-light:#F09A88; --coral-dark:#9E3A28; --gold:#E8A04E;
+  --rad-card:30px; --rad-control:6px; --nav-h:3.5rem;
+  --elev-pop:0 18px 40px -12px rgb(232 99 74 / .35); --shadow-focus:0 0 0 3px rgb(232 99 74 / .4);
+  --bad:#b91c1c; --bad-soft:#fef2f2; --bad-stripe:#b91c1c;
+  --warn:#92400e; --warn-soft:#fffbeb; --warn-stripe:#b45309;
+  --info:#1e40af; --info-soft:#eff6ff; --info-stripe:#1d4ed8;
+  --ok:#166534; --ok-soft:#f0fdf4; --ok-mark:#15803d; --danger:#dc2626; --accent-text:var(--coral-dark);
+  --placeholder:#9ca3af; --scrim:rgb(23 23 23 / .45);
+}
+:root.dark{
+  --background:#0a0a0a; --surface:#171717; --sunken:rgb(232 99 74 / .10); --content:#ededed; --muted:#9ca3af;
+  --hairline:#374151; --hairline-strong:#374151; --fill-subtle:#1f2937;
+  --elev-pop:0 18px 40px -12px rgb(232 99 74 / .45);
+  --bad:#fca5a5; --bad-soft:rgb(127 29 29 / .3); --bad-stripe:#f87171;
+  --warn:#fcd34d; --warn-soft:rgb(120 53 15 / .3); --warn-stripe:#fbbf24;
+  --info:#93c5fd; --info-soft:rgb(30 58 138 / .3); --info-stripe:#93c5fd;
+  --ok:#86efac; --ok-soft:rgb(20 83 45 / .3); --ok-mark:#4ade80; --accent-text:var(--coral-light);
+  --placeholder:#6b7280; --scrim:rgb(0 0 0 / .6); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{font-size:18px;height:100%}
+body{margin:0;height:100dvh;overflow:hidden;background:var(--background);color:var(--content);
+  font-family:"Geist","Inter",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3,p{margin:0}
+:focus{outline:none}
+:focus-visible{box-shadow:var(--shadow-focus);outline:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+
+/* ── Coque admin : en-tête + (sous 900 px) barre d'onglets ─────────────── */
+.shell{display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100dvh}
+header.top{background:var(--surface);border-bottom:1px solid var(--hairline);padding-top:env(safe-area-inset-top,0px)}
+.bar{display:flex;align-items:center;gap:12px;min-height:60px;padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px))}
+.brand{display:inline-flex;align-items:center;gap:8px;font-size:1rem;font-weight:700;color:var(--coral);white-space:nowrap;text-decoration:none;min-height:44px;border-radius:var(--rad-control)}
+.dark .brand{color:var(--coral-light)}
+.brand svg{width:24px;height:24px;flex:none}
+.views{display:none;gap:4px;margin-left:12px}
+.views a{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:var(--rad-control);font-size:.875rem;font-weight:500;color:var(--muted);text-decoration:none;white-space:nowrap}
+.views a:hover{background:var(--fill-subtle);color:var(--content)}
+.views a[aria-current="page"]{background:var(--sunken);color:var(--content);font-weight:600}
+.cnt{display:inline-flex;align-items:center;justify-content:center;height:20px;min-width:20px;padding:0 6px;border-radius:999px;background:var(--coral);color:#fff;font-size:12px;font-weight:500;line-height:1}
+.grow{flex:1}
+.protopill{display:none;align-items:center;gap:6px;font-size:11px;color:var(--muted);border:1px dashed var(--hairline-strong);border-radius:var(--rad-control);padding:2px 4px 2px 8px;white-space:nowrap}
+.protopill button{border:0;background:none;min-height:28px;padding:0 8px;border-radius:4px;font-weight:600;color:var(--muted)}
+.protopill button[aria-pressed="true"]{background:var(--fill-subtle);color:var(--content)}
+.themewrap{position:relative}
+.themebtn{white-space:nowrap;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-radius:var(--rad-control);border:1px solid var(--hairline);background:var(--surface);font-size:.875rem;font-weight:500}
+.themebtn:hover{border-color:var(--coral-light)}
+.themebtn .lbl{display:none}
+.sw{position:relative;width:20px;height:20px;border-radius:50%;border:1px solid var(--hairline);background:var(--background);overflow:hidden;flex:none}
+.sw::before{content:"";position:absolute;inset:0 0 0 50%;background:var(--coral)}
+.sw::after{content:"";position:absolute;left:16%;top:16%;width:30%;height:30%;border-radius:50%;background:var(--gold)}
+.themepop{position:fixed;inset:auto 0 0 0;z-index:50;background:var(--surface);border:1px solid var(--hairline);border-radius:var(--rad-card) var(--rad-card) 0 0;box-shadow:var(--elev-pop);padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.themepop legend,.kick{font-size:.75rem;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:0;margin-bottom:8px}
+.themepop fieldset{border:0;margin:0;padding:0}
+.seg{display:flex;gap:4px;background:var(--fill-subtle);padding:4px;border-radius:var(--rad-control)}
+.seg button{flex:1;min-height:44px;border:0;background:none;border-radius:4px;font-size:.875rem;font-weight:500;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--coral)}
+.themes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.themes span{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px;border:1px solid var(--hairline);border-radius:var(--rad-control);font-size:.875rem;font-weight:500}
+.themes span.on{border-color:var(--coral);background:var(--sunken)}
+.back{display:inline-flex;align-items:center;min-height:44px;padding:0 6px;font-size:.875rem;color:var(--muted);text-decoration:none;white-space:nowrap;border-radius:var(--rad-control)}
+.back:hover{color:var(--content)}
+.back .long{display:none}
+
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-top:1px solid var(--hairline);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs a{position:relative;display:grid;place-items:center;align-content:center;gap:3px;min-height:var(--nav-h);color:var(--muted);text-decoration:none;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.tabs svg{width:20px;height:20px}
+.tabs a[aria-current="page"]{color:var(--accent-text)}
+.tabs a[aria-current="page"]::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;background:var(--coral)}
+.tabs .cnt{position:absolute;top:4px;left:calc(50% + 8px);height:18px;min-width:18px;font-size:11px}
+
+main{min-height:0;overflow:hidden}
+main.page{overflow-y:auto}
+.pagein{max-width:1180px;margin:0 auto;padding:24px 16px;display:grid;gap:16px}
+.pagein h1{font-size:22px;font-weight:600;line-height:1.2}
+.note{border:1px dashed var(--hairline-strong);border-radius:16px;padding:16px;color:var(--muted);font-size:.875rem}
+.tools{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.tools section{border:1px solid var(--hairline);border-radius:var(--rad-card);background:var(--surface);padding:16px 8px 8px}
+.tools h2{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:0 12px 6px}
+.tools a{display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:0 12px;border-radius:var(--rad-control);text-decoration:none;color:var(--content);font-size:.875rem;font-weight:500}
+.tools a:hover{background:var(--fill-subtle)}
+.tools a small{color:var(--muted);font-weight:400;font-size:12px}
+
+/* ── Hub Membres ───────────────────────────────────────────────────────── */
+.hub{display:grid;grid-template-columns:minmax(0,1fr);height:100%;min-height:0}
+.listpane{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--surface)}
+.listhead{flex:none;display:grid;gap:10px;padding:12px 16px 10px;border-bottom:1px solid var(--hairline);position:relative;z-index:1}
+.listhead.ombre{box-shadow:0 6px 10px -8px rgb(23 23 23 / .25)}
+input[type=search],select{width:100%;min-height:44px;padding:0 12px;border-radius:8px;border:1px solid var(--hairline);background:var(--surface);font-size:.875rem;line-height:1.5}
+input::placeholder{color:var(--placeholder);font-style:italic;opacity:1}
+select{font-size:13px;padding:0 8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips.une{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding:3px 16px;scroll-padding-inline:16px;
+  mask-image:linear-gradient(to right,transparent 0,#000 16px,#000 calc(100% - 28px),transparent 100%)}
+.chip{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border:1px solid var(--hairline);background:var(--surface);border-radius:999px;font-size:13px;white-space:nowrap;color:var(--content)}
+.chip[aria-pressed="true"]{border-color:var(--coral);background:color-mix(in srgb,var(--coral) 10%,transparent);color:var(--accent-text)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.statut{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted);line-height:1.3}
+.statut select{width:auto;flex:none}
+.compteliste{padding:8px 16px;font-size:12px;color:var(--muted);line-height:1.3;border-bottom:1px solid var(--hairline)}
+.mlist{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scroll-padding-block:8px}
+.row{display:grid;grid-template-columns:4px 40px minmax(0,1fr) auto;align-items:center;gap:10px;width:100%;min-height:72px;padding:9px 14px 9px 0;border:0;border-bottom:1px solid var(--hairline);background:transparent;text-align:left}
+.row:hover{background:color-mix(in srgb,var(--sunken) 60%,transparent)}
+.row[aria-current="true"]{background:var(--sunken)}
+.row:focus-visible{box-shadow:inset var(--shadow-focus)}
+.sev{align-self:stretch;width:4px;border-radius:0 3px 3px 0}
+.av{display:grid;place-items:center;border-radius:50%;background:var(--sunken);font-weight:600;color:var(--muted);flex:none;width:40px;height:40px;font-size:.875rem}
+.av.l{width:56px;height:56px;font-size:1.125rem}
+.nm{display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:600;line-height:1.35;min-width:0}
+.nm span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.okm{color:var(--ok-mark);font-size:12px}
+.sub{display:block;font-size:12px;color:var(--muted);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.tag{display:inline-block;font-size:10px;font-weight:600;line-height:1;letter-spacing:.06em;text-transform:uppercase;padding:4px 6px;border-radius:3px;background:var(--sunken);color:var(--muted);white-space:nowrap}
+.t-bad{background:var(--bad-soft);color:var(--bad)} .t-warn{background:var(--warn-soft);color:var(--warn)} .t-info{background:var(--info-soft);color:var(--info)} .t-ok{background:var(--ok-soft);color:var(--ok)}
+.age{font-size:11px;font-weight:500;color:var(--muted);white-space:nowrap}
+.more{display:grid;gap:8px;justify-items:center;padding:14px 16px 20px;font-size:12px;color:var(--muted);text-align:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--hairline-strong);background:var(--surface);font-size:.875rem;font-weight:500;color:var(--content);white-space:nowrap}
+.btn:hover{background:var(--fill-subtle)}
+.btn.ok{background:#16a34a;border-color:#16a34a;color:#fff}
+.btn.do{border-color:var(--danger);color:var(--bad)}
+.btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+.empty{display:grid;place-items:center;gap:6px;padding:40px 16px;text-align:center;color:var(--muted)}
+.empty strong{font-size:1.125rem;font-weight:600;color:var(--content)}
+
+.ficheout{min-width:0;min-height:0;overflow-y:auto;overscroll-behavior:contain;background:var(--background)}
+.hub.fiche-ouverte .listpane{display:none}
+.hub:not(.fiche-ouverte) .ficheout{display:none}
+.fid{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;min-height:56px;padding:6px 16px;background:var(--surface);border-bottom:1px solid var(--hairline)}
+.backbtn{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 10px 0 0;border:0;background:none;font-size:.875rem;font-weight:600;color:var(--accent-text);border-radius:var(--rad-control)}
+.fid h1{font-size:1.125rem;font-weight:600;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.fid .tags{margin:0;flex-wrap:nowrap;flex:none}
+.fiche{display:grid;gap:14px;padding:16px;max-width:920px}
+.meta{font-size:13px;color:var(--muted);line-height:1.5}
+.case{display:grid;gap:10px;min-width:0;border:1px solid var(--hairline);border-left:4px solid var(--hairline);border-radius:var(--rad-card);background:var(--surface);padding:14px 16px}
+.case.bad{border-left-color:var(--bad-stripe)} .case.warn{border-left-color:var(--warn-stripe)} .case.info{border-left-color:var(--info-stripe)}
+.chead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.chead>span:first-child{display:flex;align-items:center;gap:8px;min-width:0}
+.chead h3{font-size:1rem;font-weight:600;line-height:1.25}
+.mono{font-family:"Geist Mono",ui-monospace,monospace;font-size:12px;color:var(--muted);white-space:nowrap}
+.quote{background:var(--sunken);border-radius:8px;padding:10px 14px;font-size:.875rem;line-height:1.55}
+.rep{display:grid;gap:4px;padding-top:8px;border-top:1px solid var(--hairline)}
+.rep:first-of-type{border-top:0;padding-top:0}
+.rep .who{font-size:12px;color:var(--muted)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.repere{border-top:1px dashed var(--hairline);padding-top:8px;font-size:12px;color:var(--muted);line-height:1.5}
+.repere b{color:var(--content)}
+.cols{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+.col{display:grid;gap:14px;align-content:start;min-width:0}
+.panel{display:grid;gap:10px;align-content:start;min-width:0;border:1px solid var(--hairline);border-radius:var(--rad-card);background:var(--surface);padding:14px 16px}
+.panel h2{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.panel p,.panel li{font-size:13px;color:var(--muted);line-height:1.5}
+.sig{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:6px 10px;font-size:13px}
+.hist{list-style:none;margin:0;padding:0;display:grid}
+.hist li{display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;padding:8px 0;border-top:1px solid var(--hairline);color:var(--content)}
+.hist li:first-child{border-top:0}
+.hist time{font-size:12px;color:var(--muted)}
+details{border-top:1px solid var(--hairline)}
+summary{display:flex;align-items:center;justify-content:space-between;min-height:44px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);list-style:none;border-radius:var(--rad-control)}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"";width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin-right:6px}
+details[open] summary::after{transform:rotate(-135deg)}
+details.zone summary{color:var(--bad)}
+details .in{display:grid;gap:8px;padding-bottom:10px}
+.selfie{width:112px;aspect-ratio:4/5;border-radius:12px;background:linear-gradient(135deg,var(--coral-light),var(--gold))}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:13px;align-content:start}
+.kv span{color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 20px);transform:translateX(-50%);z-index:60;background:var(--content);color:var(--surface);padding:10px 16px;border-radius:999px;font-size:13px;white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis}
+
+@media (min-width:640px){
+  .themepop{position:absolute;inset:calc(100% + 8px) 0 auto auto;width:20rem;border-radius:var(--rad-card);padding:16px}
+  .cols{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+}
+@media (min-width:900px){
+  .views{display:flex}
+  .tabs{display:none}
+  .protopill{display:inline-flex}
+  .bar{padding-inline:24px;gap:16px}
+  .hub{grid-template-columns:clamp(360px,36vw,420px) minmax(0,1fr)}
+  .listpane{border-right:1px solid var(--hairline)}
+  .hub.fiche-ouverte .listpane{display:flex}
+  .hub:not(.fiche-ouverte) .ficheout{display:block}
+  .backbtn{display:none}
+  .fid{padding-inline:24px}
+  .fiche{padding:20px 24px 32px}
+  .toast{bottom:24px}
+}
+@media (min-width:1280px){.themebtn .lbl{display:inline}.back .long{display:inline}.back .short{display:none}}
+/* Aucune animation dans ce prototype : rien à réduire. Le ThemeMenu réel garde
+   son fondu d'ouverture et son équivalent prefers-reduced-motion. */
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top"><div class="bar">
+    <a class="brand" href="#activite" data-vue="activite"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7.5-4.6-10-9.3C.3 8.300 2 4.500 5.700 4.500c2.100 0 3.600 1.100 4.600 2.500h3.400c1-1.400 2.500-2.500 4.600-2.500 3.700 0 5.400 3.800 3.700 7.200C19.500 16.400 12 21 12 21z"/></svg>Libre Admin</a>
+    <nav class="views" id="views" aria-label="Sections du bureau"></nav>
+    <span class="grow"></span>
+    <span class="protopill" title="Réglage du prototype seulement, absent de l’app">Proto · filtres
+      <button type="button" data-var="a" aria-pressed="true">A</button><button type="button" data-var="b" aria-pressed="false">B</button></span>
+    <div class="themewrap">
+      <button class="themebtn" id="themebtn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Thème et apparence"><span class="sw" aria-hidden="true"></span><span class="lbl">Libre (coral)</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div id="themepop" hidden></div>
+    </div>
+    <a class="back" href="#"><span class="long">← Retour à l’app</span><span class="short">Retour</span></a>
+  </div></header>
+  <main id="main"></main>
+  <nav class="tabs" id="tabs" aria-label="Sections du bureau"></nav>
+</div>
+<div id="toast"></div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const P=new URLSearchParams(location.search);
+const ICON={activite:'<path d="M3 12h4l3 8 4-16 3 8h4"/>',membres:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.870"/><path d="M16 3.130a4 4 0 010 7.750"/>',retours:'<path d="M21 11.500a8.380 8.380 0 01-.9 3.800 8.500 8.500 0 01-7.600 4.700 8.380 8.380 0 01-3.800-.9L3 21l1.900-5.700a8.380 8.380 0 01-.9-3.800 8.500 8.500 0 014.700-7.600 8.380 8.380 0 013.800-.9h.5a8.480 8.480 0 018 8v.5z"/>',outils:'<circle cx="12" cy="12" r="3"/><path d="M19.400 15a1.650 1.650 0 00.33 1.820l.06.06a2 2 0 11-2.830 2.830l-.06-.06a1.650 1.650 0 00-1.820-.33 1.650 1.650 0 00-1 1.510V21a2 2 0 01-4 0v-.09a1.650 1.650 0 00-1-1.510 1.650 1.650 0 00-1.820.33l-.06.06a2 2 0 11-2.830-2.830l.06-.06a1.650 1.650 0 00.33-1.820 1.650 1.650 0 00-1.510-1H3a2 2 0 010-4h.09a1.650 1.650 0 001.510-1 1.650 1.650 0 00-.33-1.820l-.06-.06a2 2 0 112.830-2.830l.06.06a1.650 1.650 0 001.820.33h0a1.650 1.650 0 001-1.510V3a2 2 0 014 0v.09a1.650 1.650 0 001 1.510h0a1.650 1.650 0 001.820-.33l.06-.06a2 2 0 112.830 2.830l-.06.06a1.650 1.650 0 00-.33 1.820v0a1.650 1.650 0 001.510 1H21a2 2 0 010 4h-.09a1.650 1.650 0 00-1.510 1z"/>'};
+const VUES=[['activite','Activité'],['membres','Membres'],['retours','Retours'],['outils','Outils']];
+
+/* ── Données factices (aucun membre réel) ── */
+const NOMS=['Alix','Basile','Capucine','Dorian','Elsa','Farid','Gaëlle','Hervé','Isaure','Joachim','Katell','Lazare','Mona','Nils','Ondine','Pablo','Quitterie','Rémi','Solène','Titouan'];
+const SEV={report:'bad',verif:'warn',photo:'warn',reponse:'warn',indice:'info'};
+const LIB={report:'Signalement',verif:'Selfie',photo:'Photo',reponse:'Réponse',indice:'Indice'};
+const RANG={report:0,verif:1,photo:1,reponse:1,indice:2};
+const M=[
+ {id:'julien',pseudo:'Julien_84',ins:2,vu:0,cas:[{t:'report',n:3,age:42,motif:'Arnaque ou demande d’argent'},{t:'indice',n:1,age:1440}],fiab:'douteux'},
+ {id:'marc',pseudo:'Marc_Tln',ins:60,vu:0,verifie:true,cas:[{t:'report',n:1,age:360,motif:'Harcèlement'}]},
+ {id:'maelle',pseudo:'Maëlle',ins:2,vu:0,cas:[{t:'verif',n:1,age:12}]},
+ {id:'sofiane',pseudo:'Sofiane',ins:9,vu:0,cas:[{t:'verif',n:1,age:41}]},
+ {id:'clara',pseudo:'Clara.L',ins:20,vu:1,verifie:true,cas:[{t:'photo',n:1,age:60}]},
+ {id:'ines',pseudo:'Inès',ins:1,vu:0,cas:[{t:'indice',n:1,age:300}],fiab:'a_surveiller'},
+ {id:'ines2',pseudo:'Ines_2',ins:1,vu:null,cas:[{t:'indice',n:1,age:300}],statut:'non_confirme'},
+ {id:'kevin',pseudo:'Kevin_R',ins:30,vu:12,cas:[],statut:'banni'},
+ {id:'lou',pseudo:'Lou',ins:150,vu:90,cas:[],statut:'masque'},
+ {id:'odile',pseudo:'Odile',ins:90,vu:0,verifie:true,cas:[]},
+];
+for(let g=1;g<=64;g++){const cas=[];if(g%10===0)cas.push({t:'report',n:1,age:g*60,motif:'Harcèlement'});if(g%2===1)cas.push({t:'verif',n:1,age:g*60});
+  M.push({id:'f'+g,pseudo:NOMS[g%20]+'_'+g,ins:g,vu:g%30,verifie:g%4===0,cas,statut:g%23===0?'banni':g%9===0&&!cas.length?'non_confirme':undefined});}
+M.forEach(m=>m.cas.sort((a,b)=>RANG[a.t]-RANG[b.t]||b.age-a.age));
+
+const FILTRES=[['atraiter','À traiter',m=>m.cas.length,1],['verif','Selfies',m=>m.cas.some(c=>c.t==='verif'),1],['report','Signalés',m=>m.cas.some(c=>c.t==='report'),1],['photo','Photos',m=>m.cas.some(c=>c.t==='photo'),1],['reponse','Réponses',m=>m.cas.some(c=>c.t==='reponse'),1],['indice','Indices',m=>m.cas.some(c=>c.t==='indice'),1],
+ ['douteux','Douteux',m=>m.fiab==='douteux'],['verifies','Vérifiés',m=>m.verifie],['masques','Masqués',m=>m.statut==='masque'],['bannis','Bannis',m=>m.statut==='banni'],['nonconf','Non confirmés',m=>m.statut==='non_confirme'],['tous','Tous',()=>true]];
+const PAGE=20, LARGE=matchMedia('(min-width:900px)');
+let vue=location.hash.slice(1)||P.get('vue')||'membres';
+let filtre=P.get('filtre')||'atraiter', tri=P.get('tri')||'urgence', q=P.get('q')||'', courant=P.get('membre')||null;
+let variante=P.get('filtres')==='b'?'b':'a', affiches=PAGE, posListe=0;
+
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dur=min=>min<60?min+' min':min<1440?Math.round(min/60)+' h':Math.round(min/1440)+' j';
+const ilya=j=>j===0?'aujourd’hui':j<30?'il y a '+j+' j':'il y a '+Math.round(j/30)+' mois';
+const vu=j=>j===null?'jamais venu':j===0?'vu aujourd’hui':'vu '+ilya(j);
+const cnt=k=>M.reduce((s,m)=>s+m.cas.filter(c=>k==='atraiter'||c.t===k).reduce((a,c)=>a+c.n,0),0);
+function liste(){
+  const f=FILTRES.find(x=>x[0]===filtre)||FILTRES[0];
+  const l=M.filter(m=>f[2](m)&&(!q||m.pseudo.toLowerCase().includes(q.toLowerCase())));
+  const u=m=>m.cas[0]?[RANG[m.cas[0].t],-m.cas[0].age]:[9,0];
+  if(tri==='urgence')l.sort((a,b)=>u(a)[0]-u(b)[0]||u(a)[1]-u(b)[1]);
+  else if(tri==='recent')l.sort((a,b)=>a.ins-b.ins);
+  else l.sort((a,b)=>({douteux:0,a_surveiller:1}[a.fiab]??2)-({douteux:0,a_surveiller:1}[b.fiab]??2));
+  return l;
+}
+function adresse(){const p=new URLSearchParams();if(filtre!=='atraiter')p.set('filtre',filtre);if(tri!=='urgence')p.set('tri',tri);if(q)p.set('q',q);if(courant)p.set('membre',courant);if(variante==='b')p.set('filtres','b');
+  history.replaceState(null,'',location.pathname+(p.size?'?'+p:'')+'#'+vue);}
+const tagsDe=m=>m.cas.map(c=>`<span class="tag t-${SEV[c.t]}">${LIB[c.t]}${c.n>1?' ×'+c.n:''}</span>`).join('')+(m.statut==='banni'?'<span class="tag t-bad">Banni</span>':m.statut==='masque'?'<span class="tag">Masqué</span>':m.statut==='non_confirme'?'<span class="tag">Non confirmé</span>':'')+(m.fiab==='douteux'?'<span class="tag t-bad">Douteux</span>':m.fiab==='a_surveiller'?'<span class="tag t-warn">À surveiller</span>':'');
+const av=(m,l)=>`<span class="av${l?' l':''}" aria-hidden="true">${esc(m.pseudo[0].toUpperCase())}</span>`;
+
+/* ── Coque ── */
+function coque(){
+  const n=cnt('atraiter');
+  $('#views').innerHTML=VUES.map(([k,l])=>`<a href="#${k}" data-vue="${k}"${vue===k?' aria-current="page"':''}>${l}${k==='membres'?`<span class="cnt">${n}</span>`:k==='retours'?'<span class="cnt">2</span>':''}</a>`).join('');
+  $('#tabs').innerHTML=VUES.map(([k,l])=>`<a href="#${k}" data-vue="${k}"${vue===k?' aria-current="page"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">${ICON[k]}</svg>${l}${k==='membres'?`<span class="cnt">${n}</span>`:''}</a>`).join('');
+}
+function rendre(){
+  coque();const main=$('#main');main.className=vue==='membres'?'':'page';
+  if(vue==='membres'){main.innerHTML=vMembres();brancher();}
+  else if(vue==='outils')main.innerHTML=`<div class="pagein"><h1>Outils</h1><div class="tools">
+    <section><h2>Modération</h2><a href="#outils">Historique des actions<small>ex-Logs</small></a><a href="#outils">La Place</a><a href="#outils">Alertes Cercle</a></section>
+    <section><h2>Site</h2><a href="#outils">Journal public</a><a href="#outils">Fonctionnalités</a><a href="#outils">Apparence</a></section>
+    <section><h2>Technique</h2><a href="#outils">Limites de requêtes<small>ex-Rate-limits</small></a><a href="#outils">Rétention</a></section></div>
+    <p class="note">Les huit pages de l’ancienne barre latérale, rangées derrière une seule entrée (spec 012, US8). Le Guide de modération s’y ajoutera avec #545. Chaque page garde son adresse actuelle.</p></div>`;
+  else main.innerHTML=`<div class="pagein"><h1>${vue==='activite'?'Activité':'Retours'}</h1><p class="note">Contenu de la page inchangé dans ce prototype : seule la coque (en-tête à quatre entrées, onglets en bas sous 900 px) remplace la barre latérale.${vue==='activite'?' L’entrée pointe sur le tableau de bord actuel en attendant le tableau d’activité (#544).':''}</p></div>`;
+  adresse();
+}
+
+/* ── Membres ── */
+function vFiltres(){
+  const puce=([k,l,,travail])=>{const n=travail?cnt(k):0;return `<button class="chip" type="button" data-f="${k}" aria-pressed="${filtre===k}">${l}${n?`<span class="cnt">${n}</span>`:''}</button>`};
+  const optTri=`<option value="urgence"${tri==='urgence'?' selected':''}>Trier par urgence</option><option value="recent"${tri==='recent'?' selected':''}>Inscription récente</option><option value="fiab"${tri==='fiab'?' selected':''}>Fiabilité</option>`;
+  if(variante==='b'||!LARGE.matches)return `<div class="chips une" role="toolbar" aria-label="Filtres">${FILTRES.map(puce).join('')}</div>
+    <div class="statut"><span id="compte" aria-live="polite"></span><select id="tri" aria-label="Trier">${optTri}</select></div>`;
+  const statutActif=!FILTRES.find(f=>f[0]===filtre)[3];
+  return `<div class="chips" role="toolbar" aria-label="Cas à traiter">${FILTRES.filter(f=>f[3]).map(puce).join('')}</div>
+    <div class="pair"><select id="statut" aria-label="Filtrer par statut du compte"><option value=""${statutActif?'':' selected'}>Statut du compte…</option>${FILTRES.filter(f=>!f[3]).map(([k,l])=>`<option value="${k}"${filtre===k?' selected':''}>${l}</option>`).join('')}</select>
+    <select id="tri" aria-label="Trier">${optTri}</select></div>`;
+}
+function vLignes(){
+  const l=liste(), vus=l.slice(0,affiches), reste=l.length-vus.length;
+  if(!l.length)return `<div class="empty"><strong>Rien ici</strong><span>Aucun membre ne correspond à ce filtre.</span>${filtre!=='tous'||q?'<button class="btn" type="button" data-reset>Voir tous les membres</button>':''}</div>`;
+  return (variante==='a'&&LARGE.matches?'<div class="compteliste" id="compte" aria-live="polite"></div>':'')+vus.map(m=>`<button class="row" type="button" data-m="${m.id}" aria-current="${m.id===courant}">
+     <span class="sev" style="background:${m.cas[0]?`var(--${SEV[m.cas[0].t]}-stripe)`:'transparent'}"></span>${av(m)}
+     <span style="min-width:0"><span class="nm"><span>${esc(m.pseudo)}</span>${m.verifie?'<span class="okm" aria-label="vérifié">✓</span>':''}</span>
+     <span class="sub">Inscrit ${ilya(m.ins)} · ${vu(m.vu)}</span>${tagsDe(m)?`<span class="tags">${tagsDe(m)}</span>`:''}</span>
+     <span class="age">${m.cas[0]?dur(m.cas[0].age):''}</span></button>`).join('')
+   +(reste?`<div class="more" id="suite"><span>Les membres suivants se chargent en arrivant ici.</span><button class="btn" type="button" data-suite>Afficher les membres suivants</button></div>`
+          :`<div class="more">Fin de la liste · ${l.length} membre${l.length>1?'s':''}</div>`);
+}
+function vMembres(){
+  return `<div class="hub${courant?' fiche-ouverte':''}">
+   <div class="listpane"><div class="listhead" id="listhead"><h1 class="sr">Membres</h1>
+     <input type="search" id="q" placeholder="Chercher par pseudo ou e-mail" value="${esc(q)}" aria-label="Chercher un membre" maxlength="100">
+     ${vFiltres()}</div>
+     <div class="mlist" id="mlist" tabindex="-1" aria-label="Liste des membres">${vLignes()}</div></div>
+   <div class="ficheout" id="ficheout">${courant?vFiche(M.find(m=>m.id===courant)):`<div class="empty"><strong>Choisis un membre</strong><span>Sa fiche s’affiche ici.</span></div>`}</div></div>`;
+}
+function compte(){const l=liste(),n=Math.min(affiches,l.length);const c=$('#compte');if(c)c.textContent=l.length?(n<l.length?`${n} affichés, d’autres suivent`:`${l.length} membre${l.length>1?'s':''}`):'';}
+let obs;
+function suite(){const ml=$('#mlist'),y=ml.scrollTop;affiches+=PAGE;ml.innerHTML=vLignes();ml.scrollTop=y;compte();observer();}
+function observer(){obs&&obs.disconnect();const s=$('#suite');if(!s)return;
+  // Racine = la zone de liste elle-même : c'est elle qui défile, pas la fenêtre.
+  obs=new IntersectionObserver(e=>{if(e.some(x=>x.isIntersecting))suite()},{root:$('#mlist'),rootMargin:'200px'});obs.observe(s);}
+function brancher(){
+  const ml=$('#mlist');compte();observer();
+  ml.addEventListener('scroll',()=>$('#listhead').classList.toggle('ombre',ml.scrollTop>2),{passive:true});
+  const sel=$('.row[aria-current="true"]',ml);if(sel&&matchMedia('(min-width:900px)').matches)sel.scrollIntoView({block:'nearest'});
+  else if(!courant)ml.scrollTop=posListe;
+  const actif=$('.chips.une .chip[aria-pressed="true"]');if(actif)actif.scrollIntoView({block:'nearest',inline:'nearest'});
+}
+function vCas(m,c){
+  const sev=SEV[c.t], tete=(titre)=>`<div class="chead"><span><span class="tag t-${sev}">${LIB[c.t]}${c.n>1?' ×'+c.n:''}</span><h3>${titre}</h3></span><span class="mono">il y a ${dur(c.age)}</span></div>`;
+  if(c.t==='report'){const par=['Hugo','Odile','Thomas'];
+    return `<article class="case ${sev}">${tete(esc(c.motif))}
+      ${Array.from({length:c.n},(_,i)=>`<div class="rep">${i===0?'<div class="quote">Je suis coincé à l’aéroport, ma carte est bloquée. Tu pourrais m’envoyer 200 € par transfert ? Je te rembourse dès lundi.</div>':''}<span class="who">Signalé par ${par[i%3]} · il y a ${dur(Math.max(5,c.age-i*9))}${i>0?' · sans texte':''}</span></div>`).join('')}
+      <div class="btns"><button class="btn" type="button" data-g>Sans suite</button><button class="btn" type="button" data-g>Avertir</button><button class="btn danger" type="button" data-g>Bannir…</button></div>
+      <div class="repere"><b>Repère.</b> ${c.motif.startsWith('Arnaque')?'Une demande d’argent à quelqu’un rencontré sur Libre suffit pour bannir, même au premier signalement.':'Lis le contenu signalé avant de décider ; un premier écart s’avertit, une récidive se masque.'}</div></article>`;}
+  if(c.t==='verif')return `<article class="case ${sev}">${tete('Selfie avec le code')}
+      <div style="display:flex;gap:14px;flex-wrap:wrap"><div class="selfie" role="img" aria-label="Selfie (image factice)"></div><div class="kv"><span>Code attendu</span><b>7358</b><span>Code lu</span><b>7358</b><span>Tentative</span><b>n° 1</b></div></div>
+      <div class="btns"><button class="btn ok" type="button" data-g>Valider</button><button class="btn do" type="button" data-g>Refuser…</button></div>
+      <div class="repere"><b>Repère.</b> Le code lu est un indice, pas une preuve : regarde le visage, le papier et l’écriture.</div></article>`;
+  if(c.t==='photo')return `<article class="case ${sev}">${tete('Texte lu sur une photo')}
+      <div style="display:flex;gap:14px;flex-wrap:wrap"><div class="selfie" role="img" aria-label="Photo (image factice)"></div><div class="quote" style="align-self:start">snap : clara.l_92</div></div>
+      <div class="btns"><button class="btn ok" type="button" data-g>Garder</button><button class="btn" type="button" data-g>Voiler…</button><button class="btn do" type="button" data-g>Retirer…</button></div>
+      <div class="repere"><b>Repère.</b> Un contact écrit sur une photo se retire ; le reste du profil ne bouge pas.</div></article>`;
+  return `<article class="case ${sev}">${tete('Indice')}<div class="quote">${m.id.startsWith('ines')?'Même appareil qu’un autre compte':'Vocabulaire d’arnaque (paiement, rencontre tarifée)'}</div>
+      <div class="btns"><button class="btn" type="button" data-g>Inviter au selfie</button><button class="btn" type="button" data-g>Rien à signaler</button></div>
+      <div class="repere"><b>Repère.</b> Un indice ne suffit jamais pour sanctionner. Le selfie lève le doute sans rien retirer au membre.</div></article>`;
+}
+function vFiche(m){
+  const st=(m.verifie?'<span class="tag t-ok">Vérifié</span>':'<span class="tag">Non vérifié</span>')+(m.statut==='banni'?'<span class="tag t-bad">Banni</span>':m.statut==='masque'?'<span class="tag">Masqué</span>':m.statut==='non_confirme'?'<span class="tag">Non confirmé</span>':'')+(m.fiab==='douteux'?'<span class="tag t-bad">Douteux</span>':m.fiab==='a_surveiller'?'<span class="tag t-warn">À surveiller</span>':'');
+  return `<div class="fid"><button class="backbtn" type="button" data-retour>← Membres</button>${av(m)}<h1>${esc(m.pseudo)}</h1><span class="grow"></span><span class="tags">${m.cas.length?`<span class="tag t-${SEV[m.cas[0].t]}">${m.cas.reduce((s,c)=>s+c.n,0)} cas</span>`:'<span class="tag t-ok">Rien à traiter</span>'}</span></div>
+  <div class="fiche">
+   <div style="display:grid;gap:6px"><span class="meta">Inscrit ${ilya(m.ins)} · ${vu(m.vu)} · 0 photo · ${esc(m.pseudo.toLowerCase().replace('.',''))}@exemple.test</span><span class="tags" style="margin:0">${st}</span></div>
+   ${m.cas.map(c=>vCas(m,c)).join('')||'<div class="panel"><p>Aucun cas en attente pour ce membre.</p></div>'}
+   <div class="cols"><div class="col">
+     <section class="panel"><h2>Indice de fiabilité ${m.fiab?`<span class="tag t-${m.fiab==='douteux'?'bad':'warn'}">${m.fiab==='douteux'?'Douteux':'À surveiller'}</span>`:'<span class="tag t-ok">Fiable</span>'}</h2>${m.fiab?'<div class="sig">Vocabulaire d’arnaque (paiement, rencontre tarifée)</div>':'<p>Aucun signal sur ce compte.</p>'}<p>Le niveau est calculé, jamais montré au membre.</p></section>
+     <section class="panel"><h2>Photos publiées</h2><p>Aucune photo publiée.</p></section></div>
+    <div class="col">
+     <section class="panel"><h2>Historique</h2><ul class="hist"><li><time>il y a 1 j</time><span>Invitation à la vérification · automatique</span></li><li><time>${ilya(m.ins)}</time><span>Inscription · automatique</span></li></ul></section>
+     <section class="panel"><h2>Autres gestes</h2><div class="btns"><button class="btn" type="button" data-g>Inviter au selfie</button><button class="btn" type="button" data-g>Mettre en retrait…</button></div>
+      <details><summary>Messagerie chiffrée</summary><div class="in"><p>Réinitialiser la clé du membre s’il ne lit plus ses messages.</p><div class="btns"><button class="btn" type="button" data-g>Réinitialiser la clé…</button></div></div></details>
+      <details class="zone"><summary>Zone sensible</summary><div class="in"><p>Bannir ou supprimer demande un motif et une confirmation.</p><div class="btns"><button class="btn danger" type="button" data-g>Bannir…</button><button class="btn do" type="button" data-g>Supprimer le compte…</button></div></div></details></section></div></div></div>`;
+}
+
+/* ── Événements ── */
+function dire(t){$('#toast').innerHTML=`<div class="toast" role="status">${t}</div>`;clearTimeout(dire.t);dire.t=setTimeout(()=>$('#toast').innerHTML='',2200);}
+document.addEventListener('click',e=>{
+  const v=e.target.closest('[data-vue]');if(v){e.preventDefault();vue=v.dataset.vue;rendre();return;}
+  const va=e.target.closest('[data-var]');if(va){variante=va.dataset.var;$$('[data-var]').forEach(b=>b.setAttribute('aria-pressed',b===va));if(vue==='membres')rendre();return;}
+  const f=e.target.closest('[data-f]');if(f){filtre=f.dataset.f;affiches=PAGE;posListe=0;courant=matchMedia('(min-width:900px)').matches?courant:null;rendre();$('#mlist').scrollTop=0;return;}
+  const r=e.target.closest('[data-m]');if(r){const ml=$('#mlist');posListe=ml.scrollTop;courant=r.dataset.m;
+    if(matchMedia('(min-width:900px)').matches){$$('.row',ml).forEach(x=>x.setAttribute('aria-current',x===r));$('#ficheout').innerHTML=vFiche(M.find(m=>m.id===courant));$('#ficheout').scrollTop=0;$('.hub').classList.add('fiche-ouverte');adresse();}
+    else rendre();return;}
+  if(e.target.closest('[data-retour]')){courant=null;rendre();return;}
+  if(e.target.closest('[data-suite]')){suite();return;}
+  if(e.target.closest('[data-reset]')){filtre='tous';q='';affiches=PAGE;rendre();return;}
+  if(e.target.closest('[data-g]')){dire('Prototype : ce geste garde sa feuille de confirmation actuelle.');return;}
+  const tb=e.target.closest('#themebtn'), pop=$('#themepop');
+  if(tb){const o=pop.hidden;pop.hidden=!o;tb.setAttribute('aria-expanded',o);if(o){pop.className='themepop';pop.setAttribute('role','dialog');pop.setAttribute('aria-label','Thème et apparence');
+    const d=document.documentElement.classList.contains('dark');
+    pop.innerHTML=`<fieldset><legend>Apparence</legend><div class="seg" role="group" aria-label="Mode clair, sombre ou automatique"><button type="button" data-mode="light" aria-pressed="${!d}">Clair</button><button type="button" data-mode="dark" aria-pressed="${d}">Sombre</button><button type="button" data-mode="auto" aria-pressed="false">Auto</button></div></fieldset>
+     <fieldset style="margin-top:16px"><legend>Thème</legend><div class="themes"><span class="on"><i class="sw"></i>Libre (coral)</span><span><i class="sw"></i>Warm</span><span><i class="sw"></i>Cartoon</span><span><i class="sw"></i>Arcade</span><span><i class="sw"></i>Rétro 8-bit</span></div></fieldset>`;}return;}
+  const mo=e.target.closest('[data-mode]');if(mo){const k=mo.dataset.mode;document.documentElement.classList.toggle('dark',k==='dark'||(k==='auto'&&matchMedia('(prefers-color-scheme:dark)').matches));$$('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',b===mo));return;}
+  if(!pop.hidden&&!e.target.closest('.themewrap')){pop.hidden=true;$('#themebtn').setAttribute('aria-expanded',false);}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#themepop').hidden){$('#themepop').hidden=true;$('#themebtn').setAttribute('aria-expanded',false);$('#themebtn').focus();}});
+document.addEventListener('change',e=>{
+  if(e.target.id==='tri'){tri=e.target.value;affiches=PAGE;rendre();$('#mlist').scrollTop=0;}
+  if(e.target.id==='statut'&&e.target.value){filtre=e.target.value;affiches=PAGE;rendre();$('#mlist').scrollTop=0;}
+});
+document.addEventListener('input',e=>{if(e.target.id==='q'){q=e.target.value;affiches=PAGE;$('#mlist').innerHTML=vLignes();$('#mlist').scrollTop=0;compte();observer();adresse();}});
+if(P.get('mode')==='dark'||(!P.get('mode')&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark');
+$$('[data-var]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.var===variante));
+LARGE.addEventListener('change',()=>rendre());
+rendre();
+</script>
+</body>
+</html>
