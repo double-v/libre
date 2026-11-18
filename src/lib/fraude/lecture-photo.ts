@@ -66,14 +66,28 @@ function obtenirWorker(): Promise<Worker> {
   return worker;
 }
 
-export async function lireTexte(image: Buffer): Promise<string> {
+/**
+ * `listeBlanche` restreint les caractères reconnus (code manuscrit du selfie,
+ * spec 012 : `23456789`). Le worker est partagé et traite ses tâches dans
+ * l'ordre d'arrivée : les trois messages (restreindre, lire, rétablir) partent
+ * sans `await` entre eux, aucune autre lecture ne s'intercale.
+ */
+export async function lireTexte(image: Buffer, { listeBlanche }: { listeBlanche?: string } = {}): Promise<string> {
   let minuteur: ReturnType<typeof setTimeout> | undefined;
   try {
     // Préparée avant tout : un tampon qui n'est pas une image s'arrête ici,
     // sans réveiller le worker.
     const pret = await preparer(image);
     const w = await obtenirWorker();
-    const lecture = w.recognize(pret).then((r) => r.data.text ?? '');
+    let lecture: Promise<string>;
+    if (listeBlanche) {
+      const restreindre = w.setParameters({ tessedit_char_whitelist: listeBlanche });
+      const lu = w.recognize(pret);
+      const retablir = w.setParameters({ tessedit_char_whitelist: '' });
+      lecture = Promise.all([restreindre, lu, retablir]).then(([, r]) => r.data.text ?? '');
+    } else {
+      lecture = w.recognize(pret).then((r) => r.data.text ?? '');
+    }
     const delai = new Promise<never>((_, rejeter) => {
       minuteur = setTimeout(() => rejeter(new Error('delai')), DELAI_MAX_MS);
     });

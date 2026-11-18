@@ -67,6 +67,19 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  // Spec 012 (US4, research R10) : les anciennes files mènent au hub Membres,
+  // filtré sur le type correspondant. 308 : liens et favoris suivent.
+  async redirects() {
+    return [
+      { source: '/admin/reports', destination: '/admin/membres?filtre=report', permanent: true },
+      { source: '/admin/verifications', destination: '/admin/membres?filtre=verif', permanent: true },
+      { source: '/admin/indices', destination: '/admin/membres?filtre=indice', permanent: true },
+      { source: '/admin/profils', destination: '/admin/membres?filtre=indice', permanent: true },
+      { source: '/admin/users', destination: '/admin/membres', permanent: true },
+      { source: '/admin/users/:id', destination: '/admin/membres?membre=:id', permanent: true },
+    ];
+  },
+
   turbopack: {
     resolveAlias: {
       '@prisma/client': './src/generated/client',

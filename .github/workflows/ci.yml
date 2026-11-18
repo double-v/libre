@@ -17,12 +17,27 @@ on:
   pull_request:
     branches: [main, rc]
 
+# Dépôt public (#548) : le jeton du workflow ne peut que lire. Aucun job n'a
+# besoin d'écrire dans le dépôt, les issues ou les paquets.
+permissions:
+  contents: read
+
 # Un push qui en remplace un autre sur la même réf rend le run précédent inutile :
-# on l'annule. Ça évite surtout qu'un run mort continue de disputer l'advisory
-# lock du job `test` (cf. #313) à celui qui vient de le remplacer.
+# on l'annule.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+# Aucun secret dans ce workflow (#548). Jusque-là, `DATABASE_URL` (la base Neon
+# de développement) était passé aux étapes qui suivaient `npm ci` : un script
+# d'installation piégé pouvait s'injecter dans ces étapes (`$GITHUB_ENV`,
+# `node_modules`) et lire la chaîne de connexion. Désormais :
+#   - `npm ci --ignore-scripts` : aucun script d'installation de dépendance ne
+#     s'exécute (Prisma est généré explicitement, sharp et esbuild arrivent en
+#     binaires précompilés) ;
+#   - les tests tournent sur un PostgreSQL jetable, créé pour le run et détruit
+#     avec lui. Plus de base partagée, donc plus de verrou de migration disputé
+#     entre runs (#313) ni de pooler qui retient ce verrou (#363).
 
 jobs:
   # Lint job — jusqu'à #194 la CI ne lançait QUE vitest, donc les erreurs ESLint
@@ -40,55 +55,41 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
-      - run: npm ci
+      - run: npm ci --ignore-scripts
 
       # Le client Prisma généré (src/generated/) est git-ignoré : on le régénère
       # pour que les imports `@/generated/client/*` résolvent pendant le lint.
+      # La génération ne se connecte à aucune base.
       - run: npx prisma generate
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - run: npx eslint .
 
   test:
     runs-on: ubuntu-latest
 
-    # `npx prisma migrate deploy` (plus bas) prend un advisory lock PostgreSQL
-    # GLOBAL — `pg_advisory_lock(72707369)`, timeout 10 s — sur la base Neon dev
-    # que TOUS les runs partagent. Deux runs simultanés, même sur deux PR sans
-    # rapport, se disputent ce lock unique : le perdant meurt en `P1002` au step
-    # `migrate deploy`, et `vitest` est *skipped*. La PR passe au rouge sans
-    # qu'un seul test n'ait tourné, ce qui accuse son contenu à tort. Le 2026-08-08
-    # ça avait mis 7 PR Dependabot sur 7 en échec, dont celles qui fermaient une
-    # alerte critical (cf. #313).
-    #
-    # Le groupe est donc volontairement CONSTANT, pas indexé sur `github.ref` :
-    # la contention est *entre* branches, un groupe par réf ne réglerait rien.
-    # Il est posé sur ce job seul — `lint` ne touche pas la base et reste parallèle.
-    #
-    # Ce garde-fou reste nécessaire, mais il ne suffisait pas : le 2026-08-23 un
-    # `P1002` est survenu alors que la sérialisation avait parfaitement joué (le
-    # run `rc` avait bien attendu la fin du run `main`). La seconde moitié de la
-    # cause était le POOLER — cf. le commentaire du step de migration plus bas.
-    #
-    # `cancel-in-progress: false` fait la queue au lieu de tuer le run en cours.
-    # Limite connue de GitHub : un seul run peut attendre par groupe ; au-delà,
-    # celui qui patientait est annulé. Un « cancelled » reste relançable et
-    # lisible, là où le `P1002` induisait en erreur — mais ça reste une rustine.
-    # Le vrai fix est une DB éphémère par run (ticket séparé, cf. #313).
-    concurrency:
-      group: prisma-migrate-shared-dev-db
-      cancel-in-progress: false
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: libre
+          POSTGRES_PASSWORD: libre
+          POSTGRES_DB: libre_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -h localhost -U libre -d libre_ci"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
 
-    # Database: the DATABASE_URL secret is configured at the repo level
-    # (Settings → Secrets and variables → Actions) and points at the dev
-    # Neon database (user: neondb_owner). GH Actions does NOT auto-inject
-    # repo secrets into process.env of a step — they have to be referenced
-    # via ${{ secrets.DATABASE_URL }} in an env: block. Each step that
-    # needs the database therefore has an explicit env: block. The
-    # previous version of this workflow set the env via plain hardcoded
-    # localhost:5432 which silently shadowed the secret and broke CI.
-    # See #88 for the post-mortem.
+    # Base jetable, propre à ce run : ces valeurs ne sont pas des secrets.
+    # `BASE_DE_TEST=1` est exigé par vitest.config.ts en CI : sans lui, la
+    # config refuse de démarrer plutôt que de sauter les tests d'intégration.
+    env:
+      DATABASE_URL: postgresql://libre:libre@localhost:5432/libre_ci
+      DATABASE_URL_UNPOOLED: postgresql://libre:libre@localhost:5432/libre_ci
+      BASE_DE_TEST: '1'
+      NEXTAUTH_SECRET: test-secret-for-ci
 
     steps:
       - uses: actions/checkout@v4
@@ -98,50 +99,17 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
-      - run: npm ci
+      - run: npm ci --ignore-scripts
 
       - run: npx prisma generate
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
-      # Migration : connexion DIRECTE, jamais le pooler.
-      #
-      # `migrate deploy` prend un advisory lock de SESSION
-      # (`pg_advisory_lock(72707369)`). À travers PgBouncer, ce verrou survit au
-      # client : la session serveur est rendue au pool en restant propriétaire du
-      # verrou, puis recyclée pour d'autres requêtes. Elle ne le relâche jamais.
-      # Le run suivant attend 10 s et meurt en `P1002` — sans qu'aucun test n'ait
-      # tourné, ce qui accuse son contenu à tort.
-      #
-      # Observé le 2026-08-23 (run 32629747321, merge de #354) : verrou tenu par
-      # une session `application_name = pgbouncer` idle, six minutes après la fin
-      # de la migration qui l'avait pris. Le verrou finit par disparaître quand
-      # Neon suspend le compute — d'où l'apparence de flakiness : assez long pour
-      # tuer un run, assez court pour n'être plus là quand on enquête.
-      #
-      # Prisma et Neon documentent tous deux la connexion directe pour les
-      # migrations. On dérive l'endpoint direct en retirant `-pooler` plutôt que
-      # d'ajouter un secret : une seule source de vérité, et rien à resynchroniser
-      # le jour où l'URL change. Le `sed` est sans effet si le secret pointe déjà
-      # en direct.
-      - name: Appliquer les migrations (endpoint direct)
-        run: |
-          # Ancré sur l'hôte (entre `@` et `/`) : un mot de passe qui
-          # contiendrait `-pooler.` ne doit pas être réécrit.
-          direct="$(printf '%s' "$DATABASE_URL" | sed 's|@\([^@/]*\)-pooler\.|@\1.|')"
-          if [ "$direct" = "$DATABASE_URL" ]; then
-            echo "DATABASE_URL vise déjà l'endpoint direct."
-          else
-            echo "Bascule pooler → direct pour la migration."
-          fi
-          DATABASE_URL="$direct" npx prisma migrate deploy
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # Toutes les migrations du dépôt, sur une base vide : une migration qui
+      # ne s'applique pas proprement depuis zéro fait échouer la PR.
+      - run: npx prisma migrate deploy
 
+      # Le jeu factice (domaine `.test`) est semé par le globalSetup de Vitest,
+      # qui refuse toute base non locale.
       - run: npx vitest run
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          NEXTAUTH_SECRET: test-secret-for-ci
 
       # Playwright E2E tests are intentionally DISABLED on CI for now.
       # Reason: the Vercel preview deploy used for E2E doesn't have the

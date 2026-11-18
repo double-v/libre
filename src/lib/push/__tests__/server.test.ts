@@ -76,6 +76,8 @@ describe('buildPayload — rien qui identifie ou révèle (SC-006)', () => {
     ['admin-feedback', buildPayload('admin-feedback', secrets)],
     // #477 : ni le texte de la réponse ni celui du retour.
     ['feedback-reply', buildPayload('feedback-reply', { ...secrets, reply: 'RÉPONSE-SENTINELLE' })],
+    // Spec 012, FR-010 : ni la décision, ni le motif, ni le code.
+    ['verification', buildPayload('verification', { ...secrets, motif: 'MOTIF-SENTINELLE', rejectReason: 'visage', codeAttendu: '7358', status: 'rejected' })],
   ] as const;
 
   for (const [kind, payload] of cases) {
@@ -107,8 +109,15 @@ describe('buildPayload — rien qui identifie ou révèle (SC-006)', () => {
     expect(JSON.stringify(p)).not.toContain('RÉPONSE-SENTINELLE');
   });
 
+  it('verification : ouvre /verify, ne dit ni refusé ni validé, ni le motif (spec 012, FR-010)', () => {
+    const p = buildPayload('verification', { motif: 'MOTIF-SENTINELLE', rejectReason: 'visage', codeAttendu: '7358', status: 'rejected' });
+    expect(p.url).toBe('/verify');
+    const json = JSON.stringify(p).toLowerCase();
+    for (const fuite of ['motif-sentinelle', 'visage', '7358', 'rejected', 'refus', 'valid']) expect(json).not.toContain(fuite);
+  });
+
   it('admin : ouvre la file concernée', () => {
-    expect(buildPayload('admin-report', {}).url).toBe('/admin/reports');
+    expect(buildPayload('admin-report', {}).url).toBe('/admin/membres?filtre=report');
     expect(buildPayload('admin-feedback', {}).url).toBe('/admin/feedback');
   });
 });

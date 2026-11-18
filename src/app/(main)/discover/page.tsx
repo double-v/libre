@@ -12,9 +12,10 @@ import SiteShell from '@/components/ui/SiteShell';
 import { classifyGeolocError, fuzzedPosition, geolocFailureMessage, geolocFallbackPrompt, geolocUpdateMessage } from '@/lib/geoloc-client';
 import CityPicker from '@/components/ui/CityPicker';
 import { defaultSaveCity } from '@/components/ProfilePositionCard';
-import { deriveMissing, isNudgeDismissed, mustOnboard, shouldInviteDistance, writeStoredDate, MIRROR_COPY, NUDGE_DISMISS_KEY, type MissingKind } from '@/lib/onboarding';
+import { deriveMissing, deriveIdentite, isNudgeDismissed, mustOnboard, shouldInviteDistance, writeStoredDate, MIRROR_COPY, NUDGE_DISMISS_KEY, type MissingKind, type IdentiteManquante } from '@/lib/onboarding';
 import { hasDeclaredIntention } from '@/lib/profile-visibility';
 import ProfileNudgeCard from '@/components/ProfileNudgeCard';
+import IdentiteNudgeCard from '@/components/IdentiteNudgeCard';
 import { useFeatures } from '@/hooks/useFeatures';
 import Link from 'next/link';
 import Card from '@/components/ui/Card';
@@ -114,8 +115,10 @@ export default function DiscoverPage() {
   const router = useRouter();
   // Carte de relance (spec 005) : ce qui manque au profil pour être choisi,
   // ou null. Décidé une fois au chargement du profil, écartable 7 jours par
-  // appareil.
+  // appareil. Le rang d'identité (#517 : genre puis orientation) n'ouvre que
+  // quand rien d'autre ne manque.
   const [nudgeKind, setNudgeKind] = useState<MissingKind | null>(null);
+  const [nudgeIdentite, setNudgeIdentite] = useState<IdentiteManquante | null>(null);
   // Indépendant de la relance écartée (#346) : la note de démarrage propose de
   // compléter le profil tant qu'il manque quelque chose, et seulement alors.
   const [profilIncomplet, setProfilIncomplet] = useState(false);
@@ -124,6 +127,11 @@ export default function DiscoverPage() {
   // invitation chez qui a déjà tout renseigné.
   const [intentionDeclared, setIntentionDeclared] = useState(true);
   const [hasPosition, setHasPosition] = useState(true);
+  // Réciprocité genre/orientation (#519) : optimistes comme l'intention — la
+  // question à deux portes se pose au clic d'un critère, pas au montage.
+  const [genreDeclared, setGenreDeclared] = useState(true);
+  const [orientationDeclared, setOrientationDeclared] = useState(true);
+  const [sensitiveConsent, setSensitiveConsent] = useState(true);
   const [users, setUsers] = useState<DiscoveredUser[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -260,7 +268,17 @@ export default function DiscoverPage() {
             setProfilIncomplet(manque !== null);
             if (!isNudgeDismissed()) {
               setNudgeKind(manque);
+              // Rang d'identité (#517) : après les manques du parcours. Une
+              // seule carte à l'écran — la relance d'identité attend son tour.
+              if (manque === null) {
+                setNudgeIdentite(deriveIdentite({ genderIdentity: p.genderIdentity ?? '', orientation: p.orientation ?? [] }));
+              }
             }
+            // Réciprocité (#519) : les contreparties connues, pour la question
+            // à deux portes du panneau des filtres.
+            setGenreDeclared(!!p.genderIdentity);
+            setOrientationDeclared((p.orientation ?? []).length > 0);
+            setSensitiveConsent(Boolean(data.sensitiveConsent));
             setFilters({
               genders: p.searchGenders ?? [],
               orientations: p.searchOrientations ?? [],
@@ -418,13 +436,46 @@ export default function DiscoverPage() {
   };
 
   const visibleUsers = users.filter((u) => !passedIds.has(u.userId));
-  // Le vide dit d'où il vient : un rayon, des filtres, ou juste le démarrage.
+  // Le vide dit d'où il vient : un rayon, un filtre identitaire, des filtres,
+  // ou juste le démarrage. Un filtre genre/orientation posé envoie d'abord
+  // la cause la plus probable (#517) : le silence des non-déclarés.
   const texteVide =
     filters.distanceKm !== null
       ? LAUNCH_COPY.videRayon(filters.distanceKm)
-      : hasActiveFilters(filters)
-        ? LAUNCH_COPY.videFiltres
-        : LAUNCH_COPY.vide;
+      : filters.genders.length > 0 || filters.orientations.length > 0
+        ? LAUNCH_COPY.videFiltresIdentite
+        : hasActiveFilters(filters)
+          ? LAUNCH_COPY.videFiltres
+          : LAUNCH_COPY.vide;
+
+  /**
+   * Déclaration faite dans la question à deux portes (réciprocité #519) :
+   * même écriture que partout (#425), puis la page sait que la contrepartie
+   * est là — le critère pendu peut se poser, ET le rang d'identité de la
+   * relance se re-dérive (déclarer le genre peut ouvrir le rang orientation).
+   * Renvoie false en échec : la question reste ouverte.
+   */
+  const declarerIdentite = async (
+    patch: { genderIdentity?: string; orientation?: string[]; sensitiveConsent?: true },
+  ): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/users/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) return false;
+      const genreVoilà = patch.genderIdentity !== undefined || genreDeclared;
+      const orientationVoilà = patch.orientation !== undefined || orientationDeclared;
+      if (patch.genderIdentity !== undefined) setGenreDeclared(true);
+      if (patch.orientation !== undefined) setOrientationDeclared(true);
+      if (patch.sensitiveConsent) setSensitiveConsent(true);
+      setNudgeIdentite(!genreVoilà ? 'genre' : !orientationVoilà ? 'orientation' : null);
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   return (
     <SiteShell className="py-6 md:pb-section md:pt-11">
@@ -469,10 +520,19 @@ export default function DiscoverPage() {
         ))}
       </div>
 
-      {/* Filters (collapsible) — feed segments only */}
+      {/* Filters (collapsible) — feed segments only. Réciprocité #519 : la
+          question à deux portes vit ici, dans le panneau qui pose le filtre. */}
       {isFeed && showFilters && (
         <div className="mb-4">
-          <SearchFilters value={filters} onChange={handleFilterChange} intentionDeclared={intentionDeclared} />
+          <SearchFilters
+            value={filters}
+            onChange={handleFilterChange}
+            intentionDeclared={intentionDeclared}
+            genreDeclared={genreDeclared}
+            orientationDeclared={orientationDeclared}
+            sensitiveConsent={sensitiveConsent}
+            onDeclared={declarerIdentite}
+          />
         </div>
       )}
 
@@ -580,13 +640,38 @@ export default function DiscoverPage() {
 
           <div className="grid gap-grid md:grid-cols-2 lg:grid-cols-3">
             {/* Relance de complétion (spec 005) : première cellule de « Pour
-                toi », avant les profils — là où la personne regarde. */}
+                toi », avant les profils — là où la personne regarde. Le rang
+                d'identité (#517 : genre puis orientation) n'ouvre que quand
+                rien d'autre ne manque ; écartable 7 jours, comme l'autre. */}
             {segment === 'pourtoi' && nudgeKind && (
               <ProfileNudgeCard
                 kind={nudgeKind}
                 onDismiss={() => {
                   writeStoredDate(NUDGE_DISMISS_KEY);
                   setNudgeKind(null);
+                }}
+              />
+            )}
+            {segment === 'pourtoi' && nudgeIdentite && (
+              <IdentiteNudgeCard
+                kind={nudgeIdentite}
+                consentSensible={sensitiveConsent}
+                onDeclared={(champ) => {
+                  // La déclaration née dans la carte : la page suit sur les
+                  // trois états (une déclaration faite ici vaut le
+                  // consentement art. 9, la carte l'a portée) et le rang se
+                  // re-dérive — déclarer le genre peut ouvrir le rang
+                  // orientation, sans attendre une relecture du profil.
+                  const genreVoilà = champ === 'genderIdentity' || genreDeclared;
+                  const orientationVoilà = champ === 'orientation' || orientationDeclared;
+                  if (champ === 'genderIdentity') setGenreDeclared(true);
+                  else setOrientationDeclared(true);
+                  setSensitiveConsent(true);
+                  setNudgeIdentite(!genreVoilà ? 'genre' : !orientationVoilà ? 'orientation' : null);
+                }}
+                onDismiss={() => {
+                  writeStoredDate(NUDGE_DISMISS_KEY);
+                  setNudgeIdentite(null);
                 }}
               />
             )}
@@ -613,7 +698,7 @@ export default function DiscoverPage() {
 
             {/* Fin de feed seulement : tant qu'une page reste à charger, une
                 « place libre » mentirait sur ce qui vient après. */}
-            {!cursor && <GridFillerCards realCount={visibleUsers.length + (segment === 'pourtoi' && nudgeKind ? 1 : 0)} />}
+            {!cursor && <GridFillerCards realCount={visibleUsers.length + (segment === 'pourtoi' && (nudgeKind || nudgeIdentite) ? 1 : 0)} />}
           </div>
 
           {cursor && (

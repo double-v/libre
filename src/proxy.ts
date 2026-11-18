@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { doitEcrirePresence, jourDePresence } from '@/lib/presence';
 import { getDb } from '@/lib/db';
+import { compteEstAdmin, journaliserRefusBaseInjoignable } from '@/lib/admin-role';
 import { getFeatures } from '@/lib/features-server';
+import { refusOrigineEcriture } from '@/lib/securite/origine';
 import type { Feature } from '@/lib/features';
 import {
   PREVIEW_COOKIE_NAME,
@@ -59,7 +62,8 @@ function isProtectedPath(pathname: string): boolean {
 //
 // Fail-safe : on ne met en cache QUE les résultats DB aboutis (y compris `null`
 // = user confirmé absent). Les erreurs DB ne sont pas mises en cache et sont
-// gérées comme avant (on laisse passer, cf. bloc catch).
+// gérées dans le bloc catch : on laisse passer, sauf en zone /admin où la
+// garde se ferme (#547).
 const FEATURE_PAR_PAGE: readonly [string, Feature][] = [
   ['/square', 'square'],
   ['/crossings', 'crossings'],
@@ -72,7 +76,7 @@ const USER_CHECK_TTL_MS = 30_000;
 // mémoire. Même motif que le cache LRU de src/lib/giphy.ts.
 const USER_CHECK_MAX_ENTRIES = 10_000;
 
-type UserCheck = { id: string; isBanned: boolean; role: string } | null;
+type UserCheck = { id: string; isBanned: boolean; role: string; lastSeenAt?: Date | null } | null;
 
 const userCheckCache = new Map<string, { value: UserCheck; expiresAt: number }>();
 
@@ -97,6 +101,27 @@ function setCachedUserCheck(userId: string, value: UserCheck): void {
   userCheckCache.set(userId, { value, expiresAt: Date.now() + USER_CHECK_TTL_MS });
 }
 
+/**
+ * Présence au jour près (spec 011, #498) : au plus une écriture par jour et
+ * par compte. Le `where` rend l'écriture unique entre instances ; le cache
+ * l'évite sur celle-ci. Une panne ne bloque jamais la navigation et ne
+ * journalise aucun identifiant.
+ */
+async function noterPresence(user: NonNullable<UserCheck>): Promise<void> {
+  const now = new Date();
+  if (!doitEcrirePresence(user.lastSeenAt, now)) return;
+  const jour = jourDePresence(now);
+  try {
+    await getDb().user.updateMany({
+      where: { id: user.id, OR: [{ lastSeenAt: null }, { lastSeenAt: { lt: jour } }] },
+      data: { lastSeenAt: jour, preavisInactiviteAt: null },
+    });
+    setCachedUserCheck(user.id, { ...user, lastSeenAt: jour });
+  } catch (err) {
+    console.error('presence.failed', err instanceof Error ? err.message.slice(0, 80) : 'unknown');
+  }
+}
+
 /** Exposé pour les tests — vide le cache mémoire. */
 export function _resetProxyUserCache(): void {
   userCheckCache.clear();
@@ -117,6 +142,15 @@ function redirectStrippingPreview(request: NextRequest): NextResponse {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Écritures admin (spec 012, FR-S08) : une requête qu'un site tiers fait
+  // envoyer au navigateur d'un modérateur porte l'origine de ce site. Refusée
+  // ici, avant toute route, pour celles d'aujourd'hui comme pour les futures.
+  if (pathname === '/api/admin' || pathname.startsWith('/api/admin/')) {
+    const refus = refusOrigineEcriture(request);
+    if (refus) return refus;
+    return NextResponse.next();
+  }
 
   // --- Preview theme handling (admin) -----------------------------------
   // ?preview=<theme-id> sets a 24h cookie that overrides the active theme
@@ -172,6 +206,8 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
+  const zoneAdmin = pathname === '/admin' || pathname.startsWith('/admin/');
+
   // Verify the user still exists. This is the actual fix: a JWT can be valid
   // cryptographically while pointing at a deleted/rotated user.
   //
@@ -180,11 +216,13 @@ export async function proxy(request: NextRequest) {
   // la DB et on mémorise le résultat.
   try {
     const userId = token.id as string;
-    let user = getCachedUserCheck(userId);
+    // Zone admin : jamais de cache (#547). Un rôle ADMIN mis en cache juste
+    // avant une rétrogradation ou une panne ouvrirait /admin jusqu'à 30 s.
+    let user = zoneAdmin ? undefined : getCachedUserCheck(userId);
     if (user === undefined) {
       user = await getDb().user.findUnique({
         where: { id: userId },
-        select: { id: true, isBanned: true, role: true },
+        select: { id: true, isBanned: true, role: true, lastSeenAt: true },
       });
       setCachedUserCheck(userId, user);
     }
@@ -217,12 +255,21 @@ export async function proxy(request: NextRequest) {
     // Redirect non-admins to / so the admin surface is never exposed, even
     // transiently. The DB role is authoritative — the JWT may be stale after
     // a role change (#155).
-    if (pathname.startsWith('/admin') && user.role?.toUpperCase() !== 'ADMIN') {
+    if (zoneAdmin && !compteEstAdmin(user)) {
       return NextResponse.redirect(new URL('/', request.url));
     }
+
+    await noterPresence(user);
   } catch (err) {
-    // On DB error, let the request through. The downstream page will surface
-    // its own error. We don't want to block everyone on a transient DB hiccup.
+    // Zone admin : garde fermée (#547). Sans réponse de la base, le rôle réel
+    // est inconnu ; le jeton peut être périmé ou volé, on ne s'y fie pas. On
+    // renvoie vers / comme pour un non-admin, et on trace le motif seul.
+    if (zoneAdmin) {
+      journaliserRefusBaseInjoignable('proxy', err);
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    // Ailleurs, on laisse passer : la page en aval montrera sa propre erreur,
+    // et un hoquet de base ne doit pas bloquer tout le monde.
     // Log error type only — do NOT include the userId (PII in Vercel logs).
     console.error('[proxy] DB check failed:', err instanceof Error ? err.message : 'unknown error');
   }
@@ -247,5 +294,7 @@ export const config = {
   // Match only HTML page navigations, not assets / API / static.
   matcher: [
     '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)',
+    // Les écritures admin passent par le contrôle d'origine (FR-S08).
+    '/api/admin/:path*',
   ],
 };

@@ -14,6 +14,7 @@ import NotificationDot from './NotificationDot';
 import { useUnread } from '@/hooks/useUnread';
 import { useAdminQueues } from '@/hooks/useAdminQueues';
 import { useFeedbackReply } from '@/hooks/useFeedbackReply';
+import { useVerificationStatut } from '@/hooks/useVerificationStatut';
 
 /**
  * SiteNav — nav unique du shell unifié (#276, épic #273).
@@ -62,6 +63,8 @@ export interface SiteNavViewProps {
   hasAdminPending?: boolean;
   /** Pastille sur Paramètres : l'équipe a répondu à un retour (#477) — résolue par le wrapper via `useFeedbackReply`. */
   hasFeedbackReply?: boolean;
+  /** Pastille sur Paramètres : un refus de selfie pas encore vu (spec 012, FR-010) — résolue via `useVerificationStatut`. */
+  hasVerificationRefus?: boolean;
   /** Route courante, pour l'état actif des sections (résolue par `SiteNav`). */
   pathname?: string;
 }
@@ -100,6 +103,7 @@ export function SiteNavView({
   hasUnreadMessages = false,
   hasAdminPending = false,
   hasFeedbackReply = false,
+  hasVerificationRefus = false,
   pathname = '',
   features = DEFAUTS,
 }: SiteNavViewProps) {
@@ -164,6 +168,7 @@ export function SiteNavView({
                   <span className="relative">
                     <GearIcon />
                     {hasFeedbackReply && <NotificationDot aria-label="L’équipe t’a répondu" />}
+                    {!hasFeedbackReply && hasVerificationRefus && <NotificationDot aria-label="Ta vérification a une réponse" />}
                   </span>
                 </Link>
               </>
@@ -214,6 +219,7 @@ export default function SiteNav({
   // FR-013 : un non-admin ne charge rien — c'est `enabled` qui le garantit, pas le rendu.
   const { hasPending: hasAdminPending } = useAdminQueues({ enabled: resolvedIsAdmin });
   const { hasReply: hasFeedbackReply } = useFeedbackReply({ enabled: status === 'authenticated' });
+  const { refusNonVu: hasVerificationRefus } = useVerificationStatut({ enabled: status === 'authenticated' });
 
   return (
     <SiteNavView
@@ -226,6 +232,7 @@ export default function SiteNav({
       features={features}
       hasAdminPending={hasAdminPending}
       hasFeedbackReply={hasFeedbackReply}
+      hasVerificationRefus={hasVerificationRefus}
       pathname={pathname ?? currentPath ?? ''}
     />
   );

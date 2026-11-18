@@ -7,7 +7,7 @@ import Tag from '@/components/ui/Tag';
 import { lireStatut, type StatutVerification } from '@/lib/verification/client';
 
 /**
- * Paramètres › Vérification (#436) — quatre états, lus sur la même route que
+ * Paramètres › Vérification (#436, spec 012) — quatre états, lus sur la même route que
  * la page `/verify`. Tant que le statut n'est pas connu, on n'affiche pas de
  * bouton : proposer « Obtenir le badge » à un profil vérifié serait faux.
  */
@@ -50,8 +50,14 @@ export default function VerificationSettings({ charger = lireStatut }: { charger
       )}
       {statut?.statut === 'refusee' && (
         <div className="mt-2 space-y-3">
-          <p className="text-sm text-muted">{statut.motif ?? 'Ton selfie n’a pas pu être validé.'}</p>
-          <Button type="button" size="sm" variant="secondary" onClick={vers}>Recommencer</Button>
+          <p className="text-sm text-muted">{statut.motif?.texte ?? 'Ton selfie n’a pas pu être validé.'}</p>
+          {statut.reessaiAt ? (
+            <p className="text-sm text-muted">
+              Tu pourras refaire ton selfie à partir du {new Date(statut.reessaiAt).toLocaleString('fr-FR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}.
+            </p>
+          ) : (
+            <Button type="button" size="sm" onClick={vers}>Refaire mon selfie</Button>
+          )}
         </div>
       )}
     </section>

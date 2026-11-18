@@ -50,7 +50,7 @@ type ProfileWithUser = {
   photos: string[];
   lastKnownLat: number;
   lastKnownLng: number;
-  user: { id: string; displayName: string; isVerified: boolean; lastActive: Date };
+  user: { id: string; displayName: string; isVerified: boolean; lastActive: Date; lastSeenAt?: Date | null };
 };
 
 interface FeedUser {
@@ -58,8 +58,10 @@ interface FeedUser {
   displayName: string;
   bio: string;
   birthDate: Date | null;
-  genderIdentity: string;
-  orientation: string[];
+  /** Omis pour qui s'est tu (#517) : une clé absente dit « rien à lire »,
+   *  une chaîne vide dirait « refusé ». */
+  genderIdentity?: string;
+  orientation?: string[];
   interests: string[];
   practices?: string[];
   photos: string[];
@@ -196,7 +198,7 @@ export async function GET(request: NextRequest) {
     };
 
     const profileInclude = {
-      user: { select: { id: true, displayName: true, isVerified: true, lastActive: true } },
+      user: { select: { id: true, displayName: true, isVerified: true, lastActive: true, lastSeenAt: true } },
     } as const;
 
     const onlineThreshold = new Date(now - ONLINE_THRESHOLD_MS);
@@ -228,8 +230,12 @@ export async function GET(request: NextRequest) {
         displayName: p.user.displayName,
         bio: p.bio,
         birthDate: p.birthDate,
-        genderIdentity: p.genderIdentity,
-        orientation: p.orientation,
+        // Omission, pas une valeur vide : la fiche d'autrui ne livre pas le
+        // silence d'un membre au JSON (une chaîne vide dirait « refusé »,
+        // une clé absente « rien à lire » — #517, le patron de la fiche
+        // publique). Les cartes n'affichent de toute façon jamais le champ.
+        ...(p.genderIdentity ? { genderIdentity: p.genderIdentity } : {}),
+        ...(p.orientation.length > 0 ? { orientation: p.orientation } : {}),
         interests: p.interests,
         // Pratiques : réservées aux matches par défaut (#328). Clé omise, pas
         // tableau vide — « tu n'y as pas accès » et « cette personne n'en a
@@ -374,7 +380,9 @@ export async function GET(request: NextRequest) {
         .filter(({ distanceKm }) => !withDistance || distanceKm <= distanceFilterKm)
         .map((item) => ({
           ...item,
-          sortValue: (item.profile.photos.length > 0 ? PHOTO_WEIGHT : 0) + item.profile.user.lastActive.getTime(),
+          // #498 : le jour de visite compte, `lastActive` ne bouge qu'à une écriture.
+          sortValue: (item.profile.photos.length > 0 ? PHOTO_WEIGHT : 0)
+            + Math.max(item.profile.user.lastSeenAt?.getTime() ?? 0, item.profile.user.lastActive.getTime()),
           userId: item.profile.userId,
         }))
         .sort((a, b) =>

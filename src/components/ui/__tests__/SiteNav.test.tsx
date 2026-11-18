@@ -276,6 +276,25 @@ describe('<SiteNavView /> — réponse de l’équipe (#477)', () => {
   });
 });
 
+describe('<SiteNavView /> — refus de selfie pas encore vu (spec 012, FR-010)', () => {
+  it('pose une pastille sur Paramètres, sans nombre ni motif', () => {
+    render(<SiteNavView variant="authed" hasVerificationRefus />);
+    const dot = screen.getByRole('status', { name: 'Ta vérification a une réponse' });
+    expect(screen.getByRole('link', { name: 'Paramètres' })).toContainElement(dot);
+    expect(screen.getByRole('link', { name: 'Paramètres' }).textContent).toBe('');
+  });
+
+  it('une seule pastille quand l’équipe a aussi répondu à un retour', () => {
+    render(<SiteNavView variant="authed" hasFeedbackReply hasVerificationRefus />);
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+  });
+
+  it('aucune pastille sans refus en attente', () => {
+    render(<SiteNavView variant="authed" />);
+    expect(screen.queryByRole('status', { name: 'Ta vérification a une réponse' })).toBeNull();
+  });
+});
+
 describe('<SiteNav /> — files admin depuis la session (#391)', () => {
   beforeEach(() => {
     mockSession.mockReset();

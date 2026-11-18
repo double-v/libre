@@ -31,6 +31,12 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], storageState: 'tests/e2e/auth.json' },
       dependencies: ['setup'],
     },
+    // Bureau de modération (spec 012) : session admin factice, base jetable.
+    {
+      name: 'admin',
+      testMatch: /admin-.*\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
     // Mobile view
     {
       name: 'mobile',

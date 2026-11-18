@@ -3,7 +3,7 @@
 import { forwardRef } from 'react';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'danger-outline';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps
@@ -11,6 +11,8 @@ export interface ButtonProps
   variant?: ButtonVariant;
   size?: ButtonSize;
   fullWidth?: boolean;
+  /** Forme de pilule des gestes du back-office (spec 012, DESIGN.md « Hub Membres »). */
+  pill?: boolean;
   loading?: boolean;
   iconLeft?: ReactNode;
   iconRight?: ReactNode;
@@ -18,7 +20,7 @@ export interface ButtonProps
 }
 
 const baseClasses =
-  'inline-flex items-center justify-center gap-2 rounded-md font-medium ' +
+  'inline-flex items-center justify-center gap-2 font-medium ' +
   'transition-colors duration-[var(--motion-fast)] ease-[var(--ease-out-soft)] ' +
   'focus-visible:outline-none focus-visible:shadow-focus ' +
   'disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ' +
@@ -37,6 +39,13 @@ const variantClasses: Record<ButtonVariant, string> = {
   danger:
     'bg-error text-white hover:bg-red-700 active:bg-red-800 ' +
     'dark:bg-error dark:hover:bg-red-700',
+  // Spec 012 : valider / garder, et les gestes qui retirent sans sanctionner.
+  success:
+    'bg-green-700 text-white hover:bg-green-800 active:bg-green-900 ' +
+    'dark:bg-green-400 dark:text-ink dark:hover:bg-green-300',
+  'danger-outline':
+    'bg-surface text-red-700 border border-red-700 hover:bg-red-50 active:bg-red-100 ' +
+    'dark:text-red-300 dark:border-red-300 dark:hover:bg-red-900/30',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -51,7 +60,7 @@ const sizeClasses: Record<ButtonSize, string> = {
  * lien reste un lien pour la navigation et les lecteurs d'écran.
  */
 export function buttonClassName(variant: ButtonVariant = 'primary', size: ButtonSize = 'md', extra = ''): string {
-  return `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${extra}`.trim();
+  return `${baseClasses} rounded-md ${variantClasses[variant]} ${sizeClasses[size]} ${extra}`.trim();
 }
 
 function Spinner() {
@@ -79,6 +88,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
     variant = 'primary',
     size = 'md',
     fullWidth = false,
+    pill = false,
     loading = false,
     iconLeft,
     iconRight,
@@ -93,6 +103,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   const isDisabled = disabled || loading;
   const classes = [
     baseClasses,
+    pill ? 'rounded-full' : 'rounded-md',
     variantClasses[variant],
     sizeClasses[size],
     fullWidth ? 'w-full' : '',

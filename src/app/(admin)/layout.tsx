@@ -3,24 +3,25 @@ import { decode } from 'next-auth/jwt';
 import { notFound } from 'next/navigation';
 import { getDb } from '@/lib/db';
 import { debugLog } from '@/lib/logger';
+import { estAdminEnBase } from '@/lib/admin-role';
 import Link from 'next/link';
 import ThemeMenu from '@/components/ui/ThemeMenu';
 import HeartMark from '@/components/ui/HeartMark';
 import CountChip from '@/components/ui/CountChip';
+import ToastHost from '@/components/ui/Toast';
 import { countAdminQueues, type AdminQueues } from '@/lib/admin-queues';
-import { compterProfilsAVerifier } from '@/lib/fraude/file';
+import { compterCas } from '@/lib/moderation/membres';
 
 // `queue` relie l'entrée à sa file de travail (#391) : le layout compte et
 // pose un `CountChip` à côté — le chiffre est légitime ici, surface admin.
 const adminNavItems: Array<{ href: string; label: string; icon: string; queue?: keyof AdminQueues }> = [
   { href: '/admin', label: 'Tableau de bord', icon: 'dashboard' },
-  { href: '/admin/users', label: 'Utilisateurs', icon: 'users' },
-  { href: '/admin/reports', label: 'Signalements', icon: 'reports', queue: 'reports' },
+  // Hub Membres (spec 012, US3) : remplace Utilisateurs, Signalements,
+  // Indices et Vérifications, dont les adresses y redirigent.
+  { href: '/admin/membres', label: 'Membres', icon: 'users', queue: 'atraiter' },
   { href: '/admin/feedback', label: 'Retours', icon: 'feedback', queue: 'feedback' },
   { href: '/admin/journal', label: 'Journal', icon: 'journal' },
   { href: '/admin/circle/alerts', label: 'Alertes Cercle', icon: 'alert' },
-  { href: '/admin/profils', label: 'Profils à vérifier', icon: 'shield', queue: 'profils' },
-  { href: '/admin/verifications', label: 'Vérifications', icon: 'verifications', queue: 'verifications' },
   { href: '/admin/appearance', label: 'Apparence', icon: 'palette' },
   { href: '/admin/features', label: 'Fonctionnalités', icon: 'toggle' },
   { href: '/admin/logs', label: 'Logs', icon: 'logs' },
@@ -86,7 +87,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     notFound();
   }
 
-  let token: { sub?: string; role?: string } | null = null;
+  let token: { sub?: string } | null = null;
   try {
     token = await decode({ token: tokenCookie.value, secret });
   } catch (err) {
@@ -94,58 +95,25 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     token = null;
   }
 
-  debugLog('[admin/layout] hasToken=%s hasSub=%s jwtRole=%s',
-    !!token, !!token?.sub, token?.role ?? 'none');
+  debugLog('[admin/layout] hasToken=%s hasSub=%s', !!token, !!token?.sub);
 
   if (!token?.sub) {
     debugLog('[admin/layout] ACCESS DENIED → 404 (JWT has no subject)');
     notFound();
   }
 
-  const userId = token.sub;
-  const jwtRole = token.role?.toUpperCase();
-
-  // Check DB directly — JWT may be stale, role changes must propagate instantly
-  let dbRole: string | undefined;
-  try {
-    const dbUser = await getDb().user.findUnique({
-      where: { id: userId },
-      select: { role: true },
-    });
-    dbRole = dbUser?.role?.toUpperCase();
-  } catch (err) {
-    console.error('[admin/layout] DB error, falling back to JWT role:', err);
-    dbRole = jwtRole;
-  }
-
-  debugLog('[admin/layout] hasDbRole=%s dbMatchesJwt=%s', !!dbRole, dbRole === jwtRole);
-
-  if (dbRole !== 'ADMIN') {
-    debugLog('[admin/layout] ACCESS DENIED → showing forbidden page');
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-red-600">Accès refusé</h1>
-          <p className="mt-4 text-lg text-content">
-            Rôle requis : <strong>ADMIN</strong>
-          </p>
-          <p className="mt-2 text-muted">
-            Votre rôle actuel : <code className="rounded bg-fill-subtle px-2 py-1">{dbRole || 'non défini'}</code>
-          </p>
-          <Link
-            href="/discover"
-            className="mt-6 inline-block rounded-lg bg-coral px-6 py-3 text-white hover:bg-coral-dark"
-          >
-            Retour à l&apos;application
-          </Link>
-        </div>
-      </div>
-    );
+  // Rôle relu en base (le JWT peut être périmé, #155), garde fermée : base
+  // injoignable, rétrogradé ou rôle absent → 404, comme `requireAdmin` côté
+  // API. Jamais de repli sur le rôle du jeton (#547), et jamais de page
+  // « Accès refusé » qui confirmerait l'existence de la zone admin.
+  if (!(await estAdminEnBase(token.sub, 'admin/layout'))) {
+    debugLog('[admin/layout] REFUS → 404 (pas admin en base, ou base injoignable)');
+    notFound();
   }
 
   // Files de travail (R7) : comptées ici, en serveur, sans HTTP. Un échec de
   // comptage ne ferme pas l'administration (`countAdminQueues` le confine à sa file).
-  const queues = await countAdminQueues(getDb(), compterProfilsAVerifier);
+  const queues = await countAdminQueues(getDb(), compterCas);
 
   return (
     <div className="flex min-h-screen">
@@ -211,6 +179,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </nav>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+        {/* Confirmations des gestes du hub Membres (spec 012). */}
+        <ToastHost />
       </div>
     </div>
   );

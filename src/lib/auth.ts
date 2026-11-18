@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs';
 import { getDb } from '@/lib/db';
 import type { Prisma } from '@/generated/client/client';
 import { normalizeEmail } from '@/lib/email';
+import { compteEstBanni, selectStatutCompte } from '@/lib/admin-role';
 
 // ---------------------------------------------------------------------------
 // Custom adapter – maps our Prisma 7 User model (no emailVerified / image)
@@ -217,6 +218,19 @@ export const authOptions: NextAuthOptions = {
       }
       return baseUrl;
     },
+    /**
+     * Un compte banni ne se reconnecte pas, quel que soit le fournisseur.
+     * `authorize` le refuse déjà pour le mot de passe ; sans ce rappel, un
+     * fournisseur OAuth (GitHub, Google) ouvrirait une session neuve. On
+     * cherche par identifiant et par e-mail normalisé : l'objet reçu est le
+     * compte existant ou, à la première connexion, le profil du fournisseur.
+     */
+    async signIn({ user }) {
+      const ou: Prisma.UserWhereInput[] = [{ id: user.id }];
+      if (user.email) ou.push({ normalizedEmail: normalizeEmail(user.email) });
+      const bannis = await getDb().user.count({ where: { isBanned: true, OR: ou } });
+      return bannis === 0;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
@@ -226,25 +240,29 @@ export const authOptions: NextAuthOptions = {
           console.log('[auth/jwt] sign-in: id=%s role=%s', user.id, token.role);
         }
       } else if (token.id) {
-        // JWT refresh: re-fetch role from DB so changes propagate
-        // without requiring the user to sign out and back in
+        // Relecture du compte à chaque lecture de session : le rôle suit la
+        // base (#155), et un compte banni ou supprimé perd sa session
+        // aussitôt, sur les pages comme sur toute route `/api/*` qui passe
+        // par `getServerSession` (le proxy, lui, ne voit pas `/api`).
+        let compte: { role: string | null; isBanned: boolean } | null | undefined;
         try {
-          const dbUser = await getDb().user.findUnique({
+          compte = await getDb().user.findUnique({
             where: { id: token.id as string },
-            select: { role: true },
+            select: selectStatutCompte,
           });
-          if (dbUser) {
-            // Normalize to uppercase — DB may store 'user' or 'admin' in lowercase
-            token.role = dbUser.role.toUpperCase();
-            if (process.env.NODE_ENV !== 'production') {
-              console.log('[auth/jwt] refresh: id=%s dbRole=%s', token.id, token.role);
-            }
-          } else if (process.env.NODE_ENV !== 'production') {
-            console.log('[auth/jwt] refresh: id=%s user NOT FOUND in DB', token.id);
-          }
         } catch (err) {
-          console.error('[auth/jwt] refresh DB error:', err);
+          // Base injoignable : on garde le jeton tel quel. Fermer ici
+          // déconnecterait tout le monde au moindre hoquet ; la route en
+          // aval échoue de toute façon sans base, et la zone admin a sa
+          // propre garde fermée (#547). Motif seul, jamais d'identifiant.
+          console.error('[auth/jwt] relecture impossible :', err instanceof Error ? err.name : 'inconnue');
         }
+        if (compte === null || (compte && compteEstBanni(compte))) {
+          // Lever ici fait vider le cookie par NextAuth, et
+          // `getServerSession` rend `null` : chaque route répond 401.
+          throw new Error('SESSION_REVOQUEE');
+        }
+        if (compte?.role) token.role = compte.role.toUpperCase();
       }
       return token;
     },

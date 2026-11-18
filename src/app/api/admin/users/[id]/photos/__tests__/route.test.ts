@@ -55,7 +55,7 @@ function req(body: unknown) {
   });
 }
 
-const params = { params: Promise.resolve({ id: 'u-1' }) };
+const params = { params: Promise.resolve({ id: '00000000-0000-4000-8000-0000000000b1' }) };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -94,13 +94,14 @@ describe('DELETE /api/admin/users/[id]/photos', () => {
 
     expect(res.status).toBe(200);
     expect(fakeDb.profile.update).toHaveBeenCalledWith({
-      where: { userId: 'u-1' },
+      where: { userId: '00000000-0000-4000-8000-0000000000b1' },
       data: { photos: ['u-1/a.jpg'] },
+      select: { photos: true },
     });
     expect(fakeDb.moderationLog.create).toHaveBeenCalledWith({
       data: {
         adminId: 'admin-1',
-        targetUserId: 'u-1',
+        targetUserId: '00000000-0000-4000-8000-0000000000b1',
         action: 'REMOVE_PHOTO',
         reason: 'hors charte',
       },

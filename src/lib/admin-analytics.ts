@@ -43,7 +43,7 @@ export interface OnboardingStats {
   withPosition: number;
   withRelationshipType: number;
   onboardingDone: number;
-  /** Revenus après leur premier jour (proxy `lastActive - createdAt > 1 j`). */
+  /** Revenus un autre jour que celui de l'inscription (`lastSeenAt`, #498). */
   returnedAfterDay1: number;
   /** Appareils abonnés aux notifications, tous comptes confondus. */
   pushDevices: number;

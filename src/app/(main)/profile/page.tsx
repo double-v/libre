@@ -180,9 +180,15 @@ export default function ProfilePage() {
     if (section === 'identity') {
       setEditBirthDate(profile?.birthDate ? profile.birthDate.split('T')[0] : '');
       setEditGenderIdentity(profile?.genderIdentity ?? '');
+      // L'orientation déclarée vit ici (#518) : à côté du genre, sous
+      // « Identité » — pas au milieu des préférences de recherche.
+      setEditOrientation(profile?.orientation ?? []);
     }
     if (section === 'bio') { setEditBio(profile?.bio ?? ''); setBioRefus(null); }
-    if (section === 'orientation') {
+    if (section === 'seeking') {
+      // La section « Ce que je cherche » ne porte que le type de relation :
+      // l'orientation déclarée a déménagé sous « Identité » (#518), où la
+      // donnée art. 9 vit à côté du genre — la cherchée reste ici.
       setEditOrientation(profile?.orientation ?? []);
       setEditRelationshipType(profile?.relationshipType ?? []);
     }
@@ -255,6 +261,31 @@ export default function ProfilePage() {
       error={consentError}
     />
   );
+
+  /**
+   * Déclaration faite dans la question à deux portes (#519, le panneau des
+   * préférences de recherche) : art. 9 en ligne comme partout, l'écriture
+   * part seule, l'état de page suit. Renvoie false en échec : la question
+   * reste ouverte.
+   */
+  const declarerIdentite = async (
+    patch: { genderIdentity?: string; orientation?: string[]; sensitiveConsent?: true },
+  ): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/users/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) return false;
+      const result = await res.json();
+      setProfile(result.profile);
+      if (patch.sensitiveConsent) setSensitiveConsent(true);
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   /**
    * Visibilité des pratiques (#328) — enregistrée au clic, sans passer par le
@@ -590,18 +621,20 @@ export default function ProfilePage() {
           </ProfileSection>
 
           {/* Ce que je cherche — type de relation d'abord (même vocabulaire que
-              le parcours et le filtre) ; complet seulement s'il est renseigné. */}
+              le parcours et le filtre). L'orientation déclarée n'y vit plus :
+              elle est une identité, pas une recherche (#518) ; complet
+              seulement s'il est renseigné. */}
           <ProfileSection
             sectionId="seeking"
             title="Ce que je cherche"
             icon={<HeartIcon className="h-5 w-5" />}
             status={profile.relationshipType.length === 0 ? 'todo' : undefined}
-            onEdit={() => startEdit('orientation')}
-            editing={editingSection === 'orientation'}
+            onEdit={() => startEdit('seeking')}
+            editing={editingSection === 'seeking'}
             complete={profile.relationshipType.length > 0}
             defaultOpen
           >
-            {editingSection === 'orientation' ? (
+            {editingSection === 'seeking' ? (
               <div className="mt-3 space-y-4">
                 <div>
                   <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Type de relation</p>
@@ -612,16 +645,10 @@ export default function ProfilePage() {
                   </div>
                   <p className="mt-1.5 text-xs text-muted">Plusieurs possibles.</p>
                 </div>
-                <div>
-                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Orientation</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {ORIENTATION_OPTIONS.map((opt) => (
-                      <TagButton key={opt} label={cap(opt)} selected={editOrientation.includes(opt)} onClick={() => setEditOrientation(editOrientation.includes(opt) ? editOrientation.filter((o) => o !== opt) : [...editOrientation, opt])} />
-                    ))}
-                  </div>
-                </div>
-                {consentField}
-                <EditActions saving={saving} onSave={() => void saveSensible({ orientation: editOrientation, relationshipType: editRelationshipType })} onCancel={() => setEditingSection(null)} />
+                {/* Pas de case art. 9 ici : le type de relation n'est pas dans
+                    CHAMPS_SENSIBLES ; l'orientation déclarée qui l'habitait a
+                    déménagé sous « Identité » (#518). */}
+                <EditActions saving={saving} onSave={() => void saveSensible({ relationshipType: editRelationshipType })} onCancel={() => setEditingSection(null)} />
               </div>
             ) : (
               <div className="mt-2 space-y-2">
@@ -630,14 +657,10 @@ export default function ProfilePage() {
                   {profile.relationshipType.length > 0
                     ? <ChipList items={profile.relationshipType} />
                     : (
-                      <button type="button" onClick={() => startEdit('orientation')} className="mt-1 text-sm text-coral hover:text-terracotta">
+                      <button type="button" onClick={() => startEdit('seeking')} className="mt-1 text-sm text-coral hover:text-terracotta">
                         Choisir — libre, poly, casual, sérieux, autre
                       </button>
                     )}
-                </div>
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted">Orientation</p>
-                  {profile.orientation.length > 0 ? <ChipList items={profile.orientation} /> : <span className="text-xs italic text-muted">Non renseignée</span>}
                 </div>
               </div>
             )}
@@ -669,7 +692,11 @@ export default function ProfilePage() {
             </div>
           </ProfileSection>
 
-          {/* Identité */}
+          {/* Identité — le genre et l'orientation déclarée vivent ici (#518) :
+              la donnée art. 9 porte la personne (« ton orientation »), pas la
+              recherche. Une fois posées, elles se voient sur la fiche
+              (ProfileModal) ; le bloc vide, lui, est jamais rendu (#517) —
+              reste un écart : le JSON public sérialise les champs vides (PR). */}
           <ProfileSection sectionId="identity" title="Identité" icon={<IdCardIcon className="h-5 w-5" />} onEdit={() => startEdit('identity')} editing={editingSection === 'identity'} complete={!!profile.birthDate && !!profile.genderIdentity} defaultOpen>
             {editingSection === 'identity' ? (
               <div className="mt-3 space-y-3">
@@ -685,14 +712,24 @@ export default function ProfilePage() {
                     ))}
                   </select>
                 </div>
-                {editGenderIdentity ? consentField : null}
-                <EditActions saving={saving} onSave={() => void saveSensible({ birthDate: editBirthDate ? new Date(editBirthDate).toISOString() : undefined, genderIdentity: editGenderIdentity || undefined })} onCancel={() => setEditingSection(null)} />
+                <div>
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Ton orientation</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {ORIENTATION_OPTIONS.map((opt) => (
+                      <TagButton key={opt} label={cap(opt)} selected={editOrientation.includes(opt)} onClick={() => setEditOrientation(editOrientation.includes(opt) ? editOrientation.filter((o) => o !== opt) : [...editOrientation, opt])} />
+                    ))}
+                  </div>
+                  <p className="mt-1.5 text-xs text-muted">Une fois enregistrée, elle se voit sur ta fiche.</p>
+                </div>
+                {editGenderIdentity || editOrientation.length > 0 ? consentField : null}
+                <EditActions saving={saving} onSave={() => void saveSensible({ birthDate: editBirthDate ? new Date(editBirthDate).toISOString() : undefined, genderIdentity: editGenderIdentity, orientation: editOrientation })} onCancel={() => setEditingSection(null)} />
               </div>
             ) : (
               <div className="mt-2 space-y-2">
                 <p className="text-sm text-content">
                   <strong>{age ? `${age} ans` : 'Âge non renseigné'}</strong>
                   {profile.genderIdentity ? ` · ${genderLabel(profile.genderIdentity)}` : ''}
+                  {profile.orientation.length > 0 ? ` · ${profile.orientation.map(cap).join(', ')}` : ''}
                 </p>
                 <PrivacyTip tip="Seul ton âge est visible, jamais ta date de naissance. Un pseudo, pas ton vrai nom." />
               </div>
@@ -743,12 +780,17 @@ export default function ProfilePage() {
             <p className="mt-1 text-xs text-muted">Qui souhaites-tu rencontrer ? Ces préférences filtrent aussi ta page Découvrir.</p>
             {editingSection === 'search' ? (
               <div className="mt-3 space-y-4">
-                {/* Filtre d'intention ignoré tant que la sienne n'est pas dite (spec 008). */}
+                {/* Filtre d'intention ignoré tant que la sienne n'est pas dite (spec 008) ;
+                    réciprocité genre/orientation (#519) : question à deux portes. */}
                 <SearchFilters
                   value={editSearchFilters}
                   onChange={setEditSearchFilters}
                   framed={false}
                   intentionDeclared={profile.relationshipType.length > 0}
+                  genreDeclared={!!profile.genderIdentity}
+                  orientationDeclared={profile.orientation.length > 0}
+                  sensitiveConsent={sensitiveConsent}
+                  onDeclared={declarerIdentite}
                 />
                 {consentField}
                 <EditActions

@@ -79,3 +79,97 @@ describe('<StepSeeking />', () => {
     expect(onLater).toHaveBeenCalledTimes(1);
   });
 });
+
+/**
+ * Réciprocité (#519) : choisir un critère genre/orientation sans contrepartie
+ * pose la question — deux portes au tunnel, et la déclaration voyage dans le
+ * même PUT que l'étape. Jamais d'écriture forcée : « Sans filtre » retire.
+ */
+describe('<StepSeeking /> — réciprocité (#519)', () => {
+  it('pose la question au clic du critère sans genre déclaré, et bloque Continuer', () => {
+    const onContinue = vi.fn().mockResolvedValue(undefined);
+    render(<StepSeeking onContinue={onContinue} onLater={vi.fn()} genreDeclared={false} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Femme' }));
+    expect(screen.getByText('Pour chercher par genre, dis aussi le tien.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continuer' })).toBeDisabled();
+    expect(onContinue).not.toHaveBeenCalled();
+  });
+
+  it('la porte « Déclarer mon genre » ouvre le champ, la déclaration voyage dans le PUT de l\'étape (#518)', async () => {
+    const onContinue = vi.fn().mockResolvedValue(undefined);
+    render(
+      <StepSeeking
+        onContinue={onContinue}
+        onLater={vi.fn()}
+        genreDeclared={false}
+        sensitiveConsent={false}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Femme' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Déclarer mon genre' }));
+    const champ = screen.getByLabelText('Ton genre');
+    expect(champ).toBeInTheDocument();
+    // La case art. 9 de la question, cochée avant la pose (#425).
+    fireEvent.change(champ, { target: { value: 'femme' } });
+    // La case de la QUESTION (celle du composant) — le test en voit deux
+    // quand le champ est déplié : celle de la question, celle du bas d'écran.
+    const caseQuestion = screen.getAllByRole('checkbox').find((c) => (c as HTMLInputElement).checked === false)!;
+    fireEvent.click(caseQuestion);
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer et filtrer' }));
+    // La question se referme : la contrepartie est prise.
+    await waitFor(() => expect(screen.queryByText('Pour chercher par genre, dis aussi le tien.')).toBeNull());
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    await waitFor(() => expect(onContinue).toHaveBeenCalledWith(expect.objectContaining({
+      searchGenders: ['femme'],
+      genderIdentity: 'femme',
+      sensitiveConsent: true,
+    })));
+  });
+
+  it('la porte « Sans filtre » retire le critère et rouvre Continuer', async () => {
+    const onContinue = vi.fn().mockResolvedValue(undefined);
+    render(<StepSeeking onContinue={onContinue} onLater={vi.fn()} genreDeclared={false} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Femme' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sans filtre' }));
+    expect(screen.getByRole('button', { name: 'Continuer' })).toBeEnabled();
+    // Rien n'a été forcé : le PUT de l'étape part sans critère ni consentement.
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    await waitFor(() => expect(onContinue).toHaveBeenCalledWith(expect.objectContaining({
+      searchGenders: [],
+    })));
+    expect(onContinue.mock.calls[0][0]).not.toHaveProperty('sensitiveConsent');
+    expect(onContinue.mock.calls[0][0]).not.toHaveProperty('genderIdentity');
+  });
+
+  it('un critère par côté : déclarer le genre n\'ouvre pas le filtre orientation', async () => {
+    const onContinue = vi.fn().mockResolvedValue(undefined);
+    render(
+      <StepSeeking
+        onContinue={onContinue}
+        onLater={vi.fn()}
+        genreDeclared={false}
+        orientationDeclared={true}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Hétéro' }));
+    expect(screen.queryByText('Pour chercher par orientation, dis aussi la tienne.')).toBeNull();
+    // Le côté genre, lui, pose sa question — déclarer l'un n'ouvre pas l'autre.
+    fireEvent.click(screen.getByRole('button', { name: 'Femme' }));
+    expect(screen.getByText('Pour chercher par genre, dis aussi le tien.')).toBeInTheDocument();
+  });
+
+  it('porte l\'échange sur le critère, la personne sur la déclaration (#518)', () => {
+    render(<StepSeeking onContinue={vi.fn()} onLater={vi.fn()} />);
+    expect(screen.getByText('L\'orientation des gens qui te plaisent')).toBeInTheDocument();
+    expect(screen.queryByText('Orientation')).not.toBeInTheDocument();
+  });
+
+  it('l\'erreur de consentement se montre dès le choix sensible sans case (#518)', () => {
+    const onContinue = vi.fn().mockResolvedValue(undefined);
+    render(<StepSeeking onContinue={onContinue} onLater={vi.fn()} />);
+    // Sans choix sensible : pas de case, pas d'erreur.
+    expect(screen.queryByRole('alert')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Bi' }));
+    expect(screen.getByText('Coche la case pour enregistrer ces informations.')).toBeInTheDocument();
+  });
+});

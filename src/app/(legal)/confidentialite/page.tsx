@@ -79,6 +79,7 @@ export default function ConfidentialitePage() {
         <li>User-Agent (collecté uniquement lors d&apos;un signalement de bug via le formulaire de feedback)</li>
         <li>Adresses IP : traitées au passage par Cloudflare et Vercel ; conservées par Libre seulement avec la trace de votre consentement (voir §5), et, à l&apos;inscription, sous la forme d&apos;une empreinte chiffrée gardée 7 jours (voir §4)</li>
         <li>Fuseau horaire de votre navigateur : comparé à la ville que vous saisissez à la main, puis oublié — il n&apos;est jamais enregistré</li>
+        <li>Jour de votre dernière visite : seulement la date, sans l&apos;heure ni l&apos;historique de vos visites. Elle sert à nos statistiques de fréquentation et à l&apos;ordre de Découvrir. Elle n&apos;est jamais montrée aux autres membres.</li>
       </ul>
 
       <h3>2.6 Notifications hors de l&apos;application</h3>
@@ -97,7 +98,13 @@ export default function ConfidentialitePage() {
       <h3>2.7 Données de modération</h3>
       <ul>
         <li>Signalements (raison, description)</li>
-        <li>Demandes de vérification (selfie, statut)</li>
+        <li>
+          Demandes de vérification : le selfie, le code de quatre chiffres qui vous a été donné et
+          son statut. Le selfie est enregistré sans ses métadonnées (position, appareil) ; nous
+          gardons seulement le fait qu&apos;il en portait ou non. Le code écrit sur le selfie est lu
+          automatiquement sur nos serveurs, sans aucun service extérieur. Cette lecture aide
+          l&apos;équipe à vérifier le code ; elle ne décide jamais à sa place.
+        </li>
         <li>Favoris (likes), blocages, matchs</li>
         <li>Indices de sécurité calculés sur votre compte (voir §4 et §11)</li>
         <li>Journal de modération (actions des administrateurs, et invitations automatiques à la vérification)</li>

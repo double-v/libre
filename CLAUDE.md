@@ -292,6 +292,17 @@ pas contre le confort du développement.
   **sans retrait** (RGPD art. 22) — le retrait reste un geste de modérateur.
   Journal : `adminId` nul = action automatique. Garde :
   `src/__tests__/city-label-never-leaks.test.ts`.
+- Selfie au code manuscrit (spec 012, US1/US2) : le serveur tire quatre
+  chiffres 2–9 (`src/lib/verification/code.ts`), une ligne par membre dans
+  `verification_codes`, écrasée à chaque tirage (révocation), effacée à la mise
+  en file par un `deleteMany` conditionnel (un seul envoi passe). Le code est
+  contrôlé **avant** de stocker l'image. Lecture OCR dans `after()`, indice
+  seulement (`code_lu`), **jamais** renvoyée au membre ni décisive. Après trois
+  refus consécutifs, 24 h d'attente, **dérivée** des demandes (`droitTirage`),
+  jamais stockée. `verification_codes`, `code_lu`, `code_attendu`,
+  `sans_donnees_appareil` sont **privés** (même garde). Les routes membres ne
+  lisent aucun identifiant (session seule). Plafonds par compte **et** par IP
+  (`verifCode*`, `verifEnvoi*`).
 
 ## Notifications (spec 003, #389–#393)
 
@@ -312,6 +323,9 @@ pas contre le confort du développement.
   retour) est planifié après la réponse et ne change jamais son statut ; sans
   `VAPID_PRIVATE_KEY`, no-op journalisé. Journaux sans PII (`push.send.failed`
   avec kind + statut, jamais d'endpoint ni d'identifiant).
+- **Push `verification` (spec 012)** : « Ta vérification a une réponse », vers
+  `/verify`, sans décision ni motif. Repère sur la roue dentée dérivé de
+  `verification_requests.vue_at` (`useVerificationStatut`).
 - **Réponse aux retours (#477)** : une seule réponse par retour, jamais
   modifiée (`POST /api/admin/feedback/[id]/reply`, écriture conditionnée à
   `reply: null`). Elle ne se lit que dans Paramètres › Mes retours : le push

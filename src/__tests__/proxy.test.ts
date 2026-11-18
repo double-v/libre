@@ -15,7 +15,8 @@ const mockGetToken = vi.fn();
 vi.mock('next-auth/jwt', () => ({ __esModule: true, getToken: mockGetToken }));
 
 const findUnique = vi.fn();
-vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => ({ user: { findUnique } }) }));
+const updateMany = vi.fn();
+vi.mock('@/lib/db', () => ({ __esModule: true, getDb: () => ({ user: { findUnique, updateMany } }) }));
 const mockGetFeatures = vi.fn(async () => ({ checkin: true, crossings: true, square: true }));
 vi.mock('@/lib/features-server', () => ({ __esModule: true, getFeatures: () => mockGetFeatures() }));
 
@@ -40,6 +41,8 @@ beforeEach(() => {
   _resetProxyUserCache();
   mockGetToken.mockResolvedValue({ id: USER });
   findUnique.mockResolvedValue({ id: USER, isBanned: false, role: 'USER' });
+  updateMany.mockReset();
+  updateMany.mockResolvedValue({ count: 1 });
 });
 
 describe('proxy — cache court du contrôle user (#146)', () => {
@@ -128,5 +131,177 @@ describe('proxy — pages des fonctionnalités coupées (#418)', () => {
     mockGetFeatures.mockClear();
     await proxy(req('/discover'));
     expect(mockGetFeatures).not.toHaveBeenCalled();
+  });
+});
+
+describe('proxy — présence au jour près (#498)', () => {
+  it('deux navigations le même jour = une seule écriture, qui lève le préavis', async () => {
+    await proxy(req('/discover'));
+    await proxy(req('/messages'));
+    expect(updateMany).toHaveBeenCalledTimes(1);
+    expect(updateMany.mock.calls[0][0].data).toMatchObject({ preavisInactiviteAt: null });
+  });
+
+  it('déjà vu aujourd’hui → aucune écriture', async () => {
+    const jour = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()));
+    findUnique.mockResolvedValue({ id: USER, isBanned: false, role: 'USER', lastSeenAt: jour });
+    await proxy(req('/discover'));
+    expect(updateMany).not.toHaveBeenCalled();
+  });
+
+  it('panne à l’écriture → la navigation passe', async () => {
+    updateMany.mockRejectedValue(new Error('boom'));
+    const res = await proxy(req('/discover'));
+    expect(res.headers.get('location')).toBeNull();
+  });
+});
+
+describe('proxy — zone /admin fermée quand la base ne répond pas (#547)', () => {
+  // Le jeton affirme ADMIN dans tous ces cas : seul le rôle en base doit compter.
+  beforeEach(() => {
+    mockGetToken.mockResolvedValue({ id: USER, role: 'ADMIN' });
+  });
+
+  it('admin réel en base → /admin passe', async () => {
+    findUnique.mockResolvedValue({ id: USER, isBanned: false, role: 'ADMIN' });
+    const r = await proxy(req('/admin'));
+    expect(r.status).toBe(200);
+    expect(r.headers.get('location')).toBeNull();
+  });
+
+  it('rétrogradé en base alors que le JWT dit encore ADMIN → redirect vers /', async () => {
+    findUnique.mockResolvedValue({ id: USER, isBanned: false, role: 'USER' });
+    const r = await proxy(req('/admin/users'));
+    expect(r.status).toBe(307);
+    expect(new URL(r.headers.get('location') as string).pathname).toBe('/');
+  });
+
+  it('rôle absent en base → redirect vers /', async () => {
+    findUnique.mockResolvedValue({ id: USER, isBanned: false, role: null });
+    const r = await proxy(req('/admin'));
+    expect(new URL(r.headers.get('location') as string).pathname).toBe('/');
+  });
+
+  it('base qui lève une erreur sur /admin → redirect vers /, aucun repli sur le jeton', async () => {
+    findUnique.mockRejectedValue(new Error('connexion refusée'));
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const r = await proxy(req('/admin/reports'));
+      expect(r.status).toBe(307);
+      expect(new URL(r.headers.get('location') as string).pathname).toBe('/');
+      // Panne visible, sans identifiant ni rôle du jeton.
+      const lignes = spy.mock.calls.map((args) => args.map(String).join(' '));
+      expect(lignes.some((l) => l.includes('base injoignable'))).toBe(true);
+      for (const l of lignes) {
+        expect(l).not.toContain(USER);
+        expect(l).not.toContain('ADMIN');
+      }
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('base qui lève une erreur hors /admin → la navigation passe, comme avant', async () => {
+    findUnique.mockRejectedValue(new Error('connexion refusée'));
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const r = await proxy(req('/discover'));
+      expect(r.status).toBe(200);
+      expect(r.headers.get('location')).toBeNull();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('zone /admin sans cache : rétrogradé pendant le TTL → refusé tout de suite', async () => {
+    findUnique.mockResolvedValue({ id: USER, isBanned: false, role: 'ADMIN' });
+    const r1 = await proxy(req('/admin'));
+    expect(r1.status).toBe(200);
+    findUnique.mockResolvedValue({ id: USER, isBanned: false, role: 'USER' });
+    const r2 = await proxy(req('/admin'));
+    expect(r2.status).toBe(307);
+    expect(new URL(r2.headers.get('location') as string).pathname).toBe('/');
+  });
+
+  it('zone /admin sans cache : panne juste après un passage admin → refusé', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      findUnique.mockResolvedValue({ id: USER, isBanned: false, role: 'ADMIN' });
+      expect((await proxy(req('/discover'))).status).toBe(200); // met le rôle en cache
+      findUnique.mockRejectedValue(new Error('connexion refusée'));
+      const r = await proxy(req('/admin'));
+      expect(r.status).toBe(307);
+      expect(new URL(r.headers.get('location') as string).pathname).toBe('/');
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('une panne n’est pas mise en cache : la base revenue, l’admin réel repasse', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      findUnique.mockRejectedValueOnce(new Error('connexion refusée'));
+      const r1 = await proxy(req('/admin'));
+      expect(r1.status).toBe(307);
+      findUnique.mockResolvedValue({ id: USER, isBanned: false, role: 'ADMIN' });
+      const r2 = await proxy(req('/admin'));
+      expect(r2.status).toBe(200);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});
+
+describe('écritures admin : contrôle d’origine (spec 012, FR-S08)', () => {
+  const SITE = 'http://localhost';
+  function ecriture(methode: string, origine?: string | null, chemin = '/api/admin/membres/x') {
+    const headers = new Headers({ 'content-type': 'application/json' });
+    if (origine) headers.set('origin', origine);
+    return new NextRequest(`${SITE}${chemin}`, { method: methode, headers, ...(methode === 'GET' || methode === 'HEAD' ? {} : { body: '{}' }) });
+  }
+
+  it.each(['POST', 'PUT', 'PATCH', 'DELETE'])('%s depuis un site tiers : 403, avant toute route ni lecture de session', async (m) => {
+    const res = await proxy(ecriture(m, 'https://piege.example'));
+    expect(res.status).toBe(403);
+    expect(mockGetToken).not.toHaveBeenCalled();
+    expect(findUnique).not.toHaveBeenCalled();
+  });
+
+  it.each(['POST', 'DELETE'])('%s sans en-tête Origin : 403', async (m) => {
+    expect((await proxy(ecriture(m, null))).status).toBe(403);
+  });
+
+  it.each([
+    ['même hôte, autre port', 'http://localhost:4000'],
+    ['préfixe trompeur', 'http://localhost.piege.example'],
+    ['autre schéma', 'https://localhost'],
+    ['valeur « null » (iframe isolée, fichier local)', 'null'],
+  ])('origine proche mais différente (%s) : 403', async (_l, o) => {
+    expect((await proxy(ecriture('POST', o))).status).toBe(403);
+  });
+
+  it('écriture depuis le site : laissée à la route (qui garde sa garde admin)', async () => {
+    const res = await proxy(ecriture('POST', SITE));
+    expect(res.status).toBe(200);
+    expect(res.headers.get('x-middleware-next')).toBe('1');
+  });
+
+  it('lectures non contrôlées : un GET sans Origin passe', async () => {
+    const res = await proxy(ecriture('GET', null));
+    expect(res.headers.get('x-middleware-next')).toBe('1');
+  });
+
+  it('la racine /api/admin est couverte aussi', async () => {
+    expect((await proxy(ecriture('POST', 'https://piege.example', '/api/admin'))).status).toBe(403);
+  });
+
+  it('le proxy est bien appelé sur les routes admin (matcher)', async () => {
+    const { config } = await import('../proxy');
+    const { unstable_doesMiddlewareMatch } = await import('next/experimental/testing/server');
+    for (const url of ['/api/admin', '/api/admin/membres/x', '/api/admin/verifications/v1']) {
+      expect(unstable_doesMiddlewareMatch({ config, url }), url).toBe(true);
+    }
+    // Les autres routes API restent hors du proxy.
+    expect(unstable_doesMiddlewareMatch({ config, url: '/api/messages' })).toBe(false);
   });
 });

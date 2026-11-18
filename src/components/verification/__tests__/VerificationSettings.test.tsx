@@ -30,10 +30,23 @@ describe('VerificationSettings', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
-  it('refusé : le motif et « Recommencer »', async () => {
-    render(<VerificationSettings charger={avec({ statut: 'refusee', motif: 'Ton visage n’est pas assez visible.' })} />);
+  it('refusé : le motif et « Refaire mon selfie », qui mène à /verify', async () => {
+    render(<VerificationSettings charger={avec({
+      statut: 'refusee', tentative: 2, nonVu: true,
+      motif: { cle: 'visage', texte: 'Ton visage n’est pas assez visible.', conseil: 'Face à la lumière.' },
+    })} />);
     expect(await screen.findByText('Ton visage n’est pas assez visible.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Recommencer' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Refaire mon selfie' }));
+    expect(push).toHaveBeenLastCalledWith('/verify');
+  });
+
+  it('refusé trois fois : la date de reprise, sans bouton qui mènerait à une impasse', async () => {
+    render(<VerificationSettings charger={avec({
+      statut: 'refusee', tentative: 4, nonVu: false, reessaiAt: '2026-11-13T15:30:00.000Z',
+      motif: { cle: 'code', texte: 'Le code n’est pas écrit à la main, pas lisible ou pas exact.', conseil: 'En gros.' },
+    })} />);
+    expect(await screen.findByText(/Tu pourras refaire ton selfie à partir du 13 novembre/)).toBeInTheDocument();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
   it('tant que le statut n’est pas connu, aucun bouton', () => {

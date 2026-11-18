@@ -85,8 +85,13 @@ export async function GET(
     if (user.profile) {
       publicProfile.age = age;
       publicProfile.bio = user.profile.bio;
-      publicProfile.genderIdentity = user.profile.genderIdentity;
-      publicProfile.orientation = user.profile.orientation;
+      // Une omission de clé, pas une valeur vide : le silence d'un membre au
+      // JSON public — une chaîne vide dirait « a été demandé et refusé »,
+      // une clé absente dit « rien à lire » (#517 : l'absence invisible, au
+      // modèle de l'omission d'intention voilée — spec 008). Pour soi, la
+      // route /api/users/profile porte les champs tels quels.
+      if (user.profile.genderIdentity) publicProfile.genderIdentity = user.profile.genderIdentity;
+      if (user.profile.orientation.length > 0) publicProfile.orientation = user.profile.orientation;
       publicProfile.interests = user.profile.interests;
       publicProfile.photos = user.profile.photos;
 

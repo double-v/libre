@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { AMORCAGE_PRESENCE } from '@/lib/presence';
 import { requireAdmin, isAdminSession } from '@/lib/admin';
 import { getDb } from '@/lib/db';
 import {
@@ -55,7 +56,7 @@ async function computeOnboarding(cutoff30d: Date): Promise<AnalyticsStats['onboa
         COUNT(*) FILTER (WHERE p."last_geoloc_at" IS NOT NULL OR p."city_label" IS NOT NULL) AS with_position,
         COUNT(*) FILTER (WHERE cardinality(p."relationshipType") > 0)             AS with_relationship,
         COUNT(*) FILTER (WHERE p."onboardingStep" >= 3)                           AS done,
-        COUNT(*) FILTER (WHERE u."lastActive" - u."createdAt" > interval '1 day') AS returned
+        COUNT(*) FILTER (WHERE u."last_seen_at" > u."createdAt"::date AND u."last_seen_at" > ${AMORCAGE_PRESENCE}::date) AS returned
       FROM "users" u
       LEFT JOIN "profiles" p ON p."userId" = u.id
       WHERE u."createdAt" >= ${cutoff30d}
@@ -171,8 +172,8 @@ async function computeAnalytics(totalUsers: number): Promise<AnalyticsStats> {
     getDb().like.count({ where: { createdAt: { gte: cutoff30d } } }),
     getDb().match.count({ where: { createdAt: { gte: cutoff30d } } }),
     getDb().encounter.count({ where: { happenedAt: { gte: cutoff30d } } }),
-    getDb().user.count({ where: { lastActive: { gte: cutoff7d } } }),
-    getDb().user.count({ where: { lastActive: { gte: cutoff30d } } }),
+    getDb().user.count({ where: { lastSeenAt: { gte: cutoff7d, gt: AMORCAGE_PRESENCE } } }),
+    getDb().user.count({ where: { lastSeenAt: { gte: cutoff30d, gt: AMORCAGE_PRESENCE } } }),
     getDb().moderationLog.groupBy({
       by: ['action'],
       where: { createdAt: { gte: cutoff30d } },
@@ -317,7 +318,7 @@ async function computeAnswers(cutoff30d: Date): Promise<AnalyticsStats['answers'
     active: bigint; with_answer: bigint; choices_only: bigint; matches: bigint; matches_shared: bigint;
   }>>`
     WITH actifs AS (
-      SELECT u.id FROM "users" u WHERE u."lastActive" >= ${cutoff30d}
+      SELECT u.id FROM "users" u WHERE u."last_seen_at" >= ${cutoff30d} AND u."last_seen_at" > ${AMORCAGE_PRESENCE}::date
     ), par_membre AS (
       SELECT a."userId", bool_and(a."text" = '') AS que_des_choix
       FROM "profile_answers" a JOIN actifs ON actifs.id = a."userId"

@@ -203,6 +203,13 @@ export const limits: Record<string, RateLimitPreset> = {
   // Réponses aux questions (spec 009) : « Répondre une par une » et « Ceci
   // ou cela » enchaînent des dizaines de réponses en quelques minutes.
   answers: { limit: 120, windowMs: 3_600_000 },
+  // Selfie au code manuscrit (spec 012, FR-S02) : de quoi rater sa photo
+  // plusieurs fois dans l'heure, pas de quoi passer en revue tous les codes.
+  // Par adresse IP, un plafond plus large : un foyer partage la sienne.
+  verifCode: { limit: 10, windowMs: 3_600_000 },
+  verifCodeIp: { limit: 30, windowMs: 3_600_000 },
+  verifEnvoi: { limit: 6, windowMs: 3_600_000 },
+  verifEnvoiIp: { limit: 20, windowMs: 3_600_000 },
 };
 
 export function rateLimitHeaders(

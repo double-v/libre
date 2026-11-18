@@ -163,14 +163,18 @@ const VIE_PRIVEE: Qr[] = [
     ),
   },
   {
-    // Badge selfie (#436) : selfie hors profil, purgé 30 jours après la décision (regles.ts).
+    // Badge selfie (#436, spec 012) : code écrit à la main, selfie hors profil,
+    // purgé 30 jours après la décision (regles.ts).
     id: 'badge-verifie',
     q: 'Comment obtenir le badge vérifié ?',
     a: (
       <p>
-        Dans Paramètres, rubrique « Vérification », tu prends un selfie en reproduisant un geste
-        demandé. Une personne de l’équipe le compare à tes photos. Ton selfie n’est jamais montré aux
-        autres membres ni ajouté à ton profil, et il est effacé 30 jours après la décision.
+        Dans Paramètres, rubrique « Vérification », tu reçois un code de quatre chiffres. Tu l’écris à
+        la main sur une feuille, et tu prends un selfie avec la feuille près de ton visage ou posée à
+        côté de toi. Quelqu’un peut écrire le code pour toi. Une personne de l’équipe compare ensuite
+        ton selfie à tes photos. Si ton selfie n’est pas validé, tu vois pourquoi et tu peux en
+        refaire un tout de suite. Ton selfie n’est jamais montré aux autres membres ni ajouté à ton
+        profil, et il est effacé 30 jours après la décision.
       </p>
     ),
   },
