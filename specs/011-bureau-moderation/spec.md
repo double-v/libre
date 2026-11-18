@@ -4,7 +4,16 @@
 
 **Created**: 2026-10-13
 
-**Status**: Draft
+**Status**: En vigueur, en partie remplacée par la spec 012
+
+> **État au 2026-11-18.** US1 (présence réelle, #498) et US2 (page Indices,
+> #522) sont livrées. Le hub Membres de la spec 012 absorbe la page Indices ;
+> la navigation de la 012 remplace l'entrée « Modération » unique de l'US4
+> (#524, fermée), dont elle reprend l'exigence des filtres portés par
+> l'adresse (FR-016 de la 012). Restent ouvertes et régies par cette spec :
+> US3 (#523, lots — intégrés au hub par une sélection multiple), US5 (#525,
+> inscription sans doublon, avec le correctif `verify-email` de la tâche T029)
+> et US6 (#526, durée de vie des comptes).
 
 **Input**: User description: "Côté modération, rationaliser et refondre le backoffice. Une page dédiée aux indices levés, avec côte à côte les comptes multiples (plusieurs membres ont créé deux comptes après une faute de frappe dans leur adresse e-mail), une vision rapide du pourquoi c'est suspect, et la possibilité de réclamer l'un des deux types de vérification pour un lot de comptes. Prévenir les doublons à l'inscription (confirmation de l'e-mail). Une règle de purge des comptes inactifs, et une vue des comptes réellement actifs."
 
