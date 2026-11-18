@@ -19,6 +19,7 @@ vi.mock('next-auth/jwt', () => ({ __esModule: true, decode: (arg: unknown) => de
 // `notFound()` de Next lève une erreur que le routeur transforme en 404 : on
 // garde ce contrat (une levée) avec un message reconnaissable.
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/admin',
   __esModule: true,
   notFound: () => {
     throw new Error('NEXT_NOT_FOUND');

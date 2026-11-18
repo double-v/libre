@@ -27,7 +27,15 @@ const MODES: { id: Mode; label: string }[] = [
  * `prefers-reduced-motion` de globals.css (80ms).
  * Cf. DESIGN.md § Component Library — ThemeMenu.
  */
-export default function ThemeMenu({ className = '' }: { className?: string }) {
+export default function ThemeMenu({
+  className = '',
+  labelClassName = 'hidden sm:inline',
+}: {
+  className?: string;
+  /** Quand le nom du thème s'affiche à côté de la pastille. L'en-tête du bureau,
+   *  plus chargé, ne le montre qu'à partir de 1280 px (#568). */
+  labelClassName?: string;
+}) {
   const { ready, mode, theme, setMode, setTheme } = useThemePreference();
   const { status } = useSession();
   const [open, setOpen] = useState(false);
@@ -101,10 +109,10 @@ export default function ThemeMenu({ className = '' }: { className?: string }) {
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         aria-label="Thème et apparence"
-        className="inline-flex min-h-[44px] items-center gap-2 rounded-control border border-hairline bg-surface px-3 py-1.5 text-sm font-medium text-content transition-colors hover:border-coral-light focus-visible:outline-none focus-visible:shadow-focus"
+        className="inline-flex min-h-[44px] items-center gap-2 whitespace-nowrap rounded-control border border-hairline bg-surface px-3 py-1.5 text-sm font-medium text-content transition-colors hover:border-coral-light focus-visible:outline-none focus-visible:shadow-focus"
       >
         <ThemeSwatch id={current.id} size="sm" />
-        <span className="hidden sm:inline">{current.label}</span>
+        <span className={labelClassName}>{current.label}</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" className="text-muted">
           <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
