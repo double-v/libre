@@ -36,3 +36,4 @@ vi.mock('next/server', async () => ({
 import './hub/gestes.cas';
 import './hub/liste.cas';
 import './hub/fiche.cas';
+import './hub/signalements-groupe.cas';
