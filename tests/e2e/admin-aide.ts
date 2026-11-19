@@ -14,6 +14,7 @@ export const ID = {
   marc: '00000000-0000-4000-8000-000000000011',
   ines: '00000000-0000-4000-8000-000000000016',
   ines2: '00000000-0000-4000-8000-000000000017',
+  groupe: '00000000-0000-4000-8000-000000000030',
 };
 
 export async function contexteAdmin(browser: Browser, largeur: number): Promise<BrowserContext> {
@@ -25,3 +26,19 @@ export async function contexteAdmin(browser: Browser, largeur: number): Promise<
   });
   return c;
 }
+
+/**
+ * Nombre de points d'un élément réellement peints à l'écran, sur une grille
+ * de 3 × 2 : un élément coupé par un parent ou recouvert en partie n'a pas ses
+ * six points. Jamais le seul centre (règle de mesure du dépôt).
+ */
+export const POINTS_PEINTS = `(el) => {
+  const r = el.getBoundingClientRect();
+  let n = 0;
+  for (const fx of [0.1, 0.5, 0.9]) for (const fy of [0.2, 0.8]) {
+    const x = r.left + r.width * fx, y = r.top + r.height * fy;
+    const vu = document.elementFromPoint(x, y);
+    if (vu && el.contains(vu)) n++;
+  }
+  return n;
+}`;

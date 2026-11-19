@@ -7,61 +7,10 @@ import { estAdminEnBase } from '@/lib/admin-role';
 import Link from 'next/link';
 import ThemeMenu from '@/components/ui/ThemeMenu';
 import HeartMark from '@/components/ui/HeartMark';
-import CountChip from '@/components/ui/CountChip';
+import AdminNav from '@/components/admin/AdminNav';
 import ToastHost from '@/components/ui/Toast';
-import { countAdminQueues, type AdminQueues } from '@/lib/admin-queues';
+import { countAdminQueues } from '@/lib/admin-queues';
 import { compterCas } from '@/lib/moderation/membres';
-
-// `queue` relie l'entrée à sa file de travail (#391) : le layout compte et
-// pose un `CountChip` à côté — le chiffre est légitime ici, surface admin.
-const adminNavItems: Array<{ href: string; label: string; icon: string; queue?: keyof AdminQueues }> = [
-  { href: '/admin', label: 'Tableau de bord', icon: 'dashboard' },
-  // Hub Membres (spec 012, US3) : remplace Utilisateurs, Signalements,
-  // Indices et Vérifications, dont les adresses y redirigent.
-  { href: '/admin/membres', label: 'Membres', icon: 'users', queue: 'atraiter' },
-  { href: '/admin/feedback', label: 'Retours', icon: 'feedback', queue: 'feedback' },
-  { href: '/admin/journal', label: 'Journal', icon: 'journal' },
-  { href: '/admin/circle/alerts', label: 'Alertes Cercle', icon: 'alert' },
-  { href: '/admin/appearance', label: 'Apparence', icon: 'palette' },
-  { href: '/admin/features', label: 'Fonctionnalités', icon: 'toggle' },
-  { href: '/admin/logs', label: 'Logs', icon: 'logs' },
-  { href: '/admin/square', label: 'La Place', icon: 'square' },
-  { href: '/admin/rate-limits', label: 'Rate-limits', icon: 'gauge' },
-  { href: '/admin/retention', label: 'Rétention', icon: 'logs' },
-];
-
-function SidebarIcon({ icon }: { icon: string }) {
-  switch (icon) {
-    case 'dashboard':
-      return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>;
-    case 'users':
-      return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>;
-    case 'reports':
-      return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
-    case 'journal':
-      return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></svg>;
-    case 'feedback':
-      return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>;
-    case 'alert':
-      return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>;
-    case 'palette':
-      return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>;
-    case 'verifications':
-      return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
-    case 'shield':
-      return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4M12 16h.01"/></svg>;
-    case 'logs':
-      return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>;
-    case 'square':
-      return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>;
-    case 'toggle':
-      return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="7" width="20" height="10" rx="5"/><circle cx="16" cy="12" r="3"/></svg>;
-    case 'gauge':
-      return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 14l4-4"/><path d="M3.34 19a10 10 0 1117.32 0"/></svg>;
-    default:
-      return null;
-  }
-}
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   // ---------------------------------------------------------------------------
@@ -116,72 +65,41 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const queues = await countAdminQueues(getDb(), compterCas);
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="hidden w-56 shrink-0 border-r border-hairline bg-fill-subtle md:block">
-        <div className="flex items-center justify-between gap-2 p-4">
-          {/* Marque avec le logo cœur de référence (#294) ; l'admin garde son
-              ThemeMenu (pas de nav app / Paramètres dans cette zone power). */}
-          <Link href="/admin" className="inline-flex items-center gap-2 text-lg font-bold text-coral dark:text-coral-light">
+    // La coque tient dans la fenêtre (#568) : l'en-tête et les onglets ne
+    // défilent pas. Une page ordinaire défile dans `main` ; une page « plein
+    // cadre » (le hub Membres) occupe toute la hauteur et fait défiler ses
+    // propres zones. Un seul <main> : la page n'est montée qu'une fois.
+    <div className="flex h-dvh flex-col">
+      <header className="shrink-0 border-b border-hairline bg-surface pt-safe">
+        <div className="flex min-h-[60px] items-center gap-3 px-4 min-[900px]:gap-4 min-[900px]:px-6">
+          {/* Marque avec le logo cœur de référence (#294), sur une ligne. */}
+          <Link
+            href="/admin"
+            className="inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-control text-base font-bold text-coral focus-visible:outline-none focus-visible:shadow-focus dark:text-coral-light"
+          >
             <HeartMark className="h-6 w-6" />
             Libre Admin
           </Link>
-          <ThemeMenu />
-        </div>
-        <nav className="mt-2 flex flex-col gap-1 px-2">
-          {adminNavItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted hover:bg-fill-subtle hover:text-content"
-            >
-              <SidebarIcon icon={item.icon} />
-              {item.label}
-              {item.queue && <CountChip count={queues[item.queue]} className="ml-auto" />}
-            </Link>
-          ))}
-        </nav>
-        <div className="mt-auto border-t border-hairline p-4">
-          <Link href="/discover" className="text-sm text-muted hover:text-content">
-            ← Retour à l&apos;app
+          <AdminNav variante="entete" atraiter={queues.atraiter} retours={queues.feedback} />
+          <span className="flex-1" />
+          {/* En fin d'en-tête : le panneau du ThemeMenu, ancré à droite, tient
+              dans la fenêtre. Jamais dans une colonne collée au bord gauche. */}
+          <ThemeMenu labelClassName="hidden min-[1280px]:inline" />
+          <Link
+            href="/discover"
+            className="inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-control px-1.5 text-sm text-muted hover:text-content focus-visible:outline-none focus-visible:shadow-focus"
+          >
+            <span className="hidden min-[1280px]:inline">← Retour à l&apos;app</span>
+            <span className="min-[1280px]:hidden">Retour</span>
           </Link>
         </div>
-      </aside>
-
-      {/* Colonne de contenu — `min-w-0` : sans lui, la nav mobile `overflow-x-auto`
-          élargit la colonne au lieu de défiler, et ThemeMenu/Retour sortent du
-          viewport. Un seul <main> : la page n'était montée deux fois (une copie
-          mobile, une desktop, masquées en CSS) — requêtes et état en double. */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="border-b border-hairline bg-surface p-4 md:hidden">
-          <div className="flex items-center justify-between gap-2">
-            <Link href="/admin" className="inline-flex items-center gap-2 text-lg font-bold text-coral dark:text-coral-light">
-              <HeartMark className="h-6 w-6" />
-              Libre Admin
-            </Link>
-            <div className="flex items-center gap-2">
-              <ThemeMenu />
-              <Link href="/discover" className="text-sm text-muted">
-                Retour
-              </Link>
-            </div>
-          </div>
-          <nav className="mt-2 flex gap-2 overflow-x-auto">
-            {adminNavItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-muted hover:bg-fill-subtle"
-              >
-                {item.label}
-                {item.queue && <CountChip count={queues[item.queue]} />}
-              </Link>
-            ))}
-          </nav>
-        </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
-        {/* Confirmations des gestes du hub Membres (spec 012). */}
-        <ToastHost />
-      </div>
+      </header>
+      <main className="min-h-0 flex-1 overflow-y-auto p-4 has-[[data-plein-cadre]]:overflow-hidden has-[[data-plein-cadre]]:p-0 min-[900px]:p-6 min-[900px]:has-[[data-plein-cadre]]:p-0">
+        {children}
+      </main>
+      <AdminNav variante="onglets" atraiter={queues.atraiter} retours={queues.feedback} />
+      {/* Confirmations des gestes du hub Membres (spec 012). */}
+      <ToastHost />
     </div>
   );
 }

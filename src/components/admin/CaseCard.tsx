@@ -17,6 +17,7 @@ const FILET: Record<Gravite, string> = {
  */
 export default function CaseCard({
   type,
+  nombre = 1,
   gravite,
   titre,
   age,
@@ -25,6 +26,8 @@ export default function CaseCard({
   children,
 }: {
   type: TypeCas;
+  /** Cas réunis dans la carte : « Signalement ×3 » au-delà de un (#568). */
+  nombre?: number;
   gravite: Gravite;
   titre: string;
   age: string;
@@ -36,7 +39,7 @@ export default function CaseCard({
     <article className={`grid min-w-0 content-start gap-2.5 rounded-card border border-l-4 border-hairline bg-surface p-3.5 ${FILET[gravite]}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="flex min-w-0 items-center gap-2">
-          <CaseTag variant={gravite}>{LIBELLE_CAS[type]}</CaseTag>
+          <CaseTag variant={gravite}>{LIBELLE_CAS[type]}{nombre > 1 ? ` ×${nombre}` : ''}</CaseTag>
           <h3 className="text-base font-semibold text-content">{titre}</h3>
         </span>
         <span className="font-mono text-xs text-muted">{age}</span>

@@ -37,3 +37,22 @@ test('doublon probable : le compte lié s’ouvre d’un geste', async ({ browse
   await expect(page.getByRole('heading', { level: 1, name: 'Ines_2' })).toBeVisible();
   await c.close();
 });
+
+test('trois signalements du même motif : une carte, un geste pour le groupe, l’autre motif reste (#568)', async ({ browser }) => {
+  const c = await contexteAdmin(browser, 1280);
+  const page = await c.newPage();
+  await page.goto(`/admin/membres?filtre=report&membre=${ID.groupe}`);
+  const cartes = page.getByRole('article');
+  await expect(cartes).toHaveCount(2, { timeout: 30_000 });
+  const groupe = cartes.filter({ hasText: 'Signalement ×3' });
+  await expect(groupe.getByText(/^Signalé par /)).toHaveCount(3);
+  await expect(groupe.getByText('Repère.')).toHaveCount(1);
+  await groupe.getByRole('button', { name: 'Sans suite' }).click();
+  // Les trois signalements sont clos d'un geste ; celui de l'autre motif attend toujours.
+  await expect(cartes).toHaveCount(1, { timeout: 20_000 });
+  await expect(cartes.getByRole('heading', { name: 'Faux profil' })).toBeVisible();
+  await expect(page.getByText('1 cas')).toBeVisible();
+  // Une seule ligne de journal pour le geste.
+  await expect(page.getByText(/Signalement classé sans suite/)).toHaveCount(1);
+  await c.close();
+});

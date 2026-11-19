@@ -15,7 +15,8 @@ vi.mock('next/headers', () => ({
   cookies: async () => ({ get: (name: string) => (name === 'next-auth.session-token' ? { value: 'jwt' } : undefined) }),
 }));
 vi.mock('next-auth/jwt', () => ({ decode: async () => ({ sub: 'admin-1', role: 'ADMIN' }) }));
-vi.mock('next/navigation', () => ({ notFound: () => { throw new Error('notFound'); } }));
+let chemin = '/admin/membres';
+vi.mock('next/navigation', () => ({ notFound: () => { throw new Error('notFound'); }, usePathname: () => chemin }));
 vi.mock('@/components/ui/ThemeMenu', () => ({ __esModule: true, default: () => null }));
 
 const fakeDb = {
@@ -35,12 +36,14 @@ async function renderLayout() {
   return render(tree);
 }
 
+/** La navigation de l'en-tête ; celle des onglets (sous 900 px) porte les mêmes entrées. */
 function sidebar() {
-  return within(screen.getAllByRole('navigation')[0]);
+  return within(screen.getAllByRole('navigation', { name: 'Sections du bureau' })[0]);
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
+  chemin = '/admin/membres';
   process.env.NEXTAUTH_SECRET = 'test-secret';
   fakeDb.user.findUnique.mockResolvedValue({ role: 'ADMIN' });
 });
@@ -81,5 +84,38 @@ describe('layout admin — compteurs', () => {
     expect(screen.getAllByText('contenu').length).toBeGreaterThan(0);
     expect(sidebar().getByRole('link', { name: /Membres/ })).toHaveTextContent(/^Membres$/);
     expect(sidebar().getByRole('link', { name: /Retours/ })).toHaveTextContent(/^Retours4$/);
+  });
+
+  it('quatre entrées, dans l’en-tête et dans les onglets, et plus de barre latérale (#568)', async () => {
+    compterCas.mockResolvedValue(cas({ atraiter: 3 }));
+    fakeDb.feedback.count.mockResolvedValue(0);
+    const { container } = await renderLayout();
+    const navs = screen.getAllByRole('navigation', { name: 'Sections du bureau' });
+    expect(navs).toHaveLength(2);
+    for (const nav of navs) {
+      expect(within(nav).getAllByRole('link').map((l) => l.getAttribute('href'))).toEqual(['/admin', '/admin/membres', '/admin/feedback', '/admin/outils']);
+      expect(within(nav).getByRole('link', { name: /Membres/ })).toHaveAttribute('aria-current', 'page');
+      expect(within(nav).getAllByRole('link').filter((l) => l.hasAttribute('aria-current'))).toHaveLength(1);
+    }
+    expect(container.querySelector('aside')).toBeNull();
+    expect(container.querySelectorAll('main')).toHaveLength(1);
+  });
+
+  it.each([
+    ['/admin', 'Activité'],
+    ['/admin/membres', 'Membres'],
+    ['/admin/feedback', 'Retours'],
+    ['/admin/outils', 'Outils'],
+    ['/admin/logs', 'Outils'],
+    ['/admin/journal/nouveau', 'Outils'],
+    // Un préfixe ne suffit pas : « /admin/membres-archives » n'est pas Membres.
+    ['/admin/membres-archives', 'Outils'],
+  ])('%s : l’entrée courante est %s', async (adresse, entree) => {
+    chemin = adresse;
+    compterCas.mockResolvedValue(cas());
+    fakeDb.feedback.count.mockResolvedValue(0);
+    await renderLayout();
+    const courants = sidebar().getAllByRole('link').filter((l) => l.getAttribute('aria-current') === 'page');
+    expect(courants.map((l) => l.textContent)).toEqual([entree]);
   });
 });

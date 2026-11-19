@@ -13,6 +13,7 @@ import {
   CODES_MOTIFS_SANCTION, GESTES, MOTIFS_LEVER_VOILE, MOTIFS_PHOTO, MOTIFS_SANCTION, repereDuCas,
   type CodeGeste, type MotifSanction,
 } from '@/lib/moderation/reperes';
+import { grouperSignalements, type GroupeSignalements } from '@/lib/moderation/grouper-signalements';
 import { duree, ilYa, vuLe } from '@/lib/moderation/temps';
 import { SENSITIVITY_LABELS, SENSITIVITY_LEVELS, type SensitivityLevel } from '@/lib/photo-sensitivity';
 import { toast } from '@/lib/toast';
@@ -25,14 +26,15 @@ import { Avatar, FiabiliteTag, StatutTag } from './MembreRow';
  * Sections dans l'ordre de FR-019 : identité, cas, fiabilité, photos,
  * historique, autres gestes, zone sensible repliée. Chaque geste passe par la
  * route unitaire existante (lot 2) : même effet, même ligne de journal que
- * les anciennes pages (FR-023). Les gestes à confirmer ouvrent une feuille qui
+ * les anciennes pages (FR-023). Les signalements d'un même motif tiennent dans
+ * une carte, et leur geste tranche tout le groupe affiché (#568). Les gestes à confirmer ouvrent une feuille qui
  * dit ce que le membre verra (FR-021) ; bannir et supprimer exigent un motif
  * de la liste fermée (FR-022), et supprimer la ressaisie du pseudo (FR-S11).
  */
 
 type Feuille =
-  | { geste: 'avertir'; reportId: string }
-  | { geste: 'bannir'; reportId: string | null }
+  | { geste: 'avertir'; groupe: GroupeSignalements }
+  | { geste: 'bannir'; groupe: GroupeSignalements | null }
   | { geste: 'retirer_reponse'; answerId: string; question: string }
   | { geste: 'retirer_photo'; cle: string }
   | { geste: 'voiler'; cle: string }
@@ -132,11 +134,11 @@ export default function FicheMembre({
   );
 
   if (etat === 'chargement' && !fiche) {
-    return <div className="grid gap-3.5 py-3.5" aria-busy="true"><BoutonRetour onRetour={onRetour} /><span className="text-sm text-muted">Chargement de la fiche…</span></div>;
+    return <div className="grid gap-3.5 p-4" aria-busy="true"><BoutonRetour onRetour={onRetour} /><span className="text-sm text-muted">Chargement de la fiche…</span></div>;
   }
   if (etat === 'introuvable') {
     return (
-      <div className="grid gap-3.5 py-3.5">
+      <div className="grid gap-3.5 p-4">
         <BoutonRetour onRetour={onRetour} />
         <Vide titre="Ce membre n’existe plus" texte="Son compte a été supprimé. Choisis un autre membre dans la liste." />
       </div>
@@ -144,7 +146,7 @@ export default function FicheMembre({
   }
   if (etat === 'erreur' || !fiche) {
     return (
-      <div className="grid gap-3.5 py-3.5">
+      <div className="grid gap-3.5 p-4">
         <BoutonRetour onRetour={onRetour} />
         <div role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">La fiche n’a pas pu être chargée. Vérifie ta connexion, puis réessaie.</div>
         <div><Button pill variant="secondary" onClick={() => void charger()}>Réessayer</Button></div>
@@ -157,8 +159,15 @@ export default function FicheMembre({
   const pseudo = m.pseudo;
   const decisionProfil = (decision: 'rien' | 'verification', succes: string) =>
     agir(`/api/admin/profils-a-verifier/${uid}`, { method: 'PUT', body: JSON.stringify({ decision }) }, succes);
-  const signalement = (reportId: string, action: 'DISMISS_REPORT' | 'WARNING' | 'BAN', succes: string, reason?: string) =>
-    agir(`/api/admin/reports/${reportId}`, { method: 'PATCH', body: JSON.stringify({ action, reason }) }, succes);
+  // Un geste tranche tous les signalements affichés du motif, en une
+  // transaction côté serveur : on envoie ce que le modérateur a sous les yeux.
+  const signalements = (g: GroupeSignalements, action: 'DISMISS_REPORT' | 'WARNING' | 'BAN', succes: string, reason?: string) =>
+    agir(
+      `/api/admin/membres/${uid}/signalements`,
+      { method: 'PATCH', body: JSON.stringify({ motif: g.motif, ids: g.signalements.map((s) => s.id), action, reason }) },
+      succes,
+    );
+  const accord = (n: number, un: string, plusieurs: string) => (n > 1 ? `${n} ${plusieurs}` : un);
   const inviter = () => agir(`/api/admin/users/${uid}/invitation`, { method: 'POST' }, `${pseudo} : invitation au selfie envoyée.`);
   const decision = (verificationId: string) => async (d: Decision) => {
     await agir(
@@ -173,44 +182,49 @@ export default function FicheMembre({
     </Button>
   );
 
-  const titreCas = (c: CasFiche): string => {
-    if (c.type === 'report') return c.motifLibelle;
+  const titreCas = (c: Exclude<CasFiche, { type: 'report' }>): string => {
     if (c.type === 'verif') return 'Selfie à vérifier';
     if (c.type === 'photo') return 'Photo à revoir';
     return c.doublon ? 'Doublon probable' : 'Indice';
   };
 
-  function corpsCas(c: CasFiche): { corps: ReactNode; gestes: ReactNode; repere: string } {
-    if (c.type === 'report') {
-      return {
-        repere: repereDuCas({ type: 'report', motif: c.motif }),
-        corps: (
-          <>
-            {c.description ? <Citation>{c.description}</Citation> : <span className="text-sm text-muted">Le signalement ne porte aucun texte.</span>}
-            <span className="text-xs text-muted">
-              {c.enAttente} signalement{c.enAttente > 1 ? 's' : ''} en attente pour ce membre · signalé par {c.auteur}
-            </span>
-            {c.reponsesAuMoment.length > 0 && (
-              <details className="text-sm">
-                <summary className="flex min-h-11 cursor-pointer items-center text-xs font-semibold uppercase tracking-[0.06em] text-muted">Ses réponses au moment du signalement</summary>
-                <ul className="grid gap-2">
-                  {c.reponsesAuMoment.map((r, i) => (
-                    <li key={i} className="grid gap-1"><span className="text-xs text-muted">{r.question}</span><Citation>{[...r.choix, r.texte].filter(Boolean).join(' · ')}</Citation></li>
-                  ))}
-                </ul>
-              </details>
-            )}
-          </>
-        ),
-        gestes: (
-          <>
-            {bouton('sans_suite', () => void signalement(c.id, 'DISMISS_REPORT', `${pseudo} : signalement classé sans suite.`))}
-            {bouton('avertir', () => setFeuille({ geste: 'avertir', reportId: c.id }))}
-            {m.statut !== 'banni' && !m.admin && bouton('bannir', () => setFeuille({ geste: 'bannir', reportId: c.id }), 'danger')}
-          </>
-        ),
-      };
-    }
+  function corpsGroupe(g: GroupeSignalements): { corps: ReactNode; gestes: ReactNode; repere: string } {
+    const n = g.signalements.length;
+    return {
+      repere: repereDuCas({ type: 'report', motif: g.motif }),
+      corps: (
+        <ul className="m-0 grid list-none gap-2 p-0">
+          {g.signalements.map((c) => (
+            <li key={c.id} className="grid gap-1.5 border-t border-hairline pt-2 first:border-t-0 first:pt-0">
+              {c.description && <Citation>{c.description}</Citation>}
+              <span className="text-xs text-muted">
+                Signalé par {c.auteur} · il y a {duree(c.depuis, maintenant)}{c.description ? '' : ' · sans texte'}
+              </span>
+              {c.reponsesAuMoment.length > 0 && (
+                <details className="group text-sm">
+                  <Resume className="text-xs uppercase tracking-[0.06em] text-muted">Ses réponses au moment du signalement</Resume>
+                  <ul className="grid gap-2">
+                    {c.reponsesAuMoment.map((r, i) => (
+                      <li key={i} className="grid gap-1"><span className="text-xs text-muted">{r.question}</span><Citation>{[...r.choix, r.texte].filter(Boolean).join(' · ')}</Citation></li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </li>
+          ))}
+        </ul>
+      ),
+      gestes: (
+        <>
+          {bouton('sans_suite', () => void signalements(g, 'DISMISS_REPORT', `${pseudo} : ${accord(n, 'signalement classé', 'signalements classés')} sans suite.`))}
+          {bouton('avertir', () => setFeuille({ geste: 'avertir', groupe: g }))}
+          {m.statut !== 'banni' && !m.admin && bouton('bannir', () => setFeuille({ geste: 'bannir', groupe: g }), 'danger')}
+        </>
+      ),
+    };
+  }
+
+  function corpsCas(c: Exclude<CasFiche, { type: 'report' }>): { corps: ReactNode; gestes: ReactNode; repere: string } {
     if (c.type === 'verif') {
       return {
         repere: repereDuCas({ type: 'verif' }),
@@ -286,25 +300,33 @@ export default function FicheMembre({
     };
   }
 
-  return (
-    <div className="grid min-w-0 content-start gap-3.5 py-3.5">
-      <BoutonRetour onRetour={onRetour} />
+  const cas = grouperSignalements(fiche.cas);
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Avatar src={fiche.photos[0]?.url ?? null} pseudo={pseudo} taille={56} />
-        <div className="grid min-w-0 gap-1">
-          <h1 className="break-words text-[22px] font-semibold leading-tight text-content">{pseudo}</h1>
-          <span className="text-xs text-muted">
-            Inscrit {ilYa(m.inscritAt, maintenant)} · {vuLe(m.vuLe, maintenant)} · {fiche.photos.length} photo{fiche.photos.length > 1 ? 's' : ''}
-          </span>
-          <span className="break-all text-xs text-muted">{m.email}</span>
-          <span className="flex flex-wrap gap-1">
-            {m.verifie ? <CaseTag variant="ok">Vérifié</CaseTag> : <CaseTag>Non vérifié</CaseTag>}
-            {m.admin && <CaseTag variant="info">Admin</CaseTag>}
-            <StatutTag statut={m.statut} />
-            <FiabiliteTag niveau={m.fiabilite} />
-          </span>
-        </div>
+  return (
+    <div className="min-w-0">
+      {/* Un seul en-tête, collé en haut du volet : on sait toujours de qui on
+          parle, et « ← Membres » reste sous le pouce (#568). */}
+      <div className="sticky top-0 z-[2] flex min-h-14 items-center gap-2.5 border-b border-hairline bg-surface px-4 py-1.5 min-[900px]:px-6">
+        <BoutonRetour onRetour={onRetour} />
+        <Avatar src={fiche.photos[0]?.url ?? null} pseudo={pseudo} />
+        <h1 className="min-w-0 truncate text-lg font-semibold leading-tight text-content">{pseudo}</h1>
+        <span className="flex-1" />
+        {fiche.cas.length > 0
+          ? <CaseTag variant={GRAVITE[fiche.cas[0].type]}>{fiche.cas.length} cas</CaseTag>
+          : <CaseTag variant="ok">Rien à traiter</CaseTag>}
+      </div>
+
+      <div className="grid max-w-[920px] content-start gap-3.5 p-4 min-[900px]:px-6 min-[900px]:pb-8 min-[900px]:pt-5">
+      <div className="grid min-w-0 gap-1.5">
+        <span className="text-xs text-muted">
+          Inscrit {ilYa(m.inscritAt, maintenant)} · {vuLe(m.vuLe, maintenant)} · {fiche.photos.length} photo{fiche.photos.length > 1 ? 's' : ''} · <span className="break-all">{m.email}</span>
+        </span>
+        <span className="flex flex-wrap gap-1">
+          {m.verifie ? <CaseTag variant="ok">Vérifié</CaseTag> : <CaseTag>Non vérifié</CaseTag>}
+          {m.admin && <CaseTag variant="info">Admin</CaseTag>}
+          <StatutTag statut={m.statut} />
+          <FiabiliteTag niveau={m.fiabilite} />
+        </span>
       </div>
 
       {erreur && <div role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">{erreur}</div>}
@@ -312,12 +334,21 @@ export default function FicheMembre({
       {fiche.cas.length === 0 ? (
         <Panneau titre="À traiter"><span className="text-sm text-muted">Aucun geste en attente pour ce membre.</span></Panneau>
       ) : (
-        fiche.cas.map((c) => {
+        cas.map((c) => {
+          if (c.type === 'groupe') {
+            const { corps, gestes, repere } = corpsGroupe(c);
+            const premier = c.signalements[0];
+            return (
+              <CaseCard key={`groupe:${c.motif}`} type="report" nombre={c.signalements.length} gravite={GRAVITE.report} titre={premier.motifLibelle} age={`il y a ${duree(premier.depuis, maintenant)}`} repere={repere} gestes={gestes}>
+                {corps}
+              </CaseCard>
+            );
+          }
           const { corps, gestes, repere } = corpsCas(c);
           return (
-            <CaseCardFiche key={`${c.type}:${c.id}`} c={c} titre={titreCas(c)} age={`il y a ${duree(c.depuis, maintenant)}`} repere={repere} gestes={gestes}>
+            <CaseCard key={`${c.type}:${c.id}`} type={c.type} gravite={GRAVITE[c.type]} titre={titreCas(c)} age={`il y a ${duree(c.depuis, maintenant)}`} repere={repere} gestes={gestes}>
               {corps}
-            </CaseCardFiche>
+            </CaseCard>
           );
         })
       )}
@@ -406,14 +437,14 @@ export default function FicheMembre({
             {m.invitation && !m.verifie && <span className="text-xs text-muted">Invité au selfie {ilYa(m.invitation, maintenant)}.</span>}
             {/* Montée seulement à l'ouverture : la consultation de la clé est
                 journalisée (VIEW_KEY_STATE), elle ne doit pas l'être à chaque fiche. */}
-            <details className="text-sm" onToggle={(e) => setCle((e.currentTarget as HTMLDetailsElement).open)}>
-              <summary className="flex min-h-11 cursor-pointer items-center text-[13px] font-semibold text-muted">Messagerie chiffrée</summary>
+            <details className="group border-t border-hairline text-sm" onToggle={(e) => setCle((e.currentTarget as HTMLDetailsElement).open)}>
+              <Resume className="text-[13px] text-muted">Messagerie chiffrée</Resume>
               {cle && <AdminUserKeyState userId={uid} />}
             </details>
-            <details className="text-sm">
-              <summary className="flex min-h-11 cursor-pointer items-center text-[13px] font-semibold text-red-700 dark:text-red-300">Zone sensible</summary>
-              <div className="flex flex-wrap gap-2">
-                {m.statut !== 'banni' && !m.admin && bouton('bannir', () => setFeuille({ geste: 'bannir', reportId: null }), 'danger-outline')}
+            <details className="group border-t border-hairline text-sm">
+              <Resume className="text-[13px] text-red-700 dark:text-red-300">Zone sensible</Resume>
+              <div className="flex flex-wrap gap-2 pb-1">
+                {m.statut !== 'banni' && !m.admin && bouton('bannir', () => setFeuille({ geste: 'bannir', groupe: null }), 'danger-outline')}
                 {!m.admin && bouton('supprimer', () => setFeuille({ geste: 'supprimer' }), 'danger-outline')}
               </div>
             </details>
@@ -432,11 +463,11 @@ export default function FicheMembre({
           onConfirmer={async (f, choix) => {
             switch (f.geste) {
               case 'avertir':
-                return void signalement(f.reportId, 'WARNING', `${pseudo} : avertissement inscrit à l’historique.`);
+                return void signalements(f.groupe, 'WARNING', `${pseudo} : avertissement inscrit à l’historique.`);
               case 'bannir': {
                 const motif = MOTIFS_SANCTION[choix.motif as MotifSanction];
-                return void (f.reportId
-                  ? signalement(f.reportId, 'BAN', `${pseudo} : banni.`, motif)
+                return void (f.groupe
+                  ? signalements(f.groupe, 'BAN', `${pseudo} : banni.`, motif)
                   : agir(`/api/admin/users/${uid}`, { method: 'PATCH', body: JSON.stringify({ banned: true, reason: motif }) }, `${pseudo} : banni.`));
               }
               case 'retirer_reponse':
@@ -474,21 +505,26 @@ export default function FicheMembre({
           }}
         />
       )}
+      </div>
     </div>
   );
 }
 
-function CaseCardFiche({ c, titre, age, repere, gestes, children }: { c: CasFiche; titre: string; age: string; repere: string; gestes: ReactNode; children: ReactNode }) {
+/** Titre d'une zone repliée : cible de 44 px et chevron, pour qu'on voie qu'elle s'ouvre. */
+function Resume({ className, children }: { className: string; children: ReactNode }) {
   return (
-    <CaseCard type={c.type} gravite={GRAVITE[c.type]} titre={titre} age={age} repere={repere} gestes={gestes}>
+    <summary className={`flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-2 rounded-control font-semibold focus-visible:outline-none focus-visible:shadow-focus [&::-webkit-details-marker]:hidden ${className}`}>
       {children}
-    </CaseCard>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 group-open:rotate-180">
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    </summary>
   );
 }
 
 function BoutonRetour({ onRetour }: { onRetour: () => void }) {
   return (
-    <button type="button" onClick={onRetour} className="flex min-h-11 items-center gap-1.5 justify-self-start p-0 font-semibold text-coral-dark focus-visible:outline-none focus-visible:shadow-focus dark:text-coral-light min-[900px]:hidden">
+    <button type="button" onClick={onRetour} className="flex min-h-[44px] shrink-0 items-center gap-1.5 justify-self-start whitespace-nowrap rounded-control p-0 pr-1 text-sm font-semibold text-coral-dark focus-visible:outline-none focus-visible:shadow-focus dark:text-coral-light min-[900px]:hidden">
       ← Membres
     </button>
   );
@@ -579,6 +615,9 @@ function FeuilleGeste({
     <BottomSheet titre={TITRES[g](pseudo)} onClose={onFermer}>
       {g === 'supprimer_doublon' && (
         <span className="text-sm text-muted">Le compte {feuille.orphelin.pseudo}, jamais confirmé, sera supprimé. {pseudo} garde le sien.</span>
+      )}
+      {(g === 'avertir' || g === 'bannir') && feuille.groupe && feuille.groupe.signalements.length > 1 && (
+        <span className="text-sm text-muted">Les {feuille.groupe.signalements.length} signalements de ce motif seront clos par ce geste.</span>
       )}
       {g === 'retirer_reponse' && <span className="text-sm text-muted">Question : {feuille.question}</span>}
       {g === 'retirer_photo' && photos[0] === feuille.cle && (

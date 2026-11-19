@@ -1321,6 +1321,70 @@ bleu = pour information, vert = validé, avec leur pendant sombre.
   `danger-outline` (retirer, refuser : contour et texte rouges) ; le geste
   irréversible reste `danger` (plein).
 
+### Coque du bureau et hub Membres — amendement du 2026-11-18 (#568)
+
+Prototype validé : `specs/012-bureau-refonte/proto-bo-membres-ui.html`. Il
+corrige la livraison de #540/#541, mesurée sur l'app servie : liste coupée et
+sans défilement sur grand écran, bouton du thème à cheval sur la barre
+latérale, 417 px de filtres avant la première ligne. Ce qui suit **remplace**
+les points correspondants de la section précédente.
+
+- **Coque du bureau** (`src/app/(admin)/layout.tsx`, `AdminNav`) : plus de
+  barre latérale. Un en-tête `bg-surface` + `border-hairline` de 60 px porte
+  la marque (`HeartMark` + « Libre Admin », sur une ligne), puis, à partir de
+  900 px, les quatre entrées de FR-042 : **Activité** (le tableau de bord
+  actuel, en attendant #544), **Membres**, **Retours**, **Outils**. Entrée
+  courante : `bg-sunken text-content` + `aria-current="page"`. À droite :
+  `ThemeMenu` puis « ← Retour à l’app ». Sous 900 px, les quatre entrées
+  passent dans une barre d'onglets en bas (`min-h-14`, icône 20 px + libellé de
+  10 px en capitales, filet corail de 2 px sur l'onglet courant, `pb-safe`).
+  Les onglets ne sont pas en position fixe : ils sont la dernière rangée de
+  la coque, donc ils ne recouvrent jamais le contenu.
+  Un seul seuil, 900 px, pour la coque et pour le hub. Liens : cible de 44 px
+  et `focus-visible:shadow-focus`. Les compteurs restent des `CountChip`
+  (surface admin).
+- **`ThemeMenu` dans l'en-tête** : placé en fin d'en-tête, son panneau ancré
+  à droite tient dans la fenêtre. Il ne va jamais dans une colonne étroite
+  collée au bord gauche. Seul ajout au composant : la prop `labelClassName`
+  (défaut `hidden sm:inline`, inchangé ailleurs) ; l'en-tête du bureau, plus
+  chargé, ne montre le nom du thème qu'à partir de 1280 px, et le bouton ne
+  passe jamais à la ligne (`whitespace-nowrap`).
+- **Outils** (`/admin/outils`) : index des pages existantes, en trois
+  groupes (Modération, Site, Technique), chaque lien haut de 48 px. Les pages
+  gardent leur adresse.
+- **La coque tient dans la fenêtre** : `h-dvh`, `main` en `min-h-0`. Une page
+  ordinaire défile dans `main` ; le hub Membres occupe toute la hauteur et
+  fait défiler ses deux volets.
+- **Volet de liste : une zone fixe, une zone qui défile.** Colonne
+  `flex` : l'en-tête du volet (recherche, filtres, tri) ne défile pas ; la
+  liste (`aria-label="Liste des membres"`, `overflow-y-auto`,
+  `overscroll-contain`) défile seule, et la fenêtre jamais. La liste n'est
+  **pas** dans une carte arrondie `overflow-hidden` : c'est elle qui coupait
+  les lignes. Le chargement de la suite observe cette zone (`root` de
+  l'`IntersectionObserver`), avec un bouton « Afficher les membres suivants »
+  en secours ; la liste se termine par « Fin de la liste · N membres ».
+  Largeur du volet : `clamp(360px, 36vw, 420px)` à partir de 900 px.
+- **Filtres** : à partir de 900 px, les six filtres de travail restent des
+  puces avec leur `CountChip` et passent à la ligne ; les six filtres de
+  statut (Douteux, Vérifiés, Masqués, Bannis, Non confirmés, Tous) tiennent
+  dans une liste « Statut du compte… » à côté du tri. Sous 900 px, les douze
+  puces restent sur une ligne qui défile. Contrôles hauts de 44 px fixes
+  (`min-h-[44px]`, pas `min-h-11` qui vaut 50 px avec la base à 18 px).
+- **Fiche** : un seul en-tête, collé en haut du volet (`sticky top-0`,
+  `bg-surface`, filet bas) : « ← Membres » sous 900 px, avatar de 40 px,
+  pseudo en `h1` de 18 px tronqué, nombre de cas en `CaseTag`. Les
+  méta-données et les étiquettes de statut suivent et défilent. Contenu
+  plafonné à 920 px. Les `<details>` portent un chevron.
+- **Signalements regroupés** : les signalements en attente d'un même motif
+  tiennent dans une `CaseCard` (« Signalement ×3 »), avec chaque signalement
+  sur sa ligne (texte cité s'il y en a un, « Signalé par … · il y a … »), une
+  seule rangée de gestes et un seul repère. Le geste s'applique à **tous les
+  signalements affichés** du groupe, en une transaction
+  (`PATCH /api/admin/membres/[id]/signalements`) : tout ou rien, et une seule
+  ligne de journal, celle du geste unitaire. La feuille de confirmation
+  (avertir, bannir) dit combien de signalements seront clos.
+- **Aucune animation ajoutée** : rien à réduire.
+
 ## Responsive
 
 | Breakpoint | Width | Key Changes |
